@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "feature_set": "session_v2",
+  "regime_start": "2024-11-06",
+  "display_top_k": 2,
+  "trade_top_k": 1,
+  "cost_bps": 20.0,
+  "max_history_age_calendar_days": 7,
+  "min_latest_session_coverage": 0.9,
+  "require_expected_history_date": true,
+  "universe": {
+    "min_history": 60,
+    "price_min": 100.0,
+    "price_max": 30000.0,
+    "atr14_min_pct": 0.25,
+    "atr14_max_pct": 5.0,
+    "model_training_atr_max_pct": 15.0,
+    "max_zero_oc_20": 0.2
+  },
+  "model": {
+    "algorithm": "logistic_regression",
+    "c": 0.08,
+    "class_weight": "balanced",
+    "random_state": 31,
+    "max_iter": 1000,
+    "date_equal_weight": true
+  },
+  "preopen": {
+    "timezone": "Asia/Tokyo",
+    "decision_time": "08:58:59",
+    "max_snapshot_age_seconds": 180,
+    "positive_gap_atr_veto": 2.0,
+    "latest_expected_open_time": "09:05:00"
+  }
+}

@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tse-session-ranker"
+version = "0.1.0"
+description = "Leakage-safe pre-open ranking for Tokyo Stock Exchange sessions"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "joblib>=1.3",
+  "numpy>=1.26",
+  "pandas>=2.0",
+  "scikit-learn>=1.4",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+parquet = ["pyarrow>=14"]
+
+[project.scripts]
+tse-session-ranker = "tse_session_ranker.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
