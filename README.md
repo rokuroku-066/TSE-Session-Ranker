@@ -245,4 +245,4 @@ print(result.candidates[["model_rank", "code", "name", "model_score"]])
 
 学習と推論では同じ株価調整方式を使ってください。分割・併合を未調整のまま跨ぐとリターンとATRが壊れます。
 
-比較条件、全結果、制約は[VALIDATION.md](VALIDATION.md)を参照してください。
+比較条件、全結果、制約は追記専用の[VALIDATION.md](VALIDATION.md)に記録します。Entryは古い順で、末尾が最新の運用判断です。
