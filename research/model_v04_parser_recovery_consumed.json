@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "phase": "parser_only_recovery_consumed",
+  "started_at_utc": "2026-07-21T12:17:46+00:00",
+  "recovery_lock_path": "/workspace/scratch/8678b1d14f37/research/model_v04_parser_recovery_lock.json",
+  "recovery_lock_sha256": "1f87a81e21175dc52c82f8a42762ab52cfd8ab39a3b18bcdb6061d908ab95554",
+  "selection_lock_sha256": "7b1d6922dcb591607730e58a98946511c600bf31bbd8ae2a43ee3be50ada83cb",
+  "original_consumed_receipt_sha256": "b27d59994f191be31b2d591d601c4f7047667833b016065876aafd8863465c85",
+  "failure_record_sha256": "1cc29c11cdee0c7df5fc87de6522b75c136dd11a9265412e93f92d75470f4e0e",
+  "formal_metric_run_limit": 1
+}

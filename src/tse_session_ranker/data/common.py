@@ -10,6 +10,16 @@ from ..exceptions import DataValidationError
 
 
 OHLC = ("open", "high", "low", "close")
+SESSION_OHLC = (
+    "am_open",
+    "am_high",
+    "am_low",
+    "am_close",
+    "pm_open",
+    "pm_high",
+    "pm_low",
+    "pm_close",
+)
 REQUIRED_DAILY_COLUMNS = ("date", "code", *OHLC)
 
 
@@ -75,7 +85,15 @@ def _deduplicate_or_raise(frame: pd.DataFrame) -> pd.DataFrame:
         return frame
     compare = [
         column
-        for column in ("name", *OHLC, "volume", "turnover", "traded", "partial_session")
+        for column in (
+            "name",
+            *OHLC,
+            *SESSION_OHLC,
+            "volume",
+            "turnover",
+            "traded",
+            "partial_session",
+        )
         if column in frame.columns
     ]
     conflicts: list[str] = []
@@ -113,7 +131,7 @@ def normalize_daily_prices(prices: pd.DataFrame) -> pd.DataFrame:
     if frame["code"].eq("").any():
         raise DataValidationError("daily data contains an empty security code")
     frame["name"] = frame.get("name", frame["code"]).fillna(frame["code"]).astype(str)
-    for column in (*OHLC, "volume", "turnover"):
+    for column in (*OHLC, *SESSION_OHLC, "volume", "turnover"):
         if column not in frame:
             frame[column] = np.nan
         frame[column] = pd.to_numeric(frame[column], errors="coerce")
@@ -142,6 +160,45 @@ def normalize_daily_prices(prices: pd.DataFrame) -> pd.DataFrame:
     bad_low = traded["low"] > traded[["open", "close"]].min(axis=1)
     if bad_high.any() or bad_low.any() or (traded["high"] < traded["low"]).any():
         raise DataValidationError("daily data violates OHLC high/low bounds")
+    populated_session = frame[list(SESSION_OHLC)].notna().any(axis=1)
+    incomplete_session = populated_session & frame[list(SESSION_OHLC)].isna().any(
+        axis=1
+    )
+    if incomplete_session.any():
+        raise DataValidationError(
+            "session OHLC must contain all eight AM/PM prices or none"
+        )
+    invalid_session_state = populated_session & (
+        ~frame["traded"] | frame["partial_session"]
+    )
+    if invalid_session_state.any():
+        raise DataValidationError(
+            "AM/PM OHLC may be populated only for a full traded session"
+        )
+    session_rows = frame.loc[populated_session, list(SESSION_OHLC)]
+    if (session_rows <= 0).any(axis=None):
+        raise DataValidationError("session OHLC values must be positive")
+    bad_am_high = session_rows["am_high"] < session_rows[
+        ["am_open", "am_close"]
+    ].max(axis=1)
+    bad_am_low = session_rows["am_low"] > session_rows[
+        ["am_open", "am_close"]
+    ].min(axis=1)
+    bad_pm_high = session_rows["pm_high"] < session_rows[
+        ["pm_open", "pm_close"]
+    ].max(axis=1)
+    bad_pm_low = session_rows["pm_low"] > session_rows[
+        ["pm_open", "pm_close"]
+    ].min(axis=1)
+    if (
+        bad_am_high.any()
+        or bad_am_low.any()
+        or (session_rows["am_high"] < session_rows["am_low"]).any()
+        or bad_pm_high.any()
+        or bad_pm_low.any()
+        or (session_rows["pm_high"] < session_rows["pm_low"]).any()
+    ):
+        raise DataValidationError("daily data violates AM/PM OHLC bounds")
     if (frame[["volume", "turnover"]].dropna() < 0).any(axis=None):
         raise DataValidationError("volume and turnover must not be negative")
 
@@ -291,6 +348,7 @@ def build_prior_session_universe(
         "code",
         "name",
         *OHLC,
+        *SESSION_OHLC,
         "volume",
         "turnover",
         "traded",

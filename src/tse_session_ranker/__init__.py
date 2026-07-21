@@ -12,6 +12,7 @@ from .features import (
     build_inference_frame,
 )
 from .inference import PredictionResult
+from .data.market_context import append_market_context, normalize_market_context
 from .profit import daily_portfolio_returns, profit_metrics
 from .training import TrainingResult
 
@@ -36,6 +37,8 @@ __all__ = [
     "load_artifact",
     "daily_portfolio_returns",
     "profit_metrics",
+    "append_market_context",
+    "normalize_market_context",
 ]
 
 __version__ = "0.3.0"

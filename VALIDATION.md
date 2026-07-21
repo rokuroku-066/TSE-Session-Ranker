@@ -38,11 +38,11 @@
 本文
 
 </details>
+
+
 ```
 
 </details>
-
----
 
 ## Entry 001 — tse-session-ranker 0.2.0：モデル手法比較
 
@@ -483,5 +483,285 @@ python -m pip wheel . --no-deps --no-build-isolation \
 ### 互換性
 
 0.3.0はconfig schema **3**、artifact schema **5**である。特徴セットIDは`session_v3_tdnet_clear`、データ意味論は`prior_session_universe_source_mask_tdnet_v3`。0.2以前のartifactはTDnet cutoff、calendar、18特徴の整合性を証明できないため、0.3.0で再学習する必要がある。
+
+</details>
+
+---
+
+## Entry 003 — tse-session-ranker 0.4.0：sealed holdout parser incident
+
+| 項目 | 内容 |
+|---|---|
+| 検証日 | 2026-07-21 |
+| 検証対象ロック | `7b1d6922dcb591607730e58a98946511c600bf31bbd8ae2a43ee3be50ada83cb` |
+| 親Entry | Entry 002 |
+| 検証対象 | v0.4固定winnerの2025-08-04～2026-03-31 sealed holdout |
+| 採用判断 | **損益評価前に停止。parser-only recoveryを1回だけ許可** |
+| 当時の運用判断 | 結果未確定。実発注不可 |
+| 主指標 | 未計算（metric evaluation count = 0） |
+| 機械可読成果物 | `research/model_v04_holdout_parse_failure.json` |
+
+> **一行結論:** 全PDF解析後の行数検査でfail-closedし、損益を一度も計算せず停止した。モデルを固定したまま、公式の特別気配接頭辞だけを解釈する監査可能なrecoveryへ進む。
+
+<details>
+<summary><strong>incidentと回復条件</strong></summary>
+
+正式選定では、価格・市場・TDnetを統合した62特徴、`positive_session`ラベル、`C=0.03`、全履歴、日別・クラス均衡の正則化logitが開発winnerとなった。選定ロックのSHA-256は上記のとおり。ただし開発確認の往復20bp後平均は`-0.022342%/日`で、開発gateは不合格だった。
+
+sealed holdoutは全入力hashとruntimeを照合し、消費receiptを排他的に作成してから160 PDFを解析した。その後のmanifest検査で、普通株として数えた行に未解析行があるため停止した。この時点ではparsed export、特徴パネル、モデル学習、候補、損益指標のいずれも作成していない。
+
+行形式だけを再診断した結果、47ファイル・63行の全件が同一原因だった。JPXの`Final Special Quote`欄に、買い・売りを示す半角カナ`ｶ`または`ｳ`が数値の直前に付いていた。OHLC列のずれ、任意の4価格欠落、正の出来高を伴う価格全欠落は確認されなかった。
+
+回復では次を固定する。
+
+- winner、baseline、特徴、目的変数、C、学習窓、コスト、gate、bootstrapを変更しない。
+- 元selection lock、元receipt、failure recordを削除・上書きしない。
+- 既存実装の変更をJPX parserだけに限定し、selection runnerとprotocolはbyte単位で維持する。
+- 旧parserが受理した全行のcanonical値が新parserでも完全一致することを確認する。
+- 開発期間のcanonical価格出力が変わらないことを確認する。
+- parser patch、非parser実装、全入力、runtime、固定winnerをrecovery lockへ結合する。
+- recovery metric runは1回だけとし、開始前に別の排他的receiptを作る。
+- 最終結果にはraw parse回数、metric evaluation回数、parser recovery実施、holdout retuningなしを明記する。
+
+</details>
+
+---
+
+## Entry 004 — 研究プロトコルv0.4：特徴量選定とparser recovery後の非正式診断
+
+| 項目 | 内容 |
+|---|---|
+| 検証日 | 2026-07-21 |
+| 検証対象コミット | 本PRへ収録。固定対象は下記selection lock・runner・diagnostic lockのSHA-256で識別 |
+| 親Entry | Entry 003 |
+| 検証対象 | 固定済み62特徴logitとv0.3 controlの2025-08-04～2026-03-31診断 |
+| 採用判断 | JPX parser v6を採用。62特徴モデルは負のresearch baselineとして固定し、productionへ昇格しない |
+| 当時の運用判断 | **実発注不可。研究・shadow表示のみ** |
+| 主指標 | v0.4 top1・往復20bp後 `-0.086199%/日`、top2 `-0.059361%/日` |
+| 正式評価状態 | formal metric run `0`。formal recoveryはモデル評価前のOOMで未完了 |
+| 非正式診断状態 | `diagnostic_no_demonstrated_edge`。winner/controlを各1回だけ評価 |
+| 機械可読成果物 | `research/model_v04_post_failure_diagnostic_result.json`<br>SHA-256 `36a1e7ec557d0549399392224d0acbd89f369012c294290724465605447854ed` |
+| 独立再集計 | `research/model_v04_post_failure_diagnostic_result_audit.json`<br>SHA-256 `f81d83ffe85cbe324bc27523c93d619de485a59cf196354debbc35d0b75d628d` |
+
+> **一行結論:** 正則化logitのまま価格・前後場・市場・TDnetを62特徴まで比較したが、固定winnerは非正式な未使用期間診断でも20bp控除後損益が負だった。仕様は再現用baselineとして確定し、自動発注へは採用しない。
+
+<details>
+<summary><strong>選定、正式評価事故、非正式診断、最終仕様</strong></summary>
+
+### 目的と探索範囲
+
+最適化対象は勝率ではなく、次のscheduled-day損益率とした。
+
+```text
+日次損益 = 始値→終値騰落率 - 約定時のみ往復20bp
+主指標   = top1の日次損益平均
+表示     = 毎日top1・top2
+発注評価 = top1
+```
+
+推定器の種類はL2正則化ロジスティック回帰へ固定した。その上で、2021年以降の学習データを使い、時系列を次のように分離した。
+
+| 区分 | 期間 | 用途 |
+|---|---|---|
+| feature screen | 2022-03-01～12-30 | 6特徴block × 4目的ラベル |
+| model design | 2023-01-04～12-29 | 特徴・目的、C、学習窓、class weight |
+| development confirmation | 2024-01-04～2025-07-31 | 月次walk-forwardで最終選定 |
+| sealed期間 | 2025-08-04～2026-03-31 | 選定後に1回だけ確認する予定だった期間 |
+| 既知除外期間 | 2026-04-01～07-21 | 以前の調査で閲覧済みのためholdoutにしない |
+
+比較registryは、6特徴block、4目的ラベル、`C={0.03, 0.08, 0.2}`、504営業日またはexpanding学習窓、class weight有無で事前固定した。段階ごとに候補を減らし、後段から候補を追加していない。protocolとselection lockは次のとおり。
+
+```text
+research/model_v04_protocol.json
+b7ccbf62de187cd8f70fdb8fc0acca2fb598ce978d948639b7453d0d60ed30c1
+
+research/model_v04_selection_lock.json
+7b1d6922dcb591607730e58a98946511c600bf31bbd8ae2a43ee3be50ada83cb
+```
+
+### 固定winner
+
+```text
+特徴block:       session_market_tdnet（62特徴）
+目的ラベル:      close > open
+推定器:          L2 LogisticRegression
+C:               0.03
+class weight:    balanced
+日付weight:      各学習日の合計を等しくする
+学習窓:          2021-01-04以降のexpanding
+最小学習期間:    252 sessions
+再学習:          月次
+random state:    31
+```
+
+62特徴の内訳は次のとおり。
+
+```text
+前営業日までの価格・前後場shape: 34
+前営業日までの市場context:         5
+08:58:59までのTDnet・interaction:  23
+```
+
+価格群には、日中・夜間騰落、5/20/60日momentum、ATR固定変換、横断rank、前場・後場の騰落と値幅、昼休みgap、後場終値位置を含む。市場群には前日の等金額市場騰落、60日beta、市場残差とbeta・ATR interactionを含む。
+
+TDnet群には開示有無・件数・発表時刻、決算、業績修正方向、配当方向、自己株取得、ToSTNeT、エクイティ調達、優待、分割、M&A、支配権取引、減損、監査問題、および事前値動き・市場contextとの固定interactionを含む。PDF本文の業績修正額や買付規模は使用していない。
+
+development confirmationのwinnerは386 scheduled sessionsで、往復20bp後top1平均`-0.022342%/日`、プラス月8/19、上位5日除外平均`-0.152758%/日`だった。3 finalistに対するmoving-block reality-checkのp値は`0.674516`。したがってselection lock作成時点から状態は`development_best_no_edge`であり、正の優位性を主張していない。
+
+### JPX parser incidentと回復
+
+Entry 003の初回正式runは、JPX相場表の`Final Special Quote`欄に付く半角カナ`ｶ`・`ｳ`を解析できず、損益計算前にfail-closedした。
+
+parser v6では、この欄の数値直前だけにmarkerを許可した。
+
+```text
+対象PDF:                    160
+旧parser受理行:             622,661
+旧parser拒否行:                  63
+新parser受理行:             622,724
+新parser拒否行:                   0
+marker内訳:                 ｶ 37、ｳ 26
+旧parser受理行の同一性:     完全一致
+return・metric参照:         なし
+```
+
+開発データでも4,788,079行、4,387銘柄、canonical 23列とモデル入力内容が完全一致した。
+
+```text
+parser recovery audit
+317d5cde9741429263cc91c11575300660f94f62123725fc8ce2d76cdee02eeb
+
+development parser compatibility
+ee8bc1c30aa8409d18650ca5eaf30e35d3fcc8969bfa2982eba1900ebef9eb9f
+```
+
+正式recovery runは全160 PDF・622,724行を拒否0で解析した。その後、特徴パネル構築中に20GiBのcgroup上限へ達し、exit 137で終了した。
+
+```text
+feature panel build:        開始、未完了
+winner evaluation count:    0
+v0.3 control evaluation:    0
+formal metric run count:    0
+picks・result:               未作成
+```
+
+正式runのlock、消費receipt、failure recordは上書きせず保存した。
+
+```text
+formal recovery lock
+1f87a81e21175dc52c82f8a42762ab52cfd8ab39a3b18bcdb6061d908ab95554
+
+formal recovery receipt
+dfaaa3cf94614e76a5bc826386d63380cbcd0473523744d2571dce98125587e2
+
+formal runtime failure
+f34912dbc9c9c787d10caffc9766e132f6527f3ccc1ab3acb66a9145286bb5c3
+```
+
+このためformal recoveryは未完了で、formal validationは成立していない。
+
+### メモリ制約下の非正式診断
+
+正式runを再試行せず、同じ特徴をメモリ制約内で生成する診断専用panel builderを別途作成した。開発期間のwinnerとv0.3 controlについて、旧パネルと候補の非return列が完全一致し、return差の最大値は双方`4.44e-16`だった。
+
+```text
+diagnostic panel builder
+fe2a38b8e67c3387896c43eb096325f6083d1ecf157a7a033de80e556f450f1f
+
+development equivalence audit
+7870171ec64788236003337030a6ee6fc456a1d1567932acb88e07cb7c33cb4c
+```
+
+ただし、このpanelでは診断前に対象期間のラベルがmaterializeされている。正式runの実行権も既に消費されているため、後続結果をsealed formal holdoutまたはformal validationとは呼ばない。
+
+診断runnerの監査中、同じファイルをhash確認後に別openするTOCTOUと、formal/non-formal状態名の曖昧さを検出した。旧lock `74643bd1da5e5a72565f275304bf7c919e9a358a52b03df784466631706b39dc` は**未消費のまま使用禁止**とした。修正版は同一file descriptorで`hash → deserialize → 再hash`し、状態を分離して記録する。
+
+```text
+diagnostic runner
+38ce95b092f951194452385b41f9a22de0b36957d771204dd0e77ad1253a3613
+
+authoritative diagnostic lock v2
+868a496459ab2276dd2e6cd9a68e8e1e110883e7fed8219c687d317c123abd06
+
+diagnostic receipt
+01b62b92f87e1d4feb895c66712d209068f760b3b44e693fd3f88e9fcb978b4a
+```
+
+```text
+formal metric run count:       0
+diagnostic metric run count:   1
+winner evaluation count:       1
+v0.3 control evaluation count: 1
+診断内の再選択・再調整:        なし
+```
+
+### 非正式診断結果
+
+評価対象は159 scheduled sessions。153日で候補を表示し、表示率は96.226%だった。
+
+| 仕様 | 20bp後平均 | 中央値 | 40bp後平均 | PF | プラス月 | 上位5日除外平均 |
+|---|---:|---:|---:|---:|---:|---:|
+| **v0.4 top1** | **-0.086199%** | 0.000000% | -0.278652% | 0.9021 | 2/8 | -0.254070% |
+| **v0.4 top2** | **-0.059361%** | 0.000000% | -0.251813% | 0.9119 | 2/8 | -0.193278% |
+| v0.3 control top1 | -0.087886% | -0.071877% | -0.280338% | 0.8976 | 3/8 | -0.313019% |
+| v0.3 control top2 | +0.111147% | +0.041531% | -0.081306% | 1.1974 | 4/8 | -0.078121% |
+
+v0.4 top1はgross平均`+0.106254%/日`、約定銘柄勝率54.90%だったが、往復20bpを控除すると負になった。勝率が50%を上回っても、今回の損益目的を満たさない。
+
+v0.4 top1のmoving-block bootstrap片側90%下限もすべて負だった。
+
+```text
+block 5:   -0.320354%
+block 10:  -0.312789%
+block 20:  -0.337140%
+```
+
+v0.3 controlとの差は`+0.001686pt/日`に過ぎず、paired bootstrap片側下限はblock 5/10/20のすべてで負だった。順位は大きく変わっても、損益改善へ結び付いていない。
+
+v0.3 control top2は20bpで正だったが、事前登録した主目的ではない。4/8か月しかプラスでなく、上位5日除外平均と40bp stressが負である。この期間を見た後にtop2へ切り替えると後付け選択になるため、productionへ昇格しない。
+
+独立監査はpicksから20bp・40bp損益を再集計し、JSONとの差が最大`3.33e-16`であることを確認した。監査時に、両モデルとも候補なしだった6日を`NaN != NaN`として数えたため、result内の`ranking_changed_days=149`は正しくは`143`と判明した。これは表示項目で、gate・損益・bootstrap・statusには使われない。元resultを上書きせず、次の追補監査へ訂正を保存した。
+
+```text
+result audit runner
+e5f3593023af127d9bea1dc085fd11a692431aaa94c5e675f5b1f411362a2f7f
+
+result audit artifact
+f81d83ffe85cbe324bc27523c93d619de485a59cf196354debbc35d0b75d628d
+
+audit checks: 27 / 27 passed
+```
+
+### 先物特徴
+
+日経225先物・TOPIX先物の08:58:59以前の騰落率と、個別株beta・ATR・TDnet材料とのinteractionは、有力な前向き仮説として実装した。
+
+```text
+market_beta_60 × futures_return
+ATR14 × abs(futures_return)
+market_beta_60 × Nikkei-TOPIX futures spread
+TDnet material flag × futures_return
+```
+
+ただし正確な過去時点snapshotがないため、今回選定した62特徴には含めていない。日足終値、9:00以後の値、後から確定した値を代理投入しない。`ingest-market-context`はtimezone付き`observed_at`、同日08:58:59以前、明示的な`return_definition`を必須にし、過去行の変更と欠測日のcarry-forwardを拒否する。
+
+```text
+historical status:  未検証
+current model:      不使用
+next action:        PR後に08:58:59以前のsnapshotを毎日append-only保存
+```
+
+### 最終判断
+
+```text
+JPX parser v6:             採用
+62特徴logit:               負のresearch baselineとして仕様確定
+production model昇格:      なし
+自動発注:                  不可
+CORE / RESERVE表示:        shadow・診断用途のみ
+formal validation:         未成立
+```
+
+同じ2025-08～2026-03期間で特徴、C、top-kを再選択しない。v0.3 control top2も今回の結果から採用しない。次の仕様変更は新しいprotocolとして登録し、PR後に収集した先物snapshotを含む完全新規期間で評価する。
 
 </details>

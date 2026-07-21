@@ -87,6 +87,15 @@ def build_parser() -> argparse.ArgumentParser:
     preopen.add_argument("--existing")
     preopen.add_argument("--config")
 
+    market_context = subparsers.add_parser(
+        "ingest-market-context",
+        help="validate and append exact-date pre-open futures snapshots",
+    )
+    market_context.add_argument("--input", required=True)
+    market_context.add_argument("--output", required=True)
+    market_context.add_argument("--existing")
+    market_context.add_argument("--config")
+
     train = subparsers.add_parser(
         "train", help="fit the fixed profit-first session_v3 ranker"
     )
@@ -227,6 +236,25 @@ def _run(argv: Sequence[str] | None = None) -> None:
                 "codes": frame["code"].nunique(),
                 "min_observed_at": frame["observed_at"].min(),
                 "max_observed_at": frame["observed_at"].max(),
+            }
+        )
+        return
+    if args.command == "ingest-market-context":
+        ranker = _ranker(args.config)
+        frame = ranker.ingest_market_context(
+            args.input, output=args.output, existing=args.existing
+        )
+        _print_json(
+            {
+                "rows": len(frame),
+                "min_date": frame["date"].min(),
+                "max_date": frame["date"].max(),
+                "min_observed_at": frame["observed_at"].min(),
+                "max_observed_at": frame["observed_at"].max(),
+                "return_definition": (
+                    frame.iloc[0]["return_definition"] if len(frame) else None
+                ),
+                "output": args.output,
             }
         )
         return

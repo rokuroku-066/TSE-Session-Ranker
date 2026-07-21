@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "phase": "post_failure_nonformal_diagnostic_consumed",
+  "started_at_utc": "2026-07-21T13:20:30+00:00",
+  "diagnostic_lock_path": "/workspace/scratch/8678b1d14f37/research/model_v04_post_failure_diagnostic_lock_v2.json",
+  "diagnostic_lock_sha256": "868a496459ab2276dd2e6cd9a68e8e1e110883e7fed8219c687d317c123abd06",
+  "formal_metric_run_count": 0,
+  "diagnostic_metric_run_limit": 1
+}

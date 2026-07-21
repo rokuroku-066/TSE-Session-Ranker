@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "protocol_id": "session_v4_profit_logit_preregistered_20260721",
+  "registered_at": "2026-07-21",
+  "objective": {
+    "primary": "top1 scheduled-day mean net open-to-close return in percentage points",
+    "round_trip_cost_bps": 20.0,
+    "cost_stress_bps": 40.0,
+    "display_top_k": 2,
+    "trade_top_k": 1,
+    "unfilled_policy": "rank first; an unfilled slot receives zero return and zero cost; never substitute a lower rank after observing execution"
+  },
+  "fixed_estimator_family": {
+    "algorithm": "sklearn.linear_model.LogisticRegression",
+    "penalty": "L2, expressed explicitly as l1_ratio=0.0 for the pinned scikit-learn runtime",
+    "preprocessing": "training-only median imputation with missing indicators, then training-only standard scaling",
+    "random_state": 31,
+    "max_iter": 1000,
+    "solver": "lbfgs",
+    "score_semantics": "uncalibrated same-day rank score"
+  },
+  "periods": {
+    "price_feature_warmup_only": ["2020-07-01", "2020-12-30"],
+    "training_only": ["2021-01-04", "2021-12-30"],
+    "feature_screen": ["2022-03-01", "2022-12-30"],
+    "model_design": ["2023-01-04", "2023-12-29"],
+    "development_confirmation": ["2024-01-04", "2025-07-31"],
+    "sealed_holdout": ["2025-08-04", "2026-03-31"],
+    "known_excluded": ["2026-04-01", "2026-07-21"]
+  },
+  "sealed_holdout": {
+    "source": "official JPX daily stock quotation PDFs",
+    "files": 159,
+    "canonical_files_sha256": "c10d68a08f872cf47f1eccb6f36a4c06568b8f72be7fe987105b6c3960689492",
+    "manifest_sha256": "3c4e5dac4d1f2557f26b1f3c79e29d559e8fd6ec18e4266cff7600e7d4fea532",
+    "manifest_path": "/tmp/jpx_blind/sealed_download_manifest_v2.json",
+    "access_budget": 1,
+    "rule": "do not compute or inspect holdout returns until the development winner, implementation hashes, and data hashes are frozen",
+    "parse_policy": "the holdout phase re-hashes every raw PDF, writes an exclusive consumed receipt, and only then parses all PDFs directly; no pre-parsed holdout input is accepted",
+    "excluded_contamination": "2025-08-01 was opened only to inspect a previously unsupported JPX PDF layout before model selection; it is excluded from every scored holdout metric and label and is retained solely as the completed prior-session feature source for 2025-08-04"
+  },
+  "feature_blocks": {
+    "legacy_v03": "18-column v0.3 estimator-and-feature control (price-12 plus TDnet-clear-6), re-evaluated under the corrected common calendar, source-completeness, and corporate-action hygiene",
+    "bounded_daily": "16 features: cross-sectional ranks of prior open-to-close, overnight, volatility, 5/20/60-session close momentum and 20-session close location, plus four fixed ATR-scaled nonlinear transforms; all use completed prior sessions only",
+    "session_shape": "34 features: bounded_daily plus prior AM/PM returns, ranges, midday gap, PM close location, rolling PM behaviour, and fixed PM shock hinges",
+    "session_market": "39 features: session_shape plus prior equal-weight market return, rolling stock beta, and beta/ATR market-regime interactions",
+    "session_tdnet": "56 features: session_shape plus pre-open-known TDnet count/timing, generic title-derived material categories, and revision/financing-by-prior-run-up interactions",
+    "session_market_tdnet": "62 features: session_market plus the same TDnet block and a TDnet-presence-by-market-regime interaction"
+  },
+  "prospective_only_features": {
+    "futures_context": "Nikkei 225 and TOPIX futures returns observed no later than 08:58:59 JST",
+    "interactions": [
+      "stock_beta_60 x futures_return",
+      "stock_ATR x abs(futures_return)",
+      "TDnet_material_flag x futures_return",
+      "Nikkei_beta_minus_TOPIX_beta x futures_spread"
+    ],
+    "historical_selection_status": "excluded because exact point-in-time futures snapshots are unavailable locally; no later daily value may be substituted"
+  },
+  "model_objectives": {
+    "positive_session": "1(open-to-close return > 0)",
+    "net_positive_20bp": "1(open-to-close return > 0.20 percentage points)",
+    "net_positive_magnitude_weighted": "net_positive_20bp with abs(return - 0.20) clipped to 0.25..3.00 and weights renormalized to equal total weight per date",
+    "same_day_top_quintile": "1(return is in the top 20 percent of training-eligible securities on its date)"
+  },
+  "weighting": {
+    "all_candidates": "every training session has total sample weight 1",
+    "balanced_candidates": "two-margin raking preserves the per-session total of 1 and makes the two class totals equal; the positive-class multiplier is solved by deterministic bisection and infeasible margins are fatal",
+    "legacy_v03_control": "the original sklearn estimator class_weight=balanced multiplied by 1/n securities per date; this is an estimator-and-feature control under corrected shared data hygiene, not a claim of byte-for-byte historical prediction parity"
+  },
+  "missing_day_policy": {
+    "scheduled_days": "every exchange session in each evaluation interval is present in the return series",
+    "no_candidate_or_source_incomplete": "emit empty rank slots with zero return, zero cost, and display=false; never drop or substitute the day",
+    "tdnet": "calendar-day collection completeness from the preceding exchange session through the target cutoff is required; incomplete dates are ineligible for every candidate block",
+    "coverage_gate": "candidate display rate below 95 percent fails validation"
+  },
+  "corporate_action_hygiene": "a security is ineligible when any completed prior session in the last 60 sessions has an absolute raw overnight move above 30 percent; this is a point-in-time discontinuity heuristic, not complete corporate-action adjustment, so smaller-ratio actions or actions hidden by missing source rows remain a shadow-only limitation",
+  "staged_search": {
+    "stage_1": "screen every one of the 24 feature-block x objective pairs on feature_screen with C=0.08, balanced classes, expanding history and quarterly walk-forward; retain the best objective within each of all six blocks by block-5 one-sided 90% lower bound, then mean, then fewer features, then id",
+    "stage_2": "on model_design compare the six retained block/objective pairs with C=0.08, balanced classes, expanding history and quarterly walk-forward; retain three pairs by the same ordering",
+    "stage_3": {
+      "period": "model_design",
+      "walk_forward": "quarterly",
+      "C": [0.03, 0.08, 0.2],
+      "training_horizon_sessions": [504, "expanding"],
+      "class_weight": [null, "balanced"],
+      "retained_pairs": 3,
+      "retained_finalists": 3
+    },
+    "stage_4": "evaluate the three finalists on development_confirmation with monthly retraining; select the highest block-5 lower bound among development-gate passers, otherwise the highest lower bound and mark no_edge",
+    "stage_5": "freeze the winner and implementation/data hashes, then evaluate the winner and the v0.3 estimator-and-feature control once on sealed_holdout with monthly retraining"
+  },
+  "development_gate": {
+    "observations_gte": 252,
+    "net_20bp_mean_gt": 0.0,
+    "top5_removed_mean_gt": 0.0,
+    "positive_quarter_ratio_gte": 0.6,
+    "profit_factor_gt": 1.0,
+    "max_one_day_share_of_positive_net_lte": 0.25,
+    "ranking_changed_days_vs_v03_gte": 30
+  },
+  "bootstrap": {
+    "samples": 20000,
+    "random_state": 31,
+    "method": "moving block only"
+  },
+  "multiple_testing_diagnostic": "report a shared five-session moving-block White-style reality-check p-value across the three development finalists; do not use it to reopen or expand the candidate registry",
+  "holdout_gate": {
+    "observations_gte": 120,
+    "net_20bp_mean_gt": 0.0,
+    "net_20bp_median_gt": 0.0,
+    "moving_block_bootstrap_one_sided_90pct_lower_gt": 0.0,
+    "bootstrap_block_lengths": [5, 10, 20],
+    "positive_month_ratio_gte": 0.625,
+    "top5_removed_mean_gt": 0.0,
+    "profit_factor_gt": 1.0,
+    "net_40bp_mean_gte": 0.0,
+    "max_one_day_share_of_positive_net_lte": 0.25,
+    "paired_mean_delta_vs_v03_gt": 0.0,
+    "candidate_display_rate_gte": 0.95
+  },
+  "stopping_rule": {
+    "all_holdout_gates_pass": "validated-shadow; feature and model design are frozen",
+    "positive_holdout_mean_but_any_gate_fails": "provisional-shadow; freeze without holdout retuning and collect 60-100 new sessions",
+    "nonpositive_holdout_mean": "no demonstrated tradable edge; retain the frozen specification as research baseline only"
+  }
+}

@@ -2,14 +2,24 @@
 
 寄り前時点で東証普通株を順位付けし、当日の**始値→終値のコスト控除後損益率**を最大化する候補を毎日1～2件出すPythonパッケージです。
 
-現行の0.3.0は、モデルを正則化ロジスティック回帰へ固定し、価格履歴12特徴と寄り前までのTDnet適時開示6特徴を組み合わせた`session_v3_tdnet_clear`です。1位を`CORE`、2位を`RESERVE`として表示します。
+現行CLI/APIの既定モデルは0.3.0互換の`session_v3_tdnet_clear`です。正則化ロジスティック回帰に、価格履歴12特徴と寄り前までのTDnet適時開示6特徴を入力し、1位を`CORE`、2位を`RESERVE`として表示します。
 
 > [!WARNING]
-> これはshadow運用向けの暫定仕様です。開発期間では旧価格特徴だけのモデルより損益が改善しましたが、20bp控除後の絶対損益はまだマイナスで、未使用holdoutもありません。自動発注の優位性は未確立です。
+> **自動発注には使用できません。** 次期候補として価格・前後場・市場・TDnetを62特徴へ拡張した研究プロトコルv0.4を選定しましたが、非正式な未使用期間診断の20bp控除後平均はtop1 `-0.086199%/日`、top2 `-0.059361%/日`でした。formal recoveryもメモリ不足でモデル評価前に終了したため、formal validationは成立していません。既定のv0.3とv0.4候補はいずれもshadow・研究用途だけです。
+
+## 最新の研究判断
+
+| 仕様 | 特徴 | C | 用途 | 20bp後診断 |
+|---|---:|---:|---|---:|
+| v0.3既定 | 価格12 + TDnet 6 | 0.08 | CLI/APIのshadow表示 | top1 `-0.087886%/日` |
+| v0.4固定候補 | 価格・前後場34 + 市場5 + TDnet 23 | 0.03 | research baseline | top1 `-0.086199%/日` |
+
+v0.4は6特徴block、4目的ラベル、3つの正則化強度、2学習窓、class weight有無を時系列分割で比較した相対winnerです。ただし開発期間からgate不合格で、後続診断でもv0.3との差は`+0.001686pt/日`に留まりました。特徴・C・top-kを同じ期間へ再適合させず、負のbaselineとして固定します。詳しい経緯、正式評価事故、全指標、成果物hashは追記専用の[VALIDATION.md](VALIDATION.md) Entry 004にあります。
 
 ## 設計の要点
 
-- 推定器は`LogisticRegression(C=0.08, class_weight="balanced")`で固定
+- production互換の既定推定器は`LogisticRegression(C=0.08, class_weight="balanced")`で固定
+- v0.4研究winnerも同じL2正則化logitで、`C=0.03`、日別・クラス均衡、expanding学習窓
 - 学習ラベルは`close > open`、特徴量仕様の採否は勝率ではなくtop1のコスト後損益で決定
 - 対象日OHLCを特徴量へ入れず、価格特徴はすべて1セッション以上shift
 - 適時開示は各文書を「公開時刻以前で最初に到来する08:58:59 JSTの取引日」へ割当
@@ -17,6 +27,7 @@
 - 月次walk-forward、前営業日の候補集合固定、未約定枠は現金のまま評価
 - 明示的なJPX営業日calendar、日足収録率、TDnet日別ページの取得時刻をfail-closedで検証
 - MarketSpeed IIの8:58板は順位を変更せず、発注可否のvetoにだけ使用
+- 08:58:59以前の先物contextはappend-onlyで保存できるが、履歴snapshot不足のため現行順位には未使用
 
 ## インストール
 
@@ -67,6 +78,8 @@ tse-session-ranker doctor \
   --expected-through 2026-07-21
 ```
 
+JPX parser v6は、`Final Special Quote`欄の数値直前に付く特別気配marker`ｶ`・`ｳ`だけを受理します。他の価格・騰落欄に同じmarkerが現れた場合は、列ずれを疑って従来どおり拒否します。
+
 ## 2. TDnet適時開示
 
 公開日別インデックスをカレンダー日単位で保存します。現行downloaderは第三者の公開TDnet日別ミラーを利用するため、ミラー掲載の遅延や後日の訂正までは保証できません。週末・祝日にも開示があり得るため、前回取得日から対象日まで**全日**を指定します。
@@ -114,6 +127,8 @@ tdnet_has_equity_financing
 誤分類を減らすため、方向語は親カテゴリと同時に一致した場合だけ有効です。例えば「配当予想の上方修正」は業績上方修正にしません。また、ToSTNeT・取得状況・取得終了は新規自己株取得決定から、払込完了・行使状況・発行結果は新規エクイティ調達から除外します。
 
 `tdnet_has_buyback_decision`はタイトル上の新規取得決定であり、継続的な市場買付を保証するものではありません。0.3.0はPDF本文の取得方法や業績修正額をまだ構造化していません。
+
+v0.4研究では、開示有無・件数・時刻、決算、ToSTNeT、優待、分割、M&A、減損、監査問題などを含むTDnet 20特徴と3 interactionまで広げました。これは`research/finalize_logit_v04.py`の比較専用registryで、通常の`train`・`predict`が使うproduction 6特徴へは昇格していません。
 
 ## 3. 学習
 
@@ -192,7 +207,44 @@ tse-session-ranker predict \
 
 板は`model_score`と`model_rank`を変更しません。欠測・3分超古い、暫定ギャップがATR14の+2倍以上、買い特別気配、予想寄りが9:05より後、または`RESERVE`の場合だけ`DISPLAY_ONLY`にします。
 
-## 6. Walk-forward検証
+## 6. 先物contextの前向き収集
+
+日経225先物・TOPIX先物の寄り前騰落率は、v0.4の次に検証する候補です。正確な過去08:58 snapshotを復元できないため、現在のモデル順位には入れません。日足終値、9:00以後の値、後から確定した値で代用しないでください。
+
+最低列:
+
+```text
+date,observed_at,nikkei_return_pct,topix_return_pct,return_definition
+```
+
+例:
+
+```csv
+date,observed_at,nikkei_return_pct,topix_return_pct,return_definition,source
+2026-07-21,2026-07-21T08:58:00+09:00,-1.20,-0.85,previous_cash_close_to_08:58:59_JST,forward-snapshot
+```
+
+```bash
+tse-session-ranker ingest-market-context \
+  --input inputs/market-context/2026-07-21.csv \
+  --existing var/market-context.pkl \
+  --output var/market-context.pkl
+```
+
+`observed_at`はtimezone付きで、対象日と同じJST日付の08:58:59以前でなければ拒否します。`return_definition`を途中で変更できず、既存日への異なる値の上書き、過去へのbackfill、欠測日のcarry-forwardも拒否します。
+
+研究用に実装済みのinteractionは次のとおりです。
+
+```text
+market_beta_60 × Nikkei/TOPIX futures return
+ATR14 × abs(futures return)
+market_beta_60 × Nikkei-TOPIX futures spread
+TDnet material flag × futures return
+```
+
+少なくとも60～100新規営業日をappend-onlyで収集してから、新しいprotocolで採否を判断します。それまでは欠測indicatorを含め、通常のv0.3・v0.4スコアへ混ぜません。
+
+## 7. Walk-forward検証
 
 ```bash
 tse-session-ranker backtest \
@@ -239,7 +291,9 @@ print(result.candidates[["model_rank", "code", "name", "model_score"]])
 
 ## モデル特徴と候補条件
 
-価格特徴12個は、直前の日中騰落、日中騰落の5/20/60日平均・勝率、20日標準偏差、夜間騰落の直前値・20/60日平均、夜間と日中の60日相関です。これに上記TDnet特徴6個を加えます。
+production互換の価格特徴12個は、直前の日中騰落、日中騰落の5/20/60日平均・勝率、20日標準偏差、夜間騰落の直前値・20/60日平均、夜間と日中の60日相関です。これに上記TDnet特徴6個を加えます。
+
+v0.4の62特徴は`research_features.py`と研究runnerだけで生成します。前場・後場shape、ATR固定変換、横断rank、市場beta・残差、広いTDnetカテゴリと事前値動きinteractionを加えましたが、20bp控除後の優位性が確認できなかったためproductionの`FEATURE_COLUMNS`やartifact schemaは変更していません。
 
 表示対象は、履歴60セッション以上、前日終値100～30,000円、ATR14が0.25～5%、直近20セッションの無約定・始終同値率20%以下です。JPX相場表には出来高・売買代金がないため、0.3.0では注文サイズ用の流動性判定をモデルへ含めていません。
 
