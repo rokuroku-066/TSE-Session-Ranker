@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import json
+import math
 import os
 import tempfile
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import pandas as pd
 
 from .exceptions import DataValidationError
@@ -56,10 +58,34 @@ def write_frame(frame: pd.DataFrame, path: str | Path) -> Path:
     return target
 
 
+def _json_safe(value: Any) -> Any:
+    if isinstance(value, dict):
+        return {str(key): _json_safe(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_json_safe(item) for item in value]
+    if isinstance(value, (float, np.floating)):
+        return float(value) if math.isfinite(float(value)) else None
+    if isinstance(value, np.integer):
+        return int(value)
+    if isinstance(value, np.bool_):
+        return bool(value)
+    return value
+
+
+def json_dumps(payload: object) -> str:
+    return json.dumps(
+        _json_safe(payload),
+        ensure_ascii=False,
+        indent=2,
+        default=str,
+        allow_nan=False,
+    )
+
+
 def write_json(payload: dict[str, Any], path: str | Path) -> Path:
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
-    text = json.dumps(payload, ensure_ascii=False, indent=2, default=str) + "\n"
+    text = json_dumps(payload) + "\n"
     with tempfile.NamedTemporaryFile(
         mode="w",
         encoding="utf-8",
@@ -72,4 +98,3 @@ def write_json(payload: dict[str, Any], path: str | Path) -> Path:
         temporary = Path(handle.name)
     os.replace(temporary, target)
     return target
-

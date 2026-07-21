@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 from dataclasses import asdict, dataclass, field
 from datetime import time
 from pathlib import Path
@@ -45,7 +46,7 @@ class ModelConfig:
 
     def __post_init__(self) -> None:
         if self.algorithm != "logistic_regression":
-            raise ValueError("only logistic_regression is supported in session_v2")
+            raise ValueError("only logistic_regression is supported in session_v3")
         if self.c <= 0:
             raise ValueError("c must be positive")
 
@@ -77,12 +78,16 @@ class PreopenPolicy:
 
 @dataclass(frozen=True)
 class RankerConfig:
-    schema_version: int = 1
-    feature_set: str = "session_v2"
+    schema_version: int = 3
+    feature_set: str = "session_v3_tdnet_clear"
     regime_start: str = "2024-11-06"
     display_top_k: int = 2
     trade_top_k: int = 1
     cost_bps: float = 20.0
+    selection_objective: str = "top1_net_mean_pct_at_cost"
+    data_semantics: str = "prior_session_universe_source_mask_tdnet_v3"
+    source_coverage_lookback: int = 20
+    minimum_source_coverage: float = 0.90
     max_history_age_calendar_days: int = 7
     min_latest_session_coverage: float = 0.90
     require_expected_history_date: bool = True
@@ -91,16 +96,28 @@ class RankerConfig:
     preopen: PreopenPolicy = field(default_factory=PreopenPolicy)
 
     def __post_init__(self) -> None:
-        if self.schema_version != 1:
+        if self.schema_version != 3:
             raise ValueError("unsupported config schema_version")
-        if self.feature_set != "session_v2":
-            raise ValueError("only session_v2 is currently supported")
+        if self.feature_set != "session_v3_tdnet_clear":
+            raise ValueError("only session_v3_tdnet_clear is currently supported")
         if self.display_top_k < 1 or self.trade_top_k < 0:
             raise ValueError("selection counts are invalid")
         if self.trade_top_k > self.display_top_k:
             raise ValueError("trade_top_k cannot exceed display_top_k")
+        if self.trade_top_k != 1:
+            raise ValueError("profit-first session_v3 requires trade_top_k=1")
+        if not math.isfinite(self.cost_bps) or self.cost_bps < 0:
+            raise ValueError("cost_bps must be finite and non-negative")
         if self.max_history_age_calendar_days < 1:
             raise ValueError("max_history_age_calendar_days must be positive")
+        if self.selection_objective != "top1_net_mean_pct_at_cost":
+            raise ValueError("unsupported selection_objective")
+        if self.data_semantics != "prior_session_universe_source_mask_tdnet_v3":
+            raise ValueError("unsupported data_semantics")
+        if self.source_coverage_lookback < 10:
+            raise ValueError("source_coverage_lookback must be at least 10")
+        if not 0 < self.minimum_source_coverage <= 1:
+            raise ValueError("minimum_source_coverage must be in (0, 1]")
         if not 0 < self.min_latest_session_coverage <= 1:
             raise ValueError("min_latest_session_coverage must be in (0, 1]")
 

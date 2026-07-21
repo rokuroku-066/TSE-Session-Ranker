@@ -1,0 +1,1571 @@
+{
+  "schema_version": 1,
+  "objective": "top1 scheduled-day mean net open_to_close return after cost",
+  "selection_rule": "choose the fixed candidate with maximum 2025-01..03 top1.net_mean_pct_at_cost; benchmark winner only",
+  "hyperparameter_policy": "one predeclared specification per family; exploration is diagnostic and does not tune a grid",
+  "leakage_guards": {
+    "candidate_universe": "prior-session universe from production panel",
+    "training_cutoff": "strictly before each scoring month",
+    "scoring_filter": "eligible only; no label/OHLC/execution filter",
+    "unfilled": "rank first, then zero return and zero cost",
+    "feature_time_assertion": "feature_source_max_date < target date",
+    "benchmark_access": "only the selection-period winner is evaluated",
+    "session_calendar": "explicit observed-session list from canonical input; detects row-level incomplete sessions but cannot prove that an entirely absent exchange session was not omitted upstream"
+  },
+  "seed": 31,
+  "cost_bps": 20.0,
+  "config": {
+    "schema_version": 2,
+    "feature_set": "session_v2",
+    "regime_start": "2024-11-06",
+    "display_top_k": 2,
+    "trade_top_k": 1,
+    "cost_bps": 20.0,
+    "selection_objective": "top1_net_mean_pct_at_cost",
+    "data_semantics": "prior_session_universe_source_mask_v2",
+    "source_coverage_lookback": 20,
+    "minimum_source_coverage": 0.9,
+    "max_history_age_calendar_days": 7,
+    "min_latest_session_coverage": 0.9,
+    "require_expected_history_date": true,
+    "universe": {
+      "min_history": 60,
+      "price_min": 100.0,
+      "price_max": 30000.0,
+      "atr14_min_pct": 0.25,
+      "atr14_max_pct": 5.0,
+      "model_training_atr_max_pct": 15.0,
+      "max_zero_oc_20": 0.2
+    },
+    "model": {
+      "algorithm": "logistic_regression",
+      "c": 0.08,
+      "class_weight": "balanced",
+      "random_state": 31,
+      "max_iter": 1000,
+      "date_equal_weight": true
+    },
+    "preopen": {
+      "timezone": "Asia/Tokyo",
+      "decision_time": "08:58:59",
+      "max_snapshot_age_seconds": 180,
+      "positive_gap_atr_veto": 2.0,
+      "latest_expected_open_time": "09:05:00"
+    }
+  },
+  "runtime": {
+    "python": "3.12.13",
+    "numpy": "2.3.5",
+    "pandas": "2.2.3",
+    "scikit_learn": "1.8.0",
+    "joblib": "1.5.3"
+  },
+  "script": {
+    "path": "/workspace/scratch/8678b1d14f37/research/compare_profit_models.py",
+    "file_sha256": "a85ba486daa39c619ead3f67a7390de5bb09b9f4d98908d0f76776f8b38adaca"
+  },
+  "data": {
+    "path": "/tmp/package_collected.pkl",
+    "file_sha256": "0dfe401559d34bb4b468e307c2a08146186f7f8e9b391add7cf59760b5208eff",
+    "canonical_content_sha256": "0e1388037ea75ff8ee503bb4bb70493e418dfb16504eba29452bfecd47e815ba",
+    "raw_rows_through_benchmark_end": 1510910,
+    "modeling_rows": 1511783,
+    "panel_rows": 1511783,
+    "codes": 4124,
+    "sessions": 386,
+    "session_calendar_mode": "explicit_observed_sessions_from_canonical_input",
+    "session_calendar_sha256": "966f4a416d0929487d850b16be87c9c1cd69cd9f8c0447a3e76214a5715c489e",
+    "session_calendar_sessions": 386,
+    "session_calendar_through": "2025-07-31",
+    "min_date": "2024-01-04",
+    "max_date": "2025-07-31",
+    "partial_session_rows": 34259,
+    "no_trade_rows": 54982,
+    "source_incomplete_dates": [
+      "2024-07-05",
+      "2024-07-08",
+      "2024-07-09",
+      "2024-07-10",
+      "2024-07-11",
+      "2024-07-12",
+      "2024-07-16",
+      "2024-07-17",
+      "2024-07-18",
+      "2024-07-19",
+      "2024-07-22",
+      "2024-07-23",
+      "2024-07-24",
+      "2024-07-25",
+      "2024-07-26",
+      "2024-07-29",
+      "2024-07-30",
+      "2024-07-31"
+    ]
+  },
+  "model_specifications": {
+    "current_logit": {
+      "family": "binary_logistic_regression",
+      "target": "close_gt_open",
+      "features": [
+        "oc_last",
+        "oc_mean_5",
+        "oc_mean_20",
+        "oc_mean_60",
+        "oc_win_5",
+        "oc_win_20",
+        "oc_win_60",
+        "oc_std_20",
+        "overnight_last",
+        "overnight_mean_20",
+        "overnight_mean_60",
+        "night_day_corr_60"
+      ],
+      "imputer": "median_with_missing_indicators",
+      "scaler": "standard",
+      "C": 0.08,
+      "class_weight": "balanced",
+      "date_weight": "1 / executed_training_rows_on_date",
+      "score": "P(close > open); used only as a same-day rank score",
+      "random_state": 31
+    },
+    "direct_ridge_return": {
+      "family": "ridge_regression",
+      "target": "raw open_to_close return percent",
+      "features": [
+        "oc_last",
+        "oc_mean_5",
+        "oc_mean_20",
+        "oc_mean_60",
+        "oc_win_5",
+        "oc_win_20",
+        "oc_win_60",
+        "oc_std_20",
+        "overnight_last",
+        "overnight_mean_20",
+        "overnight_mean_60",
+        "night_day_corr_60"
+      ],
+      "imputer": "median_with_missing_indicators",
+      "scaler": "standard",
+      "alpha": 10.0,
+      "date_weight": "1 / executed_training_rows_on_date",
+      "score": "predicted raw open_to_close return percent"
+    },
+    "robust_huber_sgd_return": {
+      "family": "SGDRegressor(loss='huber')",
+      "target": "raw open_to_close return percent",
+      "features": [
+        "oc_last",
+        "oc_mean_5",
+        "oc_mean_20",
+        "oc_mean_60",
+        "oc_win_5",
+        "oc_win_20",
+        "oc_win_60",
+        "oc_std_20",
+        "overnight_last",
+        "overnight_mean_20",
+        "overnight_mean_60",
+        "night_day_corr_60"
+      ],
+      "imputer": "median_with_missing_indicators",
+      "scaler": "standard",
+      "alpha": 0.0001,
+      "epsilon_return_pct": 1.0,
+      "max_iter": 2000,
+      "tol": 0.0001,
+      "average": true,
+      "date_weight": "1 / executed_training_rows_on_date",
+      "score": "robust predicted open_to_close return percent",
+      "random_state": 31
+    },
+    "pairwise_linear_rank": {
+      "family": "within_date_pairwise_linear_logistic_ranker",
+      "pair_target": "higher realised open_to_close return within training date",
+      "features": [
+        "oc_last",
+        "oc_mean_5",
+        "oc_mean_20",
+        "oc_mean_60",
+        "oc_win_5",
+        "oc_win_20",
+        "oc_win_60",
+        "oc_std_20",
+        "overnight_last",
+        "overnight_mean_20",
+        "overnight_mean_60",
+        "night_day_corr_60"
+      ],
+      "imputer": "median_with_missing_indicators fitted on original training rows",
+      "scaler": "standard fitted on original training rows",
+      "C": 0.08,
+      "pairs_per_date": 96,
+      "pair_sampling": "seeded with replacement; equal-return pairs discarded",
+      "orientation": "each high-minus-low pair plus its negative",
+      "date_weight": "all oriented pair weights sum to one per training date",
+      "score": "linear decision value w dot transformed_features",
+      "random_state": 31
+    },
+    "return_weighted_logit": {
+      "family": "return_magnitude_weighted_logistic_regression",
+      "target": "close_gt_open",
+      "features": [
+        "oc_last",
+        "oc_mean_5",
+        "oc_mean_20",
+        "oc_mean_60",
+        "oc_win_5",
+        "oc_win_20",
+        "oc_win_60",
+        "oc_std_20",
+        "overnight_last",
+        "overnight_mean_20",
+        "overnight_mean_60",
+        "night_day_corr_60"
+      ],
+      "C": 0.08,
+      "class_weight": "balanced",
+      "magnitude_floor_pct": 0.25,
+      "magnitude_cap_pct": 3.0,
+      "date_weight": "clip(abs(open_to_close_return_pct), floor, cap), then normalise weights to sum to one within each training date",
+      "score": "weighted P(close > open); same-day rank only",
+      "random_state": 31
+    },
+    "multi_threshold_expected_return": {
+      "family": "multi_threshold_logistic_expected_return",
+      "target": "four cumulative indicators open_to_close_return > threshold",
+      "features": [
+        "oc_last",
+        "oc_mean_5",
+        "oc_mean_20",
+        "oc_mean_60",
+        "oc_win_5",
+        "oc_win_20",
+        "oc_win_60",
+        "oc_std_20",
+        "overnight_last",
+        "overnight_mean_20",
+        "overnight_mean_60",
+        "night_day_corr_60"
+      ],
+      "threshold_midpoints_pct": [
+        -2.0,
+        -0.5,
+        0.5,
+        2.0
+      ],
+      "integration_widths_pct": [
+        2.0,
+        1.0,
+        1.0,
+        2.0
+      ],
+      "clip_range_pct": [
+        -3.0,
+        3.0
+      ],
+      "C": 0.08,
+      "class_weight": null,
+      "date_weight": "1 / executed_training_rows_on_date",
+      "score": "-3 + 2*P(R>-2) + 1*P(R>-0.5) + 1*P(R>0.5) + 2*P(R>2)",
+      "random_state": 31
+    }
+  },
+  "periods": {
+    "exploration": {
+      "start": "2024-09-02",
+      "end": "2024-10-31",
+      "train_start": "2024-04-01"
+    },
+    "selection": {
+      "start": "2025-01-06",
+      "end": "2025-03-31",
+      "train_start": "2024-11-06"
+    },
+    "known_benchmark": {
+      "start": "2025-04-01",
+      "end": "2025-07-31",
+      "train_start": "2024-11-06"
+    }
+  },
+  "exploration": {
+    "current_logit": {
+      "top1": {
+        "n": 41,
+        "days": 41,
+        "executed": 41,
+        "execution_rate": 1.0,
+        "hit_rate": 0.4146341463414634,
+        "signal_hit_rate_including_unfilled": 0.4146341463414634,
+        "gross_mean_pct": -0.27546737604846494,
+        "gross_median_pct": -0.32679738562091387,
+        "net_mean_pct_at_cost": -0.4754673760484651,
+        "net_median_pct_at_cost": -0.5267973856209138,
+        "compounded_net_return_pct": -19.13224364951901,
+        "max_drawdown_pct": -27.72565017239912,
+        "profit_factor": 0.6450158318751319,
+        "positive_months": 1,
+        "months": 2,
+        "worst_month_pct": -1.2478168056046102,
+        "top5_removed_net_mean_pct": -1.16241797846864,
+        "largest_day_net_pct": 6.719396393080612,
+        "largest_day_share_of_positive_net": 0.18969867250765704,
+        "monthly_net_mean_pct": {
+          "2024-09": -1.2478168056046102,
+          "2024-10": 0.19156167675002408
+        },
+        "cost_sensitivity_net_mean_pct": {
+          "0.0": -0.27546737604846494,
+          "10.0": -0.3754673760484649,
+          "20.0": -0.4754673760484651,
+          "40.0": -0.6754673760484651,
+          "60.0": -0.8754673760484647
+        }
+      },
+      "top2": {
+        "n": 82,
+        "days": 41,
+        "executed": 82,
+        "execution_rate": 1.0,
+        "hit_rate": 0.43902439024390244,
+        "signal_hit_rate_including_unfilled": 0.43902439024390244,
+        "gross_mean_pct": -0.21790742787083156,
+        "gross_median_pct": -0.5063209494324039,
+        "net_mean_pct_at_cost": -0.41790742787083157,
+        "net_median_pct_at_cost": -0.7063209494324041,
+        "compounded_net_return_pct": -16.472381964264805,
+        "max_drawdown_pct": -26.098696013078314,
+        "profit_factor": 0.547787654478975,
+        "positive_months": 0,
+        "months": 2,
+        "worst_month_pct": -0.8599887549586352,
+        "top5_removed_net_mean_pct": -0.9656461537824756,
+        "largest_day_net_pct": 6.21424365108576,
+        "largest_day_share_of_positive_net": 0.29940186718091794,
+        "monthly_net_mean_pct": {
+          "2024-09": -0.8599887549586352,
+          "2024-10": -0.0361099181131831
+        },
+        "cost_sensitivity_net_mean_pct": {
+          "0.0": -0.21790742787083156,
+          "10.0": -0.3179074278708316,
+          "20.0": -0.41790742787083157,
+          "40.0": -0.6179074278708315,
+          "60.0": -0.8179074278708315
+        }
+      },
+      "folds": [
+        {
+          "period": "2024-09",
+          "model_name": "current_logit",
+          "train_start": "2024-04-03",
+          "train_end": "2024-08-30",
+          "score_start": "2024-09-02",
+          "score_end": "2024-09-30",
+          "train_rows": 289411,
+          "score_rows": 60046,
+          "score_days": 19
+        },
+        {
+          "period": "2024-10",
+          "model_name": "current_logit",
+          "train_start": "2024-04-03",
+          "train_end": "2024-09-30",
+          "score_start": "2024-10-01",
+          "score_end": "2024-10-31",
+          "train_rows": 354651,
+          "score_rows": 69537,
+          "score_days": 22
+        }
+      ]
+    },
+    "direct_ridge_return": {
+      "top1": {
+        "n": 41,
+        "days": 41,
+        "executed": 41,
+        "execution_rate": 1.0,
+        "hit_rate": 0.36585365853658536,
+        "signal_hit_rate_including_unfilled": 0.36585365853658536,
+        "gross_mean_pct": -1.596587624054116,
+        "gross_median_pct": -0.371747211895912,
+        "net_mean_pct_at_cost": -1.7965876240541157,
+        "net_median_pct_at_cost": -0.5717472118959119,
+        "compounded_net_return_pct": -54.25138119624735,
+        "max_drawdown_pct": -55.113741436527405,
+        "profit_factor": 0.2636782297235132,
+        "positive_months": 0,
+        "months": 2,
+        "worst_month_pct": -1.942388933362239,
+        "top5_removed_net_mean_pct": -2.4977487279699666,
+        "largest_day_net_pct": 4.443962848297223,
+        "largest_day_share_of_positive_net": 0.1684734719495626,
+        "monthly_net_mean_pct": {
+          "2024-09": -1.6277650553815515,
+          "2024-10": -1.942388933362239
+        },
+        "cost_sensitivity_net_mean_pct": {
+          "0.0": -1.596587624054116,
+          "10.0": -1.6965876240541153,
+          "20.0": -1.7965876240541157,
+          "40.0": -1.9965876240541156,
+          "60.0": -2.1965876240541156
+        }
+      },
+      "top2": {
+        "n": 82,
+        "days": 41,
+        "executed": 82,
+        "execution_rate": 1.0,
+        "hit_rate": 0.4024390243902439,
+        "signal_hit_rate_including_unfilled": 0.4024390243902439,
+        "gross_mean_pct": -0.7269385747483424,
+        "gross_median_pct": -0.3851995333582825,
+        "net_mean_pct_at_cost": -0.9269385747483425,
+        "net_median_pct_at_cost": -0.5851995333582826,
+        "compounded_net_return_pct": -33.23511817092499,
+        "max_drawdown_pct": -33.23511817092499,
+        "profit_factor": 0.4065135875912775,
+        "positive_months": 0,
+        "months": 2,
+        "worst_month_pct": -1.1890164540683166,
+        "top5_removed_net_mean_pct": -1.63048091787676,
+        "largest_day_net_pct": 12.698780294630131,
+        "largest_day_share_of_positive_net": 0.4878237169834968,
+        "monthly_net_mean_pct": {
+          "2024-09": -1.1890164540683166,
+          "2024-10": -0.7005985880629103
+        },
+        "cost_sensitivity_net_mean_pct": {
+          "0.0": -0.7269385747483424,
+          "10.0": -0.8269385747483425,
+          "20.0": -0.9269385747483425,
+          "40.0": -1.1269385747483425,
+          "60.0": -1.3269385747483424
+        }
+      },
+      "folds": [
+        {
+          "period": "2024-09",
+          "model_name": "direct_ridge_return",
+          "train_start": "2024-04-03",
+          "train_end": "2024-08-30",
+          "score_start": "2024-09-02",
+          "score_end": "2024-09-30",
+          "train_rows": 289411,
+          "score_rows": 60046,
+          "score_days": 19
+        },
+        {
+          "period": "2024-10",
+          "model_name": "direct_ridge_return",
+          "train_start": "2024-04-03",
+          "train_end": "2024-09-30",
+          "score_start": "2024-10-01",
+          "score_end": "2024-10-31",
+          "train_rows": 354651,
+          "score_rows": 69537,
+          "score_days": 22
+        }
+      ]
+    },
+    "robust_huber_sgd_return": {
+      "top1": {
+        "n": 41,
+        "days": 41,
+        "executed": 41,
+        "execution_rate": 1.0,
+        "hit_rate": 0.36585365853658536,
+        "signal_hit_rate_including_unfilled": 0.36585365853658536,
+        "gross_mean_pct": 0.15604377834122535,
+        "gross_median_pct": -0.5351681957186494,
+        "net_mean_pct_at_cost": -0.04395622165877476,
+        "net_median_pct_at_cost": -0.7351681957186493,
+        "compounded_net_return_pct": -5.981958288006939,
+        "max_drawdown_pct": -18.98450563719335,
+        "profit_factor": 0.9692458112065464,
+        "positive_months": 1,
+        "months": 2,
+        "worst_month_pct": -0.904372130911563,
+        "top5_removed_net_mean_pct": -1.2112247322981347,
+        "largest_day_net_pct": 25.223728813559323,
+        "largest_day_share_of_positive_net": 0.44409452638994745,
+        "monthly_net_mean_pct": {
+          "2024-09": -0.904372130911563,
+          "2024-10": 0.6991302454231788
+        },
+        "cost_sensitivity_net_mean_pct": {
+          "0.0": 0.15604377834122535,
+          "10.0": 0.056043778341225405,
+          "20.0": -0.04395622165877476,
+          "40.0": -0.2439562216587746,
+          "60.0": -0.44395622165877463
+        }
+      },
+      "top2": {
+        "n": 82,
+        "days": 41,
+        "executed": 82,
+        "execution_rate": 1.0,
+        "hit_rate": 0.4268292682926829,
+        "signal_hit_rate_including_unfilled": 0.4268292682926829,
+        "gross_mean_pct": 0.26802887456892355,
+        "gross_median_pct": -0.4197231058177209,
+        "net_mean_pct_at_cost": 0.06802887456892365,
+        "net_median_pct_at_cost": -0.619723105817721,
+        "compounded_net_return_pct": 0.33793818224443495,
+        "max_drawdown_pct": -13.277151027568557,
+        "profit_factor": 1.0656063662279605,
+        "positive_months": 2,
+        "months": 2,
+        "worst_month_pct": 0.06505722671976252,
+        "top5_removed_net_mean_pct": -0.8869489113161617,
+        "largest_day_net_pct": 13.938683486334892,
+        "largest_day_share_of_positive_net": 0.30767612052088555,
+        "monthly_net_mean_pct": {
+          "2024-09": 0.07146972997321534,
+          "2024-10": 0.06505722671976252
+        },
+        "cost_sensitivity_net_mean_pct": {
+          "0.0": 0.26802887456892355,
+          "10.0": 0.16802887456892357,
+          "20.0": 0.06802887456892365,
+          "40.0": -0.1319711254310762,
+          "60.0": -0.3319711254310765
+        }
+      },
+      "folds": [
+        {
+          "period": "2024-09",
+          "model_name": "robust_huber_sgd_return",
+          "train_start": "2024-04-03",
+          "train_end": "2024-08-30",
+          "score_start": "2024-09-02",
+          "score_end": "2024-09-30",
+          "train_rows": 289411,
+          "score_rows": 60046,
+          "score_days": 19
+        },
+        {
+          "period": "2024-10",
+          "model_name": "robust_huber_sgd_return",
+          "train_start": "2024-04-03",
+          "train_end": "2024-09-30",
+          "score_start": "2024-10-01",
+          "score_end": "2024-10-31",
+          "train_rows": 354651,
+          "score_rows": 69537,
+          "score_days": 22
+        }
+      ]
+    },
+    "pairwise_linear_rank": {
+      "top1": {
+        "n": 41,
+        "days": 41,
+        "executed": 41,
+        "execution_rate": 1.0,
+        "hit_rate": 0.4146341463414634,
+        "signal_hit_rate_including_unfilled": 0.4146341463414634,
+        "gross_mean_pct": 0.20014602908972626,
+        "gross_median_pct": -0.09992505620783909,
+        "net_mean_pct_at_cost": 0.00014602908972620487,
+        "net_median_pct_at_cost": -0.2999250562078391,
+        "compounded_net_return_pct": -0.4192637332241733,
+        "max_drawdown_pct": -10.48377359301661,
+        "profit_factor": 1.0002924153817119,
+        "positive_months": 1,
+        "months": 2,
+        "worst_month_pct": -0.237114809677065,
+        "top5_removed_net_mean_pct": -0.4357151785690175,
+        "largest_day_net_pct": 4.514912280701755,
+        "largest_day_share_of_positive_net": 0.22044452652926,
+        "monthly_net_mean_pct": {
+          "2024-09": 0.2748691055565372,
+          "2024-10": -0.237114809677065
+        },
+        "cost_sensitivity_net_mean_pct": {
+          "0.0": 0.20014602908972626,
+          "10.0": 0.10014602908972624,
+          "20.0": 0.00014602908972620487,
+          "40.0": -0.1998539709102737,
+          "60.0": -0.3998539709102738
+        }
+      },
+      "top2": {
+        "n": 82,
+        "days": 41,
+        "executed": 82,
+        "execution_rate": 1.0,
+        "hit_rate": 0.4146341463414634,
+        "signal_hit_rate_including_unfilled": 0.4146341463414634,
+        "gross_mean_pct": 0.1969859095588982,
+        "gross_median_pct": 0.07214999719503123,
+        "net_mean_pct_at_cost": -0.0030140904411018166,
+        "net_median_pct_at_cost": -0.12785000280496878,
+        "compounded_net_return_pct": -0.33625851061257483,
+        "max_drawdown_pct": -6.879826659896537,
+        "profit_factor": 0.9923678799920237,
+        "positive_months": 1,
+        "months": 2,
+        "worst_month_pct": -0.16900380013177546,
+        "top5_removed_net_mean_pct": -0.2855648871526187,
+        "largest_day_net_pct": 2.5401931696231284,
+        "largest_day_share_of_positive_net": 0.15808807061841157,
+        "monthly_net_mean_pct": {
+          "2024-09": 0.18918452077967815,
+          "2024-10": -0.16900380013177546
+        },
+        "cost_sensitivity_net_mean_pct": {
+          "0.0": 0.1969859095588982,
+          "10.0": 0.09698590955889815,
+          "20.0": -0.0030140904411018166,
+          "40.0": -0.20301409044110183,
+          "60.0": -0.40301409044110187
+        }
+      },
+      "folds": [
+        {
+          "period": "2024-09",
+          "model_name": "pairwise_linear_rank",
+          "train_start": "2024-04-03",
+          "train_end": "2024-08-30",
+          "score_start": "2024-09-02",
+          "score_end": "2024-09-30",
+          "train_rows": 289411,
+          "score_rows": 60046,
+          "score_days": 19
+        },
+        {
+          "period": "2024-10",
+          "model_name": "pairwise_linear_rank",
+          "train_start": "2024-04-03",
+          "train_end": "2024-09-30",
+          "score_start": "2024-10-01",
+          "score_end": "2024-10-31",
+          "train_rows": 354651,
+          "score_rows": 69537,
+          "score_days": 22
+        }
+      ]
+    },
+    "return_weighted_logit": {
+      "top1": {
+        "n": 41,
+        "days": 41,
+        "executed": 41,
+        "execution_rate": 1.0,
+        "hit_rate": 0.4634146341463415,
+        "signal_hit_rate_including_unfilled": 0.4634146341463415,
+        "gross_mean_pct": -0.015981592485133412,
+        "gross_median_pct": -0.1387925052047212,
+        "net_mean_pct_at_cost": -0.21598159248513357,
+        "net_median_pct_at_cost": -0.3387925052047212,
+        "compounded_net_return_pct": -10.360701001646454,
+        "max_drawdown_pct": -24.817406866460136,
+        "profit_factor": 0.8306251925781086,
+        "positive_months": 1,
+        "months": 2,
+        "worst_month_pct": -1.2478168056046102,
+        "top5_removed_net_mean_pct": -1.0305349820350058,
+        "largest_day_net_pct": 9.194313967861568,
+        "largest_day_share_of_positive_net": 0.21172027513739472,
+        "monthly_net_mean_pct": {
+          "2024-09": -1.2478168056046102,
+          "2024-10": 0.6751488188453237
+        },
+        "cost_sensitivity_net_mean_pct": {
+          "0.0": -0.015981592485133412,
+          "10.0": -0.11598159248513348,
+          "20.0": -0.21598159248513357,
+          "40.0": -0.41598159248513344,
+          "60.0": -0.6159815924851334
+        }
+      },
+      "top2": {
+        "n": 82,
+        "days": 41,
+        "executed": 82,
+        "execution_rate": 1.0,
+        "hit_rate": 0.4024390243902439,
+        "signal_hit_rate_including_unfilled": 0.4024390243902439,
+        "gross_mean_pct": 0.16116948188804944,
+        "gross_median_pct": -0.5063209494324039,
+        "net_mean_pct_at_cost": -0.038830518111950575,
+        "net_median_pct_at_cost": -0.7063209494324041,
+        "compounded_net_return_pct": -3.131046289629069,
+        "max_drawdown_pct": -14.395863128533893,
+        "profit_factor": 0.9531433852993059,
+        "positive_months": 1,
+        "months": 2,
+        "worst_month_pct": -0.19454715770490277,
+        "top5_removed_net_mean_pct": -0.8593673838167333,
+        "largest_day_net_pct": 13.938683486334892,
+        "largest_day_share_of_positive_net": 0.4304050760111527,
+        "monthly_net_mean_pct": {
+          "2024-09": -0.19454715770490277,
+          "2024-10": 0.09565203426378072
+        },
+        "cost_sensitivity_net_mean_pct": {
+          "0.0": 0.16116948188804944,
+          "10.0": 0.06116948188804933,
+          "20.0": -0.038830518111950575,
+          "40.0": -0.23883051811195052,
+          "60.0": -0.4388305181119507
+        }
+      },
+      "folds": [
+        {
+          "period": "2024-09",
+          "model_name": "return_weighted_logit",
+          "train_start": "2024-04-03",
+          "train_end": "2024-08-30",
+          "score_start": "2024-09-02",
+          "score_end": "2024-09-30",
+          "train_rows": 289411,
+          "score_rows": 60046,
+          "score_days": 19
+        },
+        {
+          "period": "2024-10",
+          "model_name": "return_weighted_logit",
+          "train_start": "2024-04-03",
+          "train_end": "2024-09-30",
+          "score_start": "2024-10-01",
+          "score_end": "2024-10-31",
+          "train_rows": 354651,
+          "score_rows": 69537,
+          "score_days": 22
+        }
+      ]
+    },
+    "multi_threshold_expected_return": {
+      "top1": {
+        "n": 41,
+        "days": 41,
+        "executed": 41,
+        "execution_rate": 1.0,
+        "hit_rate": 0.3902439024390244,
+        "signal_hit_rate_including_unfilled": 0.3902439024390244,
+        "gross_mean_pct": -0.771081049335995,
+        "gross_median_pct": -0.24449877750610804,
+        "net_mean_pct_at_cost": -0.971081049335995,
+        "net_median_pct_at_cost": -0.44449877750610806,
+        "compounded_net_return_pct": -34.568893052181394,
+        "max_drawdown_pct": -34.568893052181394,
+        "profit_factor": 0.4526560551994226,
+        "positive_months": 0,
+        "months": 2,
+        "worst_month_pct": -1.1210191350641658,
+        "top5_removed_net_mean_pct": -1.7251062932246501,
+        "largest_day_net_pct": 6.719396393080612,
+        "largest_day_share_of_positive_net": 0.2040717599008237,
+        "monthly_net_mean_pct": {
+          "2024-09": -1.1210191350641658,
+          "2024-10": -0.8415890662071202
+        },
+        "cost_sensitivity_net_mean_pct": {
+          "0.0": -0.771081049335995,
+          "10.0": -0.8710810493359948,
+          "20.0": -0.971081049335995,
+          "40.0": -1.171081049335995,
+          "60.0": -1.3710810493359948
+        }
+      },
+      "top2": {
+        "n": 82,
+        "days": 41,
+        "executed": 82,
+        "execution_rate": 1.0,
+        "hit_rate": 0.47560975609756095,
+        "signal_hit_rate_including_unfilled": 0.47560975609756095,
+        "gross_mean_pct": 0.5052493303374156,
+        "gross_median_pct": 0.0,
+        "net_mean_pct_at_cost": 0.3052493303374154,
+        "net_median_pct_at_cost": -0.2,
+        "compounded_net_return_pct": 10.357410277525258,
+        "max_drawdown_pct": -10.216879867507178,
+        "profit_factor": 1.31719536474839,
+        "positive_months": 2,
+        "months": 2,
+        "worst_month_pct": 0.00967566800235845,
+        "top5_removed_net_mean_pct": -0.7160500762137622,
+        "largest_day_net_pct": 13.938683486334892,
+        "largest_day_share_of_positive_net": 0.2682006452431492,
+        "monthly_net_mean_pct": {
+          "2024-09": 0.00967566800235845,
+          "2024-10": 0.5605174932631464
+        },
+        "cost_sensitivity_net_mean_pct": {
+          "0.0": 0.5052493303374156,
+          "10.0": 0.40524933033741534,
+          "20.0": 0.3052493303374154,
+          "40.0": 0.10524933033741551,
+          "60.0": -0.0947506696625847
+        }
+      },
+      "folds": [
+        {
+          "period": "2024-09",
+          "model_name": "multi_threshold_expected_return",
+          "train_start": "2024-04-03",
+          "train_end": "2024-08-30",
+          "score_start": "2024-09-02",
+          "score_end": "2024-09-30",
+          "train_rows": 289411,
+          "score_rows": 60046,
+          "score_days": 19
+        },
+        {
+          "period": "2024-10",
+          "model_name": "multi_threshold_expected_return",
+          "train_start": "2024-04-03",
+          "train_end": "2024-09-30",
+          "score_start": "2024-10-01",
+          "score_end": "2024-10-31",
+          "train_rows": 354651,
+          "score_rows": 69537,
+          "score_days": 22
+        }
+      ]
+    }
+  },
+  "selection": {
+    "current_logit": {
+      "top1": {
+        "n": 57,
+        "days": 57,
+        "executed": 57,
+        "execution_rate": 1.0,
+        "hit_rate": 0.5789473684210527,
+        "signal_hit_rate_including_unfilled": 0.5789473684210527,
+        "gross_mean_pct": 0.42779387309876415,
+        "gross_median_pct": 0.45801526717557106,
+        "net_mean_pct_at_cost": 0.227793873098764,
+        "net_median_pct_at_cost": 0.25801526717557105,
+        "compounded_net_return_pct": 12.678014338339661,
+        "max_drawdown_pct": -12.579294714940437,
+        "profit_factor": 1.3655906785830778,
+        "positive_months": 1,
+        "months": 3,
+        "worst_month_pct": -0.1462004239739393,
+        "top5_removed_net_mean_pct": -0.0784293243966397,
+        "largest_day_net_pct": 3.5037037037036978,
+        "largest_day_share_of_positive_net": 0.07224121608737578,
+        "monthly_net_mean_pct": {
+          "2025-01": -0.1462004239739393,
+          "2025-02": 1.0368393922545616,
+          "2025-03": -0.14505251192238539
+        },
+        "cost_sensitivity_net_mean_pct": {
+          "0.0": 0.42779387309876415,
+          "10.0": 0.3277938730987642,
+          "20.0": 0.227793873098764,
+          "40.0": 0.027793873098764136,
+          "60.0": -0.17220612690123585
+        }
+      },
+      "top2": {
+        "n": 114,
+        "days": 57,
+        "executed": 114,
+        "execution_rate": 1.0,
+        "hit_rate": 0.5614035087719298,
+        "signal_hit_rate_including_unfilled": 0.5614035087719298,
+        "gross_mean_pct": 0.18004200478902976,
+        "gross_median_pct": 0.25957747902558004,
+        "net_mean_pct_at_cost": -0.0199579952109703,
+        "net_median_pct_at_cost": 0.05957747902557986,
+        "compounded_net_return_pct": -1.7581964880805656,
+        "max_drawdown_pct": -10.948664978267185,
+        "profit_factor": 0.9622437993243166,
+        "positive_months": 1,
+        "months": 3,
+        "worst_month_pct": -0.28149358737325775,
+        "top5_removed_net_mean_pct": -0.2838337180663538,
+        "largest_day_net_pct": 4.075845278310353,
+        "largest_day_share_of_positive_net": 0.1405817950247155,
+        "monthly_net_mean_pct": {
+          "2025-01": -0.28149358737325775,
+          "2025-02": 0.34717570028344047,
+          "2025-03": -0.10191950860176693
+        },
+        "cost_sensitivity_net_mean_pct": {
+          "0.0": 0.18004200478902976,
+          "10.0": 0.08004200478902976,
+          "20.0": -0.0199579952109703,
+          "40.0": -0.21995799521097023,
+          "60.0": -0.4199579952109702
+        }
+      },
+      "folds": [
+        {
+          "period": "2025-01",
+          "model_name": "current_logit",
+          "train_start": "2024-11-06",
+          "train_end": "2024-12-30",
+          "score_start": "2025-01-06",
+          "score_end": "2025-01-31",
+          "train_rows": 130000,
+          "score_rows": 61141,
+          "score_days": 19
+        },
+        {
+          "period": "2025-02",
+          "model_name": "current_logit",
+          "train_start": "2024-11-06",
+          "train_end": "2025-01-31",
+          "score_start": "2025-02-03",
+          "score_end": "2025-02-28",
+          "train_rows": 194805,
+          "score_rows": 57531,
+          "score_days": 18
+        },
+        {
+          "period": "2025-03",
+          "model_name": "current_logit",
+          "train_start": "2024-11-06",
+          "train_end": "2025-02-28",
+          "score_start": "2025-03-03",
+          "score_end": "2025-03-31",
+          "train_rows": 255716,
+          "score_rows": 63652,
+          "score_days": 20
+        }
+      ]
+    },
+    "direct_ridge_return": {
+      "top1": {
+        "n": 57,
+        "days": 57,
+        "executed": 56,
+        "execution_rate": 0.9824561403508771,
+        "hit_rate": 0.42857142857142855,
+        "signal_hit_rate_including_unfilled": 0.42105263157894735,
+        "gross_mean_pct": -0.1345533379217948,
+        "gross_median_pct": 0.0,
+        "net_mean_pct_at_cost": -0.3310445659919703,
+        "net_median_pct_at_cost": -0.2,
+        "compounded_net_return_pct": -18.150786653609863,
+        "max_drawdown_pct": -23.579025395509866,
+        "profit_factor": 0.6310293620639009,
+        "positive_months": 1,
+        "months": 3,
+        "worst_month_pct": -0.671102062823794,
+        "top5_removed_net_mean_pct": -0.7305833512097935,
+        "largest_day_net_pct": 4.647986852917008,
+        "largest_day_share_of_positive_net": 0.1440276289951747,
+        "monthly_net_mean_pct": {
+          "2025-01": -0.671102062823794,
+          "2025-02": -0.3767191988787233,
+          "2025-03": 0.0331172255963398
+        },
+        "cost_sensitivity_net_mean_pct": {
+          "0.0": -0.1345533379217948,
+          "10.0": -0.23279895195688258,
+          "20.0": -0.3310445659919703,
+          "40.0": -0.5275357940621458,
+          "60.0": -0.7240270221323211
+        }
+      },
+      "top2": {
+        "n": 114,
+        "days": 57,
+        "executed": 113,
+        "execution_rate": 0.9912280701754386,
+        "hit_rate": 0.4247787610619469,
+        "signal_hit_rate_including_unfilled": 0.42105263157894735,
+        "gross_mean_pct": -0.09685305464084445,
+        "gross_median_pct": -0.1941466241669132,
+        "net_mean_pct_at_cost": -0.29509866867593226,
+        "net_median_pct_at_cost": -0.39414662416691326,
+        "compounded_net_return_pct": -16.107644948891565,
+        "max_drawdown_pct": -17.109198404559155,
+        "profit_factor": 0.618014424197522,
+        "positive_months": 0,
+        "months": 3,
+        "worst_month_pct": -0.5869625044791884,
+        "top5_removed_net_mean_pct": -0.5713838982777805,
+        "largest_day_net_pct": 3.5290946951390567,
+        "largest_day_share_of_positive_net": 0.12967897175240337,
+        "monthly_net_mean_pct": {
+          "2025-01": -0.5869625044791884,
+          "2025-02": -0.1385214760732663,
+          "2025-03": -0.15874749800523827
+        },
+        "cost_sensitivity_net_mean_pct": {
+          "0.0": -0.09685305464084445,
+          "10.0": -0.19597586165838835,
+          "20.0": -0.29509866867593226,
+          "40.0": -0.4933442827110198,
+          "60.0": -0.6915898967461077
+        }
+      },
+      "folds": [
+        {
+          "period": "2025-01",
+          "model_name": "direct_ridge_return",
+          "train_start": "2024-11-06",
+          "train_end": "2024-12-30",
+          "score_start": "2025-01-06",
+          "score_end": "2025-01-31",
+          "train_rows": 130000,
+          "score_rows": 61141,
+          "score_days": 19
+        },
+        {
+          "period": "2025-02",
+          "model_name": "direct_ridge_return",
+          "train_start": "2024-11-06",
+          "train_end": "2025-01-31",
+          "score_start": "2025-02-03",
+          "score_end": "2025-02-28",
+          "train_rows": 194805,
+          "score_rows": 57531,
+          "score_days": 18
+        },
+        {
+          "period": "2025-03",
+          "model_name": "direct_ridge_return",
+          "train_start": "2024-11-06",
+          "train_end": "2025-02-28",
+          "score_start": "2025-03-03",
+          "score_end": "2025-03-31",
+          "train_rows": 255716,
+          "score_rows": 63652,
+          "score_days": 20
+        }
+      ]
+    },
+    "robust_huber_sgd_return": {
+      "top1": {
+        "n": 57,
+        "days": 57,
+        "executed": 54,
+        "execution_rate": 0.9473684210526315,
+        "hit_rate": 0.48148148148148145,
+        "signal_hit_rate_including_unfilled": 0.45614035087719296,
+        "gross_mean_pct": 0.18198320495877215,
+        "gross_median_pct": 0.0,
+        "net_mean_pct_at_cost": -0.007490479251754216,
+        "net_median_pct_at_cost": -0.16069182389937248,
+        "compounded_net_return_pct": -0.8415309352153288,
+        "max_drawdown_pct": -8.322996549462891,
+        "profit_factor": 0.9804372843016398,
+        "positive_months": 1,
+        "months": 3,
+        "worst_month_pct": -0.262049090678678,
+        "top5_removed_net_mean_pct": -0.244022951254612,
+        "largest_day_net_pct": 3.319668737060044,
+        "largest_day_share_of_positive_net": 0.15513850876002663,
+        "monthly_net_mean_pct": {
+          "2025-01": -0.137283049114983,
+          "2025-02": 0.4123556905226806,
+          "2025-03": -0.262049090678678
+        },
+        "cost_sensitivity_net_mean_pct": {
+          "0.0": 0.18198320495877215,
+          "10.0": 0.087246362853509,
+          "20.0": -0.007490479251754216,
+          "40.0": -0.1969641634622805,
+          "60.0": -0.3864378476728068
+        }
+      },
+      "top2": {
+        "n": 114,
+        "days": 57,
+        "executed": 108,
+        "execution_rate": 0.9473684210526315,
+        "hit_rate": 0.4351851851851852,
+        "signal_hit_rate_including_unfilled": 0.41228070175438597,
+        "gross_mean_pct": -0.019559624980846835,
+        "gross_median_pct": 0.0941176470588223,
+        "net_mean_pct_at_cost": -0.2090333091913731,
+        "net_median_pct_at_cost": -0.1,
+        "compounded_net_return_pct": -11.902259349945677,
+        "max_drawdown_pct": -15.86033296773034,
+        "profit_factor": 0.596194135451786,
+        "positive_months": 0,
+        "months": 3,
+        "worst_month_pct": -0.43506003589881564,
+        "top5_removed_net_mean_pct": -0.37321828382331057,
+        "largest_day_net_pct": 1.792790166515923,
+        "largest_day_share_of_positive_net": 0.10191169670612914,
+        "monthly_net_mean_pct": {
+          "2025-01": -0.43506003589881564,
+          "2025-02": -0.09370458629636906,
+          "2025-03": -0.0981037694248064
+        },
+        "cost_sensitivity_net_mean_pct": {
+          "0.0": -0.019559624980846835,
+          "10.0": -0.11429646708610997,
+          "20.0": -0.2090333091913731,
+          "40.0": -0.3985069934018994,
+          "60.0": -0.5879806776124259
+        }
+      },
+      "folds": [
+        {
+          "period": "2025-01",
+          "model_name": "robust_huber_sgd_return",
+          "train_start": "2024-11-06",
+          "train_end": "2024-12-30",
+          "score_start": "2025-01-06",
+          "score_end": "2025-01-31",
+          "train_rows": 130000,
+          "score_rows": 61141,
+          "score_days": 19
+        },
+        {
+          "period": "2025-02",
+          "model_name": "robust_huber_sgd_return",
+          "train_start": "2024-11-06",
+          "train_end": "2025-01-31",
+          "score_start": "2025-02-03",
+          "score_end": "2025-02-28",
+          "train_rows": 194805,
+          "score_rows": 57531,
+          "score_days": 18
+        },
+        {
+          "period": "2025-03",
+          "model_name": "robust_huber_sgd_return",
+          "train_start": "2024-11-06",
+          "train_end": "2025-02-28",
+          "score_start": "2025-03-03",
+          "score_end": "2025-03-31",
+          "train_rows": 255716,
+          "score_rows": 63652,
+          "score_days": 20
+        }
+      ]
+    },
+    "pairwise_linear_rank": {
+      "top1": {
+        "n": 57,
+        "days": 57,
+        "executed": 54,
+        "execution_rate": 0.9473684210526315,
+        "hit_rate": 0.42592592592592593,
+        "signal_hit_rate_including_unfilled": 0.40350877192982454,
+        "gross_mean_pct": -0.38659425830295047,
+        "gross_median_pct": 0.0,
+        "net_mean_pct_at_cost": -0.5760679425134768,
+        "net_median_pct_at_cost": -0.2,
+        "compounded_net_return_pct": -29.133666184145103,
+        "max_drawdown_pct": -29.138806374356296,
+        "profit_factor": 0.44686232233146267,
+        "positive_months": 0,
+        "months": 3,
+        "worst_month_pct": -0.7580829748750677,
+        "top5_removed_net_mean_pct": -0.9338673174104465,
+        "largest_day_net_pct": 5.539514348785879,
+        "largest_day_share_of_positive_net": 0.20882506815598284,
+        "monthly_net_mean_pct": {
+          "2025-01": -0.7230847382681508,
+          "2025-02": -0.21864462214844246,
+          "2025-03": -0.7580829748750677
+        },
+        "cost_sensitivity_net_mean_pct": {
+          "0.0": -0.38659425830295047,
+          "10.0": -0.4813311004082136,
+          "20.0": -0.5760679425134768,
+          "40.0": -0.7655416267240033,
+          "60.0": -0.9550153109345294
+        }
+      },
+      "top2": {
+        "n": 114,
+        "days": 57,
+        "executed": 109,
+        "execution_rate": 0.956140350877193,
+        "hit_rate": 0.4954128440366973,
+        "signal_hit_rate_including_unfilled": 0.47368421052631576,
+        "gross_mean_pct": -0.08278391359650401,
+        "gross_median_pct": -0.0494342814846116,
+        "net_mean_pct_at_cost": -0.27401198377194264,
+        "net_median_pct_at_cost": -0.24943428148461158,
+        "compounded_net_return_pct": -15.106295764177268,
+        "max_drawdown_pct": -16.477969659375134,
+        "profit_factor": 0.6316891082054459,
+        "positive_months": 0,
+        "months": 3,
+        "worst_month_pct": -0.5617380909785058,
+        "top5_removed_net_mean_pct": -0.57527288086141,
+        "largest_day_net_pct": 4.576366648260633,
+        "largest_day_share_of_positive_net": 0.17083921718473255,
+        "monthly_net_mean_pct": {
+          "2025-01": -0.5617380909785058,
+          "2025-02": -0.26968085421655474,
+          "2025-03": -0.004570198525556779
+        },
+        "cost_sensitivity_net_mean_pct": {
+          "0.0": -0.08278391359650401,
+          "10.0": -0.17839794868422335,
+          "20.0": -0.27401198377194264,
+          "40.0": -0.46524005394738116,
+          "60.0": -0.65646812412282
+        }
+      },
+      "folds": [
+        {
+          "period": "2025-01",
+          "model_name": "pairwise_linear_rank",
+          "train_start": "2024-11-06",
+          "train_end": "2024-12-30",
+          "score_start": "2025-01-06",
+          "score_end": "2025-01-31",
+          "train_rows": 130000,
+          "score_rows": 61141,
+          "score_days": 19
+        },
+        {
+          "period": "2025-02",
+          "model_name": "pairwise_linear_rank",
+          "train_start": "2024-11-06",
+          "train_end": "2025-01-31",
+          "score_start": "2025-02-03",
+          "score_end": "2025-02-28",
+          "train_rows": 194805,
+          "score_rows": 57531,
+          "score_days": 18
+        },
+        {
+          "period": "2025-03",
+          "model_name": "pairwise_linear_rank",
+          "train_start": "2024-11-06",
+          "train_end": "2025-02-28",
+          "score_start": "2025-03-03",
+          "score_end": "2025-03-31",
+          "train_rows": 255716,
+          "score_rows": 63652,
+          "score_days": 20
+        }
+      ]
+    },
+    "return_weighted_logit": {
+      "top1": {
+        "n": 57,
+        "days": 57,
+        "executed": 55,
+        "execution_rate": 0.9649122807017544,
+        "hit_rate": 0.5272727272727272,
+        "signal_hit_rate_including_unfilled": 0.5087719298245614,
+        "gross_mean_pct": -0.03242145075117152,
+        "gross_median_pct": 0.039308176100627534,
+        "net_mean_pct_at_cost": -0.2254039068915224,
+        "net_median_pct_at_cost": 0.0,
+        "compounded_net_return_pct": -13.239645359798757,
+        "max_drawdown_pct": -21.1179012353666,
+        "profit_factor": 0.7167844506251658,
+        "positive_months": 1,
+        "months": 3,
+        "worst_month_pct": -0.8556639492005322,
+        "top5_removed_net_mean_pct": -0.5512622285574135,
+        "largest_day_net_pct": 3.345051698670609,
+        "largest_day_share_of_positive_net": 0.10287149645962507,
+        "monthly_net_mean_pct": {
+          "2025-01": -0.8556639492005322,
+          "2025-02": -0.014094789869778992,
+          "2025-03": 0.1831649279824678
+        },
+        "cost_sensitivity_net_mean_pct": {
+          "0.0": -0.03242145075117152,
+          "10.0": -0.12891267882134685,
+          "20.0": -0.2254039068915224,
+          "40.0": -0.41838636303187315,
+          "60.0": -0.6113688191722243
+        }
+      },
+      "top2": {
+        "n": 114,
+        "days": 57,
+        "executed": 110,
+        "execution_rate": 0.9649122807017544,
+        "hit_rate": 0.4909090909090909,
+        "signal_hit_rate_including_unfilled": 0.47368421052631576,
+        "gross_mean_pct": -0.08573416703758557,
+        "gross_median_pct": 0.14430014430014682,
+        "net_mean_pct_at_cost": -0.2787166231779365,
+        "net_median_pct_at_cost": -0.055699855699853196,
+        "compounded_net_return_pct": -15.600207732796578,
+        "max_drawdown_pct": -24.393097423662237,
+        "profit_factor": 0.6402754769884276,
+        "positive_months": 1,
+        "months": 3,
+        "worst_month_pct": -0.9725482712538479,
+        "top5_removed_net_mean_pct": -0.5189785224776156,
+        "largest_day_net_pct": 3.80803580737894,
+        "largest_day_share_of_positive_net": 0.13466863967197681,
+        "monthly_net_mean_pct": {
+          "2025-01": -0.9725482712538479,
+          "2025-02": -0.04744414435723211,
+          "2025-03": 0.17227821155554532
+        },
+        "cost_sensitivity_net_mean_pct": {
+          "0.0": -0.08573416703758557,
+          "10.0": -0.182225395107761,
+          "20.0": -0.2787166231779365,
+          "40.0": -0.47169907931828736,
+          "60.0": -0.6646815354586384
+        }
+      },
+      "folds": [
+        {
+          "period": "2025-01",
+          "model_name": "return_weighted_logit",
+          "train_start": "2024-11-06",
+          "train_end": "2024-12-30",
+          "score_start": "2025-01-06",
+          "score_end": "2025-01-31",
+          "train_rows": 130000,
+          "score_rows": 61141,
+          "score_days": 19
+        },
+        {
+          "period": "2025-02",
+          "model_name": "return_weighted_logit",
+          "train_start": "2024-11-06",
+          "train_end": "2025-01-31",
+          "score_start": "2025-02-03",
+          "score_end": "2025-02-28",
+          "train_rows": 194805,
+          "score_rows": 57531,
+          "score_days": 18
+        },
+        {
+          "period": "2025-03",
+          "model_name": "return_weighted_logit",
+          "train_start": "2024-11-06",
+          "train_end": "2025-02-28",
+          "score_start": "2025-03-03",
+          "score_end": "2025-03-31",
+          "train_rows": 255716,
+          "score_rows": 63652,
+          "score_days": 20
+        }
+      ]
+    },
+    "multi_threshold_expected_return": {
+      "top1": {
+        "n": 57,
+        "days": 57,
+        "executed": 55,
+        "execution_rate": 0.9649122807017544,
+        "hit_rate": 0.5272727272727272,
+        "signal_hit_rate_including_unfilled": 0.5087719298245614,
+        "gross_mean_pct": -0.020962427200465695,
+        "gross_median_pct": 0.039308176100627534,
+        "net_mean_pct_at_cost": -0.21394488334081657,
+        "net_median_pct_at_cost": -0.011764705882355397,
+        "compounded_net_return_pct": -12.45000338379646,
+        "max_drawdown_pct": -20.348905493731916,
+        "profit_factor": 0.6814579256255027,
+        "positive_months": 1,
+        "months": 3,
+        "worst_month_pct": -0.717485378715944,
+        "top5_removed_net_mean_pct": -0.483949497567427,
+        "largest_day_net_pct": 3.319668737060044,
+        "largest_day_share_of_positive_net": 0.1272464706284089,
+        "monthly_net_mean_pct": {
+          "2025-01": -0.717485378715944,
+          "2025-02": -0.14485507558683905,
+          "2025-03": 0.20223776028697477
+        },
+        "cost_sensitivity_net_mean_pct": {
+          "0.0": -0.020962427200465695,
+          "10.0": -0.11745365527064104,
+          "20.0": -0.21394488334081657,
+          "40.0": -0.4069273394811672,
+          "60.0": -0.5999097956215182
+        }
+      },
+      "top2": {
+        "n": 114,
+        "days": 57,
+        "executed": 110,
+        "execution_rate": 0.9649122807017544,
+        "hit_rate": 0.5,
+        "signal_hit_rate_including_unfilled": 0.4824561403508772,
+        "gross_mean_pct": -0.18757764065818652,
+        "gross_median_pct": 0.0941176470588223,
+        "net_mean_pct_at_cost": -0.3805600967985374,
+        "net_median_pct_at_cost": -0.1,
+        "compounded_net_return_pct": -20.417854075898823,
+        "max_drawdown_pct": -24.10495472358236,
+        "profit_factor": 0.5011488875141984,
+        "positive_months": 1,
+        "months": 3,
+        "worst_month_pct": -0.7780525228741266,
+        "top5_removed_net_mean_pct": -0.6103694080430676,
+        "largest_day_net_pct": 3.80803580737894,
+        "largest_day_share_of_positive_net": 0.17474593963868704,
+        "monthly_net_mean_pct": {
+          "2025-01": -0.7780525228741266,
+          "2025-02": -0.506668412077658,
+          "2025-03": 0.11055519172448083
+        },
+        "cost_sensitivity_net_mean_pct": {
+          "0.0": -0.18757764065818652,
+          "10.0": -0.284068868728362,
+          "20.0": -0.3805600967985374,
+          "40.0": -0.5735425529388882,
+          "60.0": -0.7665250090792393
+        }
+      },
+      "folds": [
+        {
+          "period": "2025-01",
+          "model_name": "multi_threshold_expected_return",
+          "train_start": "2024-11-06",
+          "train_end": "2024-12-30",
+          "score_start": "2025-01-06",
+          "score_end": "2025-01-31",
+          "train_rows": 130000,
+          "score_rows": 61141,
+          "score_days": 19
+        },
+        {
+          "period": "2025-02",
+          "model_name": "multi_threshold_expected_return",
+          "train_start": "2024-11-06",
+          "train_end": "2025-01-31",
+          "score_start": "2025-02-03",
+          "score_end": "2025-02-28",
+          "train_rows": 194805,
+          "score_rows": 57531,
+          "score_days": 18
+        },
+        {
+          "period": "2025-03",
+          "model_name": "multi_threshold_expected_return",
+          "train_start": "2024-11-06",
+          "train_end": "2025-02-28",
+          "score_start": "2025-03-03",
+          "score_end": "2025-03-31",
+          "train_rows": 255716,
+          "score_rows": 63652,
+          "score_days": 20
+        }
+      ]
+    }
+  },
+  "selected_winner": "current_logit",
+  "known_benchmark_winner_only": {
+    "top1": {
+      "n": 84,
+      "days": 84,
+      "executed": 84,
+      "execution_rate": 1.0,
+      "hit_rate": 0.6547619047619048,
+      "signal_hit_rate_including_unfilled": 0.6547619047619048,
+      "gross_mean_pct": 0.49578522688469095,
+      "gross_median_pct": 0.5564428791752563,
+      "net_mean_pct_at_cost": 0.29578522688469094,
+      "net_median_pct_at_cost": 0.35644287917525624,
+      "compounded_net_return_pct": 26.14246915969538,
+      "max_drawdown_pct": -10.841684910179506,
+      "profit_factor": 1.587896550421065,
+      "positive_months": 3,
+      "months": 4,
+      "worst_month_pct": -0.22025124480793704,
+      "top5_removed_net_mean_pct": 0.03622824132103131,
+      "largest_day_net_pct": 7.022222222222219,
+      "largest_day_share_of_positive_net": 0.10463994681840812,
+      "monthly_net_mean_pct": {
+        "2025-04": -0.22025124480793704,
+        "2025-05": 0.13649687598241775,
+        "2025-06": 0.6176331760797292,
+        "2025-07": 0.6259545900890023
+      },
+      "cost_sensitivity_net_mean_pct": {
+        "0.0": 0.49578522688469095,
+        "10.0": 0.3957852268846909,
+        "20.0": 0.29578522688469094,
+        "40.0": 0.09578522688469097,
+        "60.0": -0.10421477311530906
+      }
+    },
+    "top2": {
+      "n": 168,
+      "days": 84,
+      "executed": 167,
+      "execution_rate": 0.9940476190476191,
+      "hit_rate": 0.6167664670658682,
+      "signal_hit_rate_including_unfilled": 0.6130952380952381,
+      "gross_mean_pct": 0.4891860497070963,
+      "gross_median_pct": 0.5991062436076583,
+      "net_mean_pct_at_cost": 0.2903765258975724,
+      "net_median_pct_at_cost": 0.39910624360765834,
+      "compounded_net_return_pct": 26.725918764641055,
+      "max_drawdown_pct": -6.50931669788587,
+      "profit_factor": 1.7623301166658372,
+      "positive_months": 3,
+      "months": 4,
+      "worst_month_pct": -0.0704222535407585,
+      "top5_removed_net_mean_pct": 0.14037232412142325,
+      "largest_day_net_pct": 3.346594982078849,
+      "largest_day_share_of_positive_net": 0.059349652283972654,
+      "monthly_net_mean_pct": {
+        "2025-04": 0.1700810157538511,
+        "2025-05": -0.0704222535407585,
+        "2025-06": 0.08075113695252678,
+        "2025-07": 0.9332999108807871
+      },
+      "cost_sensitivity_net_mean_pct": {
+        "0.0": 0.4891860497070963,
+        "10.0": 0.3897812878023344,
+        "20.0": 0.2903765258975724,
+        "40.0": 0.09156700208804866,
+        "60.0": -0.10724252172147523
+      }
+    },
+    "folds": [
+      {
+        "period": "2025-04",
+        "model_name": "current_logit",
+        "train_start": "2024-11-06",
+        "train_end": "2025-03-31",
+        "score_start": "2025-04-01",
+        "score_end": "2025-04-30",
+        "train_rows": 323597,
+        "score_rows": 52829,
+        "score_days": 21
+      },
+      {
+        "period": "2025-05",
+        "model_name": "current_logit",
+        "train_start": "2024-11-06",
+        "train_end": "2025-04-30",
+        "score_start": "2025-05-01",
+        "score_end": "2025-05-30",
+        "train_rows": 396405,
+        "score_rows": 64265,
+        "score_days": 20
+      },
+      {
+        "period": "2025-06",
+        "model_name": "current_logit",
+        "train_start": "2024-11-06",
+        "train_end": "2025-05-30",
+        "score_start": "2025-06-02",
+        "score_end": "2025-06-30",
+        "train_rows": 465376,
+        "score_rows": 67115,
+        "score_days": 21
+      },
+      {
+        "period": "2025-07",
+        "model_name": "current_logit",
+        "train_start": "2024-11-06",
+        "train_end": "2025-06-30",
+        "score_start": "2025-07-01",
+        "score_end": "2025-07-31",
+        "train_rows": 536470,
+        "score_rows": 70125,
+        "score_days": 22
+      }
+    ]
+  },
+  "benchmark_is_true_holdout": false
+}
