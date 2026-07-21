@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tse-session-ranker"
-version = "0.1.0"
-description = "Leakage-safe pre-open ranking for Tokyo Stock Exchange sessions"
+version = "0.2.0"
+description = "Profit-first, leakage-safe pre-open ranking for Tokyo Stock Exchange sessions"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -24,4 +24,3 @@ tse-session-ranker = "tse_session_ranker.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-

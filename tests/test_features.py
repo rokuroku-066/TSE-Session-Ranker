@@ -105,7 +105,10 @@ class FeatureTests(unittest.TestCase):
         changed = changed[
             ~(changed["code"].eq("1003") & changed["date"].eq(last_date))
         ]
-        config = RankerConfig(min_latest_session_coverage=0.50)
+        config = RankerConfig(
+            min_latest_session_coverage=0.50,
+            minimum_source_coverage=0.50,
+        )
         live = build_inference_frame(
             changed,
             target,
@@ -121,6 +124,19 @@ class FeatureTests(unittest.TestCase):
                 self.prices,
                 target,
                 expected_history_date=pd.Timestamp(self.dates[-1]),
+            )
+
+    def test_direct_inference_rejects_missing_calendar_previous_session(self) -> None:
+        target = pd.Timestamp(self.dates[-1]) + pd.offsets.BDay(1)
+        calendar = pd.DatetimeIndex([*self.dates, target])
+        missing_previous = pd.Timestamp(self.dates[-1])
+        changed = self.prices[~self.prices["date"].eq(missing_previous)].copy()
+        with self.assertRaisesRegex(DataValidationError, "calendar previous"):
+            build_inference_frame(
+                changed,
+                target,
+                expected_history_date=pd.Timestamp(self.dates[-2]),
+                expected_sessions=(value for value in calendar),
             )
 
 

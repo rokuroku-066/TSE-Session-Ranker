@@ -228,7 +228,7 @@ def download_jpx_urls(
             )
             continue
         request = urllib.request.Request(
-            url, headers={"User-Agent": "tse-session-ranker/0.1 (+local research)"}
+            url, headers={"User-Agent": "tse-session-ranker/0.2 (+local research)"}
         )
         with urllib.request.urlopen(request, timeout=60) as response:
             payload = response.read()

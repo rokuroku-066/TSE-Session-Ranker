@@ -49,6 +49,34 @@ class BacktestTests(unittest.TestCase):
         self.assertEqual(len(scored), 1)
         self.assertTrue(scored["label"].isna().all())
 
+    def test_missing_target_row_is_restored_from_prior_universe(self) -> None:
+        prices = synthetic_prices(periods=240, codes=4)
+        dates = sorted(prices["date"].unique())
+        target = pd.Timestamp(dates[220])
+        prices = prices[
+            ~(prices["date"].eq(target) & prices["code"].eq("1001"))
+        ].copy()
+        config = RankerConfig(
+            regime_start=str(pd.Timestamp(dates[70]).date()),
+            minimum_source_coverage=0.50,
+        )
+        result = monthly_walk_forward(
+            prices,
+            evaluation_start=pd.Timestamp(dates[180]),
+            evaluation_end=pd.Timestamp(dates[230]),
+            config=config,
+        )
+        row = result.scores[
+            result.scores["date"].eq(target)
+            & result.scores["code"].eq("1001")
+        ]
+        self.assertEqual(len(row), 1)
+        self.assertTrue(row["label"].isna().all())
+        self.assertEqual(
+            result.summary["primary_objective"],
+            "top1.net_mean_pct_at_cost",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

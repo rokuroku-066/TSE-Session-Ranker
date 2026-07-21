@@ -3,15 +3,20 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-import numpy as np
 import pandas as pd
 from sklearn.metrics import brier_score_loss, roc_auc_score
 
 from .config import RankerConfig
-from .data.common import normalize_daily_prices
+from .data.common import (
+    normalize_daily_prices,
+    normalize_expected_sessions,
+    prepare_modeling_prices,
+    session_calendar_hash,
+)
 from .exceptions import DataValidationError
 from .features import FEATURE_COLUMNS, build_feature_panel
 from .inference import rank_candidates
+from .profit import profit_metrics
 from .training import fit_estimator
 
 
@@ -29,39 +34,13 @@ def _daily_picks(scores: pd.DataFrame, count: int) -> pd.DataFrame:
     return pd.concat(parts, ignore_index=True) if parts else scores.iloc[0:0].copy()
 
 
-def _pick_metrics(frame: pd.DataFrame, cost_bps: float) -> dict[str, Any]:
-    if frame.empty:
-        return {
-            "n": 0,
-            "days": 0,
-            "executed": 0,
-            "execution_rate": np.nan,
-            "hit_rate": np.nan,
-            "signal_hit_rate_including_unfilled": np.nan,
-            "gross_mean_pct": np.nan,
-        }
-    executed = frame["label"].notna()
-    gross = frame["oc_return_pct"].fillna(0.0)
-    costs = executed.astype(float) * (cost_bps / 100.0)
-    return {
-        "n": int(len(frame)),
-        "days": int(frame["date"].nunique()),
-        "executed": int(executed.sum()),
-        "execution_rate": float(executed.mean()),
-        "hit_rate": float(frame.loc[executed, "label"].mean()),
-        "signal_hit_rate_including_unfilled": float(frame["label"].fillna(0).mean()),
-        "gross_mean_pct": float(gross.mean()),
-        "gross_median_pct": float(gross.median()),
-        "net_mean_pct_at_cost": float((gross - costs).mean()),
-    }
-
-
 def monthly_walk_forward(
     prices: pd.DataFrame,
     evaluation_start: object,
     evaluation_end: object,
     config: RankerConfig | None = None,
     train_start: object | None = None,
+    expected_sessions: object | None = None,
 ) -> WalkForwardResult:
     """Fixed-spec expanding monthly walk-forward evaluation."""
 
@@ -74,7 +53,34 @@ def monthly_walk_forward(
             "walk-forward requires train_start < evaluation_start <= evaluation_end"
         )
     canonical = normalize_daily_prices(prices)
-    panel = build_feature_panel(canonical.loc[canonical["date"].le(end)].copy(), settings)
+    source = canonical.loc[canonical["date"].le(end)].copy()
+    calendar = None
+    if expected_sessions is not None:
+        calendar_all = normalize_expected_sessions(expected_sessions)
+        if calendar_all.max() < end:
+            raise DataValidationError(
+                f"session calendar ends at {calendar_all.max().date()} before "
+                f"evaluation_end {end.date()}"
+            )
+        if end not in calendar_all:
+            raise DataValidationError(
+                "evaluation_end is not in the exchange session calendar"
+            )
+        calendar = calendar_all[calendar_all <= end]
+        expected_latest = calendar[calendar >= source["date"].min()].max()
+        actual_latest = source["date"].max()
+        if expected_latest > actual_latest:
+            raise DataValidationError(
+                f"daily history ends at {actual_latest.date()} but the session "
+                f"calendar expects {expected_latest.date()}"
+            )
+    modeling, coverage = prepare_modeling_prices(
+        source,
+        coverage_lookback=settings.source_coverage_lookback,
+        minimum_source_coverage=settings.minimum_source_coverage,
+        expected_sessions=calendar,
+    )
+    panel = build_feature_panel(modeling, settings)
     scored_parts: list[pd.DataFrame] = []
     fold_rows: list[dict[str, Any]] = []
     for period in pd.period_range(start.to_period("M"), end.to_period("M"), freq="M"):
@@ -118,9 +124,40 @@ def monthly_walk_forward(
     top2 = _daily_picks(scores, 2)
     evaluated = scores[scores["label"].notna()].copy()
     labels = evaluated["label"].astype(int)
+    top1_metrics = profit_metrics(top1, top_k=1, cost_bps=settings.cost_bps)
+    top2_metrics = profit_metrics(top2, top_k=2, cost_bps=settings.cost_bps)
+    excluded_dates = coverage.loc[~coverage["source_complete"], "date"]
+    embargoed_dates = panel.loc[
+        (~panel["source_complete"] | ~panel["universe_source_complete"])
+        & panel["date"].between(start, end),
+        "date",
+    ].drop_duplicates()
     summary = {
         "evaluation_start": str(start.date()),
         "evaluation_end": str(end.date()),
+        "selection_objective": settings.selection_objective,
+        "data_semantics": settings.data_semantics,
+        "assumed_round_trip_cost_bps": settings.cost_bps,
+        "primary_objective": "top1.net_mean_pct_at_cost",
+        "primary_objective_value": top1_metrics["net_mean_pct_at_cost"],
+        "excluded_source_incomplete_dates": [
+            str(pd.Timestamp(value).date()) for value in excluded_dates
+        ],
+        "embargoed_evaluation_dates": [
+            str(pd.Timestamp(value).date()) for value in embargoed_dates
+        ],
+        "source_coverage_policy": "sticky_prior_accepted_q90_v1",
+        "session_calendar_mode": (
+            "explicit_exchange_sessions" if calendar is not None else "observed_sessions_only"
+        ),
+        "session_calendar_sha256": (
+            session_calendar_hash(calendar, through=end)
+            if calendar is not None
+            else None
+        ),
+        "session_calendar_through": (
+            str(calendar.max().date()) if calendar is not None else None
+        ),
         "baseline_rows": int(len(scores)),
         "baseline_executed_rows": int(len(evaluated)),
         "baseline_execution_rate": float(len(evaluated) / len(scores)),
@@ -128,8 +165,8 @@ def monthly_walk_forward(
         "baseline_hit_rate": float(labels.mean()),
         "auc": float(roc_auc_score(labels, evaluated["model_score"])),
         "brier": float(brier_score_loss(labels, evaluated["model_score"])),
-        "top1": _pick_metrics(top1, settings.cost_bps),
-        "top2": _pick_metrics(top2, settings.cost_bps),
+        "top1": top1_metrics,
+        "top2": top2_metrics,
         "calibration_status": "uncalibrated",
         "selection_spec_changed_during_evaluation": False,
     }

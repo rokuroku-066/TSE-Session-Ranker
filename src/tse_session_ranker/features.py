@@ -6,7 +6,12 @@ import numpy as np
 import pandas as pd
 
 from .config import RankerConfig, UniversePolicy
-from .data.common import normalize_daily_prices
+from .data.common import (
+    normalize_daily_prices,
+    normalize_expected_sessions,
+    prepare_modeling_prices,
+    session_coverage_report,
+)
 from .exceptions import DataValidationError, LeakageError
 
 
@@ -163,10 +168,19 @@ def build_feature_panel(
     validate_feature_columns(FEATURE_COLUMNS)
     frame = normalize_daily_prices(prices)
     group = frame.groupby("code", sort=False)
-    frame["history_count"] = group.cumcount()
+    observed = frame.get(
+        "outcome_observed", pd.Series(True, index=frame.index, dtype=bool)
+    ).fillna(False).astype(bool)
+    frame["history_count"] = observed.groupby(frame["code"], sort=False).cumsum()
+    frame["history_count"] = frame["history_count"] - observed.astype(int)
     frame["feature_source_max_date"] = group["date"].shift(1)
     frame["effective_close"] = group["close"].ffill()
-    frame["prior_close"] = frame.groupby("code", sort=False)["effective_close"].shift(1)
+    prior_outcome_observed = observed.groupby(
+        frame["code"], sort=False
+    ).shift(1).eq(True)
+    frame["prior_close"] = frame.groupby(
+        "code", sort=False
+    )["effective_close"].shift(1).where(prior_outcome_observed)
 
     traded = frame["traded"] & frame[["open", "high", "low", "close"]].notna().all(axis=1)
     frame["oc_return_pct"] = np.nan
@@ -218,17 +232,32 @@ def build_feature_panel(
     synthetic = frame.get(
         "synthetic_target", pd.Series(False, index=frame.index, dtype=bool)
     ).fillna(False)
+    source_complete = frame.get(
+        "source_complete", pd.Series(True, index=frame.index, dtype=bool)
+    ).fillna(False).astype(bool)
+    unobserved_source_gap = ~observed & ~source_complete
     frame["zero_oc"] = np.where(
-        synthetic,
+        synthetic | unobserved_source_gap,
         np.nan,
         np.where(~traded, 1.0, frame["oc_return_pct"].abs().lt(1e-12).astype(float)),
     )
     frame["zero_oc_20"] = _prior_rolling(
         frame, "zero_oc", 20, "mean", min_periods=10
     )
-    frame["eligible"] = eligibility_mask(frame, settings.universe)
-    frame["training_eligible"] = eligibility_mask(
-        frame, settings.universe, for_training=True
+    evaluation_ready = frame.get(
+        "evaluation_ready",
+        frame.get(
+            "prior_universe_member",
+            pd.Series(True, index=frame.index, dtype=bool),
+        ),
+    )
+    evaluation_ready = pd.Series(evaluation_ready, index=frame.index).fillna(False)
+    frame["eligible"] = (
+        eligibility_mask(frame, settings.universe) & evaluation_ready
+    )
+    frame["training_eligible"] = (
+        eligibility_mask(frame, settings.universe, for_training=True)
+        & evaluation_ready
     )
 
     leaked_time = frame["feature_source_max_date"].notna() & (
@@ -244,6 +273,7 @@ def build_inference_frame(
     target_date: object,
     config: RankerConfig | None = None,
     expected_history_date: object | None = None,
+    expected_sessions: object | None = None,
 ) -> pd.DataFrame:
     """Create the next-session feature rows without requiring target OHLC data."""
 
@@ -254,6 +284,11 @@ def build_inference_frame(
     if history.empty:
         raise DataValidationError("no price history exists before target_date")
     latest_session = history["date"].max()
+    calendar = (
+        normalize_expected_sessions(expected_sessions, through=target)
+        if expected_sessions is not None
+        else None
+    )
     age_days = int((target - latest_session).days)
     if age_days > settings.max_history_age_calendar_days:
         raise DataValidationError(
@@ -264,6 +299,27 @@ def build_inference_frame(
         raise DataValidationError(
             "expected_history_date is required for fail-closed live inference"
         )
+    if calendar is not None:
+        if target not in calendar:
+            raise DataValidationError(
+                "target_date is not in the exchange session calendar"
+            )
+        prior_sessions = calendar[calendar < target]
+        if prior_sessions.empty:
+            raise DataValidationError(
+                "exchange session calendar has no session before target_date"
+            )
+        if expected_history_date is None:
+            raise DataValidationError(
+                "expected_history_date is required with an explicit session calendar"
+            )
+        calendar_previous = prior_sessions.max()
+        expected = pd.Timestamp(expected_history_date).normalize()
+        if calendar_previous != expected:
+            raise DataValidationError(
+                f"calendar previous session is {calendar_previous.date()}, "
+                f"expected_history_date is {expected.date()}"
+            )
     if expected_history_date is not None:
         expected = pd.Timestamp(expected_history_date).normalize()
         if expected >= target:
@@ -273,11 +329,22 @@ def build_inference_frame(
                 f"latest daily session is {latest_session.date()}, "
                 f"expected {expected.date()}"
             )
-    session_counts = history.groupby("date", sort=True)["code"].nunique()
-    reference_count = float(session_counts.tail(20).median())
-    latest_count = int(session_counts.loc[latest_session])
-    coverage = latest_count / reference_count if reference_count else 0.0
-    if coverage < settings.min_latest_session_coverage:
+    source_coverage = session_coverage_report(
+        history,
+        lookback=settings.source_coverage_lookback,
+        minimum_coverage=max(
+            settings.minimum_source_coverage,
+            settings.min_latest_session_coverage,
+        ),
+        expected_sessions=calendar,
+    )
+    latest_report = source_coverage[
+        source_coverage["date"].eq(latest_session)
+    ].iloc[0]
+    coverage = float(latest_report["coverage_ratio"])
+    if not np.isfinite(coverage):
+        coverage = 1.0
+    if not bool(latest_report["source_complete"]):
         raise DataValidationError(
             f"latest daily session coverage is only {coverage:.1%}; "
             "collection may be incomplete"
@@ -291,6 +358,19 @@ def build_inference_frame(
     # session is the safest available active-listing signal.  This removes
     # delisted and code-changed securities from live inference.
     latest = latest[latest["date"].eq(latest_session)].copy()
+    modeling_history, source_coverage = prepare_modeling_prices(
+        history,
+        coverage_lookback=settings.source_coverage_lookback,
+        minimum_source_coverage=settings.minimum_source_coverage,
+        expected_sessions=calendar,
+    )
+    incomplete_dates = set(
+        source_coverage.loc[~source_coverage["source_complete"], "date"]
+    )
+    if latest_session in incomplete_dates:
+        raise DataValidationError(
+            f"latest daily session {latest_session.date()} is source-incomplete"
+        )
     placeholders = pd.DataFrame(
         {
             "date": target,
@@ -305,10 +385,18 @@ def build_inference_frame(
             "traded": False,
             "partial_session": False,
             "synthetic_target": True,
+            "universe_source_date": latest_session,
+            "prior_universe_member": True,
+            "outcome_observed": False,
+            "source_complete": True,
+            "universe_source_complete": True,
+            "evaluation_ready": True,
         }
     )
-    history["synthetic_target"] = False
-    combined = pd.concat([history, placeholders], ignore_index=True, sort=False)
+    modeling_history["synthetic_target"] = False
+    combined = pd.concat(
+        [modeling_history, placeholders], ignore_index=True, sort=False
+    )
     panel = build_feature_panel(combined, settings)
     inference = panel[panel["synthetic_target"].fillna(False)].copy()
     if inference["label"].notna().any() or inference["oc_return_pct"].notna().any():

@@ -10,6 +10,7 @@ import pandas as pd
 from .artifact import ModelArtifact
 from .config import PreopenPolicy
 from .data.preopen import latest_preopen_snapshots
+from .data.common import normalize_expected_sessions, session_calendar_hash
 from .exceptions import DataValidationError, LeakageError
 from .features import FEATURE_COLUMNS, build_inference_frame
 
@@ -22,6 +23,7 @@ class PredictionResult:
     eligible_universe_size: int
     total_universe_size: int
     calibration_status: str = "uncalibrated"
+    score_semantics: str = "uncalibrated_positive_session_rank_score"
 
 
 def rank_candidates(scored: pd.DataFrame, top_k: int) -> pd.DataFrame:
@@ -171,6 +173,7 @@ def predict_candidates(
     snapshots: pd.DataFrame | None = None,
     as_of: datetime | pd.Timestamp | str | None = None,
     expected_history_date: object | None = None,
+    expected_sessions: object | None = None,
 ) -> PredictionResult:
     artifact.validate()
     target = pd.Timestamp(target_date).normalize()
@@ -179,11 +182,56 @@ def predict_candidates(
         raise LeakageError(
             "live inference target_date must be after the artifact training_end"
         )
+    calendar_mode = artifact.manifest.get(
+        "session_calendar_mode", "observed_sessions_only"
+    )
+    trained_calendar_hash = artifact.manifest.get("session_calendar_sha256")
+    calendar = (
+        normalize_expected_sessions(expected_sessions, through=target)
+        if expected_sessions is not None
+        else None
+    )
+    if calendar_mode == "explicit_exchange_sessions":
+        if calendar is None:
+            raise DataValidationError(
+                "the artifact requires the explicit exchange session calendar"
+            )
+        if target not in calendar:
+            raise DataValidationError("target_date is not in the exchange session calendar")
+        prior_sessions = calendar[calendar < target]
+        if prior_sessions.empty:
+            raise DataValidationError(
+                "exchange session calendar has no session before target_date"
+            )
+        calendar_previous = prior_sessions.max()
+        if expected_history_date is None:
+            raise DataValidationError(
+                "expected_history_date is required with an explicit session calendar"
+            )
+        expected = pd.Timestamp(expected_history_date).normalize()
+        if expected != calendar_previous:
+            raise DataValidationError(
+                f"calendar previous session is {calendar_previous.date()}, "
+                f"expected_history_date is {expected.date()}"
+            )
+        actual_calendar_hash = session_calendar_hash(
+            calendar,
+            through=artifact.manifest["training_end"],
+        )
+        if actual_calendar_hash != trained_calendar_hash:
+            raise DataValidationError(
+                "session calendar does not match the artifact training calendar"
+            )
+    elif calendar is not None:
+        raise DataValidationError(
+            "artifact was trained without an explicit session calendar"
+        )
     feature_frame = build_inference_frame(
         prices,
         target,
         artifact.config,
         expected_history_date=expected_history_date,
+        expected_sessions=calendar,
     )
     missing = sorted(set(artifact.feature_columns) - set(feature_frame.columns))
     if missing:
@@ -206,6 +254,16 @@ def predict_candidates(
         as_of=as_of,
         policy=artifact.config.preopen,
     )
+    selected["run_id"] = str(artifact.manifest["run_id"])
+    selected["score_semantics"] = str(
+        artifact.manifest.get(
+            "score_semantics", "uncalibrated_positive_session_rank_score"
+        )
+    )
+    selected["selection_objective"] = artifact.config.selection_objective
+    selected["data_semantics"] = artifact.config.data_semantics
+    selected["session_calendar_mode"] = calendar_mode
+    selected["session_calendar_sha256"] = trained_calendar_hash
     return PredictionResult(
         target_date=target,
         run_id=str(artifact.manifest["run_id"]),
@@ -214,5 +272,10 @@ def predict_candidates(
         total_universe_size=int(len(scored)),
         calibration_status=str(
             artifact.manifest.get("calibration_status", "uncalibrated")
+        ),
+        score_semantics=str(
+            artifact.manifest.get(
+                "score_semantics", "uncalibrated_positive_session_rank_score"
+            )
         ),
     )

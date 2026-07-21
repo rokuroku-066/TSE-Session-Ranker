@@ -10,6 +10,7 @@ from .backtest import WalkForwardResult, monthly_walk_forward
 from .config import RankerConfig
 from .data.jpx import collect_jpx, download_jpx_urls
 from .data.preopen import normalize_preopen_snapshots
+from .exceptions import ArtifactError
 from .inference import PredictionResult, predict_candidates
 from .io import read_frame, write_frame, write_json
 from .training import TrainingResult, train_model
@@ -27,7 +28,9 @@ class SessionRanker:
         config: RankerConfig | None = None,
         artifact: ModelArtifact | None = None,
     ) -> None:
-        self.config = config or (artifact.config if artifact else RankerConfig())
+        if artifact is not None and config is not None and config != artifact.config:
+            raise ArtifactError("explicit config does not match the model artifact config")
+        self.config = artifact.config if artifact is not None else (config or RankerConfig())
         self.artifact = artifact
 
     @classmethod
@@ -92,12 +95,14 @@ class SessionRanker:
         train_end: object,
         artifact_path: str | Path | None = None,
         train_start: object | None = None,
+        expected_sessions: object | None = None,
     ) -> TrainingResult:
         result = train_model(
             _frame(daily_prices),
             train_end=train_end,
             train_start=train_start,
             config=self.config,
+            expected_sessions=expected_sessions,
         )
         self.artifact = result.artifact
         if artifact_path is not None:
@@ -112,9 +117,10 @@ class SessionRanker:
         preopen_snapshots: pd.DataFrame | str | Path | None = None,
         as_of: object | None = None,
         expected_history_date: object | None = None,
+        expected_sessions: object | None = None,
     ) -> PredictionResult:
         if self.artifact is None:
-            raise RuntimeError("load or train a model artifact before prediction")
+            raise ArtifactError("load or train a model artifact before prediction")
         snapshots = (
             None if preopen_snapshots is None else _frame(preopen_snapshots)
         )
@@ -126,6 +132,7 @@ class SessionRanker:
             snapshots=snapshots,
             as_of=as_of,
             expected_history_date=expected_history_date,
+            expected_sessions=expected_sessions,
         )
 
     def backtest(
@@ -134,6 +141,7 @@ class SessionRanker:
         evaluation_start: object,
         evaluation_end: object,
         train_start: object | None = None,
+        expected_sessions: object | None = None,
     ) -> WalkForwardResult:
         return monthly_walk_forward(
             _frame(daily_prices),
@@ -141,4 +149,5 @@ class SessionRanker:
             evaluation_end=evaluation_end,
             train_start=train_start,
             config=self.config,
+            expected_sessions=expected_sessions,
         )

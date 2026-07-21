@@ -7,6 +7,7 @@ from .config import ModelConfig, PreopenPolicy, RankerConfig, UniversePolicy
 from .exceptions import ArtifactError, DataValidationError, LeakageError, SessionRankerError
 from .features import FEATURE_COLUMNS, build_feature_panel, build_inference_frame
 from .inference import PredictionResult
+from .profit import daily_portfolio_returns, profit_metrics
 from .training import TrainingResult
 
 __all__ = [
@@ -27,6 +28,8 @@ __all__ = [
     "build_feature_panel",
     "build_inference_frame",
     "load_artifact",
+    "daily_portfolio_returns",
+    "profit_metrics",
 ]
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
