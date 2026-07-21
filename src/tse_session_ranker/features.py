@@ -12,10 +12,17 @@ from .data.common import (
     prepare_modeling_prices,
     session_coverage_report,
 )
+from .data.tdnet import (
+    TDNET_MODEL_FEATURE_COLUMNS,
+    TDnetDataset,
+    merge_tdnet_features,
+    require_production_tdnet_provenance,
+    tdnet_target_completeness,
+)
 from .exceptions import DataValidationError, LeakageError
 
 
-FEATURE_COLUMNS: tuple[str, ...] = (
+PRICE_FEATURE_COLUMNS: tuple[str, ...] = (
     "oc_last",
     "oc_mean_5",
     "oc_mean_20",
@@ -28,6 +35,11 @@ FEATURE_COLUMNS: tuple[str, ...] = (
     "overnight_mean_20",
     "overnight_mean_60",
     "night_day_corr_60",
+)
+
+FEATURE_COLUMNS: tuple[str, ...] = (
+    *PRICE_FEATURE_COLUMNS,
+    *TDNET_MODEL_FEATURE_COLUMNS,
 )
 
 BANNED_MODEL_COLUMNS = frozenset(
@@ -53,7 +65,7 @@ def validate_feature_columns(columns: Sequence[str]) -> tuple[str, ...]:
         raise LeakageError(f"target-derived columns cannot be model features: {banned}")
     if result != FEATURE_COLUMNS:
         raise LeakageError(
-            "artifact feature order does not match the session_v2 manifest"
+            "artifact feature order does not match the session_v3 manifest"
         )
     return result
 
@@ -271,6 +283,7 @@ def build_feature_panel(
 def build_inference_frame(
     prices: pd.DataFrame,
     target_date: object,
+    tdnet_dataset: TDnetDataset,
     config: RankerConfig | None = None,
     expected_history_date: object | None = None,
     expected_sessions: object | None = None,
@@ -278,6 +291,7 @@ def build_inference_frame(
     """Create the next-session feature rows without requiring target OHLC data."""
 
     settings = config or RankerConfig()
+    require_production_tdnet_provenance(tdnet_dataset)
     target = pd.Timestamp(target_date).normalize()
     history = normalize_daily_prices(prices)
     history = history[history["date"] < target].copy()
@@ -298,6 +312,10 @@ def build_inference_frame(
     if expected_history_date is None and settings.require_expected_history_date:
         raise DataValidationError(
             "expected_history_date is required for fail-closed live inference"
+        )
+    if calendar is None:
+        raise DataValidationError(
+            "session_v3 inference requires an explicit exchange session calendar"
         )
     if calendar is not None:
         if target not in calendar:
@@ -397,7 +415,22 @@ def build_inference_frame(
     combined = pd.concat(
         [modeling_history, placeholders], ignore_index=True, sort=False
     )
-    panel = build_feature_panel(combined, settings)
+    tdnet_coverage = tdnet_target_completeness(
+        calendar,
+        tdnet_dataset.complete_dates,
+        tdnet_dataset.observed_at_by_date,
+        decision_time=settings.preopen.decision_time,
+    )
+    if not bool(tdnet_coverage.get(target, False)):
+        raise DataValidationError(
+            f"TDnet index coverage is incomplete for target session {target.date()}"
+        )
+    panel = merge_tdnet_features(
+        build_feature_panel(combined, settings),
+        tdnet_dataset,
+        calendar,
+        decision_time=settings.preopen.decision_time,
+    )
     inference = panel[panel["synthetic_target"].fillna(False)].copy()
     if inference["label"].notna().any() or inference["oc_return_pct"].notna().any():
         raise LeakageError("inference rows unexpectedly contain target labels")

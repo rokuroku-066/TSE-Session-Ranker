@@ -7,7 +7,7 @@ import pandas as pd
 from tse_session_ranker.backtest import monthly_walk_forward
 from tse_session_ranker.config import RankerConfig
 
-from .helpers import synthetic_prices
+from .helpers import synthetic_prices, synthetic_tdnet
 
 
 class BacktestTests(unittest.TestCase):
@@ -19,7 +19,9 @@ class BacktestTests(unittest.TestCase):
             prices,
             evaluation_start=pd.Timestamp(dates[180]),
             evaluation_end=pd.Timestamp(dates[230]),
+            tdnet_dataset=synthetic_tdnet(prices),
             config=config,
+            expected_sessions=dates,
         )
         for row in result.folds.itertuples(index=False):
             self.assertLess(pd.Timestamp(row.train_end), pd.Timestamp(row.score_start))
@@ -40,7 +42,9 @@ class BacktestTests(unittest.TestCase):
             prices,
             evaluation_start=pd.Timestamp(dates[180]),
             evaluation_end=pd.Timestamp(dates[230]),
+            tdnet_dataset=synthetic_tdnet(prices),
             config=config,
+            expected_sessions=dates,
         )
         scored = result.scores[
             result.scores["date"].eq(no_trade_date)
@@ -64,7 +68,9 @@ class BacktestTests(unittest.TestCase):
             prices,
             evaluation_start=pd.Timestamp(dates[180]),
             evaluation_end=pd.Timestamp(dates[230]),
+            tdnet_dataset=synthetic_tdnet(prices),
             config=config,
+            expected_sessions=dates,
         )
         row = result.scores[
             result.scores["date"].eq(target)

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 import tempfile
 from dataclasses import dataclass
@@ -10,6 +11,10 @@ from typing import Any
 
 import joblib
 import sklearn
+from sklearn.impute import SimpleImputer
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 
 from .config import RankerConfig
 from .exceptions import ArtifactError
@@ -17,8 +22,23 @@ from .features import FEATURE_COLUMNS, validate_feature_columns
 from .io import write_json
 
 
-ARTIFACT_SCHEMA_VERSION = 4
-PACKAGE_VERSION = "0.2.0"
+ARTIFACT_SCHEMA_VERSION = 5
+PACKAGE_VERSION = "0.3.0"
+
+
+def _estimator_params_match(
+    actual: dict[str, Any], expected: dict[str, Any]
+) -> bool:
+    if set(actual) != set(expected):
+        return False
+    for key, expected_value in expected.items():
+        actual_value = actual[key]
+        if isinstance(actual_value, float) and isinstance(expected_value, float):
+            if math.isnan(actual_value) and math.isnan(expected_value):
+                continue
+        if actual_value != expected_value:
+            return False
+    return True
 
 
 def _sha256(path: Path) -> str:
@@ -57,21 +77,68 @@ class ModelArtifact:
             validate_feature_columns(self.feature_columns)
         except Exception as exc:
             raise ArtifactError(str(exc)) from exc
-        if self.config.feature_set != "session_v2":
+        if self.config.feature_set != "session_v3_tdnet_clear":
             raise ArtifactError(
-                f"artifact feature_set is {self.config.feature_set!r}, expected 'session_v2'"
+                "artifact feature_set is "
+                f"{self.config.feature_set!r}, expected 'session_v3_tdnet_clear'"
             )
-        if not hasattr(self.estimator, "predict_proba"):
-            raise ArtifactError("artifact estimator does not support predict_proba")
+        if not isinstance(self.estimator, Pipeline) or list(
+            self.estimator.named_steps
+        ) != ["impute", "scale", "model"]:
+            raise ArtifactError("artifact is not the fixed session_v3 pipeline")
+        imputer = self.estimator.named_steps["impute"]
+        scaler = self.estimator.named_steps["scale"]
+        model = self.estimator.named_steps["model"]
+        if not (
+            isinstance(imputer, SimpleImputer)
+            and isinstance(scaler, StandardScaler)
+            and isinstance(model, LogisticRegression)
+        ):
+            raise ArtifactError(
+                "artifact is not the fixed regularized logistic pipeline"
+            )
+        expected_model = self.config.model
+        expected_imputer_params = SimpleImputer(
+            strategy="median", add_indicator=True
+        ).get_params(deep=False)
+        expected_scaler_params = StandardScaler().get_params(deep=False)
+        expected_model_params = LogisticRegression(
+            C=expected_model.c,
+            class_weight=expected_model.class_weight,
+            max_iter=expected_model.max_iter,
+            random_state=expected_model.random_state,
+        ).get_params(deep=False)
+        if not _estimator_params_match(
+            imputer.get_params(deep=False), expected_imputer_params
+        ):
+            raise ArtifactError(
+                "artifact imputer parameters do not match the fixed config"
+            )
+        if not _estimator_params_match(
+            scaler.get_params(deep=False), expected_scaler_params
+        ):
+            raise ArtifactError(
+                "artifact scaler parameters do not match the fixed config"
+            )
+        if not _estimator_params_match(
+            model.get_params(deep=False), expected_model_params
+        ):
+            raise ArtifactError(
+                "artifact logistic parameters do not match the fixed config"
+            )
         required_manifest = {
             "training_end",
             "run_id",
+            "feature_set",
             "selection_objective",
             "data_semantics",
             "score_semantics",
             "sklearn_version",
             "session_calendar_mode",
             "session_calendar_sha256",
+            "tdnet_source_sha256",
+            "tdnet_complete_through",
+            "tdnet_decision_time",
         }
         if not required_manifest.issubset(self.manifest):
             raise ArtifactError("artifact training manifest is incomplete")
@@ -79,6 +146,15 @@ class ModelArtifact:
             raise ArtifactError("artifact selection objective does not match config")
         if self.manifest["data_semantics"] != self.config.data_semantics:
             raise ArtifactError("artifact data semantics do not match config")
+        if self.manifest["feature_set"] != self.config.feature_set:
+            raise ArtifactError("artifact feature set does not match config")
+        if self.manifest["tdnet_decision_time"] != self.config.preopen.decision_time:
+            raise ArtifactError("artifact TDnet decision time does not match config")
+        input_count = getattr(self.estimator, "n_features_in_", None)
+        if input_count != len(self.feature_columns):
+            raise ArtifactError(
+                "artifact estimator input dimension does not match feature manifest"
+            )
 
     def save(self, path: str | Path) -> Path:
         self.validate()
@@ -157,6 +233,7 @@ def load_artifact(path: str | Path, verify_checksum: bool = True) -> ModelArtifa
             "selection_objective": artifact.manifest["selection_objective"],
             "data_semantics": artifact.manifest["data_semantics"],
             "score_semantics": artifact.manifest["score_semantics"],
+            "feature_set": artifact.manifest["feature_set"],
             "config_sha256": artifact.manifest.get("config_sha256"),
             "training_data_sha256": artifact.manifest.get("training_data_sha256"),
             "sklearn_version": artifact.manifest["sklearn_version"],
@@ -167,6 +244,11 @@ def load_artifact(path: str | Path, verify_checksum: bool = True) -> ModelArtifa
             "session_calendar_through": artifact.manifest.get(
                 "session_calendar_through"
             ),
+            "tdnet_source_sha256": artifact.manifest["tdnet_source_sha256"],
+            "tdnet_complete_through": artifact.manifest[
+                "tdnet_complete_through"
+            ],
+            "tdnet_decision_time": artifact.manifest["tdnet_decision_time"],
         }
         mismatches = [
             key

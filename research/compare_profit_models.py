@@ -39,7 +39,7 @@ from tse_session_ranker.data.common import (
     prepare_modeling_prices,
     session_calendar_hash,
 )
-from tse_session_ranker.features import FEATURE_COLUMNS, build_feature_panel
+from tse_session_ranker.features import PRICE_FEATURE_COLUMNS, build_feature_panel
 from tse_session_ranker.inference import rank_candidates
 from tse_session_ranker.io import read_frame, write_frame, write_json
 from tse_session_ranker.profit import profit_metrics
@@ -47,6 +47,7 @@ from tse_session_ranker.training import date_equal_weights, fit_estimator
 
 
 DEFAULT_SEED = 31
+FEATURE_COLUMNS = PRICE_FEATURE_COLUMNS
 EXPLORATION_START = pd.Timestamp("2024-09-02")
 EXPLORATION_END = pd.Timestamp("2024-10-31")
 EXPLORATION_TRAIN_START = pd.Timestamp("2024-04-01")

@@ -7,14 +7,16 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from sklearn.dummy import DummyClassifier
 
 from tse_session_ranker import RankerConfig, SessionRanker
 from tse_session_ranker.artifact import load_artifact
+from tse_session_ranker.data.tdnet import TDnetDataset, normalize_tdnet_disclosures
 from tse_session_ranker.exceptions import ArtifactError, DataValidationError
 from tse_session_ranker.inference import predict_candidates
 from tse_session_ranker.training import train_model
 
-from .helpers import synthetic_prices
+from .helpers import synthetic_prices, synthetic_tdnet
 
 
 class TrainingArtifactTests(unittest.TestCase):
@@ -22,15 +24,28 @@ class TrainingArtifactTests(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.prices = synthetic_prices(periods=230, codes=4)
         cls.dates = sorted(cls.prices["date"].unique())
+        cls.calendar = pd.DatetimeIndex(cls.dates)
+        cls.tdnet = synthetic_tdnet(cls.prices)
         cls.config = RankerConfig(regime_start=str(pd.Timestamp(cls.dates[70]).date()))
+
+    def _train(
+        self, prices: pd.DataFrame, cutoff: pd.Timestamp
+    ):
+        return train_model(
+            prices,
+            cutoff,
+            tdnet_dataset=self.tdnet,
+            config=self.config,
+            expected_sessions=self.calendar,
+        )
 
     def test_train_end_is_hard_cutoff(self) -> None:
         cutoff = pd.Timestamp(self.dates[180])
-        first = train_model(self.prices, cutoff, config=self.config).artifact
+        first = self._train(self.prices, cutoff).artifact
         changed = self.prices.copy()
         future = changed["date"] > cutoff
         changed.loc[future, ["open", "high", "low", "close"]] *= 7.0
-        second = train_model(changed, cutoff, config=self.config).artifact
+        second = self._train(changed, cutoff).artifact
         first_model = first.estimator.named_steps["model"]
         second_model = second.estimator.named_steps["model"]
         np.testing.assert_allclose(first_model.coef_, second_model.coef_, atol=0, rtol=0)
@@ -41,16 +56,115 @@ class TrainingArtifactTests(unittest.TestCase):
         )
         self.assertEqual(first.manifest["input_max_date"], str(cutoff.date()))
 
+    def test_tdnet_after_train_cutoff_cannot_change_model_or_hash(self) -> None:
+        cutoff = pd.Timestamp(self.dates[180])
+        first = self._train(self.prices, cutoff).artifact
+        future_disclosure = normalize_tdnet_disclosures(
+            pd.DataFrame(
+                {
+                    "published_at": [
+                        pd.Timestamp(
+                            f"{cutoff.date()} 09:00:00", tz="Asia/Tokyo"
+                        )
+                    ],
+                    "code": [str(self.prices.iloc[0]["code"])],
+                    "name": [str(self.prices.iloc[0]["name"])],
+                    "title": ["業績予想の上方修正に関するお知らせ"],
+                    "url": ["https://example.invalid/future.pdf"],
+                }
+            )
+        )
+        changed_tdnet = TDnetDataset(
+            disclosures=normalize_tdnet_disclosures(
+                pd.concat(
+                    [self.tdnet.disclosures, future_disclosure], ignore_index=True
+                )
+            ),
+            complete_dates=self.tdnet.complete_dates,
+            observed_at_by_date=self.tdnet.observed_at_by_date,
+            provenance_by_date=self.tdnet.provenance_by_date,
+            source_sha256="changed-after-cutoff",
+            source_files=self.tdnet.source_files,
+        )
+        second = train_model(
+            self.prices,
+            cutoff,
+            tdnet_dataset=changed_tdnet,
+            config=self.config,
+            expected_sessions=self.calendar,
+        ).artifact
+        first_model = first.estimator.named_steps["model"]
+        second_model = second.estimator.named_steps["model"]
+        np.testing.assert_allclose(first_model.coef_, second_model.coef_, atol=0, rtol=0)
+        np.testing.assert_allclose(
+            first_model.intercept_, second_model.intercept_, atol=0, rtol=0
+        )
+        self.assertEqual(
+            first.manifest["tdnet_source_sha256"],
+            second.manifest["tdnet_source_sha256"],
+        )
+        self.assertEqual(
+            first.manifest["tdnet_disclosures_through_cutoff"],
+            second.manifest["tdnet_disclosures_through_cutoff"],
+        )
+
+    def test_missing_tdnet_calendar_date_fails_training_closed(self) -> None:
+        cutoff = pd.Timestamp(self.dates[180])
+        missing_date = pd.Timestamp(self.dates[120]) + pd.Timedelta(days=1)
+        incomplete = TDnetDataset(
+            disclosures=self.tdnet.disclosures,
+            complete_dates=self.tdnet.complete_dates.difference(
+                pd.DatetimeIndex([missing_date])
+            ),
+            observed_at_by_date=self.tdnet.observed_at_by_date.drop(
+                missing_date, errors="ignore"
+            ),
+            provenance_by_date=self.tdnet.provenance_by_date.drop(
+                missing_date, errors="ignore"
+            ),
+            source_sha256="incomplete-tdnet",
+            source_files=self.tdnet.source_files - 1,
+        )
+        with self.assertRaisesRegex(DataValidationError, "TDnet index coverage"):
+            train_model(
+                self.prices,
+                cutoff,
+                tdnet_dataset=incomplete,
+                config=self.config,
+                expected_sessions=self.calendar,
+            )
+
+    def test_historical_tdnet_provenance_cannot_enter_production_training(self) -> None:
+        historical = TDnetDataset(
+            disclosures=self.tdnet.disclosures,
+            complete_dates=self.tdnet.complete_dates,
+            observed_at_by_date=self.tdnet.observed_at_by_date,
+            source_sha256="historical-only-tdnet",
+            source_files=self.tdnet.source_files,
+            provenance_by_date=pd.Series(
+                "legacy_historical_file_mtime_assumption",
+                index=self.tdnet.complete_dates,
+            ),
+        )
+        with self.assertRaisesRegex(DataValidationError, "production TDnet"):
+            train_model(
+                self.prices,
+                pd.Timestamp(self.dates[180]),
+                tdnet_dataset=historical,
+                config=self.config,
+                expected_sessions=self.calendar,
+            )
+
     def test_artifact_roundtrip_and_prediction(self) -> None:
         cutoff = pd.Timestamp(self.dates[180])
-        artifact = train_model(self.prices, cutoff, config=self.config).artifact
+        artifact = self._train(self.prices, cutoff).artifact
         self.assertEqual(
             artifact.manifest["selection_objective"],
             "top1_net_mean_pct_at_cost",
         )
         self.assertEqual(
             artifact.manifest["data_semantics"],
-            "prior_session_universe_source_mask_v2",
+            "prior_session_universe_source_mask_tdnet_v3",
         )
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "model.joblib"
@@ -60,15 +174,19 @@ class TrainingArtifactTests(unittest.TestCase):
                 artifact,
                 self.prices,
                 pd.Timestamp(self.dates[181]),
+                self.tdnet,
                 top_k=2,
                 expected_history_date=pd.Timestamp(self.dates[180]),
+                expected_sessions=self.calendar,
             )
             after = predict_candidates(
                 loaded,
                 self.prices,
                 pd.Timestamp(self.dates[181]),
+                self.tdnet,
                 top_k=2,
                 expected_history_date=pd.Timestamp(self.dates[180]),
+                expected_sessions=self.calendar,
             )
         self.assertEqual(artifact.feature_columns, loaded.feature_columns)
         self.assertEqual(artifact.config, loaded.config)
@@ -91,9 +209,23 @@ class TrainingArtifactTests(unittest.TestCase):
         ):
             self.assertIn(column, before.candidates)
 
+    def test_artifact_requires_the_fixed_logistic_pipeline(self) -> None:
+        artifact = self._train(
+            self.prices, pd.Timestamp(self.dates[180])
+        ).artifact
+        artifact.estimator.steps[-1] = ("model", DummyClassifier())
+        with self.assertRaisesRegex(ArtifactError, "fixed regularized logistic"):
+            artifact.validate()
+        drifted = self._train(
+            self.prices, pd.Timestamp(self.dates[180])
+        ).artifact
+        drifted.estimator.named_steps["model"].set_params(penalty=None)
+        with self.assertRaisesRegex(ArtifactError, "logistic parameters"):
+            drifted.validate()
+
     def test_sidecar_metadata_must_match_embedded_artifact(self) -> None:
         cutoff = pd.Timestamp(self.dates[180])
-        artifact = train_model(self.prices, cutoff, config=self.config).artifact
+        artifact = self._train(self.prices, cutoff).artifact
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "model.joblib"
             artifact.save(path)
@@ -112,9 +244,10 @@ class TrainingArtifactTests(unittest.TestCase):
             SessionRanker().predict(
                 self.prices,
                 target_date=pd.Timestamp(self.dates[181]),
+                tdnet_indexes=self.tdnet,
             )
         cutoff = pd.Timestamp(self.dates[180])
-        artifact = train_model(self.prices, cutoff, config=self.config).artifact
+        artifact = self._train(self.prices, cutoff).artifact
         with self.assertRaisesRegex(ArtifactError, "does not match"):
             SessionRanker(config=RankerConfig(cost_bps=21.0), artifact=artifact)
 
@@ -126,9 +259,17 @@ class TrainingArtifactTests(unittest.TestCase):
     def test_explicit_training_calendar_is_required_again_at_inference(self) -> None:
         cutoff = pd.Timestamp(self.dates[180])
         calendar = pd.DatetimeIndex(self.dates[:182])
+        with self.assertRaisesRegex(DataValidationError, "requires an explicit"):
+            train_model(
+                self.prices,
+                cutoff,
+                tdnet_dataset=self.tdnet,
+                config=self.config,
+            )
         artifact = train_model(
             self.prices,
             cutoff,
+            tdnet_dataset=self.tdnet,
             config=self.config,
             expected_sessions=calendar,
         ).artifact
@@ -136,26 +277,19 @@ class TrainingArtifactTests(unittest.TestCase):
             artifact.manifest["session_calendar_mode"],
             "explicit_exchange_sessions",
         )
-        observed_calendar_artifact = train_model(
-            self.prices,
-            cutoff,
-            config=self.config,
-        ).artifact
-        self.assertNotEqual(
-            artifact.manifest["run_id"],
-            observed_calendar_artifact.manifest["run_id"],
-        )
         with self.assertRaisesRegex(DataValidationError, "requires"):
             predict_candidates(
                 artifact,
                 self.prices,
                 pd.Timestamp(self.dates[181]),
+                self.tdnet,
                 expected_history_date=cutoff,
             )
         result = predict_candidates(
             artifact,
             self.prices,
             pd.Timestamp(self.dates[181]),
+            self.tdnet,
             expected_history_date=cutoff,
             expected_sessions=(value for value in calendar),
         )
@@ -165,6 +299,7 @@ class TrainingArtifactTests(unittest.TestCase):
                 artifact,
                 self.prices,
                 pd.Timestamp(self.dates[181]),
+                self.tdnet,
                 expected_history_date=pd.Timestamp(self.dates[179]),
                 expected_sessions=calendar,
             )
@@ -173,6 +308,7 @@ class TrainingArtifactTests(unittest.TestCase):
                 artifact,
                 self.prices,
                 pd.Timestamp(self.dates[181]) + pd.Timedelta(hours=24),
+                self.tdnet,
                 expected_history_date=pd.Timestamp(self.dates[181]),
                 expected_sessions=calendar,
             )
@@ -186,6 +322,7 @@ class TrainingArtifactTests(unittest.TestCase):
             train_model(
                 truncated_prices,
                 requested_end,
+                tdnet_dataset=self.tdnet,
                 config=self.config,
                 expected_sessions=truncated_calendar,
             )
@@ -200,6 +337,7 @@ class TrainingArtifactTests(unittest.TestCase):
             train_model(
                 prices_with_cutoff_gap,
                 requested_end,
+                tdnet_dataset=self.tdnet,
                 config=self.config,
                 expected_sessions=calendar_with_cutoff_gap,
             )
@@ -208,6 +346,7 @@ class TrainingArtifactTests(unittest.TestCase):
                 prices_with_cutoff_gap,
                 evaluation_start=pd.Timestamp(self.dates[170]),
                 evaluation_end=requested_end,
+                tdnet_indexes=self.tdnet,
                 expected_sessions=calendar_with_cutoff_gap,
             )
         with self.assertRaisesRegex(DataValidationError, "calendar ends"):
@@ -215,6 +354,7 @@ class TrainingArtifactTests(unittest.TestCase):
                 truncated_prices,
                 evaluation_start=pd.Timestamp(self.dates[170]),
                 evaluation_end=requested_end,
+                tdnet_indexes=self.tdnet,
                 expected_sessions=truncated_calendar,
             )
 
@@ -226,7 +366,9 @@ class TrainingArtifactTests(unittest.TestCase):
             train_model(
                 bad,
                 pd.Timestamp(self.dates[180]),
+                tdnet_dataset=self.tdnet,
                 config=self.config,
+                expected_sessions=self.calendar,
             )
 
 

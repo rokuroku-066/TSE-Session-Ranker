@@ -10,11 +10,13 @@ from tse_session_ranker.config import RankerConfig
 from tse_session_ranker.exceptions import DataValidationError
 from tse_session_ranker.features import (
     FEATURE_COLUMNS,
+    PRICE_FEATURE_COLUMNS,
     build_feature_panel,
     build_inference_frame,
 )
+from tse_session_ranker.data.tdnet import merge_tdnet_features
 
-from .helpers import synthetic_prices
+from .helpers import synthetic_prices, synthetic_tdnet
 
 
 class FeatureTests(unittest.TestCase):
@@ -22,6 +24,7 @@ class FeatureTests(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.prices = synthetic_prices(periods=100, codes=3)
         cls.dates = sorted(cls.prices["date"].unique())
+        cls.tdnet = synthetic_tdnet(cls.prices)
 
     def test_target_ohlc_cannot_change_target_features(self) -> None:
         target = pd.Timestamp(self.dates[80])
@@ -37,7 +40,7 @@ class FeatureTests(unittest.TestCase):
         ]
         modified = build_feature_panel(modified_prices)
         columns = [
-            *FEATURE_COLUMNS,
+            *PRICE_FEATURE_COLUMNS,
             "prior_close",
             "history_count",
             "atr14_pct",
@@ -61,11 +64,17 @@ class FeatureTests(unittest.TestCase):
 
     def test_training_and_live_feature_parity_and_no_label(self) -> None:
         target = pd.Timestamp(self.dates[80])
-        panel = build_feature_panel(self.prices)
+        panel = merge_tdnet_features(
+            build_feature_panel(self.prices), self.tdnet, self.dates
+        )
         expected = panel[panel["date"].eq(target)].sort_values("code")
         prior_date = pd.Timestamp(self.dates[79])
         live = build_inference_frame(
-            self.prices, target, expected_history_date=prior_date
+            self.prices,
+            target,
+            self.tdnet,
+            expected_history_date=prior_date,
+            expected_sessions=self.dates,
         ).sort_values("code")
         np.testing.assert_allclose(
             expected[list(FEATURE_COLUMNS) + ["prior_close", "atr14_pct"]],
@@ -84,7 +93,7 @@ class FeatureTests(unittest.TestCase):
         future = changed["date"] > target
         changed.loc[future, ["open", "high", "low", "close"]] *= 3.0
         rebuilt = build_feature_panel(changed)
-        columns = ["date", "code", *FEATURE_COLUMNS, "eligible"]
+        columns = ["date", "code", *PRICE_FEATURE_COLUMNS, "eligible"]
         left = original.loc[original["date"].le(target), columns].reset_index(drop=True)
         right = rebuilt.loc[rebuilt["date"].le(target), columns].reset_index(drop=True)
         assert_frame_equal(left, right, check_exact=True)
@@ -112,8 +121,10 @@ class FeatureTests(unittest.TestCase):
         live = build_inference_frame(
             changed,
             target,
+            synthetic_tdnet(changed, through=target),
             config=config,
             expected_history_date=last_date,
+            expected_sessions=[*self.dates, target],
         )
         self.assertNotIn("1003", set(live["code"]))
 
@@ -123,7 +134,9 @@ class FeatureTests(unittest.TestCase):
             build_inference_frame(
                 self.prices,
                 target,
+                synthetic_tdnet(self.prices, through=target),
                 expected_history_date=pd.Timestamp(self.dates[-1]),
+                expected_sessions=[*self.dates, target],
             )
 
     def test_direct_inference_rejects_missing_calendar_previous_session(self) -> None:
@@ -135,6 +148,7 @@ class FeatureTests(unittest.TestCase):
             build_inference_frame(
                 changed,
                 target,
+                synthetic_tdnet(changed, through=target),
                 expected_history_date=pd.Timestamp(self.dates[-2]),
                 expected_sessions=(value for value in calendar),
             )

@@ -23,6 +23,12 @@ from .data.common import (
     prepare_modeling_prices,
     session_calendar_hash,
 )
+from .data.tdnet import (
+    TDnetDataset,
+    merge_tdnet_features,
+    require_production_tdnet_provenance,
+    tdnet_target_completeness,
+)
 from .exceptions import DataValidationError
 from .features import FEATURE_COLUMNS, build_feature_panel, validate_feature_columns
 
@@ -101,14 +107,43 @@ def _config_hash(config: RankerConfig) -> str:
     return hashlib.sha256(encoded).hexdigest()
 
 
+def _tdnet_training_hash(
+    dataset: TDnetDataset, end: pd.Timestamp, decision_time: str
+) -> tuple[str, int]:
+    cutoff = pd.Timestamp(
+        f"{end.date()} {decision_time}", tz="Asia/Tokyo"
+    )
+    events = dataset.disclosures[
+        dataset.disclosures["published_at"].le(cutoff)
+    ].copy()
+    fields = events[["published_at", "code", "title", "url"]].copy()
+    fields["published_at"] = fields["published_at"].astype(str)
+    row_hashes = pd.util.hash_pandas_object(fields, index=False).to_numpy()
+    complete = dataset.complete_dates[dataset.complete_dates <= end]
+    encoded_dates = "\n".join(
+        (
+            value.strftime("%Y-%m-%d")
+            + "="
+            + pd.Timestamp(dataset.observed_at_by_date.loc[value]).isoformat()
+        )
+        for value in complete
+    )
+    digest = hashlib.sha256()
+    digest.update(row_hashes.tobytes())
+    digest.update(("\n" + encoded_dates + "\n").encode("utf-8"))
+    return digest.hexdigest(), int(len(events))
+
+
 def train_model(
     prices: pd.DataFrame,
     train_end: object,
+    tdnet_dataset: TDnetDataset,
     config: RankerConfig | None = None,
     train_start: object | None = None,
     expected_sessions: object | None = None,
 ) -> TrainingResult:
     settings = config or RankerConfig()
+    require_production_tdnet_provenance(tdnet_dataset)
     end = pd.Timestamp(train_end).normalize()
     start = pd.Timestamp(train_start or settings.regime_start).normalize()
     if end < start:
@@ -116,33 +151,55 @@ def train_model(
 
     canonical = normalize_daily_prices(prices)
     source_history = canonical.loc[canonical["date"].le(end)].copy()
-    calendar = None
-    if expected_sessions is not None:
-        calendar_all = normalize_expected_sessions(expected_sessions)
-        if calendar_all.max() < end:
-            raise DataValidationError(
-                f"session calendar ends at {calendar_all.max().date()} before "
-                f"train_end {end.date()}"
-            )
-        if end not in calendar_all:
-            raise DataValidationError(
-                "train_end is not in the exchange session calendar"
-            )
-        calendar = calendar_all[calendar_all <= end]
-        expected_latest = calendar[calendar >= source_history["date"].min()].max()
-        actual_latest = source_history["date"].max()
-        if expected_latest > actual_latest:
-            raise DataValidationError(
-                f"daily history ends at {actual_latest.date()} but the session "
-                f"calendar expects {expected_latest.date()}"
-            )
+    if expected_sessions is None:
+        raise DataValidationError(
+            "session_v3 training requires an explicit exchange session calendar"
+        )
+    calendar_all = normalize_expected_sessions(expected_sessions)
+    if calendar_all.max() < end:
+        raise DataValidationError(
+            f"session calendar ends at {calendar_all.max().date()} before "
+            f"train_end {end.date()}"
+        )
+    if end not in calendar_all:
+        raise DataValidationError(
+            "train_end is not in the exchange session calendar"
+        )
+    calendar = calendar_all[calendar_all <= end]
+    expected_latest = calendar[calendar >= source_history["date"].min()].max()
+    actual_latest = source_history["date"].max()
+    if expected_latest > actual_latest:
+        raise DataValidationError(
+            f"daily history ends at {actual_latest.date()} but the session "
+            f"calendar expects {expected_latest.date()}"
+        )
+    tdnet_coverage = tdnet_target_completeness(
+        calendar,
+        tdnet_dataset.complete_dates,
+        tdnet_dataset.observed_at_by_date,
+        decision_time=settings.preopen.decision_time,
+    )
+    required_tdnet_sessions = calendar[calendar >= start]
+    incomplete_tdnet = required_tdnet_sessions[
+        ~tdnet_coverage.reindex(required_tdnet_sessions, fill_value=False).to_numpy()
+    ]
+    if len(incomplete_tdnet):
+        examples = ", ".join(str(value.date()) for value in incomplete_tdnet[:5])
+        raise DataValidationError(
+            "TDnet index coverage is incomplete for training sessions: " + examples
+        )
     history, coverage = prepare_modeling_prices(
         source_history,
         coverage_lookback=settings.source_coverage_lookback,
         minimum_source_coverage=settings.minimum_source_coverage,
         expected_sessions=calendar,
     )
-    panel = build_feature_panel(history, settings)
+    panel = merge_tdnet_features(
+        build_feature_panel(history, settings),
+        tdnet_dataset,
+        calendar,
+        decision_time=settings.preopen.decision_time,
+    )
     training = panel[
         panel["date"].between(start, end)
         & panel["training_eligible"]
@@ -169,10 +226,13 @@ def train_model(
         if calendar is not None
         else None
     )
+    tdnet_hash, tdnet_events = _tdnet_training_hash(
+        tdnet_dataset, end, settings.preopen.decision_time
+    )
     calendar_token = calendar_hash[:8] if calendar_hash is not None else "observed"
     run_id = (
-        f"session-v2-profit-{end:%Y%m%d}-{config_hash[:8]}-"
-        f"{data_hash[:8]}-{calendar_token}"
+        f"session-v3-profit-{end:%Y%m%d}-{config_hash[:8]}-"
+        f"{data_hash[:8]}-{calendar_token}-{tdnet_hash[:8]}"
     )
     excluded_dates = coverage.loc[~coverage["source_complete"], "date"]
     embargoed_dates = panel.loc[
@@ -212,6 +272,10 @@ def train_model(
         "session_calendar_through": (
             str(calendar.max().date()) if calendar is not None else None
         ),
+        "tdnet_source_sha256": tdnet_hash,
+        "tdnet_complete_through": str(end.date()),
+        "tdnet_disclosures_through_cutoff": tdnet_events,
+        "tdnet_decision_time": settings.preopen.decision_time,
         "training_data_sha256": data_hash,
         "config_sha256": config_hash,
         "python_runtime": __import__("sys").version.split()[0],

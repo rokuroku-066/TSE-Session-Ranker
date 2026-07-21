@@ -11,6 +11,7 @@ from .artifact import ModelArtifact
 from .config import PreopenPolicy
 from .data.preopen import latest_preopen_snapshots
 from .data.common import normalize_expected_sessions, session_calendar_hash
+from .data.tdnet import TDnetDataset
 from .exceptions import DataValidationError, LeakageError
 from .features import FEATURE_COLUMNS, build_inference_frame
 
@@ -169,6 +170,7 @@ def predict_candidates(
     artifact: ModelArtifact,
     prices: pd.DataFrame,
     target_date: object,
+    tdnet_dataset: TDnetDataset,
     top_k: int | None = None,
     snapshots: pd.DataFrame | None = None,
     as_of: datetime | pd.Timestamp | str | None = None,
@@ -229,6 +231,7 @@ def predict_candidates(
     feature_frame = build_inference_frame(
         prices,
         target,
+        tdnet_dataset,
         artifact.config,
         expected_history_date=expected_history_date,
         expected_sessions=calendar,
@@ -264,6 +267,7 @@ def predict_candidates(
     selected["data_semantics"] = artifact.config.data_semantics
     selected["session_calendar_mode"] = calendar_mode
     selected["session_calendar_sha256"] = trained_calendar_hash
+    selected["tdnet_source_sha256"] = tdnet_dataset.source_sha256
     return PredictionResult(
         target_date=target,
         run_id=str(artifact.manifest["run_id"]),

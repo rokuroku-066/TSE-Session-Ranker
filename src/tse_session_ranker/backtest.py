@@ -14,6 +14,12 @@ from .data.common import (
     session_calendar_hash,
 )
 from .exceptions import DataValidationError
+from .data.tdnet import (
+    TDnetDataset,
+    merge_tdnet_features,
+    require_production_tdnet_provenance,
+    tdnet_target_completeness,
+)
 from .features import FEATURE_COLUMNS, build_feature_panel
 from .inference import rank_candidates
 from .profit import profit_metrics
@@ -38,6 +44,7 @@ def monthly_walk_forward(
     prices: pd.DataFrame,
     evaluation_start: object,
     evaluation_end: object,
+    tdnet_dataset: TDnetDataset,
     config: RankerConfig | None = None,
     train_start: object | None = None,
     expected_sessions: object | None = None,
@@ -45,6 +52,7 @@ def monthly_walk_forward(
     """Fixed-spec expanding monthly walk-forward evaluation."""
 
     settings = config or RankerConfig()
+    require_production_tdnet_provenance(tdnet_dataset)
     start = pd.Timestamp(evaluation_start).normalize()
     end = pd.Timestamp(evaluation_end).normalize()
     regime_start = pd.Timestamp(train_start or settings.regime_start).normalize()
@@ -54,33 +62,55 @@ def monthly_walk_forward(
         )
     canonical = normalize_daily_prices(prices)
     source = canonical.loc[canonical["date"].le(end)].copy()
-    calendar = None
-    if expected_sessions is not None:
-        calendar_all = normalize_expected_sessions(expected_sessions)
-        if calendar_all.max() < end:
-            raise DataValidationError(
-                f"session calendar ends at {calendar_all.max().date()} before "
-                f"evaluation_end {end.date()}"
-            )
-        if end not in calendar_all:
-            raise DataValidationError(
-                "evaluation_end is not in the exchange session calendar"
-            )
-        calendar = calendar_all[calendar_all <= end]
-        expected_latest = calendar[calendar >= source["date"].min()].max()
-        actual_latest = source["date"].max()
-        if expected_latest > actual_latest:
-            raise DataValidationError(
-                f"daily history ends at {actual_latest.date()} but the session "
-                f"calendar expects {expected_latest.date()}"
-            )
+    if expected_sessions is None:
+        raise DataValidationError(
+            "session_v3 backtesting requires an explicit exchange session calendar"
+        )
+    calendar_all = normalize_expected_sessions(expected_sessions)
+    if calendar_all.max() < end:
+        raise DataValidationError(
+            f"session calendar ends at {calendar_all.max().date()} before "
+            f"evaluation_end {end.date()}"
+        )
+    if end not in calendar_all:
+        raise DataValidationError(
+            "evaluation_end is not in the exchange session calendar"
+        )
+    calendar = calendar_all[calendar_all <= end]
+    expected_latest = calendar[calendar >= source["date"].min()].max()
+    actual_latest = source["date"].max()
+    if expected_latest > actual_latest:
+        raise DataValidationError(
+            f"daily history ends at {actual_latest.date()} but the session "
+            f"calendar expects {expected_latest.date()}"
+        )
+    tdnet_coverage = tdnet_target_completeness(
+        calendar,
+        tdnet_dataset.complete_dates,
+        tdnet_dataset.observed_at_by_date,
+        decision_time=settings.preopen.decision_time,
+    )
+    required_tdnet_sessions = calendar[calendar >= regime_start]
+    incomplete_tdnet = required_tdnet_sessions[
+        ~tdnet_coverage.reindex(required_tdnet_sessions, fill_value=False).to_numpy()
+    ]
+    if len(incomplete_tdnet):
+        examples = ", ".join(str(value.date()) for value in incomplete_tdnet[:5])
+        raise DataValidationError(
+            "TDnet index coverage is incomplete for backtest sessions: " + examples
+        )
     modeling, coverage = prepare_modeling_prices(
         source,
         coverage_lookback=settings.source_coverage_lookback,
         minimum_source_coverage=settings.minimum_source_coverage,
         expected_sessions=calendar,
     )
-    panel = build_feature_panel(modeling, settings)
+    panel = merge_tdnet_features(
+        build_feature_panel(modeling, settings),
+        tdnet_dataset,
+        calendar,
+        decision_time=settings.preopen.decision_time,
+    )
     scored_parts: list[pd.DataFrame] = []
     fold_rows: list[dict[str, Any]] = []
     for period in pd.period_range(start.to_period("M"), end.to_period("M"), freq="M"):
@@ -158,6 +188,8 @@ def monthly_walk_forward(
         "session_calendar_through": (
             str(calendar.max().date()) if calendar is not None else None
         ),
+        "tdnet_source_sha256": tdnet_dataset.source_sha256,
+        "tdnet_complete_through": str(end.date()),
         "baseline_rows": int(len(scores)),
         "baseline_executed_rows": int(len(evaluated)),
         "baseline_execution_rate": float(len(evaluated) / len(scores)),

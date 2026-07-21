@@ -63,6 +63,22 @@ def build_parser() -> argparse.ArgumentParser:
     collect.add_argument("--existing")
     collect.add_argument("--manifest")
 
+    download_tdnet = subparsers.add_parser(
+        "download-tdnet", help="download public TDnet date-index pages"
+    )
+    download_tdnet.add_argument("--start", required=True)
+    download_tdnet.add_argument("--end", required=True)
+    download_tdnet.add_argument("--destination", required=True)
+    download_tdnet.add_argument("--workers", type=int, default=4)
+    download_tdnet.add_argument("--overwrite", action="store_true")
+
+    collect_tdnet = subparsers.add_parser(
+        "collect-tdnet", help="parse cached TDnet date-index pages"
+    )
+    collect_tdnet.add_argument("--input", nargs="+", required=True)
+    collect_tdnet.add_argument("--output", required=True)
+    collect_tdnet.add_argument("--manifest")
+
     preopen = subparsers.add_parser(
         "ingest-preopen", help="validate and append MarketSpeed-exported snapshots"
     )
@@ -72,7 +88,7 @@ def build_parser() -> argparse.ArgumentParser:
     preopen.add_argument("--config")
 
     train = subparsers.add_parser(
-        "train", help="fit the fixed profit-first session_v2 ranker"
+        "train", help="fit the fixed profit-first session_v3 ranker"
     )
     train.add_argument("--daily", required=True)
     train.add_argument("--train-start")
@@ -81,7 +97,11 @@ def build_parser() -> argparse.ArgumentParser:
     train.add_argument("--config")
     train.add_argument(
         "--calendar",
+        required=True,
         help="CSV with a date column, or one YYYY-MM-DD session per line",
+    )
+    train.add_argument(
+        "--tdnet-cache", required=True, help="TDnet HTML directory or exported dataset"
     )
 
     predict = subparsers.add_parser("predict", help="rank the next TSE session")
@@ -90,9 +110,9 @@ def build_parser() -> argparse.ArgumentParser:
     predict.add_argument("--target-date", required=True, help="session date YYYY-MM-DD")
     predict.add_argument(
         "--expected-history-date",
+        required=True,
         help=(
-            "expected latest completed TSE session YYYY-MM-DD; required when "
-            "the artifact uses fail-closed live inference"
+            "expected latest completed TSE session YYYY-MM-DD"
         ),
     )
     predict.add_argument(
@@ -103,7 +123,11 @@ def build_parser() -> argparse.ArgumentParser:
     predict.add_argument("--output")
     predict.add_argument(
         "--calendar",
+        required=True,
         help="same exchange-session calendar used for artifact training",
+    )
+    predict.add_argument(
+        "--tdnet-cache", required=True, help="TDnet HTML directory or exported dataset"
     )
 
     backtest = subparsers.add_parser(
@@ -117,7 +141,11 @@ def build_parser() -> argparse.ArgumentParser:
     backtest.add_argument("--config")
     backtest.add_argument(
         "--calendar",
+        required=True,
         help="CSV with a date column, or one YYYY-MM-DD session per line",
+    )
+    backtest.add_argument(
+        "--tdnet-cache", required=True, help="TDnet HTML directory or exported dataset"
     )
 
     doctor = subparsers.add_parser("doctor", help="validate a canonical daily dataset")
@@ -148,6 +176,46 @@ def _run(argv: Sequence[str] | None = None) -> None:
         )
         _print_json(report)
         return
+    if args.command == "download-tdnet":
+        report = SessionRanker().download_tdnet(
+            args.start,
+            args.end,
+            args.destination,
+            overwrite=args.overwrite,
+            max_workers=args.workers,
+        )
+        _print_json(
+            {
+                "dates": len(report),
+                "downloaded": sum(row["status"] == "downloaded" for row in report),
+                "refreshed": sum(row["status"] == "refreshed" for row in report),
+                "cached": sum(row["status"] == "cached" for row in report),
+                "finalized": sum(bool(row["finalized"]) for row in report),
+                "provisional": sum(not bool(row["finalized"]) for row in report),
+                "destination": args.destination,
+            }
+        )
+        return
+    if args.command == "collect-tdnet":
+        dataset = SessionRanker().collect_tdnet(
+            args.input,
+            output=args.output,
+            manifest_path=args.manifest,
+        )
+        _print_json(
+            {
+                "rows": len(dataset.disclosures),
+                "codes": dataset.disclosures["code"].nunique(),
+                "source_files": dataset.source_files,
+                "source_sha256": dataset.source_sha256,
+                "complete_from": dataset.complete_dates.min(),
+                "complete_through": dataset.complete_dates.max(),
+                "observed_at_min": dataset.observed_at_by_date.min(),
+                "observed_at_max": dataset.observed_at_by_date.max(),
+                "output": args.output,
+            }
+        )
+        return
     if args.command == "ingest-preopen":
         ranker = _ranker(args.config)
         frame = ranker.ingest_preopen(
@@ -168,6 +236,7 @@ def _run(argv: Sequence[str] | None = None) -> None:
             args.daily,
             train_start=args.train_start,
             train_end=args.train_end,
+            tdnet_indexes=args.tdnet_cache,
             artifact_path=args.artifact,
             expected_sessions=_calendar(args.calendar),
         )
@@ -195,6 +264,7 @@ def _run(argv: Sequence[str] | None = None) -> None:
         result = ranker.predict(
             args.daily,
             target_date=args.target_date,
+            tdnet_indexes=args.tdnet_cache,
             top_k=args.top_k,
             preopen_snapshots=args.preopen,
             as_of=args.as_of,
@@ -213,6 +283,9 @@ def _run(argv: Sequence[str] | None = None) -> None:
                 "model_score",
                 "prior_close",
                 "atr14_pct",
+                "tdnet_has_revision_up",
+                "tdnet_has_dividend_up",
+                "tdnet_has_buyback_decision",
                 "order_status",
                 "veto_reasons",
             )
@@ -231,6 +304,9 @@ def _run(argv: Sequence[str] | None = None) -> None:
                 "session_calendar_mode": ranker.artifact.manifest[
                     "session_calendar_mode"
                 ],
+                "tdnet_training_source_sha256": ranker.artifact.manifest[
+                    "tdnet_source_sha256"
+                ],
                 "output": args.output,
             }
         )
@@ -241,6 +317,7 @@ def _run(argv: Sequence[str] | None = None) -> None:
             args.daily,
             evaluation_start=args.start,
             evaluation_end=args.end,
+            tdnet_indexes=args.tdnet_cache,
             train_start=args.train_start,
             expected_sessions=_calendar(args.calendar),
         )
