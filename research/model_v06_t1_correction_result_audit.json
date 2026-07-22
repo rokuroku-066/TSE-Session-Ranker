@@ -1,0 +1,310 @@
+{
+  "schema_version": 1,
+  "result_path": "research/model_v06_t1_correction_result.json",
+  "result_sha256": "e6af141fbd5566a3b77ac603e0cb88920205ea8f37aa351e4849e270c6105595",
+  "result_manifest_sha256": "5d689a4cfad747dde4f9d0c9ab6d667ef220fc18bd74fd784fa9b242bc91ca70",
+  "protocol_sha256": "939fe5a330cb973f3a43bbf5d2302ed9495093075acbb8ed98624e85a0e2e4d6",
+  "runner_sha256": "d41145a6e8723828e0aa64895c35726a9e62d717c0622a42ccdc274771e8269a",
+  "auditor_sha256": "2985b08addc0cb6d7eefba839546573e4177bb12790395b40d039afa98c9b633",
+  "checks": [
+    {
+      "name": "manifest_binds_result",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "protocol_hash_binding",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "runner_hash_binding",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "display_picks_hash_binding",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "all_frozen_inputs_hash_bound",
+      "passed": true,
+      "detail": {
+        "v06_protocol": true,
+        "v06_catalog": true,
+        "v06_evaluator": true,
+        "v06_panel": true,
+        "alignment_overlay": true,
+        "v06_result_reference": true,
+        "v06_group_screen_picks_reference": true
+      }
+    },
+    {
+      "name": "protocol_registered_before_run",
+      "passed": true,
+      "detail": {
+        "registered_at": "2026-07-22T16:13:00+09:00",
+        "run_started_at": "2026-07-22T16:17:31.595164+09:00",
+        "run_completed_at": "2026-07-22T16:17:52.794223+09:00"
+      }
+    },
+    {
+      "name": "correction_authority_is_non_selection_non_production",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "three_recipes_have_fixed_84_day_top2_schedule",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "g0_and_legacy_t1_picks_exactly_reproduce_frozen_v06",
+      "passed": true,
+      "detail": {
+        "G0_price_core": {
+          "keys_equal": true,
+          "maximum_absolute_score_difference": 0.0,
+          "maximum_absolute_outcome_difference": 0.0
+        },
+        "legacy_T1": {
+          "keys_equal": true,
+          "maximum_absolute_score_difference": 0.0,
+          "maximum_absolute_outcome_difference": 0.0
+        }
+      }
+    },
+    {
+      "name": "all_recipe_metrics_independently_recomputed",
+      "passed": true,
+      "detail": {
+        "numeric_values": 489,
+        "maximum_absolute_difference": 2.1316282072803006e-14
+      }
+    },
+    {
+      "name": "g0_and_legacy_t1_metrics_exactly_reproduce_frozen_v06",
+      "passed": true,
+      "detail": {
+        "maximum_absolute_difference": 0.0
+      }
+    },
+    {
+      "name": "all_monthly_model_folds_are_identical_and_strictly_prior",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "panel_schema_and_unique_key_match_manifest",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "overlay_schema_keys_and_count_geometry_valid",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "overlay_coverage_counts_independently_recomputed",
+      "passed": true,
+      "detail": {
+        "full_panel": {
+          "panel_rows": 1524104,
+          "panel_dates": 386,
+          "tdnet_complete_rows": 1207751,
+          "tdnet_incomplete_rows": 316353,
+          "overlay_rows": 66702,
+          "overlay_keys_matched_to_panel": 57697,
+          "overlay_keys_outside_panel": 9005,
+          "legacy_event_keys": 34491,
+          "legacy_event_keys_covered": 34491,
+          "complete_rows_without_overlay_key": 1150241
+        },
+        "model_horizon_2024_01_04_through_2024_10_31": {
+          "panel_rows": 803697,
+          "panel_dates": 204,
+          "tdnet_complete_rows": 799768,
+          "tdnet_incomplete_rows": 3929,
+          "overlay_rows": 43068,
+          "overlay_keys_matched_to_panel": 37070,
+          "overlay_keys_outside_panel": 5998,
+          "legacy_event_keys": 22282,
+          "legacy_event_keys_covered": 22282,
+          "complete_rows_without_overlay_key": 762711
+        },
+        "group_screen_2024_07_01_through_2024_10_31": {
+          "panel_rows": 331856,
+          "panel_dates": 84,
+          "tdnet_complete_rows": 331856,
+          "tdnet_incomplete_rows": 0,
+          "overlay_rows": 16697,
+          "overlay_keys_matched_to_panel": 14003,
+          "overlay_keys_outside_panel": 2694,
+          "legacy_event_keys": 8550,
+          "legacy_event_keys_covered": 8550,
+          "complete_rows_without_overlay_key": 317853
+        }
+      }
+    },
+    {
+      "name": "overlay_merge_missingness_and_change_counts_recomputed",
+      "passed": true,
+      "detail": {
+        "overlay_keys_matched": 57697,
+        "complete_rows_implicit_no_event_zero": 1150241,
+        "incomplete_rows_forced_nan": 316353,
+        "changed_rows:tdnet_clean_family_count_log1p": 37433,
+        "changed_rows:tdnet_clean_single_family": 28405
+      }
+    },
+    {
+      "name": "paired_and_shared_block_comparisons_recomputed",
+      "passed": true,
+      "detail": {
+        "numeric_values": 23,
+        "maximum_absolute_difference": 1.1102230246251565e-16
+      }
+    },
+    {
+      "name": "corrected_vs_legacy_change_is_13_slots_on_9_days",
+      "passed": true,
+      "detail": {
+        "scheduled_slots": 168,
+        "changed_slots": 13,
+        "unchanged_slots": 155,
+        "dates_with_any_changed_slot": 9,
+        "slot_change_rate": 0.07738095238095238
+      }
+    },
+    {
+      "name": "summary_recomputed_and_no_production_promotion",
+      "passed": true,
+      "detail": null
+    }
+  ],
+  "checks_passed": 19,
+  "checks_total": 19,
+  "failed_checks": [],
+  "maximum_absolute_metric_difference": 2.1316282072803006e-14,
+  "maximum_absolute_comparison_difference": 1.1102230246251565e-16,
+  "recomputed": {
+    "summary": {
+      "G0_top2_net20_mean_pct": -0.5936574240160194,
+      "legacy_T1_top2_net20_mean_pct": -0.5917441365199558,
+      "corrected_T1_top2_net20_mean_pct": -0.5655823105986516,
+      "legacy_T1_minus_G0_pct": 0.0019132874960635649,
+      "corrected_T1_minus_G0_pct": 0.028075113417367792,
+      "corrected_T1_minus_legacy_T1_pct": 0.026161825921304227
+    },
+    "shared_block_adjustment": {
+      "legacy_T1": {
+        "mean_uplift_pct": 0.0019132874960635278,
+        "max_t_critical_pct": 0.11663846635838049,
+        "adjusted_one_sided_80pct_lower_pct": -0.11472517886231696
+      },
+      "corrected_T1": {
+        "mean_uplift_pct": 0.0280751134173677,
+        "max_t_critical_pct": 0.11663846635838049,
+        "adjusted_one_sided_80pct_lower_pct": -0.08856335294101278
+      }
+    },
+    "corrected_minus_legacy_paired": {
+      "observations": 84,
+      "block_length": 5,
+      "samples": 5000,
+      "confidence": 0.8,
+      "random_state": 31,
+      "candidate_mean_pct": -0.5655823105986516,
+      "baseline_mean_pct": -0.5917441365199558,
+      "point_estimate_delta_pct": 0.026161825921304168,
+      "one_sided_lower_delta_pct": -0.03418176921778596,
+      "two_sided_lower_delta_pct": -0.054794279463558124,
+      "two_sided_upper_delta_pct": 0.09810533805693683,
+      "bootstrap_standard_error_delta_pct": 0.060326716667240605
+    },
+    "pick_changes": {
+      "scheduled_slots": 168,
+      "changed_slots": 13,
+      "unchanged_slots": 155,
+      "dates_with_any_changed_slot": 9,
+      "slot_change_rate": 0.07738095238095238
+    },
+    "overlay_coverage": {
+      "full_panel": {
+        "panel_rows": 1524104,
+        "panel_dates": 386,
+        "tdnet_complete_rows": 1207751,
+        "tdnet_incomplete_rows": 316353,
+        "overlay_rows": 66702,
+        "overlay_keys_matched_to_panel": 57697,
+        "overlay_keys_outside_panel": 9005,
+        "legacy_event_keys": 34491,
+        "legacy_event_keys_covered": 34491,
+        "complete_rows_without_overlay_key": 1150241
+      },
+      "model_horizon_2024_01_04_through_2024_10_31": {
+        "panel_rows": 803697,
+        "panel_dates": 204,
+        "tdnet_complete_rows": 799768,
+        "tdnet_incomplete_rows": 3929,
+        "overlay_rows": 43068,
+        "overlay_keys_matched_to_panel": 37070,
+        "overlay_keys_outside_panel": 5998,
+        "legacy_event_keys": 22282,
+        "legacy_event_keys_covered": 22282,
+        "complete_rows_without_overlay_key": 762711
+      },
+      "group_screen_2024_07_01_through_2024_10_31": {
+        "panel_rows": 331856,
+        "panel_dates": 84,
+        "tdnet_complete_rows": 331856,
+        "tdnet_incomplete_rows": 0,
+        "overlay_rows": 16697,
+        "overlay_keys_matched_to_panel": 14003,
+        "overlay_keys_outside_panel": 2694,
+        "legacy_event_keys": 8550,
+        "legacy_event_keys_covered": 8550,
+        "complete_rows_without_overlay_key": 317853
+      }
+    },
+    "overlay_merge_semantics": {
+      "overlay_keys_matched": 57697,
+      "complete_rows_implicit_no_event_zero": 1150241,
+      "incomplete_rows_forced_nan": 316353,
+      "changed_rows:tdnet_clean_family_count_log1p": 37433,
+      "changed_rows:tdnet_clean_single_family": 28405
+    }
+  },
+  "pit_review": {
+    "model_folds_strictly_prior": true,
+    "overlay_excludes_target_outcomes": true,
+    "decision_time_provenance": "not independently provable from registered artifacts",
+    "unregistered_supplemental_input_lock": {
+      "available": true,
+      "path": "/tmp/model_v07_corrected_input_lock.json",
+      "sha256": "15ba07e26c51e7fa2e0af74c5159efa5af0e11d30e22ab92ae0d40633b3237d1",
+      "registered_by_protocol": false,
+      "used_as_audit_authority": false
+    }
+  },
+  "implementation_review": {
+    "major_issues": [],
+    "minor_or_scope_limiting_issues": [
+      {
+        "id": "overlay_raw_source_and_decision_time_provenance_not_registered",
+        "impact": "The overlay bytes, schema, count geometry, coverage, target-outcome independence and model-fold PIT are auditable, but the registered protocol does not bind the raw TDnet files, overlay-builder implementation, or per-row disclosure timestamps. An independent auditor therefore cannot prove from committed artifacts alone that every overlay value was available by the 08:58 decision cutoff.",
+        "mitigation": "This run is explicitly retrospective, cannot select a feature, and cannot change production. Future overlays should register a source manifest, builder hash, decision cutoff, and per-row source_max_timestamp before metrics are viewed."
+      }
+    ],
+    "verified": [
+      "G0 and legacy T1 reproduce all 168 frozen slots and scores exactly.",
+      "Every recipe metric, the paired interval, and the shared circular-block adjustment were independently reproduced.",
+      "The corrected overlay covers every legacy event key and preserves complete-zero/incomplete-NaN semantics.",
+      "The corrected and legacy recipes differ in exactly 13 slots across 9 dates.",
+      "The correction remains retrospective-only and cannot alter production or the feature survivor lock."
+    ]
+  },
+  "passed": true,
+  "assurance": "numeric_and_registered_artifact_checks_passed_with_overlay_source_provenance_limitation"
+}

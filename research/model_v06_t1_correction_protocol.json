@@ -1,0 +1,180 @@
+{
+  "schema_version": 1,
+  "protocol_id": "model_v06_t1_alignment_correction_diagnostic_20260722",
+  "registered_at": "2026-07-22T16:13:00+09:00",
+  "status": "frozen_before_corrected_t1_metrics",
+  "purpose": "Formally measure the retrospective effect of correcting the two row-shifted T1 event-structure columns while holding the v0.6 panel, model, folds, remaining features and scheduled-day accounting fixed.",
+  "authority": {
+    "result_class": "correction_retrospective_only",
+    "production_promotion_allowed": false,
+    "selection_allowed": false,
+    "reason": "The correction was identified after v0.6 outcomes were viewed. This diagnostic can repair the historical record but cannot select or promote a production recipe."
+  },
+  "frozen_inputs": {
+    "v06_protocol": {
+      "path": "research/model_v06_feature_protocol.json",
+      "sha256": "20038eb33d87a1fbcd187548f7f14c65dca136d00850566311a6888bd0083021"
+    },
+    "v06_catalog": {
+      "path": "research/model_v06_feature_catalog.json",
+      "sha256": "bbf87983979d48afbe1eaa51f3368cca713c306f2b7d4cdc8cda54e5fe43414a"
+    },
+    "v06_evaluator": {
+      "path": "research/screen_feature_candidates_v06.py",
+      "sha256": "503ed17aa04ed65fe8be5cbfb2946935a42e7f17c6497548c965cbda2a1adda1"
+    },
+    "v06_panel": {
+      "path": "/tmp/model_v06_feature_panel.pkl",
+      "sha256": "f2494efe6e66c02307b736b231a6759895ba8dc8471b4060ebc34dbd87e82cfd",
+      "manifest_path": "/tmp/model_v06_feature_panel.pkl.manifest.json",
+      "manifest_sha256": "d9386c2799cf572df3af56ffc624454dc5ce054fa09e75f91d5da542ac1b23d5",
+      "rows": 1524104,
+      "unique_key": [
+        "date",
+        "code"
+      ]
+    },
+    "alignment_overlay": {
+      "path": "/tmp/model_v07_tdnet_alignment_overlay.pkl",
+      "sha256": "5166f8d3b8cfb876edb2a1494db43a1e3d1d8d57c97f3ee974a10409434380e5",
+      "rows": 66702,
+      "columns": [
+        "date",
+        "code",
+        "tdnet_clean_family_count_log1p",
+        "tdnet_clean_single_family"
+      ],
+      "dtypes": {
+        "date": "datetime64[ns]",
+        "code": "object",
+        "tdnet_clean_family_count_log1p": "float32",
+        "tdnet_clean_single_family": "float32"
+      },
+      "date_min": "2024-01-04",
+      "date_max": "2025-04-10",
+      "unique_key": [
+        "date",
+        "code"
+      ]
+    },
+    "v06_result_reference": {
+      "path": "research/model_v06_feature_result.json",
+      "sha256": "bdf91871e05dde03579b2521e4fcd558683b2ed9ab9de750b9535614261be6c1"
+    },
+    "v06_group_screen_picks_reference": {
+      "path": "research/model_v06_feature_result_group_screen_display_picks.csv",
+      "sha256": "0b784c8d472aee2ad64def2098ffaaeb7a4e162b6b294ddb07692592f16cbbca"
+    }
+  },
+  "registered_overlay_coverage": {
+    "full_panel": {
+      "panel_rows": 1524104,
+      "panel_dates": 386,
+      "tdnet_complete_rows": 1207751,
+      "tdnet_incomplete_rows": 316353,
+      "overlay_rows": 66702,
+      "overlay_keys_matched_to_panel": 57697,
+      "overlay_keys_outside_panel": 9005,
+      "legacy_event_keys": 34491,
+      "legacy_event_keys_covered": 34491
+    },
+    "model_horizon_2024_01_04_through_2024_10_31": {
+      "panel_rows": 803697,
+      "panel_dates": 204,
+      "tdnet_complete_rows": 799768,
+      "tdnet_incomplete_rows": 3929,
+      "overlay_rows": 43068,
+      "overlay_keys_matched_to_panel": 37070,
+      "overlay_keys_outside_panel": 5998,
+      "legacy_event_keys": 22282,
+      "legacy_event_keys_covered": 22282,
+      "complete_rows_without_overlay_key": 762711
+    },
+    "group_screen_2024_07_01_through_2024_10_31": {
+      "panel_rows": 331856,
+      "panel_dates": 84,
+      "tdnet_complete_rows": 331856,
+      "tdnet_incomplete_rows": 0,
+      "overlay_rows": 16697,
+      "overlay_keys_matched_to_panel": 14003,
+      "overlay_keys_outside_panel": 2694,
+      "legacy_event_keys": 8550,
+      "legacy_event_keys_covered": 8550,
+      "complete_rows_without_overlay_key": 317853
+    }
+  },
+  "correction": {
+    "replace_columns": [
+      "tdnet_clean_family_count_log1p",
+      "tdnet_clean_single_family"
+    ],
+    "unchanged_t1_columns": [
+      "tdnet_clean_document_count_log1p",
+      "tdnet_clean_premarket_count_log1p",
+      "tdnet_clean_intraday_count_log1p",
+      "tdnet_clean_postclose_count_log1p",
+      "tdnet_clean_latest_age_hours_log1p",
+      "tdnet_clean_bundle_width_minutes_log1p",
+      "tdnet_clean_has_progress_stage",
+      "tdnet_clean_support_adverse_conflict",
+      "tdnet_clean_prior_bundle_count_60_log1p",
+      "tdnet_clean_prior_bundle_count_252_log1p",
+      "tdnet_clean_weekend_age"
+    ],
+    "merge_key": [
+      "date",
+      "code"
+    ],
+    "complete_date_missing_overlay_semantics": "no_event_zero",
+    "incomplete_date_semantics": "both_corrected_columns_nan_even_if_overlay_has_a_value",
+    "overlay_value_constraints": {
+      "family_count": "finite log1p of a nonnegative integer",
+      "single_family": "exactly 1 iff family_count is 1, otherwise 0"
+    }
+  },
+  "evaluation": {
+    "period": {
+      "start": "2024-07-01",
+      "end": "2024-10-31"
+    },
+    "training_start": "2024-01-04",
+    "minimum_training_sessions": 60,
+    "retrain_frequency": "monthly",
+    "recipes": [
+      "G0_price_core",
+      "G0_price_core+T1_event_structure_legacy",
+      "G0_price_core+T1_event_structure_corrected"
+    ],
+    "anchor_model": "exact v0.6 raked_logit specification",
+    "display_slots": 2,
+    "primary_cost_bps_round_trip": 20.0,
+    "stress_cost_bps_round_trip": 40.0,
+    "primary_comparison": "corrected T1 minus G0 scheduled-day top2 net20 mean",
+    "secondary_comparisons": [
+      "legacy T1 minus G0 scheduled-day top2 net20 mean",
+      "corrected T1 minus legacy T1 scheduled-day top2 net20 mean"
+    ],
+    "uncertainty": "paired circular moving-block bootstrap, block length 5, 5000 samples, shared max-mean adjustment across the two T1 variants",
+    "reference_reproduction_tolerance": 1e-10
+  },
+  "required_fail_closed_checks": [
+    "Every frozen input hash matches.",
+    "Panel and overlay schemas, dtypes, row counts, date ranges and unique keys match registration.",
+    "Every legacy nonzero event key is covered by the overlay.",
+    "The registered full, model-horizon and group-screen coverage counts match exactly.",
+    "Complete TDnet rows are finite after correction and missing overlay keys become zero.",
+    "Incomplete TDnet rows remain NaN even when an overlay key exists.",
+    "The other eleven T1 columns and every G0 column are bitwise-value unchanged.",
+    "The rerun G0 and legacy T1 picks/metrics reproduce the frozen v0.6 references within tolerance.",
+    "Training ends strictly before each scored month."
+  ],
+  "interpretation": {
+    "may_update": "the retrospective historical description of the v0.6 T1 screen",
+    "may_not_update": [
+      "production model",
+      "feature survivor lock",
+      "trade gate",
+      "prospective promotion status"
+    ]
+  }
+}

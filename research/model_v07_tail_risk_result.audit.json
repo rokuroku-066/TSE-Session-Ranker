@@ -1,0 +1,340 @@
+{
+  "schema_version": 1,
+  "audit_id": "model_v07_tail_risk_result_independent_audit_20260722",
+  "audited_at": "2026-07-22T16:24:53.449402+09:00",
+  "scope": {
+    "result": "research/model_v07_tail_risk_result.json",
+    "manifest": "research/model_v07_tail_risk_result.manifest.json",
+    "protocol": "research/model_v07_tail_risk_protocol.json",
+    "method": "Independent CSV/input reconstruction; no import from the v0.7 research runner."
+  },
+  "checks": {
+    "total": 24,
+    "passed": 24,
+    "failed": 0,
+    "items": [
+      {
+        "name": "posthoc_authority_prohibits_production",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "registered_recipe_set",
+        "passed": true,
+        "detail": [
+          "forced_top2",
+          "veto_range_expansion",
+          "veto_close_volatility_expansion",
+          "veto_deep_60d_relative_loser",
+          "veto_frequent_flat_session",
+          "veto_large_positive_overnight",
+          "veto_any_1_of_5",
+          "veto_any_2_of_5",
+          "veto_any_3_of_5"
+        ]
+      },
+      {
+        "name": "fixed_display_and_cost_contract",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "protocol_hash_binding",
+        "passed": true,
+        "detail": "3b76e0ec8824953146e50392f0a406b4b95238e23992bb4d0951b16daf049dc8"
+      },
+      {
+        "name": "runner_hash_binding",
+        "passed": true,
+        "detail": {
+          "actual": "82643ca78bcd0f7db02e249658273ed49163fecd511de08320ca3e9b10e8f236",
+          "stored": "82643ca78bcd0f7db02e249658273ed49163fecd511de08320ca3e9b10e8f236"
+        }
+      },
+      {
+        "name": "result_hash_binding",
+        "passed": true,
+        "detail": {
+          "actual": "8323febc5bf1e5fd737e619f8b9932d5b30088da9b309fa5d0aa2376ec74f6bc",
+          "stored": "8323febc5bf1e5fd737e619f8b9932d5b30088da9b309fa5d0aa2376ec74f6bc"
+        }
+      },
+      {
+        "name": "artifact_hash_bindings",
+        "passed": true,
+        "detail": {
+          "candidate_picks": {
+            "path": "research/model_v07_tail_risk_result_candidate_picks.csv",
+            "actual": "7e360945ba1fe16ce365e0bbfd667996804788e9ce37101334016dad0e05e9d3",
+            "result": "7e360945ba1fe16ce365e0bbfd667996804788e9ce37101334016dad0e05e9d3",
+            "manifest": "7e360945ba1fe16ce365e0bbfd667996804788e9ce37101334016dad0e05e9d3",
+            "passed": true
+          },
+          "period_recipe_slice": {
+            "path": "research/model_v07_tail_risk_result_period_recipe_slice.csv",
+            "actual": "b307eedeedc4b0e7425b279cb966acc166e02dc501db44c314a5b8c4d1a73e49",
+            "result": "b307eedeedc4b0e7425b279cb966acc166e02dc501db44c314a5b8c4d1a73e49",
+            "manifest": "b307eedeedc4b0e7425b279cb966acc166e02dc501db44c314a5b8c4d1a73e49",
+            "passed": true
+          },
+          "condition_slice": {
+            "path": "research/model_v07_tail_risk_result_condition_slice.csv",
+            "actual": "174818fcc0a12ebffe983764a98a4e97dd6117bb0937f7d2e70298402fc02a22",
+            "result": "174818fcc0a12ebffe983764a98a4e97dd6117bb0937f7d2e70298402fc02a22",
+            "manifest": "174818fcc0a12ebffe983764a98a4e97dd6117bb0937f7d2e70298402fc02a22",
+            "passed": true
+          },
+          "extreme_cases": {
+            "path": "research/model_v07_tail_risk_result_extreme_cases.csv",
+            "actual": "c0dcf5b81bf6861cbf83f0246a3ce03b7cfbf245ac8048c021d16ff42466c66d",
+            "result": "c0dcf5b81bf6861cbf83f0246a3ce03b7cfbf245ac8048c021d16ff42466c66d",
+            "manifest": "c0dcf5b81bf6861cbf83f0246a3ce03b7cfbf245ac8048c021d16ff42466c66d",
+            "passed": true
+          }
+        }
+      },
+      {
+        "name": "input_hash_bindings",
+        "passed": true,
+        "detail": {
+          "result_mismatches": [],
+          "manifest_mismatches": []
+        }
+      },
+      {
+        "name": "registered_display_is_fixed_top2",
+        "passed": true,
+        "detail": {
+          "rows": 532,
+          "sessions": 266
+        }
+      },
+      {
+        "name": "registered_labels_match_open_close_returns",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "candidate_artifact_exactly_preserves_registered_top2_without_replacement",
+        "passed": true,
+        "detail": []
+      },
+      {
+        "name": "display_summary",
+        "passed": true,
+        "detail": {
+          "candidate_rows": 532,
+          "sessions": 266,
+          "first_date": "2024-07-01",
+          "last_date": "2025-07-31",
+          "fixed_slots_per_day": 2,
+          "reranking_permitted": false
+        }
+      },
+      {
+        "name": "tail_flags_and_complete_case_counts_recomputed_from_raw_features",
+        "passed": true,
+        "detail": []
+      },
+      {
+        "name": "missing_conditions_pass_through_without_invented_veto",
+        "passed": true,
+        "detail": {
+          "incomplete_union_slots": 43,
+          "count_recipe_pass_through": true,
+          "single_recipe_pass_through": true
+        }
+      },
+      {
+        "name": "all_recipe_period_metrics_bootstraps_gates_and_classifications_recomputed",
+        "passed": true,
+        "detail": []
+      },
+      {
+        "name": "period_recipe_slice_recomputed",
+        "passed": true,
+        "detail": []
+      },
+      {
+        "name": "condition_slice_recomputed",
+        "passed": true,
+        "detail": []
+      },
+      {
+        "name": "extreme_case_artifact_recomputed",
+        "passed": true,
+        "detail": []
+      },
+      {
+        "name": "e0_and_g0_replay_are_fixed_top2_on_identical_dates",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "panel_manifest_and_result_summary",
+        "passed": true,
+        "detail": {
+          "rows": 1524104,
+          "sessions": 386
+        }
+      },
+      {
+        "name": "panel_features_are_strictly_prior_to_decision_date",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "candidate_features_and_flags_match_immutable_panel",
+        "passed": true,
+        "detail": []
+      },
+      {
+        "name": "unrestricted_e0_metrics_turnover_exposure_and_paired_interval_recomputed",
+        "passed": true,
+        "detail": []
+      },
+      {
+        "name": "decision_recomputed",
+        "passed": true,
+        "detail": []
+      }
+    ]
+  },
+  "recomputed_summary": {
+    "display_rows": 532,
+    "sessions": 266,
+    "recipe_count": 9,
+    "period_recipe_rows": 54,
+    "condition_slice_rows": 96,
+    "extreme_case_rows": 34,
+    "missingness": {
+      "error_discovery": {
+        "candidate_slots": 168,
+        "complete_five_feature_slots": 155,
+        "incomplete_five_feature_slots": 13,
+        "condition_missing_slots": {
+          "range_expansion": 1,
+          "close_volatility_expansion": 0,
+          "deep_60d_relative_loser": 12,
+          "frequent_flat_session": 0,
+          "large_positive_overnight": 0
+        },
+        "count_ge_2_fraction_complete_case": 0.3741935483870968
+      },
+      "replay_a": {
+        "candidate_slots": 82,
+        "complete_five_feature_slots": 77,
+        "incomplete_five_feature_slots": 5,
+        "condition_missing_slots": {
+          "range_expansion": 0,
+          "close_volatility_expansion": 0,
+          "deep_60d_relative_loser": 5,
+          "frequent_flat_session": 0,
+          "large_positive_overnight": 0
+        },
+        "count_ge_2_fraction_complete_case": 0.3116883116883117
+      },
+      "replay_b": {
+        "candidate_slots": 114,
+        "complete_five_feature_slots": 100,
+        "incomplete_five_feature_slots": 14,
+        "condition_missing_slots": {
+          "range_expansion": 0,
+          "close_volatility_expansion": 1,
+          "deep_60d_relative_loser": 13,
+          "frequent_flat_session": 0,
+          "large_positive_overnight": 0
+        },
+        "count_ge_2_fraction_complete_case": 0.31
+      },
+      "replay_c": {
+        "candidate_slots": 168,
+        "complete_five_feature_slots": 157,
+        "incomplete_five_feature_slots": 11,
+        "condition_missing_slots": {
+          "range_expansion": 0,
+          "close_volatility_expansion": 0,
+          "deep_60d_relative_loser": 11,
+          "frequent_flat_session": 0,
+          "large_positive_overnight": 0
+        },
+        "count_ge_2_fraction_complete_case": 0.2929936305732484
+      },
+      "replay_combined": {
+        "candidate_slots": 364,
+        "complete_five_feature_slots": 334,
+        "incomplete_five_feature_slots": 30,
+        "condition_missing_slots": {
+          "range_expansion": 0,
+          "close_volatility_expansion": 1,
+          "deep_60d_relative_loser": 29,
+          "frequent_flat_session": 0,
+          "large_positive_overnight": 0
+        },
+        "count_ge_2_fraction_complete_case": 0.3023952095808383
+      },
+      "retrospective_union": {
+        "candidate_slots": 532,
+        "complete_five_feature_slots": 489,
+        "incomplete_five_feature_slots": 43,
+        "condition_missing_slots": {
+          "range_expansion": 1,
+          "close_volatility_expansion": 1,
+          "deep_60d_relative_loser": 41,
+          "frequent_flat_session": 0,
+          "large_positive_overnight": 0
+        },
+        "count_ge_2_fraction_complete_case": 0.32515337423312884
+      }
+    },
+    "replay_forced_net20_mean_pct": -0.27969987140032954,
+    "best_loss_mitigation_observation": "veto_any_1_of_5",
+    "best_loss_mitigation_replay_net20_mean_pct": 0.005473241934485164,
+    "e0": {
+      "net20_mean_pct": -0.24240956091243213,
+      "uplift_vs_g0_pct": 0.03729031048789745,
+      "paired_one_sided_80pct_lower_pct": -0.19627993992295065,
+      "tail_exposure_denominators": {
+        "g0_replay_slots": 364,
+        "g0_complete_tail_slots": 334,
+        "g0_incomplete_tail_slots": 30,
+        "e0_replay_slots": 364,
+        "e0_complete_tail_slots": 335,
+        "e0_incomplete_tail_slots": 29,
+        "exposure_statistics_use_complete_cases": true
+      }
+    }
+  },
+  "issues": {
+    "critical": [],
+    "minor": [
+      {
+        "issue_id": "PROTOCOL_ARTIFACT_REGISTRY_OMITS_CONDITION_SLICE",
+        "summary": "The protocol artifact list omits condition_slice, although the runner emits it and both result and manifest content-address it.",
+        "decision_impact": "none; bytes are independently bound and recomputed"
+      },
+      {
+        "issue_id": "E0_TAIL_EXPOSURE_DENOMINATOR_IMPLICIT",
+        "summary": "E0/G0 tail-count means and >=2 fractions use complete cases, but the result field names do not state that denominator and do not report unavailable slots.",
+        "denominators": {
+          "g0_replay_slots": 364,
+          "g0_complete_tail_slots": 334,
+          "g0_incomplete_tail_slots": 30,
+          "e0_replay_slots": 364,
+          "e0_complete_tail_slots": 335,
+          "e0_incomplete_tail_slots": 29,
+          "exposure_statistics_use_complete_cases": true
+        },
+        "decision_impact": "none; stored complete-case values are numerically correct"
+      }
+    ]
+  },
+  "verdict": {
+    "computational_integrity": "pass",
+    "production_adoption": "reject",
+    "shadow_marker_adoption": "none_qualified",
+    "loss_mitigation_observation_only": "veto_any_1_of_5",
+    "unrestricted_e0": "reject",
+    "reason": "All stored calculations reproduce, but no recipe passes the registered gate; the protocol is post-hoc and explicitly prohibits production promotion."
+  }
+}

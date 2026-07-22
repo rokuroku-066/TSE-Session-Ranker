@@ -1,0 +1,611 @@
+{
+  "schema_version": 1,
+  "protocol_id": "model_v07_error_meta_gate_replay_20260722",
+  "protocol_path": "research/model_v07_error_protocol.json",
+  "protocol_sha256": "31cb5512b197ce59f418bc4021af164d362a5be6c6ad06454f4508f2eec48ebd",
+  "authority": {
+    "result_class": "known_retrospective_chronological_replay_only",
+    "production_promotion_allowed": false,
+    "reason": "All outcomes through 2026-07-22 were visible in earlier research. Replay can reject hypotheses but cannot establish a sealed edge.",
+    "prospective_sessions_required_after_lock": 100
+  },
+  "decision": "known_retrospective_no_demonstrated_gate",
+  "production_model_changed": false,
+  "display_anchor": "g0_raked_logit",
+  "family_registry": [
+    {
+      "name": "g0_raked_logit",
+      "family": "raked_logit",
+      "objective": "positive_session",
+      "parameters": {
+        "C": 0.03,
+        "class_balance": true,
+        "max_iter": 1000
+      },
+      "random_state": 31
+    },
+    {
+      "name": "g0_ridge_return",
+      "family": "ridge_return",
+      "objective": "raw_return",
+      "parameters": {
+        "alpha": 10.0,
+        "return_clip_pct": 5.0
+      },
+      "random_state": 31
+    },
+    {
+      "name": "g0_hgb_rank",
+      "family": "hist_gradient_boosting_rank",
+      "objective": "same_day_return_percentile",
+      "parameters": {
+        "loss": "squared_error",
+        "learning_rate": 0.05,
+        "max_iter": 120,
+        "max_leaf_nodes": 15,
+        "min_samples_leaf": 200,
+        "l2_regularization": 1.0,
+        "max_bins": 63,
+        "return_clip_pct": 5.0
+      },
+      "random_state": 31
+    },
+    {
+      "name": "g0_extra_trees_top_quintile",
+      "family": "extra_trees_classifier",
+      "objective": "same_day_top_quintile",
+      "parameters": {
+        "n_estimators": 64,
+        "max_depth": 8,
+        "min_samples_leaf": 200,
+        "max_features": 0.7,
+        "bootstrap": false,
+        "n_jobs": 1,
+        "class_balance": true
+      },
+      "random_state": 31
+    }
+  ],
+  "base_folds": [
+    {
+      "period": "2024-07",
+      "train_start": "2024-04-03",
+      "train_end": "2024-06-28",
+      "train_sessions": 60,
+      "train_rows": 201708,
+      "score_start": "2024-07-01",
+      "score_end": "2024-07-31",
+      "score_sessions": 22,
+      "score_rows": 70947,
+      "family_models": [
+        "g0_raked_logit",
+        "g0_ridge_return",
+        "g0_hgb_rank",
+        "g0_extra_trees_top_quintile"
+      ]
+    },
+    {
+      "period": "2024-08",
+      "train_start": "2024-04-03",
+      "train_end": "2024-07-31",
+      "train_sessions": 82,
+      "train_rows": 275857,
+      "score_start": "2024-08-01",
+      "score_end": "2024-08-30",
+      "score_sessions": 21,
+      "score_rows": 45999,
+      "family_models": [
+        "g0_raked_logit",
+        "g0_ridge_return",
+        "g0_hgb_rank",
+        "g0_extra_trees_top_quintile"
+      ]
+    },
+    {
+      "period": "2024-09",
+      "train_start": "2024-04-03",
+      "train_end": "2024-08-30",
+      "train_sessions": 103,
+      "train_rows": 348502,
+      "score_start": "2024-09-02",
+      "score_end": "2024-09-30",
+      "score_sessions": 19,
+      "score_rows": 59553,
+      "family_models": [
+        "g0_raked_logit",
+        "g0_ridge_return",
+        "g0_hgb_rank",
+        "g0_extra_trees_top_quintile"
+      ]
+    },
+    {
+      "period": "2024-10",
+      "train_start": "2024-04-03",
+      "train_end": "2024-09-30",
+      "train_sessions": 122,
+      "train_rows": 413056,
+      "score_start": "2024-10-01",
+      "score_end": "2024-10-31",
+      "score_sessions": 22,
+      "score_rows": 68772,
+      "family_models": [
+        "g0_raked_logit",
+        "g0_ridge_return",
+        "g0_hgb_rank",
+        "g0_extra_trees_top_quintile"
+      ]
+    },
+    {
+      "period": "2024-11",
+      "train_start": "2024-04-03",
+      "train_end": "2024-10-31",
+      "train_sessions": 144,
+      "train_rows": 485497,
+      "score_start": "2024-11-01",
+      "score_end": "2024-11-29",
+      "score_sessions": 20,
+      "score_rows": 61847,
+      "family_models": [
+        "g0_raked_logit",
+        "g0_ridge_return",
+        "g0_hgb_rank",
+        "g0_extra_trees_top_quintile"
+      ]
+    },
+    {
+      "period": "2024-12",
+      "train_start": "2024-04-03",
+      "train_end": "2024-11-29",
+      "train_sessions": 164,
+      "train_rows": 550697,
+      "score_start": "2024-12-02",
+      "score_end": "2024-12-30",
+      "score_sessions": 21,
+      "score_rows": 65084,
+      "family_models": [
+        "g0_raked_logit",
+        "g0_ridge_return",
+        "g0_hgb_rank",
+        "g0_extra_trees_top_quintile"
+      ]
+    },
+    {
+      "period": "2025-01",
+      "train_start": "2024-04-03",
+      "train_end": "2024-12-30",
+      "train_sessions": 185,
+      "train_rows": 619207,
+      "score_start": "2025-01-06",
+      "score_end": "2025-01-31",
+      "score_sessions": 19,
+      "score_rows": 60809,
+      "family_models": [
+        "g0_raked_logit",
+        "g0_ridge_return",
+        "g0_hgb_rank",
+        "g0_extra_trees_top_quintile"
+      ]
+    },
+    {
+      "period": "2025-02",
+      "train_start": "2024-04-03",
+      "train_end": "2025-01-31",
+      "train_sessions": 204,
+      "train_rows": 683387,
+      "score_start": "2025-02-03",
+      "score_end": "2025-02-28",
+      "score_sessions": 18,
+      "score_rows": 56971,
+      "family_models": [
+        "g0_raked_logit",
+        "g0_ridge_return",
+        "g0_hgb_rank",
+        "g0_extra_trees_top_quintile"
+      ]
+    },
+    {
+      "period": "2025-03",
+      "train_start": "2024-04-03",
+      "train_end": "2025-02-28",
+      "train_sessions": 222,
+      "train_rows": 743542,
+      "score_start": "2025-03-03",
+      "score_end": "2025-03-31",
+      "score_sessions": 20,
+      "score_rows": 63000,
+      "family_models": [
+        "g0_raked_logit",
+        "g0_ridge_return",
+        "g0_hgb_rank",
+        "g0_extra_trees_top_quintile"
+      ]
+    },
+    {
+      "period": "2025-04",
+      "train_start": "2024-04-03",
+      "train_end": "2025-03-31",
+      "train_sessions": 242,
+      "train_rows": 810434,
+      "score_start": "2025-04-01",
+      "score_end": "2025-04-30",
+      "score_sessions": 21,
+      "score_rows": 52287,
+      "family_models": [
+        "g0_raked_logit",
+        "g0_ridge_return",
+        "g0_hgb_rank",
+        "g0_extra_trees_top_quintile"
+      ]
+    },
+    {
+      "period": "2025-05",
+      "train_start": "2024-04-03",
+      "train_end": "2025-04-30",
+      "train_sessions": 263,
+      "train_rows": 882045,
+      "score_start": "2025-05-01",
+      "score_end": "2025-05-30",
+      "score_sessions": 20,
+      "score_rows": 63126,
+      "family_models": [
+        "g0_raked_logit",
+        "g0_ridge_return",
+        "g0_hgb_rank",
+        "g0_extra_trees_top_quintile"
+      ]
+    },
+    {
+      "period": "2025-06",
+      "train_start": "2024-04-03",
+      "train_end": "2025-05-30",
+      "train_sessions": 283,
+      "train_rows": 949687,
+      "score_start": "2025-06-02",
+      "score_end": "2025-06-30",
+      "score_sessions": 21,
+      "score_rows": 66152,
+      "family_models": [
+        "g0_raked_logit",
+        "g0_ridge_return",
+        "g0_hgb_rank",
+        "g0_extra_trees_top_quintile"
+      ]
+    },
+    {
+      "period": "2025-07",
+      "train_start": "2024-04-03",
+      "train_end": "2025-06-30",
+      "train_sessions": 304,
+      "train_rows": 1019568,
+      "score_start": "2025-07-01",
+      "score_end": "2025-07-31",
+      "score_sessions": 22,
+      "score_rows": 69764,
+      "family_models": [
+        "g0_raked_logit",
+        "g0_ridge_return",
+        "g0_hgb_rank",
+        "g0_extra_trees_top_quintile"
+      ]
+    }
+  ],
+  "selection": {
+    "period": {
+      "start": "2024-09-02",
+      "end": "2024-10-31"
+    },
+    "forced_metrics": {
+      "scheduled_days": 41,
+      "trade_days": 41,
+      "executed_slots": 82,
+      "trade_slot_rate": 1.0,
+      "net20_mean_pct": -0.27435968802394156,
+      "net20_median_pct": -0.6249670734222998,
+      "net40_mean_pct": -0.47435968802394146,
+      "profit_factor": 0.7338223709193497,
+      "positive_months": 1,
+      "months": 2,
+      "positive_month_fraction": 0.5,
+      "top5_removed_net20_mean_pct": -0.8252835864307014,
+      "largest_day_share_of_positive_profit": 0.15948805562378227,
+      "compounded_net20_pct": -11.506089963569332,
+      "max_drawdown_pct": -22.522712399808697,
+      "rank2_marginal_net20_mean_pct": -0.16137355750222007,
+      "monthly_net20_mean_pct": {
+        "2024-09": -0.8173555620086775,
+        "2024-10": 0.19459129405378503
+      },
+      "block5_bootstrap": {
+        "observations": 41,
+        "block_length": 5,
+        "samples": 5000,
+        "confidence": 0.9,
+        "random_state": 31,
+        "point_estimate_pct": -0.27435968802394156,
+        "one_sided_lower_pct": -0.755028716617982,
+        "two_sided_lower_pct": -0.8432972612803821,
+        "two_sided_upper_pct": 0.08936271978625829,
+        "bootstrap_standard_error_pct": 0.2870784826528086
+      }
+    },
+    "qualifications": {
+      "geometry_expected_net": {
+        "passed": false,
+        "checks": {
+          "minimum_trade_days": false,
+          "minimum_trade_slots": false,
+          "net20_mean": true,
+          "top5_removed": false,
+          "positive_month_fraction": true,
+          "paired_uplift": true,
+          "adjusted_lower": false,
+          "largest_day_share": false
+        },
+        "metrics": {
+          "scheduled_days": 41,
+          "trade_days": 2,
+          "executed_slots": 2,
+          "trade_slot_rate": 0.024390243902439025,
+          "net20_mean_pct": 0.008372048719381773,
+          "net20_median_pct": 0.0,
+          "net40_mean_pct": 0.0034939999388939663,
+          "profit_factor": 3.1323354389819325,
+          "positive_months": 1,
+          "months": 2,
+          "positive_month_fraction": 0.5,
+          "top5_removed_net20_mean_pct": -0.004471544715447156,
+          "largest_day_share_of_positive_profit": 1.0,
+          "compounded_net20_pct": 0.3424423108098207,
+          "max_drawdown_pct": -0.1609756097560977,
+          "rank2_marginal_net20_mean_pct": 0.008372048719381773,
+          "monthly_net20_mean_pct": {
+            "2024-09": -0.008472400513478822,
+            "2024-10": 0.02291952760230683
+          },
+          "block5_bootstrap": {
+            "observations": 41,
+            "block_length": 5,
+            "samples": 5000,
+            "confidence": 0.9,
+            "random_state": 31,
+            "point_estimate_pct": 0.008372048719381773,
+            "one_sided_lower_pct": -0.007852468768590129,
+            "two_sided_lower_pct": -0.007852468768590129,
+            "two_sided_upper_pct": 0.032968614926735446,
+            "bootstrap_standard_error_pct": 0.013195166742110138
+          }
+        },
+        "feature_count": 6,
+        "mean_uplift_pct": 0.28273173674332325,
+        "shared_block_max_mean_critical_pct": 0.30705871921499867,
+        "adjusted_one_sided_80pct_lower_pct": -0.024326982471675418
+      },
+      "agreement_expected_net": {
+        "passed": false,
+        "checks": {
+          "minimum_trade_days": true,
+          "minimum_trade_slots": false,
+          "net20_mean": false,
+          "top5_removed": false,
+          "positive_month_fraction": true,
+          "paired_uplift": true,
+          "adjusted_lower": false,
+          "largest_day_share": false
+        },
+        "metrics": {
+          "scheduled_days": 41,
+          "trade_days": 23,
+          "executed_slots": 25,
+          "trade_slot_rate": 0.3048780487804878,
+          "net20_mean_pct": -0.1202925618207939,
+          "net20_median_pct": 0.0,
+          "net40_mean_pct": -0.1812681715768915,
+          "profit_factor": 0.5222806554522478,
+          "positive_months": 1,
+          "months": 2,
+          "positive_month_fraction": 0.5,
+          "top5_removed_net20_mean_pct": -0.27663339765572964,
+          "largest_day_share_of_positive_profit": 0.4601706041700899,
+          "compounded_net20_pct": -4.903357380943296,
+          "max_drawdown_pct": -7.343573679073534,
+          "rank2_marginal_net20_mean_pct": -0.10297260857958512,
+          "monthly_net20_mean_pct": {
+            "2024-09": -0.27222733059965376,
+            "2024-10": 0.010923829397312304
+          },
+          "block5_bootstrap": {
+            "observations": 41,
+            "block_length": 5,
+            "samples": 5000,
+            "confidence": 0.9,
+            "random_state": 31,
+            "point_estimate_pct": -0.1202925618207939,
+            "one_sided_lower_pct": -0.2407329494850667,
+            "two_sided_lower_pct": -0.27060362963604084,
+            "two_sided_upper_pct": -0.006167183148776447,
+            "bootstrap_standard_error_pct": 0.0811798800550813
+          }
+        },
+        "feature_count": 12,
+        "mean_uplift_pct": 0.15406712620314753,
+        "shared_block_max_mean_critical_pct": 0.30705871921499867,
+        "adjusted_one_sided_80pct_lower_pct": -0.15299159301185114
+      },
+      "stability_repeat_expected_net": {
+        "passed": false,
+        "checks": {
+          "minimum_trade_days": true,
+          "minimum_trade_slots": false,
+          "net20_mean": false,
+          "top5_removed": false,
+          "positive_month_fraction": false,
+          "paired_uplift": true,
+          "adjusted_lower": false,
+          "largest_day_share": false
+        },
+        "metrics": {
+          "scheduled_days": 41,
+          "trade_days": 24,
+          "executed_slots": 27,
+          "trade_slot_rate": 0.32926829268292684,
+          "net20_mean_pct": -0.15819074309828318,
+          "net20_median_pct": 0.0,
+          "net40_mean_pct": -0.22404440163486855,
+          "profit_factor": 0.4115932018597268,
+          "positive_months": 0,
+          "months": 2,
+          "positive_month_fraction": 0.0,
+          "top5_removed_net20_mean_pct": -0.3061855848863965,
+          "largest_day_share_of_positive_profit": 0.5469116587730511,
+          "compounded_net20_pct": -6.370162482397723,
+          "max_drawdown_pct": -8.545660645605778,
+          "rank2_marginal_net20_mean_pct": -0.1142803577806469,
+          "monthly_net20_mean_pct": {
+            "2024-09": -0.2903296991598697,
+            "2024-10": -0.044070735590549366
+          },
+          "block5_bootstrap": {
+            "observations": 41,
+            "block_length": 5,
+            "samples": 5000,
+            "confidence": 0.9,
+            "random_state": 31,
+            "point_estimate_pct": -0.15819074309828318,
+            "one_sided_lower_pct": -0.31781160335069303,
+            "two_sided_lower_pct": -0.35390891511410394,
+            "two_sided_upper_pct": -0.03225877051600603,
+            "bootstrap_standard_error_pct": 0.09841048934337439
+          }
+        },
+        "feature_count": 19,
+        "mean_uplift_pct": 0.11616894492565834,
+        "shared_block_max_mean_critical_pct": 0.30705871921499867,
+        "adjusted_one_sided_80pct_lower_pct": -0.19088977428934034
+      },
+      "downside_utility": {
+        "passed": false,
+        "checks": {
+          "minimum_trade_days": false,
+          "minimum_trade_slots": false,
+          "net20_mean": false,
+          "top5_removed": false,
+          "positive_month_fraction": true,
+          "paired_uplift": true,
+          "adjusted_lower": false,
+          "largest_day_share": false
+        },
+        "metrics": {
+          "scheduled_days": 41,
+          "trade_days": 12,
+          "executed_slots": 12,
+          "trade_slot_rate": 0.14634146341463414,
+          "net20_mean_pct": -0.01255806741504701,
+          "net20_median_pct": 0.0,
+          "net40_mean_pct": -0.041826360097973844,
+          "profit_factor": 0.8281521232086638,
+          "positive_months": 1,
+          "months": 2,
+          "positive_month_fraction": 0.5,
+          "top5_removed_net20_mean_pct": -0.08322618650843705,
+          "largest_day_share_of_positive_profit": 1.0,
+          "compounded_net20_pct": -0.5522697908498242,
+          "max_drawdown_pct": -2.8629472430513725,
+          "rank2_marginal_net20_mean_pct": 0.015077660828627942,
+          "monthly_net20_mean_pct": {
+            "2024-09": -0.02980288027092496,
+            "2024-10": 0.0023351800513930474
+          },
+          "block5_bootstrap": {
+            "observations": 41,
+            "block_length": 5,
+            "samples": 5000,
+            "confidence": 0.9,
+            "random_state": 31,
+            "point_estimate_pct": -0.01255806741504701,
+            "one_sided_lower_pct": -0.11411421476158272,
+            "two_sided_lower_pct": -0.12763490823252713,
+            "two_sided_upper_pct": 0.04504689653642083,
+            "bootstrap_standard_error_pct": 0.05391037955669113
+          }
+        },
+        "feature_count": 19,
+        "mean_uplift_pct": 0.2618016206088945,
+        "shared_block_max_mean_critical_pct": 0.30705871921499867,
+        "adjusted_one_sided_80pct_lower_pct": -0.04525709860610416
+      }
+    },
+    "qualified_gates": [],
+    "locked_gate": null,
+    "multiple_testing": "shared five-session block maximum-mean adjustment"
+  },
+  "locked_gate": null,
+  "replay": {
+    "status": "not_evaluated_without_a_qualified_discovery_gate"
+  },
+  "error_analysis": {
+    "period": {
+      "start": "2024-07-01",
+      "end": "2024-10-31",
+      "outcome_access": "Individual errors and aggregate gate-selection metrics may be inspected."
+    },
+    "error_case_rows": 50,
+    "error_type_counts": {
+      "catastrophic_loss": 9,
+      "large_win": 5,
+      "high_confidence_loss": 27,
+      "repeat_loss": 14,
+      "avoided_loss": 0,
+      "missed_win": 0
+    }
+  },
+  "panel": {
+    "path": "/tmp/model_v06_feature_panel.pkl",
+    "sha256": "f2494efe6e66c02307b736b231a6759895ba8dc8471b4060ebc34dbd87e82cfd",
+    "manifest_path": "/tmp/model_v06_feature_panel.pkl.manifest.json",
+    "manifest_sha256": "d9386c2799cf572df3af56ffc624454dc5ce054fa09e75f91d5da542ac1b23d5",
+    "rows": 1524104,
+    "codes": 4124,
+    "calendar_sha256": "966f4a416d0929487d850b16be87c9c1cd69cd9f8c0447a3e76214a5715c489e"
+  },
+  "artifacts": {
+    "display_picks": {
+      "path": "research/model_v07_error_result_display_picks.csv",
+      "sha256": "1945a02315b321ba941ee0cefb52cb6f4311c81915db51038a628f96f07593c9",
+      "rows": 532
+    },
+    "forced_trade_picks": {
+      "path": "research/model_v07_error_result_forced_trade_picks.csv",
+      "sha256": "27bce0f63e26a8edddf44bceabc7e305bc4db99f4fd348063c6678b24d015e4c",
+      "rows": 532
+    },
+    "gated_trade_picks": {
+      "path": "research/model_v07_error_result_gated_trade_picks.csv",
+      "sha256": "becd9dc44a8936ba72b1ecaee607de41dacf25bc740a18329ae5e9c59ce1c9d4",
+      "rows": 532
+    },
+    "error_cases": {
+      "path": "research/model_v07_error_result_error_cases.csv",
+      "sha256": "a4a9ca00c11b70fd880f3143838e69af04eae0b23d29355b36dddbaa5aa9c065",
+      "rows": 50
+    },
+    "slice_report": {
+      "path": "research/model_v07_error_result_slice_report.csv",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "rows": 0
+    }
+  },
+  "runtime": {
+    "run_started_at": "2026-07-22T15:56:42.358628+09:00",
+    "run_completed_at": "2026-07-22T16:04:17.296519+09:00",
+    "python": "3.12.13",
+    "numpy": "2.3.5",
+    "pandas": "2.2.3",
+    "scikit_learn": "1.8.0",
+    "thread_limit": 1
+  },
+  "limitations": [
+    "Every replay outcome is already known and is not a sealed holdout.",
+    "Exact historical 08:58 futures, board, PTS and indicative-open values are absent and were not proxied.",
+    "The gate uses fixed 20 bp cost and the v0.6 price-only source limitations."
+  ]
+}

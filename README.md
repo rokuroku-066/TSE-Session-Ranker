@@ -5,7 +5,7 @@
 現行CLI/APIの既定モデルは0.3.0互換の`session_v3_tdnet_clear`です。正則化ロジスティック回帰に、価格履歴12特徴と寄り前までのTDnet適時開示6特徴を入力し、1位を`CORE`、2位を`RESERVE`として表示します。
 
 > [!WARNING]
-> **自動発注には使用できません。** v0.6で候補特徴を機構別に固定し、同一モデルでgroup ablationをやり直しました。一次通過した前後場shapeも次期間で価格core比 `-0.593191pt/日`に反転し、追加採用は0群です。既定のv0.3を含む全候補はshadow・研究用途だけです。
+> **自動発注には使用できません。** 個別誤差、4系統のmeta-gate、5つのtail cash-vetoまで検証しましたが、往復コスト・上位日除外・期間安定性を同時に通過した仕様は0件です。毎日top2のshadow表示は維持しますが、v0.7研究gateの合格仕様は0件です。CLIの既存`CORE` / `ORDER_ELIGIBLE`は研究上の発注承認を意味しません。
 
 ## 最新の研究判断
 
@@ -17,8 +17,11 @@
 | v0.5 TDnet診断対照 | 価格・前後場・市場・TDnet 62、raked logit | 後付け採用禁止 | 確認期top2 `+0.039661%/日` |
 | v0.6一次首位 | 価格core + 前後場shape、raked logit | 次期間で棄却 | screen top2 `-0.218990%/日` |
 | v0.6最終lock | 価格coreのみ、raked logit | 損益優位性未実証 | stability top2 `-0.421878%/日` |
+| v0.6.2訂正T1 | 価格core + TDnet開示構造 | 整列訂正後も棄却 | screen top2 `-0.565582%/日` |
+| v0.7 meta-gate | G0 top2の各50%枠をOOF発注判定 | 4 gateすべて不合格 | `locked_gate = null` |
+| v0.7.1 tail veto | 5 tail条件で各枠を現金化 | 損失軽減の後付け観察のみ | net20 `+0.005473%/日`、net40 `-0.084087%/日`（不合格） |
 
-v0.6は損益を見る前に、価格反転、過去gap特性、前後場shape、市場レジーム、流動性proxy、整理済みTDnet、開示構造の7追加群を固定しました。特徴寄与を分離するためraked logitは共通です。独立監査で12 recipe・1,926数値と966個のprovenance hashを再現し、追加特徴なしという負の結果を確定しました。候補の定義は[feature candidate inventory](research/model_v06_feature_candidates.md)、経緯と訂正は[VALIDATION.md](VALIDATION.md) Entry 006・007にあります。
+v0.6は損益を見る前に7つの追加群を固定し、最終的に追加特徴なしという負の結果になりました。その後、T1のfamily count整列バグを訂正したものの、絶対損益と調整下限は依然として負で、最終判断は変わりません。v0.7では個別の大損失・大利益を調べ、meta-gateとtail vetoを未使用期間へ適用しました。tail vetoは損失を減らしましたが、40bpコスト後、上位5日除外、絶対bootstrap下限に失敗したため採用しません。v0.6候補の定義は[feature candidate inventory](research/model_v06_feature_candidates.md)、v0.7 TDnet 26列は[VALIDATION.md](VALIDATION.md) Entry 010、全検証経緯は同ファイルのEntry 001～010にあります。
 
 ## 設計の要点
 
@@ -26,6 +29,7 @@ v0.6は損益を見る前に、価格反転、過去gap特性、前後場shape�
 - v0.4研究winnerも同じL2正則化logitで、`C=0.03`、日別・クラス均衡、expanding学習窓
 - v0.5研究ではモデル固定を外したが、選定winnerが確認期で再現せず、production推定器は変更なし
 - v0.6では特徴候補を先に7群へ固定し、共通モデルのgroup ablationで追加寄与を分離。次期間まで残った追加群は0
+- v0.7では表示top2を固定し、モデル間合意・スコア形状・downsideと、事前日足tailを発注gateとして分離。未合格枠はrank 3で置換せず現金
 - 学習ラベルは`close > open`または損益・同日順位。研究仕様の採否は勝率ではなくコスト後損益で決定し、v0.5の主指標はtop2等金額
 - 対象日OHLCを特徴量へ入れず、価格特徴はすべて1セッション以上shift
 - 適時開示は各文書を「公開時刻以前で最初に到来する08:58:59 JSTの取引日」へ割当
@@ -136,6 +140,8 @@ tdnet_has_equity_financing
 
 v0.4研究では、開示有無・件数・時刻、決算、ToSTNeT、優待、分割、M&A、減損、監査問題などを含むTDnet 20特徴と3 interactionまで広げました。これは`research/finalize_logit_v04.py`の比較専用registryで、通常の`train`・`predict`が使うproduction 6特徴へは昇格していません。
 
+v0.7研究用には、開示観測とfresh材料、初回予想と予想修正、株主配当と受取配当、自己株買い・エクイティ・M&Aのfresh/follow-upを分離する`tdnet_v07_*` 26列を追加しました。旧`tdnet_clean_*`は凍結成果物再現のため意味を変えません。新規26列は誤検知・時点契約を整えた「候補」であり、損益改善は未検証でproduction 6特徴には入りません。
+
 ## 3. 学習
 
 ```bash
@@ -211,7 +217,7 @@ tse-session-ranker predict \
   --as-of 2026-07-21T08:58:00+09:00
 ```
 
-板は`model_score`と`model_rank`を変更しません。欠測・3分超古い、暫定ギャップがATR14の+2倍以上、買い特別気配、予想寄りが9:05より後、または`RESERVE`の場合だけ`DISPLAY_ONLY`にします。
+板は`model_score`と`model_rank`を変更しません。欠測・3分超古い、暫定ギャップがATR14の+2倍以上、買い特別気配、予想寄りが9:05より後、または`RESERVE`の場合だけ`DISPLAY_ONLY`にします。`ORDER_ELIGIBLE`は既存の板品質・legacy vetoだけの状態名であり、期待損益gateの合格を示さないため、発注には使用できません。
 
 ## 6. 先物contextの前向き収集
 

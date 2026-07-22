@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "result_path": "research/model_v07_error_result.json",
+  "result_sha256": "e81b2abcc65c1aca958a3219951d1b1c419f0588878edcd41a2de09148714943",
+  "protocol_sha256": "31cb5512b197ce59f418bc4021af164d362a5be6c6ad06454f4508f2eec48ebd",
+  "runner_sha256": "baa95e8b6b50b2a944725c518249bcdd565a8cd83299c15559d78c1fe0541df0",
+  "panel_sha256": "f2494efe6e66c02307b736b231a6759895ba8dc8471b4060ebc34dbd87e82cfd",
+  "artifacts": {
+    "display_picks": {
+      "path": "research/model_v07_error_result_display_picks.csv",
+      "sha256": "1945a02315b321ba941ee0cefb52cb6f4311c81915db51038a628f96f07593c9",
+      "rows": 532
+    },
+    "forced_trade_picks": {
+      "path": "research/model_v07_error_result_forced_trade_picks.csv",
+      "sha256": "27bce0f63e26a8edddf44bceabc7e305bc4db99f4fd348063c6678b24d015e4c",
+      "rows": 532
+    },
+    "gated_trade_picks": {
+      "path": "research/model_v07_error_result_gated_trade_picks.csv",
+      "sha256": "becd9dc44a8936ba72b1ecaee607de41dacf25bc740a18329ae5e9c59ce1c9d4",
+      "rows": 532
+    },
+    "error_cases": {
+      "path": "research/model_v07_error_result_error_cases.csv",
+      "sha256": "a4a9ca00c11b70fd880f3143838e69af04eae0b23d29355b36dddbaa5aa9c065",
+      "rows": 50
+    },
+    "slice_report": {
+      "path": "research/model_v07_error_result_slice_report.csv",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "rows": 0
+    }
+  }
+}

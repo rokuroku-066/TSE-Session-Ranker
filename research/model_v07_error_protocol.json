@@ -1,0 +1,243 @@
+{
+  "schema_version": 1,
+  "protocol_id": "model_v07_error_meta_gate_replay_20260722",
+  "registered_at": "2026-07-22T15:45:00+09:00",
+  "status": "frozen_before_model_v07_metrics",
+  "purpose": "Turn repeated v0.5/v0.6 ranking errors into a small point-in-time meta-feature registry and test one locked zero-to-two-slot trade gate on later chronological replay periods.",
+  "authority": {
+    "result_class": "known_retrospective_chronological_replay_only",
+    "production_promotion_allowed": false,
+    "reason": "All outcomes through 2026-07-22 were visible in earlier research. Replay can reject hypotheses but cannot establish a sealed edge.",
+    "prospective_sessions_required_after_lock": 100
+  },
+  "decision": {
+    "time_jst": "08:58:59",
+    "target": "same-session open-to-close return",
+    "display_slots": 2,
+    "display_anchor": "g0_raked_logit",
+    "display_policy": "Always preserve the G0 anchor's rank 1 and rank 2 on every source-complete session.",
+    "trade_policy": "Each displayed slot is gated independently. A rejected 50 percent sleeve remains cash and rank 3 never replaces it.",
+    "primary_cost_bps_round_trip": 20.0,
+    "stress_cost_bps_round_trip": 40.0
+  },
+  "periods": {
+    "error_discovery": {
+      "start": "2024-07-01",
+      "end": "2024-10-31",
+      "outcome_access": "Individual errors and aggregate gate-selection metrics may be inspected."
+    },
+    "meta_warmup": {
+      "start": "2024-07-01",
+      "end": "2024-08-30",
+      "use": "Generate strictly out-of-fold displayed-candidate rows used to fit the first meta gate."
+    },
+    "gate_selection": {
+      "start": "2024-09-02",
+      "end": "2024-10-31",
+      "use": "Select at most one gate from the four registered candidates."
+    },
+    "replay_a": {
+      "start": "2024-11-01",
+      "end": "2024-12-30"
+    },
+    "replay_b": {
+      "start": "2025-01-06",
+      "end": "2025-03-31"
+    },
+    "replay_c": {
+      "start": "2025-04-01",
+      "end": "2025-07-31"
+    }
+  },
+  "base_training": {
+    "start": "2024-04-03",
+    "minimum_sessions": 60,
+    "window": "expanding",
+    "retrain_frequency": "monthly",
+    "date_weight": "equal total weight per training date"
+  },
+  "g0_features": [
+    "oc_last",
+    "oc_mean_5",
+    "oc_mean_20",
+    "oc_mean_60",
+    "oc_win_20",
+    "oc_std_20",
+    "overnight_last",
+    "overnight_mean_20",
+    "overnight_mean_60",
+    "night_day_corr_60",
+    "xrank_atr14_pct",
+    "xrank_close_momentum_5",
+    "xrank_close_momentum_20",
+    "xrank_close_momentum_60",
+    "xrank_prior_close_location_20"
+  ],
+  "family_registry": [
+    {
+      "name": "g0_raked_logit",
+      "family": "raked_logit",
+      "objective": "positive_session",
+      "random_state": 31,
+      "parameters": {"C": 0.03, "class_balance": true, "max_iter": 1000}
+    },
+    {
+      "name": "g0_ridge_return",
+      "family": "ridge_return",
+      "objective": "raw_return",
+      "random_state": 31,
+      "parameters": {"alpha": 10.0, "return_clip_pct": 5.0}
+    },
+    {
+      "name": "g0_hgb_rank",
+      "family": "hist_gradient_boosting_rank",
+      "objective": "same_day_return_percentile",
+      "random_state": 31,
+      "parameters": {"loss": "squared_error", "learning_rate": 0.05, "max_iter": 120, "max_leaf_nodes": 15, "min_samples_leaf": 200, "l2_regularization": 1.0, "max_bins": 63, "return_clip_pct": 5.0}
+    },
+    {
+      "name": "g0_extra_trees_top_quintile",
+      "family": "extra_trees_classifier",
+      "objective": "same_day_top_quintile",
+      "random_state": 31,
+      "parameters": {"n_estimators": 64, "max_depth": 8, "min_samples_leaf": 200, "max_features": 0.7, "bootstrap": false, "n_jobs": 1, "class_balance": true}
+    }
+  ],
+  "meta_features": {
+    "geometry": [
+      "anchor_score_tail_z",
+      "anchor_rank_percentile",
+      "local_margin_iqr",
+      "top_tail_slope_iqr",
+      "anchor_score_iqr",
+      "slot_is_rank2"
+    ],
+    "agreement": [
+      "family_rank_percentile_mean",
+      "family_rank_percentile_std",
+      "family_rank_percentile_min",
+      "family_top2_vote_rate",
+      "family_top5_vote_rate",
+      "family_rank_correlation_mean"
+    ],
+    "stability_repeat": [
+      "prior_selection_count_5",
+      "prior_selection_count_20",
+      "sessions_since_selected",
+      "last_selected_net_pct",
+      "consecutive_selection",
+      "anchor_score_change_since_selected",
+      "anchor_score_age_sessions"
+    ]
+  },
+  "meta_training": {
+    "minimum_prior_candidate_sessions": 40,
+    "target": "realised open-to-close percent minus 20 basis points",
+    "target_clip_pct": 5.0,
+    "mean_model": "training-median imputer with missing indicators, StandardScaler, Ridge alpha 10",
+    "downside_target": "max(-net return, 0), clipped to 5 percent",
+    "downside_penalty": 0.5,
+    "fit_cutoff": "strictly before each scoring month",
+    "sample_weight": "equal total weight per displayed-candidate date"
+  },
+  "gate_registry": [
+    {
+      "gate_id": "geometry_expected_net",
+      "feature_groups": ["geometry"],
+      "utility": "predicted_net_mean",
+      "trade_when": "utility > 0"
+    },
+    {
+      "gate_id": "agreement_expected_net",
+      "feature_groups": ["geometry", "agreement"],
+      "utility": "predicted_net_mean",
+      "trade_when": "utility > 0"
+    },
+    {
+      "gate_id": "stability_repeat_expected_net",
+      "feature_groups": ["geometry", "agreement", "stability_repeat"],
+      "utility": "predicted_net_mean",
+      "trade_when": "utility > 0"
+    },
+    {
+      "gate_id": "downside_utility",
+      "feature_groups": ["geometry", "agreement", "stability_repeat"],
+      "utility": "predicted_net_mean - 0.5 * predicted_negative_part",
+      "trade_when": "utility > 0"
+    }
+  ],
+  "error_analysis": {
+    "catastrophic_loss_pct": -5.0,
+    "large_win_pct": 5.0,
+    "high_confidence_quantile": 0.75,
+    "registered_error_types": [
+      "catastrophic_loss",
+      "large_win",
+      "high_confidence_loss",
+      "repeat_loss",
+      "avoided_loss",
+      "missed_win"
+    ],
+    "hypothesis_support_min_candidate_rows": 20,
+    "hypothesis_support_min_dates": 10,
+    "rule": "Never create a security-specific or date-specific veto from an anecdote."
+  },
+  "selection_gate": {
+    "minimum_trade_days": 20,
+    "minimum_trade_slots": 30,
+    "net20_mean_strictly_positive": true,
+    "top5_removed_nonnegative": true,
+    "minimum_positive_month_fraction": 0.5,
+    "paired_uplift_vs_forced_strictly_positive": true,
+    "shared_block_max_mean_80pct_lower_nonnegative": true,
+    "largest_day_share_of_positive_profit_max": 0.35,
+    "maximum_selected_gates": 1,
+    "tie_breaks": [
+      "larger gated net20 mean",
+      "larger adjusted paired lower bound",
+      "larger top5-removed mean",
+      "fewer meta features",
+      "gate id"
+    ],
+    "no_qualifier_policy": "Lock no trade-gate challenger; do not select a mostly-cash strategy merely because it lost less."
+  },
+  "replay_gate": {
+    "individual_period": {
+      "paired_uplift_vs_forced_strictly_positive": true,
+      "minimum_trade_day_fraction": 0.4
+    },
+    "combined": {
+      "net20_mean_strictly_positive": true,
+      "block5_one_sided_90pct_lower_nonnegative": true,
+      "paired_lower_bound_vs_forced_nonnegative": true,
+      "top5_removed_strictly_positive": true,
+      "net40_nonnegative": true,
+      "profit_factor_min": 1.1,
+      "positive_month_fraction_min": 0.6,
+      "minimum_trade_days": 110,
+      "largest_day_share_of_positive_profit_max": 0.25,
+      "rank2_marginal_net_if_used_nonnegative": true,
+      "minimum_positive_replay_periods": 2,
+      "all_replay_periods_must_beat_forced": true
+    }
+  },
+  "artifacts": [
+    "display_picks",
+    "forced_trade_picks",
+    "gated_trade_picks",
+    "error_cases",
+    "slice_report",
+    "result_json",
+    "result_manifest"
+  ],
+  "leakage_assertions": [
+    "Every base and family score is produced by a model fitted strictly before the scoring month.",
+    "Price feature source dates are strictly before the target date.",
+    "Score percentiles, margins and agreement use only the cutoff-time eligible universe and never outcome or target traded status.",
+    "Meta models, imputers, scalers, downside targets and repeat history use candidate dates strictly before the scoring month.",
+    "Changing a target-date or future outcome cannot change that target date's display ranks, meta features or trade decision.",
+    "A rejected slot remains cash; rank 3 is never inspected as a replacement candidate.",
+    "Missing family scores abort the run rather than silently shrinking the agreement panel.",
+    "Future futures, board, PTS and indicative-open fields are excluded from this historical replay."
+  ]
+}

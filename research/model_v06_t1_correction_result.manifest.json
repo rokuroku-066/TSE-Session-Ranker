@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "protocol_path": "research/model_v06_t1_correction_protocol.json",
+  "protocol_sha256": "939fe5a330cb973f3a43bbf5d2302ed9495093075acbb8ed98624e85a0e2e4d6",
+  "runner_path": "research/evaluate_model_v06_t1_correction.py",
+  "runner_sha256": "d41145a6e8723828e0aa64895c35726a9e62d717c0622a42ccdc274771e8269a",
+  "result_path": "research/model_v06_t1_correction_result.json",
+  "result_sha256": "e6af141fbd5566a3b77ac603e0cb88920205ea8f37aa351e4849e270c6105595",
+  "display_picks_path": "research/model_v06_t1_correction_result_display_picks.csv",
+  "display_picks_sha256": "0c1f72492bb5fb653b4c1a7a689060133d5c6d46037dc3c282ff084dee10aea3",
+  "frozen_input_sha256": {
+    "v06_protocol": "20038eb33d87a1fbcd187548f7f14c65dca136d00850566311a6888bd0083021",
+    "v06_catalog": "bbf87983979d48afbe1eaa51f3368cca713c306f2b7d4cdc8cda54e5fe43414a",
+    "v06_evaluator": "503ed17aa04ed65fe8be5cbfb2946935a42e7f17c6497548c965cbda2a1adda1",
+    "v06_panel": "f2494efe6e66c02307b736b231a6759895ba8dc8471b4060ebc34dbd87e82cfd",
+    "alignment_overlay": "5166f8d3b8cfb876edb2a1494db43a1e3d1d8d57c97f3ee974a10409434380e5",
+    "v06_result_reference": "bdf91871e05dde03579b2521e4fcd558683b2ed9ab9de750b9535614261be6c1",
+    "v06_group_screen_picks_reference": "0b784c8d472aee2ad64def2098ffaaeb7a4e162b6b294ddb07692592f16cbbca"
+  }
+}

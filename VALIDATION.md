@@ -40,6 +40,8 @@
 </details>
 
 
+
+
 ```
 
 </details>
@@ -1419,6 +1421,277 @@ locked retrospective recipe:     G0_price_core
 G0自体の損益優位性:        未実証
 production変更:                なし
 次の対象:                       F0～F4の前向きsnapshot
+```
+
+</details>
+
+
+---
+
+## Entry 008 — 研究プロトコルv0.7：個別誤差分析とOOF meta-gate
+
+| 項目 | 内容 |
+|---|---|
+| 検証日 | 2026-07-22 |
+| 検証対象コミット | 本PRへ収録 |
+| 親Entry | Entry 006・007 |
+| 検証対象 | G0の日次top2誤差、4系統の寄り前meta-gate、各50%枠の発注／現金化 |
+| 採用判断 | 4 gateすべて不採用。`locked_gate = null` |
+| 当時の運用判断 | 毎日top2の表示は維持するが、自動発注は0件 |
+| 主指標 | 選択期forced top2は往復20bp後 `-0.274360%/日`。各gateの調整片側80%下限はすべて負 |
+| 機械可読成果物 | `research/model_v07_error_result.json`<br>SHA-256 `e81b2abcc65c1aca958a3219951d1b1c419f0588878edcd41a2de09148714943`<br>`research/model_v07_error_result_audit.json`<br>SHA-256 `9fa5c9fcfcf7ef98cf77655ee6824cd1f5f061368ab750e33d98d7d4aa66053b` |
+
+> **一行結論:** 大損失・大利益を個別に調べ、スコア形状、モデル間合意、反復選定、downside予測を試したが、コスト後のプラス期待値は証明できなかった。
+
+<details>
+<summary><strong>誤差の個別調査、固定gate、未使用期間での確認</strong></summary>
+
+### 誤差の実例
+
+2024年7～10月のG0 top2から50行を抽出した。分類は重複を認める。
+
+```text
+catastrophic loss:       9
+large win:               5
+high-confidence loss:   27
+repeat loss:             14
+```
+
+大きな外れは、2024-08-05 TDSE `-10.76%`、2024-07-25 サンケン電気 `-7.91%`、2024-10-17 リックソフト `-7.69%`、反対側は2024-10-31 アツギ `+9.39%`、2024-08-05 サトー商会 `+8.00%`だった。8月5～6日を除いても既存recipeはプラスにならず、急落日だけが原因ではない。
+
+G0 scoreと実現始値→終値のSpearman相関は期間ごとに`-0.094`、`+0.013`、`-0.166`、`+0.007`で、ほぼ単調性がない。また複数期間でrank 2がrank 1を上回った。後から「rank 1を飛ばす」のではなく、表示top2を固定して発注gateを独立検証する設計に改めた。
+
+### OOF meta-gate
+
+各対象月のgateは前月末までのデータだけで学習。G0 top2の各50%枠を独立に発注または現金化し、rank 3へは置換しない。
+
+| gate | 発注日 / 枠 | net20 | top 5日除外 | 共通block調整80%下限 | 判定 |
+|---|---:|---:|---:|---:|---|
+| forced top2 | 41 / 82 | -0.274360% | -0.825284% | — | 対照 |
+| score geometry | 2 / 2 | +0.008372% | -0.004472% | -0.024327pt | 不合格 |
+| family agreement | 23 / 25 | -0.120293% | -0.276633% | -0.152992pt | 不合格 |
+| stability / repeat | 24 / 27 | -0.158191% | -0.306185% | -0.190890pt | 不合格 |
+| downside utility | 12 / 12 | -0.012558% | -0.083226% | -0.045257pt | 不合格 |
+
+geometryのプラスは2日・2枠だけで、最小標本と上位日除外に失敗した。よって`locked_gate = null`とし、登録済みの正式replayは実行していない。監査用の後付けcounterfactual replayも、各gateの全replay期間合算net20は`-0.0895～-0.1801%/日`であり、判断を変えない。
+
+### 独立監査
+
+```text
+audit checks:                    23 / 23 passed
+独立再学習・比較予測:       1,784行
+最大予測差:                    0
+最大metric差:                  2.22e-14
+対象月outcome変更不変:         11 / 11月
+```
+
+制約として、runnerは1,784行の全gate予測値を個別artifactに保存せず、空のslice CSVにheaderがない。監査で再計算しているが、次回からは予測値もhash-bound artifactにする。
+
+```text
+protocol SHA-256: 31cb5512b197ce59f418bc4021af164d362a5be6c6ad06454f4508f2eec48ebd
+result SHA-256:   e81b2abcc65c1aca958a3219951d1b1c419f0588878edcd41a2de09148714943
+manifest SHA-256: 9b8d46fcd5b506d6603d5574383915e3c71b5345b7e98d8e2b3b5029ea13557f
+```
+
+</details>
+
+---
+
+## Entry 009 — 研究プロトコルv0.7.1：posthoc tail cash-vetoと非線形E0
+
+| 項目 | 内容 |
+|---|---|
+| 検証日 | 2026-07-22 |
+| 検証対象コミット | 本PRへ収録 |
+| 親Entry | Entry 008 |
+| 検証対象 | 個別外れ値から固定した5 tail条件、単独veto、1/2/3条件veto、非線形特徴を自由係数で学習するE0 |
+| 採用判断 | 自動発注・shadow markerとも採用0。`veto_any_1_of_5`は損失軽減の観察に限定 |
+| 当時の運用判断 | 過去結果を見て作ったposthoc診断。production昇格はprotocol上禁止 |
+| 主指標 | 182日replayで1条件以上vetoはnet20 `+0.005473%/日`だが、net40 `-0.084087%`、絶対80%下限 `-0.048318%` |
+| 機械可読成果物 | `research/model_v07_tail_risk_result.json`<br>SHA-256 `8323febc5bf1e5fd737e619f8b9932d5b30088da9b309fa5d0aa2376ec74f6bc`<br>`research/model_v07_tail_risk_result.audit.json`<br>SHA-256 `1702045d33e3752e948f0ce9bf76365049496c5518b0a0da173a76b40a27d0b2` |
+
+> **一行結論:** tailの単調回避は自由係数の特徴追加より有望だが、コスト・上位日依存・期間安定性を通過せず、新規データで確認する仮説に留まった。
+
+<details>
+<summary><strong>tail条件、cash-veto、E0の失敗機構</strong></summary>
+
+次の条件はすべて対象日前までの日足だけで算出できる。
+
+```text
+session_range_ratio_5_20 >= 1.5
+cc_vol_ratio_5_20          >= 1.7
+xrank_close_momentum_60    <= -0.6
+flat_oc_rate_20            >= 0.10
+overnight_last             >= +1.7%
+```
+
+G0 top2の各50%枠を保持し、条件に触れた枠だけを現金化した。欠測時は仮のvetoを生成せず、rank 3で穴埋めしない。
+
+| recipe | replay net20 | forced比 | 判定 |
+|---|---:|---:|---|
+| forced top2 | -0.279700% | — | 対照 |
+| range expansion veto | -0.125516% | +0.154183pt | 絶対損益が負 |
+| deep 60d loser veto | -0.064014% | +0.215686pt | 絶対損益が負 |
+| any 1 of 5 | **+0.005473%** | **+0.285173pt** | 不合格 |
+| any 2 of 5 | -0.006461% | +0.273238pt | 不合格 |
+
+`any 1 of 5`は163/364枠、126/182日だけ発注し、対照より大きく損失を減らした。しかし往復40bpで`-0.084087%`、上位5日除外で`-0.073142%`、9か月中プラス3か月、独立3 replay中プラス1期間、replay Aでforced比`-0.024761pt`だった。そのため「期待値があるrule」ではなく`loss-mitigation observation`と記録する。
+
+### E0が改善にならなかった理由
+
+同じ5条件の超過量と件数を7個の非線形特徴としてG0 logitへ自由係数で追加した。
+
+```text
+E0 net20:                          -0.242410%
+G0比:                              +0.037290pt
+paired 80%下限:                  -0.196280pt
+G0と同じ銘柄枠:                    33.24%
+tail条件数平均 G0 / E0:             1.057 / 2.113
+2条件以上の比率 G0 / E0:          30.24% / 73.73%
+```
+
+モデルはtail条件を「下値リスク」ではなく「上値機会」としても学習し、むしろ複数tailの銘柄を多く選ぶようになった。実際、大損失と大利益の両方が同じtail領域にある。今後試す場合は、自由符号の特徴追加ではなく、実行スコアと分離した単調downside headまたはcash-vetoにする。
+
+独立監査は24/24項目に合格した。ただしprotocolのartifact一覧に`condition_slice`がないこと、E0のtail露出比率の分母がcomplete-caseであることはminor注記とする。
+
+```text
+protocol SHA-256: 3b76e0ec8824953146e50392f0a406b4b95238e23992bb4d0951b16daf049dc8
+result SHA-256:   8323febc5bf1e5fd737e619f8b9932d5b30088da9b309fa5d0aa2376ec74f6bc
+manifest SHA-256: 1b15515410128f6542e0cf5530ec95bb39d987872d93c33eb44e60571c0c9beb
+```
+
+</details>
+
+---
+
+## Entry 010 — 研究プロトコルv0.6.2：T1整列訂正とTDnet v0.7意味契約
+
+| 項目 | 内容 |
+|---|---|
+| 検証日 | 2026-07-22 |
+| 検証対象コミット | 本PRへ収録 |
+| 親Entry | Entry 006・007 |
+| 検証対象 | T1の2列整列バグの訂正診断、TDnetのfresh/follow-up・経済family意味の再設計 |
+| 採用判断 | T1追加は不採用を維持。新規`tdnet_v07_*` 26列は特徴候補に登録するが損益未検証 |
+| 当時の運用判断 | production変更なし。既定v0.3もshadow表示のみ |
+| 主指標 | 訂正T1 top2 net20 `-0.565582%/日`、G0比 `+0.028075pt`、調整80%下限 `-0.088563pt` |
+| 機械可読成果物 | `research/model_v06_t1_correction_result.json`<br>SHA-256 `e6af141fbd5566a3b77ac603e0cb88920205ea8f37aa351e4849e270c6105595`<br>`research/model_v06_t1_correction_result_audit.json`<br>SHA-256 `695bb7f92af8c653f330d61c8c08feea300505eaf598cfdf5598fd9189acfde6`<br>`research/model_v07_tdnet_semantics_audit.json`<br>SHA-256 `1cd257170114cf200ed7e49182dba7c24454edf57a8f2b52761414315e805bbb` |
+
+> **一行結論:** Entry 006・007のT1単独値は訂正するが、改善量は小さく絶対損益も下限も負で、「追加特徴なし・自動発注なし」の最終判断は変わらない。
+
+<details>
+<summary><strong>訂正範囲、再計算、TDnet v0.7候補の意味</strong></summary>
+
+### Entry 006・007への訂正
+
+bundleを作成後、`code / bundle_start`でsortする前の行indexでfamily countを保持し、sort後の別行へ付与していた。影響列は次の2つ。
+
+```text
+tdnet_clean_family_count_log1p
+tdnet_clean_single_family
+```
+
+全panelでそれぞれ37,433行、28,405行、group screenのevent行でそれぞれ9,106/14,003行、7,033/14,003行が変わった。G0、T0、他のT1 11列、Entry 008・009のG0ベース診断に影響はない。
+
+| recipe | top2 net20 | G0比 | プラス月 |
+|---|---:|---:|---:|
+| G0 | -0.593657% | — | 1/4 |
+| Entry 006の旧T1 | -0.591744% | +0.001913pt | 1/4 |
+| **訂正T1** | **-0.565582%** | **+0.028075pt** | **1/4** |
+
+```text
+訂正T1 - 旧T1:                    +0.026162pt
+paired 80%下限:                     -0.034182pt
+訂正T1 - G0 調整80%下限:          -0.088563pt
+選定が変わった枠:                   13 / 168、9日
+event保有枠 / 独立日:               23 / 18
+```
+
+Entry 007の監査は、凍結されたバグ入りpanelとresultを正確に再現したが、特徴生成前のfamily countと行keyの対応までは監査していなかった。本訂正はG0と旧T1の168枠・score・outcome・指標を差0で再現し、独立監査19/19項目に合格した。489数値の最大差は`2.13e-14`、block再計算差は`1.11e-16`だった。
+
+overlayは66,702 unique `date/code`を持ち、旧event key 34,491/34,491を収録する。completeでkeyなしだけ0、incompleteはNaNとする。ただし登録protocolはoverlay自体のhashは結合する一方、生成元TDnet、builder、各開示時刻を結合していない。したがって数値監査は合格だが、過去08:58時点の生データPITを完全に証明する成果物ではない。
+
+### TDnet v0.7の研究用意味契約
+
+旧`tdnet_clean_*`は凍結成果物の再現のため列名と意味を変えず、新しい26列を`tdnet_v07_*`として追加した。
+
+- 「開示文書を観測」と「freshな分類済み経済family」を分離
+- 初回予想と予想修正を分離
+- 株主配当、受取配当、グループ内配当、子会社配当を分離
+- 自己株買い、自己株消却、エクイティ、M&Aをfresh / follow-upに分離
+- M&Aを取得、売却、組織再編、内部再編に分離
+- 経済family数はraw、`log1p`、singleを保持し、follow-up family数と分離
+- completeな開示元でイベントなしなら0、incompleteまたは完全性不明はNaNに固定
+
+登録した26列は次のとおり。
+
+```text
+tdnet_v07_observed_any
+tdnet_v07_fresh_classified_economic_any
+tdnet_v07_has_forecast_initial
+tdnet_v07_has_forecast_revision
+tdnet_v07_has_shareholder_dividend
+tdnet_v07_has_received_dividend
+tdnet_v07_has_intercompany_dividend
+tdnet_v07_has_subsidiary_dividend
+tdnet_v07_has_progress_stage
+tdnet_v07_has_fresh_buyback
+tdnet_v07_has_followup_buyback
+tdnet_v07_has_fresh_equity
+tdnet_v07_has_followup_equity
+tdnet_v07_has_fresh_share_cancellation
+tdnet_v07_has_followup_share_cancellation
+tdnet_v07_has_fresh_ma
+tdnet_v07_has_followup_ma
+tdnet_v07_has_ma_acquisition
+tdnet_v07_has_ma_divestiture
+tdnet_v07_has_ma_reorganization
+tdnet_v07_has_ma_internal_reorganization
+tdnet_v07_economic_family_count
+tdnet_v07_economic_family_count_log1p
+tdnet_v07_single_economic_family
+tdnet_v07_followup_family_count
+tdnet_v07_followup_family_count_log1p
+```
+
+経過・結果タイトルが新規材料に入らないようfamily別にstage gateし、M&Aの自己株・買収防衛・固定資産・政策保有株などの誤検知を回帰fixtureにした。この26列は意味とPIT実装を整えた「候補」であり、損益の改善を証明した採用済み特徴ではない。
+
+独立監査は42/42項目に合格した。対象TDnet sourceは2024-01-04～2025-04-09の461日、97,006文書で、386 target sessionへ割り当てた66,702 bundleを監査した。自己株公開買付けへの応募、子会社主体の自己株取得、市場買付結果、期間延長、補足説明、調査委員会などを個別に調べ、issuerの新規決定とfollow-upを分離した。
+
+```text
+bundle buyback fresh / follow-up:       1,712 / 6,090
+fresh経済familyありbundle:             29,282
+follow-up familyありbundle:             10,342
+bundle出力のPIT違反 / 候補セル欠測:       0 / 0
+fresh-follow-up重複・訂正economic・主体誤分類: 0
+M&A subtype重複・既知false positive:           0
+全63候補列dtype（旧37 + 新26）:           float32
+input shuffle差:                           0
+v0.7分類器を全反転しても旧37列:         bit-exact
+```
+
+complete no-eventは63列すべて0、`False`とnullable `NA`のpartial sourceは63列すべてNaNを再現した。incomplete行でもsource-max timestampはprovenanceとして残るが、候補63列には含まれず、モデル値として漏れない。
+
+本監査は保存済みHTML・sidecar・実装をhash拘束し、公開時刻から08:58:59 cutoffへの遡及割当を検証する。ただし、各ページが当時のセッション前に同時取得されていたことまでは証明しない。実行にはgit管理外の`research/.cache/model_v05_tdnet`にある461 HTML + 461 sidecarが必要で、全922ファイルのhashはaudit JSONに収録した。
+
+```bash
+PYTHONPATH=src:. python research/audit_model_v07_tdnet_semantics.py --verify
+```
+
+```text
+protocol SHA-256: 939fe5a330cb973f3a43bbf5d2302ed9495093075acbb8ed98624e85a0e2e4d6
+result SHA-256:   e6af141fbd5566a3b77ac603e0cb88920205ea8f37aa351e4849e270c6105595
+manifest SHA-256: 5d689a4cfad747dde4f9d0c9ab6d667ef220fc18bd74fd784fa9b242bc91ca70
+picks SHA-256:    0c1f72492bb5fb653b4c1a7a689060133d5c6d46037dc3c282ff084dee10aea3
+
+TDnet audit runner SHA-256:
+455add37ea6efd5e109bbae158a5533f3a1935fae232a7ca8b6ebf866d38bc2d
+
+TDnet audit result SHA-256:
+1cd257170114cf200ed7e49182dba7c24454edf57a8f2b52761414315e805bbb
+
+TDnet audit manifest SHA-256:
+ce4e872e07c10ee305bcd8b2b2004d1af3d6921e9d3b79fb9c8fca8e581ee1e9
 ```
 
 </details>

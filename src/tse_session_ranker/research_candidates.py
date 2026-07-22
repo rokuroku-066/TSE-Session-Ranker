@@ -1,10 +1,11 @@
-"""Leakage-safe feature candidates for the v0.6 research protocol.
+"""Leakage-safe feature candidates for the v0.6/v0.7 research protocols.
 
 This module is deliberately outside the production feature manifest.  It
 implements only candidates that can be reconstructed from the historical JPX
-monthly OHLC archive and cached TDnet date indexes.  Exact 08:58 futures,
-auction, PTS, liquidity and quantitative disclosure fields remain forward-only
-and are listed in ``research/model_v06_feature_catalog.json``.
+monthly OHLC archive and cached TDnet date indexes.  Additive ``tdnet_v07_*``
+columns refine TDnet semantics while preserving every v0.6 column.  Exact
+08:58 futures, auction, PTS, liquidity and quantitative disclosure fields
+remain forward-only and are listed in ``research/model_v06_feature_catalog.json``.
 """
 
 from __future__ import annotations
@@ -123,6 +124,43 @@ T1_EVENT_STRUCTURE_COLUMNS: tuple[str, ...] = (
     "tdnet_clean_weekend_age",
 )
 
+# v0.7 adds a second, explicitly semantic view of the same PIT-safe TDnet
+# bundle.  The v0.6 ``tdnet_clean_*`` columns above intentionally retain their
+# original meaning so that archived v0.6 results remain reproducible.
+V07_EVENT_SEMANTIC_COLUMNS: tuple[str, ...] = (
+    # Any observed TDnet document, including administrative/unclassified ones.
+    "tdnet_v07_observed_any",
+    # At least one fresh, classified economic family below.  This deliberately
+    # does not claim that the title is price-sensitive; that is an empirical
+    # outcome rather than a property the title parser can establish.
+    "tdnet_v07_fresh_classified_economic_any",
+    "tdnet_v07_has_forecast_initial",
+    "tdnet_v07_has_forecast_revision",
+    "tdnet_v07_has_shareholder_dividend",
+    "tdnet_v07_has_received_dividend",
+    "tdnet_v07_has_intercompany_dividend",
+    "tdnet_v07_has_subsidiary_dividend",
+    "tdnet_v07_has_progress_stage",
+    "tdnet_v07_has_fresh_buyback",
+    "tdnet_v07_has_followup_buyback",
+    "tdnet_v07_has_fresh_equity",
+    "tdnet_v07_has_followup_equity",
+    "tdnet_v07_has_fresh_share_cancellation",
+    "tdnet_v07_has_followup_share_cancellation",
+    "tdnet_v07_has_fresh_ma",
+    "tdnet_v07_has_followup_ma",
+    "tdnet_v07_has_ma_acquisition",
+    "tdnet_v07_has_ma_divestiture",
+    "tdnet_v07_has_ma_reorganization",
+    "tdnet_v07_has_ma_internal_reorganization",
+    # The raw count is intentionally retained alongside log1p for auditability.
+    "tdnet_v07_economic_family_count",
+    "tdnet_v07_economic_family_count_log1p",
+    "tdnet_v07_single_economic_family",
+    "tdnet_v07_followup_family_count",
+    "tdnet_v07_followup_family_count_log1p",
+)
+
 X0_EVENT_CONTEXT_COLUMNS: tuple[str, ...] = (
     "tdnet_clean_revision_x_xrank_close_momentum_20",
     "tdnet_clean_dividend_x_xrank_close_momentum_20",
@@ -135,6 +173,7 @@ X0_EVENT_CONTEXT_COLUMNS: tuple[str, ...] = (
 TDNET_CANDIDATE_COLUMNS: tuple[str, ...] = (
     *T0_CLEAN_EVENT_COLUMNS,
     *T1_EVENT_STRUCTURE_COLUMNS,
+    *V07_EVENT_SEMANTIC_COLUMNS,
 )
 
 _TDNET_FAMILY_FLAG_NAMES: tuple[str, ...] = (
@@ -155,6 +194,35 @@ _TDNET_FAMILY_FLAG_NAMES: tuple[str, ...] = (
     "impairment_loss",
     "audit_problem",
     "correction",
+)
+
+# Economic content families used only by the v0.7 semantic count.  Each member
+# is already a single event-level indicator.  In particular, buyback method /
+# stage, equity method / stage and M&A subtype attributes are collapsed into
+# one family each before aggregation.  Correction and progress are never
+# economic families and gate the event-level values to zero.
+_V07_ECONOMIC_FAMILY_NAMES: tuple[str, ...] = (
+    "v07_economic_earnings",
+    "v07_economic_forecast",
+    "v07_economic_shareholder_dividend",
+    "v07_economic_received_dividend",
+    "v07_economic_subsidiary_dividend",
+    "v07_economic_buyback",
+    "v07_economic_share_cancellation",
+    "v07_economic_equity",
+    "v07_economic_benefit",
+    "v07_economic_split",
+    "v07_economic_ma",
+    "v07_economic_business_alliance",
+    "v07_economic_impairment_loss",
+    "v07_economic_audit_problem",
+)
+
+_V07_FOLLOWUP_FAMILY_NAMES: tuple[str, ...] = (
+    "v07_followup_buyback",
+    "v07_followup_equity",
+    "v07_followup_share_cancellation",
+    "v07_followup_ma",
 )
 
 
@@ -650,6 +718,362 @@ def _clean_title_flags(title: pd.Series) -> pd.DataFrame:
     return flags.astype(float)
 
 
+def _v07_semantic_title_flags(
+    title: pd.Series, legacy_flags: pd.DataFrame
+) -> pd.DataFrame:
+    """Return additive v0.7 semantics without changing the v0.6 taxonomy.
+
+    Observed is handled at bundle level.  Correction gating is global, but
+    progress gating is family-specific: a buyback result in a mixed title must
+    not erase a fresh forecast revision in that same title.  Method and stage
+    attributes describe the document without inflating the family counts.
+    """
+
+    flags = pd.DataFrame(index=title.index)
+    correction = legacy_flags["correction"].gt(0)
+    followup_prefix = _contains(
+        title,
+        r"(?:開示事項|開示内容)の(?:経過|変更)"
+        r"|^[（(](?:変更|経過)[）)]",
+    )
+
+    forecast_revision = _contains(
+        title,
+        r"業績予想.*(?:修正|変更|差異|未定|撤回|取下|取り下)"
+        r"|通期.*予想.*(?:修正|変更)",
+    )
+    forecast_explanation = _contains(
+        title,
+        r"補足説明|決算説明|説明資料|概要|質疑応答|Q.?A|Ｑ＆Ａ|サマリー",
+    )
+    forecast_initial = (
+        _contains(title, r"業績予想")
+        & ~forecast_revision
+        & ~forecast_explanation
+    )
+    flags["v07_forecast_initial"] = forecast_initial
+    flags["v07_forecast_revision"] = forecast_revision
+
+    company_source = _contains(
+        title,
+        r"(?:完全|連結|非連結)?子会社|関係会社|関連会社|"
+        r"持分法適用(?:関連)?会社",
+    )
+    received_dividend = _contains(
+        title,
+        r"受取配当|配当収入|"
+        r"配当(?:金|収入).{0,20}(?:受領|受取|計上)|"
+        r"(?:受領|受取).{0,20}配当",
+    ) | (
+        company_source
+        & _contains(title, r"から.{0,20}(?:配当|剰余金の配当)")
+    )
+    subsidiary_dividend = _contains(
+        title,
+        r"(?:当社)?(?:連結|非連結)?子会社"
+        r"(?:[（(][^）)]*[）)])?(?:における|の).{0,40}"
+        r"(?:配当予想|剰余金の配当|配当決定)"
+        r"|子会社株式の現物配当|子会社の現物配当",
+    ) & ~received_dividend
+    shareholder_dividend = (
+        legacy_flags["dividend"].gt(0)
+        & _contains(
+            title,
+            r"配当予想|剰余金の配当|期末配当|中間配当|"
+            r"年間配当|普通配当|記念配当|特別配当|"
+            r"増配|減配|復配|無配|配当方針",
+        )
+        & ~received_dividend
+        & ~subsidiary_dividend
+        & ~_contains(title, r"現物配当.*(?:孫会社|異動|スピンオフ)")
+    )
+    intercompany_dividend = received_dividend & company_source
+    flags["v07_received_dividend"] = received_dividend
+    flags["v07_intercompany_dividend"] = intercompany_dividend
+    flags["v07_subsidiary_dividend"] = subsidiary_dividend
+    flags["v07_shareholder_dividend"] = shareholder_dividend
+
+    # Subtypes are mutually exclusive per document.  A bundle can retain more
+    # than one has-subtype when separate documents describe separate deals;
+    # the economic-family count still caps all of them at one MA family.
+    takeover_defense = _contains(
+        title,
+        r"買収防衛|買収への対応|大規模買付.*対応|大量取得行為.*対応",
+    )
+    ma_reorganization = _contains(
+        title,
+        r"合併|会社分割|吸収分割|新設分割|株式交換|株式移転|"
+        r"共同持株会社|組織再編|事業統合|"
+        r"株式交付.*(?:子会社化|株式取得)",
+    )
+    internal_reorganization = ma_reorganization & _contains(
+        title,
+        r"(?:完全|連結)?子会社(?:間|との|の).*(?:合併|分割)|"
+        r"当社.*(?:完全|連結)?子会社.*(?:合併|分割)|"
+        r"グループ内.*(?:再編|合併|分割)|持株会社体制",
+    )
+    explicit_equity_compensation = _contains(
+        title,
+        r"ストック.?オプション|株式報酬|譲渡制限付株式|"
+        r"株式(?:付与|交付|給付)制度|(?:株式交付|株式給付|RS)信託|"
+        r"役員.*新株予約権|従業員.*新株予約権|"
+        r"取締役.{0,40}(?:新株式.*発行|自己株式.*処分)",
+    )
+    compensation_or_own_stock = explicit_equity_compensation | _contains(
+        title,
+        r"インセンティブ.*株式取得|"
+        r"代表取締役.*当社株式.*取得|従業員.*株式取得",
+    )
+    asset_disposal = _contains(
+        title,
+        r"固定資産|販売用不動産|不動産|信託受益権",
+    )
+    nonbusiness_asset_disposal = (
+        _contains(title, r"資産(?:の|を).*(?:譲渡|売却)|準共有持分")
+        & ~_contains(title, r"子会社|関連会社|関係会社|事業")
+    )
+    issuer_share_disposition = _contains(
+        title,
+        r"(?:自己(?:の)?|自社|当社(?:普通)?)株式.*(?:売却|譲渡|処分)|"
+        r"(?:代表取締役|執行役員|従業員).{0,40}株式.*(?:売却|譲渡|処分)",
+    )
+    non_ma_securities_sale = (
+        _contains(title, r"政策保有株式|投資有価証券|保有株式")
+        & ~_contains(
+            title,
+            r"子会社|関連会社|関係会社|持分法|特定子会社|事業",
+        )
+    )
+    ma_divestiture = (
+        _contains(
+            title,
+            r"株式.*(?:譲渡|売却)|持分.*(?:譲渡|売却)|"
+            r"事業.*(?:譲渡|売却)",
+        )
+        & ~ma_reorganization
+        & ~compensation_or_own_stock
+        & ~asset_disposal
+        & ~nonbusiness_asset_disposal
+        & ~issuer_share_disposition
+        & ~non_ma_securities_sale
+    )
+    acquisition_expression = _contains(
+        title,
+        r"(?<!自己)(?<!当社)株式(?:の|を)?(?:追加)?取得|"
+        r"持分(?:の|を)?(?:追加)?取得|事業譲受|"
+        r"(?:簡易)?株式交付.*(?:子会社化|株式取得)|"
+        r"(?:完全)?子会社化|事業買収|企業買収|"
+        r"買収(?:契約|を実施|を決定)",
+    )
+    issuer_share_acquisition = _contains(
+        title,
+        r"自己(?:の)?株式|自社株式|"
+        r"当社(?:普通)?株式.{0,30}(?:取得|買付)|"
+        r"(?:代表取締役|執行役員|従業員).{0,40}株式.*(?:取得|買付)|"
+        r"(?:RS|株式交付|株式給付)信託.*株式.*取得",
+    ) & ~_contains(title, r"子会社化|関連会社化|持分法適用")
+    ma_acquisition = acquisition_expression & ~(
+        ma_reorganization
+        | ma_divestiture
+        | takeover_defense
+        | compensation_or_own_stock
+        | issuer_share_acquisition
+        | _contains(title, r"特定子会社化")
+    )
+    flags["v07_ma_acquisition"] = ma_acquisition
+    flags["v07_ma_divestiture"] = ma_divestiture
+    flags["v07_ma_reorganization"] = ma_reorganization
+    flags["v07_ma_internal_reorganization"] = internal_reorganization
+
+    self_tender_offer_reference = _contains(
+        title,
+        r"自己株(?:式)?.*公開買付|公開買付.*自己株(?:式)?",
+    )
+    nonissuer_self_tender_offer = _contains(
+        title,
+        r"公開買付(?:け)?への.{0,30}応募|"
+        r"公開買付(?:け)?に.{0,20}応募|"
+        r"(?:当社)?(?:連結)?子会社.{0,50}自己株(?:式)?.*公開買付|"
+        r"(?:当社)?(?:連結)?子会社.{0,50}公開買付.*自己株(?:式)?",
+    )
+    issuer_self_tender_offer = (
+        self_tender_offer_reference & ~nonissuer_self_tender_offer
+    )
+    nonissuer_buyback_reference = nonissuer_self_tender_offer | _contains(
+        title,
+        r"(?:自己|自社)株(?:式)?.{0,30}(?:取得|買付)"
+        r"(?:へ|に対して)?の?.{0,20}応募|"
+        r"(?:当社)?(?:連結)?(?:子会社|関連会社).{0,50}"
+        r"(?:による|における|の).{0,30}"
+        r"(?:自己|自社)株(?:式)?.{0,20}(?:取得|買付)|"
+        r"(?:自己|自社)株(?:式)?.{0,20}(?:取得|買付).{0,50}"
+        r"(?:当社)?(?:連結)?(?:子会社|関連会社)"
+        r"(?:による|における)",
+    )
+    issuer_buyback_reference = (
+        _contains(
+            title,
+            r"(?:自己|自社)株(?:式)?(?:の)?"
+            r"(?:市場(?:での|における)?の?)?(?:取得|買付)",
+        )
+        & ~compensation_or_own_stock
+        & ~nonissuer_buyback_reference
+    )
+    buyback_family = (
+        (
+            legacy_flags[
+                ["buyback_decision", "buyback_tostnet", "buyback_status"]
+            ].max(axis=1).gt(0)
+            | issuer_self_tender_offer
+            | issuer_buyback_reference
+        )
+        & ~nonissuer_buyback_reference
+    )
+    equity_instrument = _contains(
+        title,
+        r"第三者割当|公募増資|新株式.*発行|新株予約権|"
+        r"転換社債|CB|ＣＢ|ライツ.?オファリング|株式の売出し|"
+        r"自己株式.*処分|自己株式処分|募集株式|優先株式|種類株式",
+    ) | explicit_equity_compensation
+    equity_status = (
+        legacy_flags["equity_financing_status"].gt(0) & equity_instrument
+    )
+    equity_family = (
+        legacy_flags["external_equity_financing"].gt(0)
+        | explicit_equity_compensation
+        | equity_status
+    )
+    control_transaction = (
+        legacy_flags["control_transaction"].gt(0)
+        & ~takeover_defense
+        & ~self_tender_offer_reference
+    )
+    ma_family = pd.concat(
+        [
+            flags[
+                [
+                    "v07_ma_acquisition",
+                    "v07_ma_divestiture",
+                    "v07_ma_reorganization",
+                ]
+            ],
+            control_transaction.rename("v07_control_transaction"),
+        ],
+        axis=1,
+    ).max(axis=1).gt(0)
+
+    self_tender_offer_stage = issuer_self_tender_offer & _contains(
+        title,
+        r"公開買付.{0,30}(?:結果|終了|完了|成立|不成立|"
+        r"応募状況|(?:買付条件|買付期間).{0,15}変更)"
+        r"|(?:結果|終了|完了).{0,30}公開買付",
+    )
+    buyback_acquisition_stage = issuer_buyback_reference & _contains(
+        title,
+        r"(?:取得|買付)(?:の)?(?:状況|結果|実績|終了|完了|進捗|累計)|"
+        r"市場買付(?:け)?|月間.{0,20}(?:取得|買付)|"
+        r"(?:取得|買付)(?:価額|期間|条件).{0,20}変更|"
+        r"(?:自己|自社)株(?:式)?.{0,40}(?:取得|買付).{0,80}"
+        r"(?:完了|終了|中止|再開|延長|一部変更|方法追加|"
+        r"総数変更|事後調整|調整取引|補足説明|説明資料|"
+        r"質疑応答|Q(?:&amp;|&|＆)?.?A|Ｑ＆Ａ|調査委員会|第三者委員会|"
+        r"調査結果|再発防止|分配可能額を超えた)|"
+        r"分配可能額を超えた.{0,80}"
+        r"(?:自己|自社)株(?:式)?.{0,20}(?:取得|買付)",
+    )
+    buyback_stage = (
+        legacy_flags["buyback_status"].gt(0)
+        | (buyback_family & followup_prefix)
+        | self_tender_offer_stage
+        | buyback_acquisition_stage
+    )
+    equity_stage = equity_status | (
+        equity_family
+        & (
+            followup_prefix
+            | _contains(
+                title,
+                r"資金使途.*変更|支出予定時期.*変更|"
+                r"発行内容(?:の)?確定|発行条件(?:の)?確定|"
+                r"条件(?:の)?決定|割当完了|一部失権",
+            )
+        )
+    )
+    ma_stage = ma_family & (
+        followup_prefix
+        | _contains(
+            title,
+            r"(?:株式取得|持分取得|事業譲受|株式譲渡|持分譲渡|事業譲渡|"
+            r"公開買付|合併|分割|株式交換|株式移転|株式交付).*"
+            r"(?:経過|結果|完了|終了|中止|日程変更|条件変更|"
+            r"実行.*変更)",
+        )
+    )
+    share_cancellation = _contains(title, r"自己株(?:式)?.*消却")
+    share_cancellation_stage = share_cancellation & (
+        followup_prefix
+        | _contains(
+            title,
+            r"消却.*(?:完了|終了|予定日|実施日|日変更|日の変更)|"
+            r"消却日(?:の)?(?:決定|変更)",
+        )
+    )
+
+    fresh_buyback = buyback_family & ~correction & ~buyback_stage
+    followup_buyback = buyback_family & ~correction & buyback_stage
+    fresh_equity = equity_family & ~correction & ~equity_stage
+    followup_equity = equity_family & ~correction & equity_stage
+    fresh_ma = ma_family & ~correction & ~ma_stage
+    followup_ma = ma_family & ~correction & ma_stage
+    fresh_share_cancellation = (
+        share_cancellation & ~correction & ~share_cancellation_stage
+    )
+    followup_share_cancellation = (
+        share_cancellation & ~correction & share_cancellation_stage
+    )
+    flags["v07_fresh_buyback"] = fresh_buyback
+    flags["v07_followup_buyback"] = followup_buyback
+    flags["v07_fresh_equity"] = fresh_equity
+    flags["v07_followup_equity"] = followup_equity
+    flags["v07_fresh_ma"] = fresh_ma
+    flags["v07_followup_ma"] = followup_ma
+    flags["v07_fresh_share_cancellation"] = fresh_share_cancellation
+    flags["v07_followup_share_cancellation"] = followup_share_cancellation
+    flags["v07_progress_stage"] = (
+        buyback_stage | equity_stage | ma_stage | share_cancellation_stage
+    )
+
+    economic_sources = {
+        "v07_economic_earnings": legacy_flags["earnings"].gt(0) & ~correction,
+        "v07_economic_forecast": (
+            forecast_initial | forecast_revision
+        ) & ~correction,
+        "v07_economic_shareholder_dividend": (
+            shareholder_dividend & ~correction
+        ),
+        "v07_economic_received_dividend": received_dividend & ~correction,
+        "v07_economic_subsidiary_dividend": subsidiary_dividend & ~correction,
+        "v07_economic_buyback": fresh_buyback,
+        "v07_economic_share_cancellation": fresh_share_cancellation,
+        "v07_economic_equity": fresh_equity,
+        "v07_economic_benefit": legacy_flags["benefit"].gt(0) & ~correction,
+        "v07_economic_split": legacy_flags["split"].gt(0) & ~correction,
+        "v07_economic_ma": fresh_ma,
+        "v07_economic_business_alliance": legacy_flags[
+            "business_alliance"
+        ].gt(0) & ~correction,
+        "v07_economic_impairment_loss": legacy_flags[
+            "impairment_loss"
+        ].gt(0) & ~correction,
+        "v07_economic_audit_problem": (
+            legacy_flags["audit_problem"].gt(0) & ~correction
+        ),
+    }
+    for name, values in economic_sources.items():
+        flags[name] = values
+    return flags.astype(float)
+
+
 def _prior_bundle_counts(
     bundles: pd.DataFrame, *, days: int
 ) -> pd.Series:
@@ -663,6 +1087,32 @@ def _prior_bundle_counts(
     return output
 
 
+def _empty_clean_tdnet_candidate_features() -> pd.DataFrame:
+    """Return the stable clean-TDnet schema for an empty event set."""
+
+    result = pd.DataFrame(
+        {
+            "date": pd.Series(dtype="datetime64[ns]"),
+            "code": pd.Series(dtype="object"),
+            **{
+                column: pd.Series(dtype="float32")
+                for column in TDNET_CANDIDATE_COLUMNS
+            },
+            "tdnet_clean_feature_source_max_timestamp": pd.Series(
+                dtype="datetime64[ns, Asia/Tokyo]"
+            ),
+        }
+    )
+    return result[
+        [
+            "date",
+            "code",
+            *TDNET_CANDIDATE_COLUMNS,
+            "tdnet_clean_feature_source_max_timestamp",
+        ]
+    ]
+
+
 def build_clean_tdnet_candidate_features(
     disclosures: pd.DataFrame,
     expected_sessions: Iterable[object],
@@ -671,12 +1121,21 @@ def build_clean_tdnet_candidate_features(
 ) -> pd.DataFrame:
     """Aggregate corrected TDnet title/timing features at the pre-open cutoff."""
 
-    events = normalize_tdnet_disclosures(disclosures)
+    empty_disclosures = disclosures.empty
+    if empty_disclosures:
+        _require_columns(
+            disclosures, ("published_at", "code", "title"), "TDnet data"
+        )
+        events = disclosures
+    else:
+        events = normalize_tdnet_disclosures(disclosures)
     sessions = normalize_expected_sessions(expected_sessions)
     try:
         cutoff_time = clock_time.fromisoformat(decision_time)
     except ValueError as exc:
         raise ValueError("decision_time must be an ISO local time") from exc
+    if empty_disclosures:
+        return _empty_clean_tdnet_candidate_features()
     cutoffs = pd.DatetimeIndex(
         [
             pd.Timestamp.combine(date.date(), cutoff_time).tz_localize("Asia/Tokyo")
@@ -688,6 +1147,8 @@ def build_clean_tdnet_candidate_features(
     in_range = target_positions < len(cutoffs)
     events = events.loc[in_range].copy()
     target_positions = target_positions[in_range]
+    if events.empty:
+        return _empty_clean_tdnet_candidate_features()
     events["date"] = sessions[target_positions].to_numpy()
     target_cutoff = pd.Series(cutoffs[target_positions], index=events.index)
     events["age_hours"] = (
@@ -711,7 +1172,8 @@ def build_clean_tdnet_candidate_features(
         events["premarket"] | events["intraday"]
     )
     flags = _clean_title_flags(events["title"])
-    events = pd.concat([events, flags], axis=1)
+    v07_flags = _v07_semantic_title_flags(events["title"], flags)
+    events = pd.concat([events, flags, v07_flags], axis=1)
     progress_expression = (
         r"取得状況|取得結果|終了|完了|経過|変更|中止|払込|行使状況|発行結果"
     )
@@ -756,10 +1218,34 @@ def build_clean_tdnet_candidate_features(
         "progress_stage",
         "supportive",
         "adverse",
+        "v07_forecast_initial",
+        "v07_forecast_revision",
+        "v07_shareholder_dividend",
+        "v07_received_dividend",
+        "v07_intercompany_dividend",
+        "v07_subsidiary_dividend",
+        "v07_progress_stage",
+        "v07_fresh_buyback",
+        "v07_fresh_equity",
+        "v07_fresh_share_cancellation",
+        "v07_fresh_ma",
+        "v07_ma_acquisition",
+        "v07_ma_divestiture",
+        "v07_ma_reorganization",
+        "v07_ma_internal_reorganization",
+        *_V07_FOLLOWUP_FAMILY_NAMES,
+        *_V07_ECONOMIC_FAMILY_NAMES,
     ):
         bundles[name] = grouped[name].max().to_numpy(dtype=float)
-    family_count = bundles[list(_TDNET_FAMILY_FLAG_NAMES)].sum(axis=1)
-    bundles["family_count"] = family_count
+    bundles["family_count"] = bundles[list(_TDNET_FAMILY_FLAG_NAMES)].sum(
+        axis=1
+    )
+    bundles["v07_economic_family_count"] = bundles[
+        list(_V07_ECONOMIC_FAMILY_NAMES)
+    ].sum(axis=1)
+    bundles["v07_followup_family_count"] = bundles[
+        list(_V07_FOLLOWUP_FAMILY_NAMES)
+    ].sum(axis=1)
     bundles = bundles.sort_values(["code", "bundle_start"], kind="stable").reset_index(
         drop=True
     )
@@ -798,7 +1284,9 @@ def build_clean_tdnet_candidate_features(
     result["tdnet_clean_document_count_log1p"] = np.log1p(
         bundles["document_count"]
     )
-    result["tdnet_clean_family_count_log1p"] = np.log1p(family_count)
+    result["tdnet_clean_family_count_log1p"] = np.log1p(
+        bundles["family_count"]
+    )
     for name in ("premarket", "intraday", "postclose"):
         result[f"tdnet_clean_{name}_count_log1p"] = np.log1p(
             bundles[f"{name}_count"]
@@ -811,7 +1299,9 @@ def build_clean_tdnet_candidate_features(
     ).dt.total_seconds() / 60.0
     result["tdnet_clean_bundle_width_minutes_log1p"] = np.log1p(width_minutes)
     result["tdnet_clean_has_progress_stage"] = bundles["progress_stage"]
-    result["tdnet_clean_single_family"] = family_count.eq(1).astype(float)
+    result["tdnet_clean_single_family"] = bundles["family_count"].eq(1).astype(
+        float
+    )
     result["tdnet_clean_support_adverse_conflict"] = (
         bundles["supportive"].gt(0) & bundles["adverse"].gt(0)
     ).astype(float)
@@ -823,6 +1313,54 @@ def build_clean_tdnet_candidate_features(
     )
     result["tdnet_clean_weekend_age"] = bundles["latest_age_hours"].ge(48).astype(
         float
+    )
+    result["tdnet_v07_observed_any"] = 1.0
+    result["tdnet_v07_fresh_classified_economic_any"] = bundles[
+        "v07_economic_family_count"
+    ].gt(0).astype(float)
+    v07_direct_map = {
+        "tdnet_v07_has_forecast_initial": "v07_forecast_initial",
+        "tdnet_v07_has_forecast_revision": "v07_forecast_revision",
+        "tdnet_v07_has_shareholder_dividend": "v07_shareholder_dividend",
+        "tdnet_v07_has_received_dividend": "v07_received_dividend",
+        "tdnet_v07_has_intercompany_dividend": "v07_intercompany_dividend",
+        "tdnet_v07_has_subsidiary_dividend": "v07_subsidiary_dividend",
+        "tdnet_v07_has_progress_stage": "v07_progress_stage",
+        "tdnet_v07_has_fresh_buyback": "v07_fresh_buyback",
+        "tdnet_v07_has_followup_buyback": "v07_followup_buyback",
+        "tdnet_v07_has_fresh_equity": "v07_fresh_equity",
+        "tdnet_v07_has_followup_equity": "v07_followup_equity",
+        "tdnet_v07_has_fresh_share_cancellation": (
+            "v07_fresh_share_cancellation"
+        ),
+        "tdnet_v07_has_followup_share_cancellation": (
+            "v07_followup_share_cancellation"
+        ),
+        "tdnet_v07_has_fresh_ma": "v07_fresh_ma",
+        "tdnet_v07_has_followup_ma": "v07_followup_ma",
+        "tdnet_v07_has_ma_acquisition": "v07_ma_acquisition",
+        "tdnet_v07_has_ma_divestiture": "v07_ma_divestiture",
+        "tdnet_v07_has_ma_reorganization": "v07_ma_reorganization",
+        "tdnet_v07_has_ma_internal_reorganization": (
+            "v07_ma_internal_reorganization"
+        ),
+    }
+    for output, source in v07_direct_map.items():
+        result[output] = bundles[source]
+    result["tdnet_v07_economic_family_count"] = bundles[
+        "v07_economic_family_count"
+    ]
+    result["tdnet_v07_economic_family_count_log1p"] = np.log1p(
+        bundles["v07_economic_family_count"]
+    )
+    result["tdnet_v07_single_economic_family"] = bundles[
+        "v07_economic_family_count"
+    ].eq(1).astype(float)
+    result["tdnet_v07_followup_family_count"] = bundles[
+        "v07_followup_family_count"
+    ]
+    result["tdnet_v07_followup_family_count_log1p"] = np.log1p(
+        bundles["v07_followup_family_count"]
     )
     result["tdnet_clean_feature_source_max_timestamp"] = bundles["bundle_end"]
     result[list(TDNET_CANDIDATE_COLUMNS)] = result[
@@ -859,7 +1397,12 @@ def attach_clean_tdnet_candidate_features(
         validate="many_to_one",
         sort=False,
     )
-    complete = frame[completeness_column].eq(True)
+    # Missing completeness is a source failure.  Nullable Boolean comparison
+    # preserves pd.NA, so normalize explicitly before applying the inverse
+    # mask below rather than letting an unknown row retain partial features.
+    complete = (
+        frame[completeness_column].eq(True).fillna(False).astype(bool)
+    )
     frame.loc[complete, list(TDNET_CANDIDATE_COLUMNS)] = frame.loc[
         complete, list(TDNET_CANDIDATE_COLUMNS)
     ].fillna(0.0)
