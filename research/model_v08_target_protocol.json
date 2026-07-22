@@ -1,0 +1,161 @@
+{
+  "schema_version": 1,
+  "protocol_id": "model_v08_zero_base_rank_target_20260722",
+  "status": "frozen_after_retrospective_search_before_new_forward_outcomes",
+  "registered_at": "2026-07-22T18:04:51+09:00",
+  "authority": {
+    "retrospective_only": true,
+    "production_promotion_allowed": false,
+    "reason": "Every available outcome through the frozen panel end was already visible to the project before this search. No historical interval is a sealed holdout.",
+    "earliest_new_forward_session": "2026-07-23"
+  },
+  "objective": {
+    "decision_time_jst": "08:58:59",
+    "target": "same-session open-to-close return",
+    "training_target_formula": "2 * rank(method='average', pct=True) - 1, grouped independently by training date",
+    "training_target_semantics": "This historical formula is percentile-scaled but is not exactly zero-centered for a finite daily cross-section: its minimum is 2/n - 1 and its daily mean is 1/n when there are no ties. It is retained unchanged to preserve the evaluated specification.",
+    "preprocessing_weight_semantics": "SimpleImputer medians and StandardScaler means/variances are fitted with ordinary row weighting. Date-equal sample weights are applied only to the Ridge loss. This evaluated behavior is retained unchanged; date-weighted preprocessing is a separately registered forward comparison candidate.",
+    "portfolio": "two fixed 50 percent sleeves; an unfilled slot remains cash",
+    "primary_metric": "scheduled-day top2 arithmetic mean after 20 bp round-trip cost",
+    "stress_cost_bps": [40.0, 60.0],
+    "display_policy": "always rank two when point-in-time source coverage permits",
+    "trade_policy": "shadow only; no automatic order is authorized"
+  },
+  "frozen_input": {
+    "panel_path_for_reproduction": "/tmp/model_v07_corrected_panel.pkl",
+    "panel_sha256": "6b86f994a1d15d1da8ed40469d44fc409adadc6cd5b3df3c08aef6717bcdf0eb",
+    "panel_manifest_path": "/tmp/model_v07_corrected_panel.pkl.manifest.json",
+    "panel_manifest_sha256": "ab896fad3f62d1e3a9829d10f4cc9ca2c9bdcd0a53d226f55cb18d0f32d9b296",
+    "calendar_sha256": "966f4a416d0929487d850b16be87c9c1cd69cd9f8c0447a3e76214a5715c489e",
+    "rows": 1524104,
+    "codes": 4124,
+    "sessions": 386,
+    "calendar_period": ["2024-01-04", "2025-07-31"],
+    "score_period": ["2024-07-01", "2025-07-31"],
+    "score_sessions": 266,
+    "training_start": "2024-01-04",
+    "folds": "calendar-month walk-forward with training strictly before each scoring month",
+    "fold_count": 13
+  },
+  "base_features": [
+    "oc_last", "oc_mean_5", "oc_mean_20", "oc_mean_60", "oc_win_20",
+    "oc_std_20", "overnight_last", "overnight_mean_20", "overnight_mean_60",
+    "night_day_corr_60", "xrank_atr14_pct", "xrank_close_momentum_5",
+    "xrank_close_momentum_20", "xrank_close_momentum_60",
+    "xrank_prior_close_location_20"
+  ],
+  "traceability": {
+    "stage_registrations": {
+      "stage_1": {
+        "path": "research/model_v08_target_registration_stage1.json",
+        "sha256": "7281f3ea28e7e16dfef5fc34bb89acea0ecb76d66ea3f12cfd9c01a15350a54b",
+        "source_result_sha256": "7283a1db3302a0a911a23e7ede9a2e8af7db695526ff18a54ba42d57150ba512",
+        "source_runner_sha256": "4d675dd73cd26b74c9169bc4bf9e49126bbc13370012a7fbc975748503ef94c4"
+      },
+      "stage_2": {
+        "path": "research/model_v08_target_registration_stage2.json",
+        "sha256": "29c3d0e0391b5f8977c811a0fa24f65aad0e60708e384e3f7f893c4b4f974d59",
+        "source_result_sha256": "dd8f865a998e9f4452d1b02280a83f7f82331258df2d3349abeeff8ea1dfd218",
+        "source_runner_sha256": "1d9c63f074c0344879eea87b987a74e1aa0dfc978d5c2eb6984dc456c3eb1467"
+      },
+      "stage_3": {
+        "path": "research/model_v08_target_registration_stage3.json",
+        "sha256": "2cf2fc57b84627829d9f9a7dec92099518a274f038d3efe0c6bd9d417b34ed94",
+        "source_result_sha256": "bd5db11393b65f20063f10eec6ddde6673d24623b9e4e37d3bd96da3e9074562",
+        "source_runner_sha256": "af81484f7f63549b5098189a7e2517c70fecf6e65bdbb89d11a7d2fa1b95a614"
+      },
+      "stage_4": {
+        "path": "research/model_v08_target_registration_stage4.json",
+        "sha256": "85a4b81eb141ee86d0cfaf21cdfa8a859b68181d427b36c58a66c77159b23c51",
+        "source_result_sha256": "49c2e9d9b2213124b963c2482ed4f496d9420221fbb553ee675bc32fceb177aa",
+        "source_runner_sha256": "61fe2c8f0853143b29c4e4f665f88e502d7164fe0ceed3bd8f0d87bbf6b9b7f9"
+      }
+    },
+    "commit_scope": "The four byte-exact stage registrations and the compact canonical candidate history are committed. Exploratory runners, full intermediate result JSON files, and large intermediate picks remain uncommitted; their original SHA-256 values above preserve identity."
+  },
+  "stages": {
+    "zero_base_screen": {
+      "candidate_ids": [
+        "baseline_expanding_raked_logit",
+        "feature__FZ1_oc_reliability_t20", "feature__FZ2_oc_last_surprise_z20",
+        "feature__FZ3_oc_sign_consensus", "feature__FZ4_oc_horizon_dispersion",
+        "feature__FZ5_gap_day_coupling", "feature__FZ6_momentum_sign_consensus",
+        "rolling120_raked_logit", "daily_centered_ridge", "daily_centered_huber",
+        "daily_rank_ridge", "same_day_top_decile_logit",
+        "same_day_top_five_pct_logit", "top_bottom_decile_spread_logit",
+        "two_part_expected_return", "downside_penalized_centered_ridge",
+        "relevance_weighted_centered_ridge"
+      ],
+      "selection": "none; all seventeen outcomes are retained",
+      "discovery": "daily_rank_ridge was the only candidate with positive net20, positive top5-removed net20 and nonnegative net40"
+    },
+    "rank_target_sensitivity": {
+      "candidate_ids": [
+        "rank_ridge_expand_a1", "rank_ridge_expand_a10_control",
+        "rank_ridge_expand_a100", "rank_ridge_roll120_a10",
+        "rank_ridge_roll252_a10", "rank_ridge_fixed_prejul_a10",
+        "rank_winsor_05_95_ridge_a10", "rank_huber_expand",
+        "top_bottom_decile_spread_control", "rank_spread_equal_percentile_ensemble"
+      ],
+      "role": "alpha, window, bounded-target and ensemble sensitivity; it cannot promote production",
+      "locked_target": "within-training-date average percentile of observed open-to-close return mapped to [-1,1]"
+    },
+    "liquidity_hypotheses": {
+      "candidate_ids": [
+        "L0_rank_a1_expanding", "L1_rank_a10_rolling120",
+        "L2_add_no_trade20", "L3_add_no_trade60", "L4_add_flat20",
+        "L5_add_zero_range20", "L6_add_g5_all", "L7_add_illiquidity_max",
+        "L8_add_no_trade_x_low_atr", "L9_add_g0_missing_fraction",
+        "L10_screen_no_trade20_q90", "L11_screen_flat20_q75",
+        "L12_screen_zero_range20_q90", "L13_combo_no_trade_flat_interaction",
+        "L14_roll120_add_g5_all"
+      ],
+      "overlap_disclosure": "no_trade_rate_20, no_trade_rate_60, flat_oc_rate_20 and zero_range_rate_20 exactly overlap the earlier v0.6 G5 raw columns. Their combination with a cross-sectional rank target is new; the raw sources are not.",
+      "threshold_policy": "candidate screens used only a quantile recomputed from dates strictly before each scoring fold",
+      "known_limit": "the archive has no usable volume, turnover, spread or trading-unit history; share price is not accepted as a size or liquidity proxy"
+    },
+    "fixed_role_confirmation": {
+      "mean_return_role": "L4_add_flat20 / K1_L4_expand_a1",
+      "robustness_role": "L6_add_g5_all / K2_L6_expand_a1",
+      "roles_reselected_after_confirmation": false,
+      "sensitivity_alpha": [1.0, 10.0, 100.0],
+      "sensitivity_windows": ["expanding", "rolling_120_sessions"],
+      "required_audits": [
+        "15-candidate max-statistic multiplicity adjustment",
+        "monthly and four-block results", "standardized coefficient signs",
+        "7043 and top-four-code cash fragility", "no-trade-proxy cash fragility",
+        "target-day outcome mutation invariance", "independent PnL recomputation",
+        "best, worst and selected-loss case export"
+      ]
+    }
+  },
+  "fixed_shadow_specifications": {
+    "mean_return": {
+      "id": "v08_L4_mean_shadow",
+      "model": "Ridge",
+      "alpha": 1.0,
+      "window": "expanding",
+      "target": "daily cross-sectional open-close return percentile mapped to [-1,1]",
+      "features": "base_features plus flat_oc_rate_20"
+    },
+    "robustness": {
+      "id": "v08_L6_robustness_shadow",
+      "model": "Ridge",
+      "alpha": 1.0,
+      "window": "expanding",
+      "target": "daily cross-sectional open-close return percentile mapped to [-1,1]",
+      "features": "base_features plus no_trade_rate_20, no_trade_rate_60, flat_oc_rate_20 and zero_range_rate_20"
+    },
+    "interpretation_constraint": "The fitted G5 coefficients are mostly positive. L6 must not be described as a learned liquidity penalty; it is only a retrospective robustness role with lower code concentration."
+  },
+  "stop_rule": {
+    "retrospective_target_and_model_tuning_stopped": true,
+    "reason": "The remaining variants cannot be distinguished without reusing the same outcomes again. The binding uncertainty is absent executable-liquidity and exact 08:58 forward data.",
+    "restart_requires": [
+      "new point-in-time sessions not used in this search",
+      "turnover, trading unit, indicative spread or observed execution cost",
+      "exact 08:58 futures, indicative-open, board or PTS snapshots",
+      "content-addressed feature and model specification before outcomes"
+    ]
+  }
+}

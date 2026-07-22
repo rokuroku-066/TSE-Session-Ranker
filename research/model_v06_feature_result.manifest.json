@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "result_path": "research/model_v06_feature_result.json",
+  "result_sha256": "bdf91871e05dde03579b2521e4fcd558683b2ed9ab9de750b9535614261be6c1",
+  "protocol_sha256": "20038eb33d87a1fbcd187548f7f14c65dca136d00850566311a6888bd0083021",
+  "catalog_sha256": "bbf87983979d48afbe1eaa51f3368cca713c306f2b7d4cdc8cda54e5fe43414a",
+  "input_lock_sha256": "06d0fbf6f4395a0a760f73b8a35f23a20505df3c34658bb4e5bb6d96bfd31d86",
+  "implementation_sha256": {
+    "research/screen_feature_candidates_v06.py": "503ed17aa04ed65fe8be5cbfb2946935a42e7f17c6497548c965cbda2a1adda1",
+    "research/finalize_logit_v04.py": "55db8008bccfe503977394d8cf3ba64e033e14714059f2862144710e43b1e260",
+    "src/tse_session_ranker/research_candidates.py": "c59683f6c63cae927e169e031133568f35f4689f333296abdd4265e2e508f3af",
+    "src/tse_session_ranker/research_features.py": "7c1cfb92853137569bcf8e59c77dbeb61726461afc406b2512ef432a59bf593c",
+    "src/tse_session_ranker/research_models.py": "0e8dd5bbbaea784e40975d3567163f2e153d05e7cf3ae2cd33bcd09e63467a16",
+    "src/tse_session_ranker/features.py": "aafeeae021d3917bbe5dd9c36acf1993b8b2e24130cc630b7f67c9a46d622e92",
+    "src/tse_session_ranker/data/common.py": "98992fd9675246c81617ee5ea3c565b7f8420f6248cc58d43d19ac71950f31f4",
+    "src/tse_session_ranker/data/jpx.py": "1bd2e74acced608eb36c3606b593ea407d2d1e5f54b3283790ef8fd0fb1041f7",
+    "src/tse_session_ranker/data/tdnet.py": "4ee9b02566b8ae2f638454e1d1c01e0dfb3c935271e620c3e01abe7c4fe5fc29",
+    "src/tse_session_ranker/profit.py": "7f4c35389970c988723ab69cb428d9b0edce071c79df4ab4f29d03fddf9f311a",
+    "src/tse_session_ranker/validation.py": "676c4e17a9355b537205cc3106ec2bc9694f11a1eae231609e96b4db680194f1"
+  },
+  "artifacts": {
+    "group_screen_display_picks": {
+      "path": "research/model_v06_feature_result_group_screen_display_picks.csv",
+      "sha256": "0b784c8d472aee2ad64def2098ffaaeb7a4e162b6b294ddb07692592f16cbbca"
+    },
+    "union_prune_display_picks": {
+      "path": "research/model_v06_feature_result_union_prune_display_picks.csv",
+      "sha256": "aea2c793a256ef4b759166855d593a2eb5239108adf491ff8d40c5bacb31cd82"
+    },
+    "stability_display_picks": {
+      "path": "research/model_v06_feature_result_stability_display_picks.csv",
+      "sha256": "202a79f00202e2092da354f3353a6cb5449692d47948254cb0e4b899457b74de"
+    },
+    "trade_picks": {
+      "path": "research/model_v06_feature_result_trade_picks.csv",
+      "sha256": "1c2531a02ced07b36e9f63d729aff862d60c70c7f74a9b03efedebc18011a94a",
+      "status": "empty_by_protocol_until_out_of_fold_trade_gate_is_designed"
+    }
+  }
+}

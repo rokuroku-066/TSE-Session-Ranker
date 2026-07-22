@@ -1,0 +1,20 @@
+{
+  "input_lock_sha256": "a765980d9ab989f8bcc55f83b7bc3459ef6106c5bd75dc1d4451ede787180d6d",
+  "output_path": "research/model_v05_broad_family_result.json",
+  "panel_manifest_sha256": "a6314f0024153db868f331db7bd6172f53ff7364ba7187bfc808d4f9b68a878a",
+  "panel_sha256": "e2d8ef255b8988b0b0773a31f18859d236d8c6350850a5a764da6dbbeba669b9",
+  "planned_pick_paths": [
+    "research/model_v05_broad_family_result_family_screen_picks.csv",
+    "research/model_v05_broad_family_result_feature_design_picks.csv",
+    "research/model_v05_broad_family_result_development_confirmation_picks.csv",
+    "research/model_v05_broad_family_result_known_benchmark_reference_picks.csv"
+  ],
+  "protocol_sha256": "da1a1498c663678e8044838c6b03ed89d656c4747157d94c44e9fcebd579b2a2",
+  "schema_version": 1,
+  "started_at_utc": "2026-07-22T04:13:46.502742+00:00",
+  "status": "preflight_failed_before_any_metric",
+  "error_type": "ValueError",
+  "error": "family screen had 40 eligible training sessions before 2024-06-03; frozen minimum was 80",
+  "completed_candidate_metrics": 0,
+  "superseded_by": "model_v05 protocol revision with family screen starting 2024-07-01 and minimum 60 eligible training sessions"
+}

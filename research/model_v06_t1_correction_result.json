@@ -1,0 +1,1088 @@
+{
+  "schema_version": 1,
+  "protocol_id": "model_v06_t1_alignment_correction_diagnostic_20260722",
+  "authority": {
+    "result_class": "correction_retrospective_only",
+    "production_promotion_allowed": false,
+    "selection_allowed": false,
+    "reason": "The correction was identified after v0.6 outcomes were viewed. This diagnostic can repair the historical record but cannot select or promote a production recipe."
+  },
+  "decision": "correction_retrospective_only_no_production_change",
+  "frozen_inputs": {
+    "v06_protocol": {
+      "path": "research/model_v06_feature_protocol.json",
+      "sha256": "20038eb33d87a1fbcd187548f7f14c65dca136d00850566311a6888bd0083021"
+    },
+    "v06_catalog": {
+      "path": "research/model_v06_feature_catalog.json",
+      "sha256": "bbf87983979d48afbe1eaa51f3368cca713c306f2b7d4cdc8cda54e5fe43414a"
+    },
+    "v06_evaluator": {
+      "path": "research/screen_feature_candidates_v06.py",
+      "sha256": "503ed17aa04ed65fe8be5cbfb2946935a42e7f17c6497548c965cbda2a1adda1"
+    },
+    "v06_panel": {
+      "path": "/tmp/model_v06_feature_panel.pkl",
+      "sha256": "f2494efe6e66c02307b736b231a6759895ba8dc8471b4060ebc34dbd87e82cfd",
+      "manifest_path": "/tmp/model_v06_feature_panel.pkl.manifest.json",
+      "manifest_sha256": "d9386c2799cf572df3af56ffc624454dc5ce054fa09e75f91d5da542ac1b23d5"
+    },
+    "alignment_overlay": {
+      "path": "/tmp/model_v07_tdnet_alignment_overlay.pkl",
+      "sha256": "5166f8d3b8cfb876edb2a1494db43a1e3d1d8d57c97f3ee974a10409434380e5"
+    },
+    "v06_result_reference": {
+      "path": "research/model_v06_feature_result.json",
+      "sha256": "bdf91871e05dde03579b2521e4fcd558683b2ed9ab9de750b9535614261be6c1"
+    },
+    "v06_group_screen_picks_reference": {
+      "path": "research/model_v06_feature_result_group_screen_display_picks.csv",
+      "sha256": "0b784c8d472aee2ad64def2098ffaaeb7a4e162b6b294ddb07692592f16cbbca"
+    }
+  },
+  "overlay_validation": {
+    "schema_valid": true,
+    "unique_keys": true,
+    "registered_coverage": {
+      "full_panel": {
+        "panel_rows": 1524104,
+        "panel_dates": 386,
+        "tdnet_complete_rows": 1207751,
+        "tdnet_incomplete_rows": 316353,
+        "overlay_rows": 66702,
+        "overlay_keys_matched_to_panel": 57697,
+        "overlay_keys_outside_panel": 9005,
+        "legacy_event_keys": 34491,
+        "legacy_event_keys_covered": 34491,
+        "complete_rows_without_overlay_key": 1150241
+      },
+      "model_horizon_2024_01_04_through_2024_10_31": {
+        "panel_rows": 803697,
+        "panel_dates": 204,
+        "tdnet_complete_rows": 799768,
+        "tdnet_incomplete_rows": 3929,
+        "overlay_rows": 43068,
+        "overlay_keys_matched_to_panel": 37070,
+        "overlay_keys_outside_panel": 5998,
+        "legacy_event_keys": 22282,
+        "legacy_event_keys_covered": 22282,
+        "complete_rows_without_overlay_key": 762711
+      },
+      "group_screen_2024_07_01_through_2024_10_31": {
+        "panel_rows": 331856,
+        "panel_dates": 84,
+        "tdnet_complete_rows": 331856,
+        "tdnet_incomplete_rows": 0,
+        "overlay_rows": 16697,
+        "overlay_keys_matched_to_panel": 14003,
+        "overlay_keys_outside_panel": 2694,
+        "legacy_event_keys": 8550,
+        "legacy_event_keys_covered": 8550,
+        "complete_rows_without_overlay_key": 317853
+      }
+    },
+    "merge_semantics": {
+      "overlay_keys_matched": 57697,
+      "complete_rows_implicit_no_event_zero": 1150241,
+      "incomplete_rows_forced_nan": 316353,
+      "changed_rows:tdnet_clean_family_count_log1p": 37433,
+      "changed_rows:tdnet_clean_single_family": 28405
+    },
+    "legacy_event_key_coverage_complete": true,
+    "complete_no_event_zero_preserved": true,
+    "incomplete_source_nan_preserved": true
+  },
+  "feature_isolation": {
+    "replaced_columns": [
+      "tdnet_clean_family_count_log1p",
+      "tdnet_clean_single_family"
+    ],
+    "unchanged_t1_columns": [
+      "tdnet_clean_document_count_log1p",
+      "tdnet_clean_premarket_count_log1p",
+      "tdnet_clean_intraday_count_log1p",
+      "tdnet_clean_postclose_count_log1p",
+      "tdnet_clean_latest_age_hours_log1p",
+      "tdnet_clean_bundle_width_minutes_log1p",
+      "tdnet_clean_has_progress_stage",
+      "tdnet_clean_support_adverse_conflict",
+      "tdnet_clean_prior_bundle_count_60_log1p",
+      "tdnet_clean_prior_bundle_count_252_log1p",
+      "tdnet_clean_weekend_age"
+    ],
+    "g0_columns_unchanged": true,
+    "other_t1_columns_unchanged": true
+  },
+  "evaluation": {
+    "period": {
+      "start": "2024-07-01",
+      "end": "2024-10-31"
+    },
+    "anchor_model": {
+      "name": "v06_feature_anchor",
+      "family": "raked_logit",
+      "objective": "positive_session",
+      "parameters": {
+        "C": 0.03,
+        "class_balance": true,
+        "max_iter": 1000
+      },
+      "random_state": 31
+    },
+    "monthly_walk_forward": true,
+    "reference_reproduction": {
+      "G0_price_core": {
+        "recipe_id": "G0_price_core",
+        "scheduled_slots": 168,
+        "maximum_absolute_metric_difference": 0.0,
+        "maximum_absolute_score_difference": 0.0,
+        "reproduced": true
+      },
+      "legacy_T1": {
+        "recipe_id": "G0_price_core+T1_event_structure",
+        "scheduled_slots": 168,
+        "maximum_absolute_metric_difference": 0.0,
+        "maximum_absolute_score_difference": 0.0,
+        "reproduced": true
+      }
+    },
+    "recipes": {
+      "G0_price_core": {
+        "recipe_id": "G0_price_core",
+        "feature_count": 15,
+        "features": [
+          "oc_last",
+          "oc_mean_5",
+          "oc_mean_20",
+          "oc_mean_60",
+          "oc_win_20",
+          "oc_std_20",
+          "overnight_last",
+          "overnight_mean_20",
+          "overnight_mean_60",
+          "night_day_corr_60",
+          "xrank_atr14_pct",
+          "xrank_close_momentum_5",
+          "xrank_close_momentum_20",
+          "xrank_close_momentum_60",
+          "xrank_prior_close_location_20"
+        ],
+        "period": {
+          "start": "2024-07-01",
+          "end": "2024-10-31",
+          "scheduled_sessions": 84
+        },
+        "metrics": {
+          "display": {
+            "rank1_rate": 1.0,
+            "rank2_rate": 1.0,
+            "scheduled_sessions": 84
+          },
+          "top1": {
+            "net20": {
+              "n": 84,
+              "days": 84,
+              "executed": 84,
+              "execution_rate": 1.0,
+              "hit_rate": 0.39285714285714285,
+              "signal_hit_rate_including_unfilled": 0.39285714285714285,
+              "gross_mean_pct": -0.6480359229093331,
+              "gross_median_pct": -0.49209500520543403,
+              "net_mean_pct_at_cost": -0.848035922909333,
+              "net_median_pct_at_cost": -0.692095005205434,
+              "compounded_net_return_pct": -53.399591243236124,
+              "max_drawdown_pct": -62.197522158668306,
+              "profit_factor": 0.49527014929560637,
+              "positive_months": 1,
+              "months": 4,
+              "worst_month_pct": -1.5189031924391279,
+              "top5_removed_net_mean_pct": -1.2725815464365373,
+              "largest_day_net_pct": 9.194313967861568,
+              "largest_day_share_of_positive_net": 0.13153539455393512,
+              "monthly_net_mean_pct": {
+                "2024-07": -1.5189031924391279,
+                "2024-08": -1.3597278375210484,
+                "2024-09": -0.8896495717618933,
+                "2024-10": 0.3472035982134006
+              },
+              "cost_sensitivity_net_mean_pct": {
+                "0.0": -0.6480359229093331,
+                "10.0": -0.7480359229093332,
+                "20.0": -0.848035922909333,
+                "40.0": -1.048035922909333,
+                "60.0": -1.2480359229093332
+              }
+            },
+            "net40": {
+              "n": 84,
+              "days": 84,
+              "executed": 84,
+              "execution_rate": 1.0,
+              "hit_rate": 0.39285714285714285,
+              "signal_hit_rate_including_unfilled": 0.39285714285714285,
+              "gross_mean_pct": -0.6480359229093331,
+              "gross_median_pct": -0.49209500520543403,
+              "net_mean_pct_at_cost": -1.048035922909333,
+              "net_median_pct_at_cost": -0.892095005205434,
+              "compounded_net_return_pct": -60.67716462648717,
+              "max_drawdown_pct": -67.72873345909865,
+              "profit_factor": 0.42221797412699075,
+              "positive_months": 1,
+              "months": 4,
+              "worst_month_pct": -1.7189031924391278,
+              "top5_removed_net_mean_pct": -1.4725815464365375,
+              "largest_day_net_pct": 8.994313967861567,
+              "largest_day_share_of_positive_net": 0.13981053522185583,
+              "monthly_net_mean_pct": {
+                "2024-07": -1.7189031924391278,
+                "2024-08": -1.5597278375210488,
+                "2024-09": -1.0896495717618933,
+                "2024-10": 0.1472035982134007
+              },
+              "cost_sensitivity_net_mean_pct": {
+                "0.0": -0.6480359229093331,
+                "10.0": -0.7480359229093332,
+                "20.0": -0.848035922909333,
+                "40.0": -1.048035922909333,
+                "60.0": -1.2480359229093332
+              }
+            },
+            "block5_bootstrap": {
+              "observations": 84,
+              "block_length": 5,
+              "samples": 5000,
+              "confidence": 0.9,
+              "random_state": 32,
+              "point_estimate_pct": -0.848035922909333,
+              "one_sided_lower_pct": -1.4436427268243484,
+              "two_sided_lower_pct": -1.6062914535859958,
+              "two_sided_upper_pct": -0.34408114423367586,
+              "bootstrap_standard_error_pct": 0.38078562557987466
+            }
+          },
+          "top2": {
+            "net20": {
+              "n": 168,
+              "days": 84,
+              "executed": 167,
+              "execution_rate": 0.9940476190476191,
+              "hit_rate": 0.3772455089820359,
+              "signal_hit_rate_including_unfilled": 0.375,
+              "gross_mean_pct": -0.39484790020649574,
+              "gross_median_pct": -0.49611400672735784,
+              "net_mean_pct_at_cost": -0.5936574240160194,
+              "net_median_pct_at_cost": -0.6961140067273578,
+              "compounded_net_return_pct": -40.59391788038227,
+              "max_drawdown_pct": -47.98939149951196,
+              "profit_factor": 0.4942291909613592,
+              "positive_months": 1,
+              "months": 4,
+              "worst_month_pct": -1.3219453880189294,
+              "top5_removed_net_mean_pct": -0.9036715428025306,
+              "largest_day_net_pct": 5.23305346884666,
+              "largest_day_share_of_positive_net": 0.10739037282348679,
+              "monthly_net_mean_pct": {
+                "2024-07": -1.3219453880189294,
+                "2024-08": -0.45407989866417103,
+                "2024-09": -0.8173555620086775,
+                "2024-10": 0.19459129405378503
+              },
+              "cost_sensitivity_net_mean_pct": {
+                "0.0": -0.39484790020649574,
+                "10.0": -0.49425266211125757,
+                "20.0": -0.5936574240160194,
+                "40.0": -0.7924669478255433,
+                "60.0": -0.991276471635067
+              }
+            },
+            "net40": {
+              "n": 168,
+              "days": 84,
+              "executed": 167,
+              "execution_rate": 0.9940476190476191,
+              "hit_rate": 0.3772455089820359,
+              "signal_hit_rate_including_unfilled": 0.375,
+              "gross_mean_pct": -0.39484790020649574,
+              "gross_median_pct": -0.49611400672735784,
+              "net_mean_pct_at_cost": -0.7924669478255433,
+              "net_median_pct_at_cost": -0.8961140067273577,
+              "compounded_net_return_pct": -49.793500880448825,
+              "max_drawdown_pct": -55.52412471015038,
+              "profit_factor": 0.3900243359122668,
+              "positive_months": 0,
+              "months": 4,
+              "worst_month_pct": -1.5219453880189293,
+              "top5_removed_net_mean_pct": -1.1024057200177209,
+              "largest_day_net_pct": 5.03305346884666,
+              "largest_day_share_of_positive_net": 0.11824748236055181,
+              "monthly_net_mean_pct": {
+                "2024-07": -1.5219453880189293,
+                "2024-08": -0.6493179939022664,
+                "2024-09": -1.0173555620086774,
+                "2024-10": -0.0054087059462149785
+              },
+              "cost_sensitivity_net_mean_pct": {
+                "0.0": -0.39484790020649574,
+                "10.0": -0.49425266211125757,
+                "20.0": -0.5936574240160194,
+                "40.0": -0.7924669478255433,
+                "60.0": -0.991276471635067
+              }
+            },
+            "block5_bootstrap": {
+              "observations": 84,
+              "block_length": 5,
+              "samples": 5000,
+              "confidence": 0.9,
+              "random_state": 33,
+              "point_estimate_pct": -0.5936574240160194,
+              "one_sided_lower_pct": -0.9547477052718911,
+              "two_sided_lower_pct": -1.0344292356417668,
+              "two_sided_upper_pct": -0.2895833552043333,
+              "bootstrap_standard_error_pct": 0.22514714646138634
+            }
+          },
+          "rank2_standalone_net20": {
+            "n": 84,
+            "days": 84,
+            "executed": 83,
+            "execution_rate": 0.9880952380952381,
+            "hit_rate": 0.3614457831325301,
+            "signal_hit_rate_including_unfilled": 0.35714285714285715,
+            "gross_mean_pct": -0.14165987750365816,
+            "gross_median_pct": -0.1511532929665993,
+            "net_mean_pct_at_cost": -0.33927892512270585,
+            "net_median_pct_at_cost": -0.3511532929665993,
+            "compounded_net_return_pct": -26.723326829076687,
+            "max_drawdown_pct": -31.611451242738585,
+            "profit_factor": 0.6896148273441934,
+            "positive_months": 2,
+            "months": 4,
+            "worst_month_pct": -1.1249875835987309,
+            "top5_removed_net_mean_pct": -0.6954174004177616,
+            "largest_day_net_pct": 7.802602472348741,
+            "largest_day_share_of_positive_net": 0.12322467665846143,
+            "monthly_net_mean_pct": {
+              "2024-07": -1.1249875835987309,
+              "2024-08": 0.4515680401927065,
+              "2024-09": -0.7450615522554618,
+              "2024-10": 0.0419789898941694
+            },
+            "cost_sensitivity_net_mean_pct": {
+              "0.0": -0.14165987750365816,
+              "10.0": -0.24046940131318198,
+              "20.0": -0.33927892512270585,
+              "40.0": -0.5368979727417534,
+              "60.0": -0.7345170203608011
+            }
+          }
+        },
+        "folds": [
+          {
+            "period": "2024-07",
+            "train_start": "2024-04-03",
+            "train_end": "2024-06-28",
+            "train_sessions": 60,
+            "train_rows": 201708,
+            "score_start": "2024-07-01",
+            "score_end": "2024-07-31",
+            "scheduled_sessions": 22,
+            "scored_sessions": 22,
+            "score_rows": 70947
+          },
+          {
+            "period": "2024-08",
+            "train_start": "2024-04-03",
+            "train_end": "2024-07-31",
+            "train_sessions": 82,
+            "train_rows": 275857,
+            "score_start": "2024-08-01",
+            "score_end": "2024-08-31",
+            "scheduled_sessions": 21,
+            "scored_sessions": 21,
+            "score_rows": 45999
+          },
+          {
+            "period": "2024-09",
+            "train_start": "2024-04-03",
+            "train_end": "2024-08-30",
+            "train_sessions": 103,
+            "train_rows": 348502,
+            "score_start": "2024-09-01",
+            "score_end": "2024-09-30",
+            "scheduled_sessions": 19,
+            "scored_sessions": 19,
+            "score_rows": 59553
+          },
+          {
+            "period": "2024-10",
+            "train_start": "2024-04-03",
+            "train_end": "2024-09-30",
+            "train_sessions": 122,
+            "train_rows": 413056,
+            "score_start": "2024-10-01",
+            "score_end": "2024-10-31",
+            "scheduled_sessions": 22,
+            "scored_sessions": 22,
+            "score_rows": 68772
+          }
+        ]
+      },
+      "legacy_T1": {
+        "recipe_id": "G0_price_core+T1_event_structure",
+        "feature_count": 28,
+        "features": [
+          "oc_last",
+          "oc_mean_5",
+          "oc_mean_20",
+          "oc_mean_60",
+          "oc_win_20",
+          "oc_std_20",
+          "overnight_last",
+          "overnight_mean_20",
+          "overnight_mean_60",
+          "night_day_corr_60",
+          "xrank_atr14_pct",
+          "xrank_close_momentum_5",
+          "xrank_close_momentum_20",
+          "xrank_close_momentum_60",
+          "xrank_prior_close_location_20",
+          "tdnet_clean_document_count_log1p",
+          "tdnet_clean_family_count_log1p",
+          "tdnet_clean_premarket_count_log1p",
+          "tdnet_clean_intraday_count_log1p",
+          "tdnet_clean_postclose_count_log1p",
+          "tdnet_clean_latest_age_hours_log1p",
+          "tdnet_clean_bundle_width_minutes_log1p",
+          "tdnet_clean_has_progress_stage",
+          "tdnet_clean_single_family",
+          "tdnet_clean_support_adverse_conflict",
+          "tdnet_clean_prior_bundle_count_60_log1p",
+          "tdnet_clean_prior_bundle_count_252_log1p",
+          "tdnet_clean_weekend_age"
+        ],
+        "period": {
+          "start": "2024-07-01",
+          "end": "2024-10-31",
+          "scheduled_sessions": 84
+        },
+        "metrics": {
+          "display": {
+            "rank1_rate": 1.0,
+            "rank2_rate": 1.0,
+            "scheduled_sessions": 84
+          },
+          "top1": {
+            "net20": {
+              "n": 84,
+              "days": 84,
+              "executed": 84,
+              "execution_rate": 1.0,
+              "hit_rate": 0.39285714285714285,
+              "signal_hit_rate_including_unfilled": 0.39285714285714285,
+              "gross_mean_pct": -0.592394987016251,
+              "gross_median_pct": -0.45280248021538627,
+              "net_mean_pct_at_cost": -0.7923949870162513,
+              "net_median_pct_at_cost": -0.6528024802153862,
+              "compounded_net_return_pct": -50.88851303444285,
+              "max_drawdown_pct": -60.160523323717506,
+              "profit_factor": 0.4991221388416533,
+              "positive_months": 1,
+              "months": 4,
+              "worst_month_pct": -1.4619121662437857,
+              "top5_removed_net_mean_pct": -1.203816748717479,
+              "largest_day_net_pct": 9.194313967861568,
+              "largest_day_share_of_positive_net": 0.13861918053805153,
+              "monthly_net_mean_pct": {
+                "2024-07": -1.4619121662437857,
+                "2024-08": -1.3259592982338175,
+                "2024-09": -0.8896495717618933,
+                "2024-10": 0.4704261761083785
+              },
+              "cost_sensitivity_net_mean_pct": {
+                "0.0": -0.592394987016251,
+                "10.0": -0.6923949870162512,
+                "20.0": -0.7923949870162513,
+                "40.0": -0.9923949870162512,
+                "60.0": -1.1923949870162511
+              }
+            },
+            "net40": {
+              "n": 84,
+              "days": 84,
+              "executed": 84,
+              "execution_rate": 1.0,
+              "hit_rate": 0.39285714285714285,
+              "signal_hit_rate_including_unfilled": 0.39285714285714285,
+              "gross_mean_pct": -0.592394987016251,
+              "gross_median_pct": -0.45280248021538627,
+              "net_mean_pct_at_cost": -0.9923949870162512,
+              "net_median_pct_at_cost": -0.8528024802153863,
+              "compounded_net_return_pct": -58.55336997487674,
+              "max_drawdown_pct": -65.98578835788078,
+              "profit_factor": 0.42159007472401927,
+              "positive_months": 1,
+              "months": 4,
+              "worst_month_pct": -1.6619121662437857,
+              "top5_removed_net_mean_pct": -1.403816748717479,
+              "largest_day_net_pct": 8.994313967861567,
+              "largest_day_share_of_positive_net": 0.14802993703546405,
+              "monthly_net_mean_pct": {
+                "2024-07": -1.6619121662437857,
+                "2024-08": -1.525959298233818,
+                "2024-09": -1.0896495717618933,
+                "2024-10": 0.27042617610837866
+              },
+              "cost_sensitivity_net_mean_pct": {
+                "0.0": -0.592394987016251,
+                "10.0": -0.6923949870162512,
+                "20.0": -0.7923949870162513,
+                "40.0": -0.9923949870162512,
+                "60.0": -1.1923949870162511
+              }
+            },
+            "block5_bootstrap": {
+              "observations": 84,
+              "block_length": 5,
+              "samples": 5000,
+              "confidence": 0.9,
+              "random_state": 32,
+              "point_estimate_pct": -0.7923949870162513,
+              "one_sided_lower_pct": -1.3590814081478255,
+              "two_sided_lower_pct": -1.4993624401311225,
+              "two_sided_upper_pct": -0.31761916537046975,
+              "bootstrap_standard_error_pct": 0.359770240737305
+            }
+          },
+          "top2": {
+            "net20": {
+              "n": 168,
+              "days": 84,
+              "executed": 167,
+              "execution_rate": 0.9940476190476191,
+              "hit_rate": 0.3772455089820359,
+              "signal_hit_rate_including_unfilled": 0.375,
+              "gross_mean_pct": -0.3929346127104322,
+              "gross_median_pct": -0.2709690483178234,
+              "net_mean_pct_at_cost": -0.5917441365199559,
+              "net_median_pct_at_cost": -0.4709690483178234,
+              "compounded_net_return_pct": -40.57678295634606,
+              "max_drawdown_pct": -47.974389705184926,
+              "profit_factor": 0.48981642459225677,
+              "positive_months": 1,
+              "months": 4,
+              "worst_month_pct": -0.9512255374776072,
+              "top5_removed_net_mean_pct": -0.8965682191417226,
+              "largest_day_net_pct": 5.23305346884666,
+              "largest_day_share_of_positive_net": 0.10965666967522676,
+              "monthly_net_mean_pct": {
+                "2024-07": -0.9512255374776072,
+                "2024-08": -0.835466858877535,
+                "2024-09": -0.8173555620086775,
+                "2024-10": 0.19522791233746215
+              },
+              "cost_sensitivity_net_mean_pct": {
+                "0.0": -0.3929346127104322,
+                "10.0": -0.49233937461519417,
+                "20.0": -0.5917441365199559,
+                "40.0": -0.7905536603294798,
+                "60.0": -0.9893631841390034
+              }
+            },
+            "net40": {
+              "n": 168,
+              "days": 84,
+              "executed": 167,
+              "execution_rate": 0.9940476190476191,
+              "hit_rate": 0.3772455089820359,
+              "signal_hit_rate_including_unfilled": 0.375,
+              "gross_mean_pct": -0.3929346127104322,
+              "gross_median_pct": -0.2709690483178234,
+              "net_mean_pct_at_cost": -0.7905536603294798,
+              "net_median_pct_at_cost": -0.6709690483178234,
+              "compounded_net_return_pct": -49.77914109210396,
+              "max_drawdown_pct": -55.51140396349776,
+              "profit_factor": 0.38378279696158796,
+              "positive_months": 0,
+              "months": 4,
+              "worst_month_pct": -1.1512255374776073,
+              "top5_removed_net_mean_pct": -1.0953023963569126,
+              "largest_day_net_pct": 5.03305346884666,
+              "largest_day_share_of_positive_net": 0.12169401478814978,
+              "monthly_net_mean_pct": {
+                "2024-07": -1.1512255374776073,
+                "2024-08": -1.0307049541156303,
+                "2024-09": -1.0173555620086774,
+                "2024-10": -0.004772087662537874
+              },
+              "cost_sensitivity_net_mean_pct": {
+                "0.0": -0.3929346127104322,
+                "10.0": -0.49233937461519417,
+                "20.0": -0.5917441365199559,
+                "40.0": -0.7905536603294798,
+                "60.0": -0.9893631841390034
+              }
+            },
+            "block5_bootstrap": {
+              "observations": 84,
+              "block_length": 5,
+              "samples": 5000,
+              "confidence": 0.9,
+              "random_state": 33,
+              "point_estimate_pct": -0.5917441365199559,
+              "one_sided_lower_pct": -0.9639296765505811,
+              "two_sided_lower_pct": -1.0502462624276807,
+              "two_sided_upper_pct": -0.31905942206504273,
+              "bootstrap_standard_error_pct": 0.22090713184544739
+            }
+          },
+          "rank2_standalone_net20": {
+            "n": 84,
+            "days": 84,
+            "executed": 83,
+            "execution_rate": 0.9880952380952381,
+            "hit_rate": 0.3614457831325301,
+            "signal_hit_rate_including_unfilled": 0.35714285714285715,
+            "gross_mean_pct": -0.1934742384046131,
+            "gross_median_pct": -0.12523604288608992,
+            "net_mean_pct_at_cost": -0.39109328602366067,
+            "net_median_pct_at_cost": -0.3252360428860899,
+            "compounded_net_return_pct": -30.088268862171397,
+            "max_drawdown_pct": -34.95098551755454,
+            "profit_factor": 0.6578967218301917,
+            "positive_months": 0,
+            "months": 4,
+            "worst_month_pct": -0.7450615522554618,
+            "top5_removed_net_mean_pct": -0.7158496328554318,
+            "largest_day_net_pct": 5.82739726027397,
+            "largest_day_share_of_positive_net": 0.092238980125904,
+            "monthly_net_mean_pct": {
+              "2024-07": -0.44053890871142865,
+              "2024-08": -0.3449744195212526,
+              "2024-09": -0.7450615522554618,
+              "2024-10": -0.07997035143345432
+            },
+            "cost_sensitivity_net_mean_pct": {
+              "0.0": -0.1934742384046131,
+              "10.0": -0.2922837622141368,
+              "20.0": -0.39109328602366067,
+              "40.0": -0.5887123336427083,
+              "60.0": -0.786331381261756
+            }
+          }
+        },
+        "folds": [
+          {
+            "period": "2024-07",
+            "train_start": "2024-04-03",
+            "train_end": "2024-06-28",
+            "train_sessions": 60,
+            "train_rows": 201708,
+            "score_start": "2024-07-01",
+            "score_end": "2024-07-31",
+            "scheduled_sessions": 22,
+            "scored_sessions": 22,
+            "score_rows": 70947
+          },
+          {
+            "period": "2024-08",
+            "train_start": "2024-04-03",
+            "train_end": "2024-07-31",
+            "train_sessions": 82,
+            "train_rows": 275857,
+            "score_start": "2024-08-01",
+            "score_end": "2024-08-31",
+            "scheduled_sessions": 21,
+            "scored_sessions": 21,
+            "score_rows": 45999
+          },
+          {
+            "period": "2024-09",
+            "train_start": "2024-04-03",
+            "train_end": "2024-08-30",
+            "train_sessions": 103,
+            "train_rows": 348502,
+            "score_start": "2024-09-01",
+            "score_end": "2024-09-30",
+            "scheduled_sessions": 19,
+            "scored_sessions": 19,
+            "score_rows": 59553
+          },
+          {
+            "period": "2024-10",
+            "train_start": "2024-04-03",
+            "train_end": "2024-09-30",
+            "train_sessions": 122,
+            "train_rows": 413056,
+            "score_start": "2024-10-01",
+            "score_end": "2024-10-31",
+            "scheduled_sessions": 22,
+            "scored_sessions": 22,
+            "score_rows": 68772
+          }
+        ]
+      },
+      "corrected_T1": {
+        "recipe_id": "G0_price_core+T1_event_structure_corrected",
+        "feature_count": 28,
+        "features": [
+          "oc_last",
+          "oc_mean_5",
+          "oc_mean_20",
+          "oc_mean_60",
+          "oc_win_20",
+          "oc_std_20",
+          "overnight_last",
+          "overnight_mean_20",
+          "overnight_mean_60",
+          "night_day_corr_60",
+          "xrank_atr14_pct",
+          "xrank_close_momentum_5",
+          "xrank_close_momentum_20",
+          "xrank_close_momentum_60",
+          "xrank_prior_close_location_20",
+          "tdnet_clean_document_count_log1p",
+          "tdnet_clean_family_count_log1p",
+          "tdnet_clean_premarket_count_log1p",
+          "tdnet_clean_intraday_count_log1p",
+          "tdnet_clean_postclose_count_log1p",
+          "tdnet_clean_latest_age_hours_log1p",
+          "tdnet_clean_bundle_width_minutes_log1p",
+          "tdnet_clean_has_progress_stage",
+          "tdnet_clean_single_family",
+          "tdnet_clean_support_adverse_conflict",
+          "tdnet_clean_prior_bundle_count_60_log1p",
+          "tdnet_clean_prior_bundle_count_252_log1p",
+          "tdnet_clean_weekend_age"
+        ],
+        "period": {
+          "start": "2024-07-01",
+          "end": "2024-10-31",
+          "scheduled_sessions": 84
+        },
+        "metrics": {
+          "display": {
+            "rank1_rate": 1.0,
+            "rank2_rate": 1.0,
+            "scheduled_sessions": 84
+          },
+          "top1": {
+            "net20": {
+              "n": 84,
+              "days": 84,
+              "executed": 84,
+              "execution_rate": 1.0,
+              "hit_rate": 0.4166666666666667,
+              "signal_hit_rate_including_unfilled": 0.4166666666666667,
+              "gross_mean_pct": -0.36475964695281743,
+              "gross_median_pct": -0.3982898052571071,
+              "net_mean_pct_at_cost": -0.5647596469528173,
+              "net_median_pct_at_cost": -0.5982898052571071,
+              "compounded_net_return_pct": -40.391008475065874,
+              "max_drawdown_pct": -51.644896656869264,
+              "profit_factor": 0.6112992198485824,
+              "positive_months": 1,
+              "months": 4,
+              "worst_month_pct": -1.1314138215690237,
+              "top5_removed_net_mean_pct": -0.9713763922549257,
+              "largest_day_net_pct": 9.194313967861568,
+              "largest_day_share_of_positive_net": 0.12323610302926005,
+              "monthly_net_mean_pct": {
+                "2024-07": -1.1314138215690237,
+                "2024-08": -0.761654299067929,
+                "2024-09": -0.8896495717618933,
+                "2024-10": 0.4704261761083785
+              },
+              "cost_sensitivity_net_mean_pct": {
+                "0.0": -0.36475964695281743,
+                "10.0": -0.46475964695281746,
+                "20.0": -0.5647596469528173,
+                "40.0": -0.7647596469528173,
+                "60.0": -0.9647596469528175
+              }
+            },
+            "net40": {
+              "n": 84,
+              "days": 84,
+              "executed": 84,
+              "execution_rate": 1.0,
+              "hit_rate": 0.4166666666666667,
+              "signal_hit_rate_including_unfilled": 0.4166666666666667,
+              "gross_mean_pct": -0.36475964695281743,
+              "gross_median_pct": -0.3982898052571071,
+              "net_mean_pct_at_cost": -0.7647596469528173,
+              "net_median_pct_at_cost": -0.7982898052571071,
+              "compounded_net_return_pct": -49.67440363736807,
+              "max_drawdown_pct": -58.69904297027737,
+              "profit_factor": 0.5165553813565784,
+              "positive_months": 1,
+              "months": 4,
+              "worst_month_pct": -1.3314138215690237,
+              "top5_removed_net_mean_pct": -1.1713763922549258,
+              "largest_day_net_pct": 8.994313967861567,
+              "largest_day_share_of_positive_net": 0.13103690702951903,
+              "monthly_net_mean_pct": {
+                "2024-07": -1.3314138215690237,
+                "2024-08": -0.9616542990679291,
+                "2024-09": -1.0896495717618933,
+                "2024-10": 0.27042617610837866
+              },
+              "cost_sensitivity_net_mean_pct": {
+                "0.0": -0.36475964695281743,
+                "10.0": -0.46475964695281746,
+                "20.0": -0.5647596469528173,
+                "40.0": -0.7647596469528173,
+                "60.0": -0.9647596469528175
+              }
+            },
+            "block5_bootstrap": {
+              "observations": 84,
+              "block_length": 5,
+              "samples": 5000,
+              "confidence": 0.9,
+              "random_state": 32,
+              "point_estimate_pct": -0.5647596469528173,
+              "one_sided_lower_pct": -1.0788075107988304,
+              "two_sided_lower_pct": -1.2043741249506332,
+              "two_sided_upper_pct": -0.13037419237108686,
+              "bootstrap_standard_error_pct": 0.3261133291488347
+            }
+          },
+          "top2": {
+            "net20": {
+              "n": 168,
+              "days": 84,
+              "executed": 167,
+              "execution_rate": 0.9940476190476191,
+              "hit_rate": 0.38323353293413176,
+              "signal_hit_rate_including_unfilled": 0.38095238095238093,
+              "gross_mean_pct": -0.36677278678912806,
+              "gross_median_pct": -0.21194885567232258,
+              "net_mean_pct_at_cost": -0.5655823105986516,
+              "net_median_pct_at_cost": -0.36194885567232254,
+              "compounded_net_return_pct": -39.32514097221117,
+              "max_drawdown_pct": -47.128792909638676,
+              "profit_factor": 0.5138510300025186,
+              "positive_months": 1,
+              "months": 4,
+              "worst_month_pct": -0.9130691164199316,
+              "top5_removed_net_mean_pct": -0.8687505814532474,
+              "largest_day_net_pct": 5.23305346884666,
+              "largest_day_share_of_positive_net": 0.10421067449742386,
+              "monthly_net_mean_pct": {
+                "2024-07": -0.9130691164199316,
+                "2024-08": -0.770792948681312,
+                "2024-09": -0.8173555620086775,
+                "2024-10": 0.19522791233746215
+              },
+              "cost_sensitivity_net_mean_pct": {
+                "0.0": -0.36677278678912806,
+                "10.0": -0.4661775486938898,
+                "20.0": -0.5655823105986516,
+                "40.0": -0.7643918344081756,
+                "60.0": -0.9632013582176991
+              }
+            },
+            "net40": {
+              "n": 168,
+              "days": 84,
+              "executed": 167,
+              "execution_rate": 0.9940476190476191,
+              "hit_rate": 0.38323353293413176,
+              "signal_hit_rate_including_unfilled": 0.38095238095238093,
+              "gross_mean_pct": -0.36677278678912806,
+              "gross_median_pct": -0.21194885567232258,
+              "net_mean_pct_at_cost": -0.7643918344081756,
+              "net_median_pct_at_cost": -0.5119488556723225,
+              "compounded_net_return_pct": -48.71930754500767,
+              "max_drawdown_pct": -54.69634610518548,
+              "profit_factor": 0.4054791372291771,
+              "positive_months": 0,
+              "months": 4,
+              "worst_month_pct": -1.1130691164199316,
+              "top5_removed_net_mean_pct": -1.0674847586684373,
+              "largest_day_net_pct": 5.03305346884666,
+              "largest_day_share_of_positive_net": 0.11493036995184629,
+              "monthly_net_mean_pct": {
+                "2024-07": -1.1130691164199316,
+                "2024-08": -0.9660310439194072,
+                "2024-09": -1.0173555620086774,
+                "2024-10": -0.004772087662537874
+              },
+              "cost_sensitivity_net_mean_pct": {
+                "0.0": -0.36677278678912806,
+                "10.0": -0.4661775486938898,
+                "20.0": -0.5655823105986516,
+                "40.0": -0.7643918344081756,
+                "60.0": -0.9632013582176991
+              }
+            },
+            "block5_bootstrap": {
+              "observations": 84,
+              "block_length": 5,
+              "samples": 5000,
+              "confidence": 0.9,
+              "random_state": 33,
+              "point_estimate_pct": -0.5655823105986516,
+              "one_sided_lower_pct": -0.9780985948694442,
+              "two_sided_lower_pct": -1.0799621259400913,
+              "two_sided_upper_pct": -0.25843059234433646,
+              "bootstrap_standard_error_pct": 0.24767499746445817
+            }
+          },
+          "rank2_standalone_net20": {
+            "n": 84,
+            "days": 84,
+            "executed": 83,
+            "execution_rate": 0.9880952380952381,
+            "hit_rate": 0.3493975903614458,
+            "signal_hit_rate_including_unfilled": 0.34523809523809523,
+            "gross_mean_pct": -0.3687859266254385,
+            "gross_median_pct": -0.18250118118358083,
+            "net_mean_pct_at_cost": -0.5664049742444861,
+            "net_median_pct_at_cost": -0.38250118118358084,
+            "compounded_net_return_pct": -39.83213757493741,
+            "max_drawdown_pct": -45.11935462464752,
+            "profit_factor": 0.549783001286608,
+            "positive_months": 0,
+            "months": 4,
+            "worst_month_pct": -0.7799315982946948,
+            "top5_removed_net_mean_pct": -0.8970445798394118,
+            "largest_day_net_pct": 5.82739726027397,
+            "largest_day_share_of_positive_net": 0.10029952155579622,
+            "monthly_net_mean_pct": {
+              "2024-07": -0.6947244112708396,
+              "2024-08": -0.7799315982946948,
+              "2024-09": -0.7450615522554618,
+              "2024-10": -0.07997035143345432
+            },
+            "cost_sensitivity_net_mean_pct": {
+              "0.0": -0.3687859266254385,
+              "10.0": -0.4675954504349622,
+              "20.0": -0.5664049742444861,
+              "40.0": -0.7640240218635339,
+              "60.0": -0.9616430694825812
+            }
+          }
+        },
+        "folds": [
+          {
+            "period": "2024-07",
+            "train_start": "2024-04-03",
+            "train_end": "2024-06-28",
+            "train_sessions": 60,
+            "train_rows": 201708,
+            "score_start": "2024-07-01",
+            "score_end": "2024-07-31",
+            "scheduled_sessions": 22,
+            "scored_sessions": 22,
+            "score_rows": 70947
+          },
+          {
+            "period": "2024-08",
+            "train_start": "2024-04-03",
+            "train_end": "2024-07-31",
+            "train_sessions": 82,
+            "train_rows": 275857,
+            "score_start": "2024-08-01",
+            "score_end": "2024-08-31",
+            "scheduled_sessions": 21,
+            "scored_sessions": 21,
+            "score_rows": 45999
+          },
+          {
+            "period": "2024-09",
+            "train_start": "2024-04-03",
+            "train_end": "2024-08-30",
+            "train_sessions": 103,
+            "train_rows": 348502,
+            "score_start": "2024-09-01",
+            "score_end": "2024-09-30",
+            "scheduled_sessions": 19,
+            "scored_sessions": 19,
+            "score_rows": 59553
+          },
+          {
+            "period": "2024-10",
+            "train_start": "2024-04-03",
+            "train_end": "2024-09-30",
+            "train_sessions": 122,
+            "train_rows": 413056,
+            "score_start": "2024-10-01",
+            "score_end": "2024-10-31",
+            "scheduled_sessions": 22,
+            "scored_sessions": 22,
+            "score_rows": 68772
+          }
+        ]
+      }
+    },
+    "comparisons": {
+      "shared_block_max_mean_adjusted_vs_G0": {
+        "legacy_T1": {
+          "mean_uplift_pct": 0.0019132874960635278,
+          "max_t_critical_pct": 0.11663846635838049,
+          "adjusted_one_sided_80pct_lower_pct": -0.11472517886231696
+        },
+        "corrected_T1": {
+          "mean_uplift_pct": 0.0280751134173677,
+          "max_t_critical_pct": 0.11663846635838049,
+          "adjusted_one_sided_80pct_lower_pct": -0.08856335294101278
+        }
+      },
+      "corrected_T1_minus_legacy_T1": {
+        "observations": 84,
+        "block_length": 5,
+        "samples": 5000,
+        "confidence": 0.8,
+        "random_state": 31,
+        "candidate_mean_pct": -0.5655823105986516,
+        "baseline_mean_pct": -0.5917441365199559,
+        "point_estimate_delta_pct": 0.02616182592130418,
+        "one_sided_lower_delta_pct": -0.03418176921778596,
+        "two_sided_lower_delta_pct": -0.05479427946355812,
+        "two_sided_upper_delta_pct": 0.09810533805693683,
+        "bootstrap_standard_error_delta_pct": 0.060326716667240605
+      },
+      "pick_changes_corrected_vs_legacy": {
+        "scheduled_slots": 168,
+        "changed_slots": 13,
+        "unchanged_slots": 155,
+        "dates_with_any_changed_slot": 9,
+        "slot_change_rate": 0.07738095238095238
+      }
+    }
+  },
+  "summary": {
+    "G0_top2_net20_mean_pct": -0.5936574240160194,
+    "legacy_T1_top2_net20_mean_pct": -0.5917441365199559,
+    "corrected_T1_top2_net20_mean_pct": -0.5655823105986516,
+    "legacy_T1_minus_G0_pct": 0.0019132874960634538,
+    "corrected_T1_minus_G0_pct": 0.028075113417367792,
+    "corrected_T1_minus_legacy_T1_pct": 0.026161825921304338,
+    "production_change": false,
+    "feature_survivor_lock_changed": false
+  },
+  "artifact": {
+    "display_picks": {
+      "path": "research/model_v06_t1_correction_result_display_picks.csv",
+      "sha256": "0c1f72492bb5fb653b4c1a7a689060133d5c6d46037dc3c282ff084dee10aea3",
+      "rows": 504
+    }
+  },
+  "runtime": {
+    "protocol_registered_at": "2026-07-22T16:13:00+09:00",
+    "run_started_at": "2026-07-22T16:17:31.595164+09:00",
+    "run_completed_at": "2026-07-22T16:17:52.794223+09:00",
+    "python": "3.12.13",
+    "numpy": "2.3.5",
+    "pandas": "2.2.3",
+    "scikit_learn": "1.8.0",
+    "joblib": "1.5.3"
+  },
+  "limitations": [
+    "All outcomes in this interval were already viewed before this correction diagnostic.",
+    "The two-variant correction family is not the original seven-group multiplicity family.",
+    "No result from this run may promote a feature or production model."
+  ]
+}

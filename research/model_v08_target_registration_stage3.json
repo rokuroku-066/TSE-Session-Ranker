@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "status": "frozen_before_iteration3_metrics",
+  "registered_after": "zero_target_rank_ridge_concentration_audit_20260722",
+  "authority": "retrospective_shadow_diagnostic_only_all_outcomes_previously_viewed",
+  "purpose": "test whether daily-rank Ridge survives when lagged execution-quality proxies enter learning or the preopen candidate set",
+  "input": {
+    "panel": "/tmp/model_v07_corrected_panel.pkl",
+    "parent_result": "research/.cache/zero_target_rank_ridge_audit_20260722.json",
+    "concentration_result": "research/.cache/zero_target_rank_ridge_concentration_audit_20260722.json"
+  },
+  "overlap": {
+    "prior_registered_group": "model_v06_feature_catalog.G5_liquidity_proxy",
+    "exact_overlapping_columns": [
+      "no_trade_rate_20", "no_trade_rate_60", "flat_oc_rate_20", "zero_range_rate_20"
+    ],
+    "difference": "G5 was previously tested as one block under positive-session raked logit; iteration 3 tests each column, nonlinear transforms and candidate screens under the newly discovered daily-rank Ridge objective. It does not claim four new raw data sources."
+  },
+  "unavailable": {
+    "cheap_or_lot_value_proxy": "not tested because the frozen panel and JPX monthly archive lack point-in-time market cap, usable volume, turnover and trading unit; share price alone is explicitly not treated as size or liquidity",
+    "exact_spread_or_slippage": "not available historically"
+  },
+  "common": {
+    "score_period": ["2024-07-01", "2025-07-31"],
+    "monthly_walk_forward": true,
+    "train_start": "2024-01-04",
+    "cost_bps": [20.0, 40.0, 60.0],
+    "top_k": 2,
+    "cash_unfilled": true,
+    "seed": 31
+  },
+  "controls": [
+    {"id": "L0_rank_a1_expanding", "alpha": 1.0, "window": "expanding"},
+    {"id": "L1_rank_a10_rolling120", "alpha": 10.0, "window_sessions": 120}
+  ],
+  "registered_hypotheses": [
+    {"id": "L2_add_no_trade20", "type": "learned_feature", "columns": ["no_trade_rate_20"], "mechanism": "penalize recent no-session execution propensity"},
+    {"id": "L3_add_no_trade60", "type": "learned_feature", "columns": ["no_trade_rate_60"], "mechanism": "distinguish structural from one-month no-trade risk"},
+    {"id": "L4_add_flat20", "type": "learned_feature", "columns": ["flat_oc_rate_20"], "mechanism": "penalize stale or discretized open-close histories"},
+    {"id": "L5_add_zero_range20", "type": "learned_feature", "columns": ["zero_range_rate_20"], "mechanism": "penalize sessions with no observed intraday range"},
+    {"id": "L6_add_g5_all", "type": "learned_feature_group", "columns": ["no_trade_rate_20", "no_trade_rate_60", "flat_oc_rate_20", "zero_range_rate_20"], "mechanism": "joint linear execution-quality adjustment; exact v0.6 G5 overlap under a new target"},
+    {"id": "L7_add_illiquidity_max", "type": "learned_nonlinear_feature", "formula": "max(no_trade_rate_20, flat_oc_rate_20, zero_range_rate_20)", "mechanism": "one worst-component risk score"},
+    {"id": "L8_add_no_trade_x_low_atr", "type": "learned_interaction", "formula": "no_trade_rate_20 * clip(-xrank_atr14_pct,0,1)", "mechanism": "separate no-trade observations in unusually low-range stocks"},
+    {"id": "L9_add_g0_missing_fraction", "type": "learned_history_coverage", "formula": "fraction missing among the 15 G0 inputs", "mechanism": "downweight borderline history coverage beyond per-column indicators"},
+    {"id": "L10_screen_no_trade20_q90", "type": "candidate_screen", "rule": "no_trade_rate_20 <= training-fold 90th percentile"},
+    {"id": "L11_screen_flat20_q75", "type": "candidate_screen", "rule": "flat_oc_rate_20 <= training-fold 75th percentile"},
+    {"id": "L12_screen_zero_range20_q90", "type": "candidate_screen", "rule": "zero_range_rate_20 <= training-fold 90th percentile"},
+    {"id": "L13_combo_no_trade_flat_interaction", "type": "pre_registered_combination", "columns": ["no_trade_rate_20", "flat_oc_rate_20", "no_trade_rate_20_x_low_atr"], "mechanism": "combine the two most direct execution proxies with low-range interaction before seeing iteration-3 metrics"},
+    {"id": "L14_roll120_add_g5_all", "type": "window_feature_combination", "window_sessions": 120, "alpha": 10.0, "columns": ["no_trade_rate_20", "no_trade_rate_60", "flat_oc_rate_20", "zero_range_rate_20"]}
+  ],
+  "threshold_policy": "Every screen threshold is recalculated from rows strictly before the scoring month. No full-evaluation quantile or fixed threshold is allowed.",
+  "report": [
+    "20/40/60bp", "top5/10/20 winning days removed", "13 monthly means",
+    "four fixed temporal blocks", "rank1/rank2", "maximum drawdown",
+    "break-even cost", "code profit and selection concentration", "display coverage"
+  ],
+  "shadow_survivor_gate": [
+    "net20 > 0", "net40 >= 0", "top10 winning days removed > 0",
+    "at least 9/13 positive months", "at least 3/4 positive blocks",
+    "rank2 net20 >= 0", "largest code share of total net slot PnL <= 25%",
+    "rank1 and rank2 display on at least 98% of scheduled days"
+  ],
+  "promotion": "forbidden; even a retrospective survivor requires new point-in-time turnover, lot, spread and 08:58 forward confirmation"
+}

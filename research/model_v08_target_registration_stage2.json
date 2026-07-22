@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "status": "frozen_before_iteration2_metrics",
+  "registered_after": "zero_target_screen_20260722",
+  "authority": "retrospective_shadow_diagnostic_only_all_outcomes_previously_viewed",
+  "purpose": "independently stress the iteration-1 daily cross-sectional rank Ridge finding without production promotion",
+  "input": {
+    "panel": "/tmp/model_v07_corrected_panel.pkl",
+    "iteration1_protocol": "research/.cache/zero_target_protocol_20260722.json",
+    "iteration1_result": "research/.cache/zero_target_screen_20260722.json"
+  },
+  "common": {
+    "features": "iteration1 G0 price core 15",
+    "target": "within-training-day average percentile rank of observed open-to-close return, mapped to [-1,1]",
+    "score_period": ["2024-07-01", "2025-07-31"],
+    "folds": "calendar-month walk-forward",
+    "train_start": "2024-01-04",
+    "minimum_train_sessions": 60,
+    "imputation": "training median plus missing indicators",
+    "scaling": "training StandardScaler",
+    "date_weight": "each training date sums to one",
+    "top_k": 2,
+    "cost_bps": [20.0, 40.0, 60.0],
+    "unfilled": "fixed cash sleeve",
+    "seed": 31
+  },
+  "registered_candidates": [
+    {"id": "rank_ridge_expand_a1", "model": "Ridge", "alpha": 1.0, "window": "expanding", "target": "raw_rank"},
+    {"id": "rank_ridge_expand_a10_control", "model": "Ridge", "alpha": 10.0, "window": "expanding", "target": "raw_rank"},
+    {"id": "rank_ridge_expand_a100", "model": "Ridge", "alpha": 100.0, "window": "expanding", "target": "raw_rank"},
+    {"id": "rank_ridge_roll120_a10", "model": "Ridge", "alpha": 10.0, "window_sessions": 120, "target": "raw_rank"},
+    {"id": "rank_ridge_roll252_a10", "model": "Ridge", "alpha": 10.0, "window_sessions": 252, "target": "raw_rank"},
+    {"id": "rank_ridge_fixed_prejul_a10", "model": "Ridge", "alpha": 10.0, "window": "fixed_training_through_2024_06_28", "target": "raw_rank"},
+    {"id": "rank_winsor_05_95_ridge_a10", "model": "Ridge", "alpha": 10.0, "window": "expanding", "target": "rank_clipped_to_0.05_0.95_then_mapped"},
+    {"id": "rank_huber_expand", "model": "SGDRegressor_huber_L2_average", "alpha": 0.0001, "epsilon": 0.25, "window": "expanding", "target": "raw_rank"},
+    {"id": "top_bottom_decile_spread_control", "model": "two_raked_L2_logits", "C": 0.03, "window": "expanding", "target": "P(top_decile)-P(bottom_decile)"},
+    {"id": "rank_spread_equal_percentile_ensemble", "model": "equal_mean_of_within_day_score_percentiles", "members": ["rank_ridge_expand_a10_control", "top_bottom_decile_spread_control"]}
+  ],
+  "audit": {
+    "tail_day_removals": [5, 10, 20],
+    "concentration": ["monthly", "date", "code", "rank"],
+    "outcome_mutation_fold": "2025-07",
+    "outcome_mutation": "replace scoring-date label and return with deterministic extreme values; trained scores and ranks must be bit exact",
+    "independent_pnl": "manual fixed-sleeve calculation must match package daily returns and aggregate means to 1e-12",
+    "source_check": "candidate_price_source_max_date must be strictly before target date"
+  },
+  "interpretation": {
+    "shadow_survivor_minimum": [
+      "top2 net20 positive",
+      "top2 net40 nonnegative",
+      "top5 winning days removed net20 positive",
+      "at least 9 of 13 months positive",
+      "at least 3 of 4 fixed temporal blocks net20 positive",
+      "rank2 standalone net20 nonnegative",
+      "largest code share of total positive slot PnL below 25 percent"
+    ],
+    "promotion": "forbidden; any survivor must be frozen for new point-in-time liquidity and 08:58 forward data"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "phase": "sealed_holdout_consumed",
+  "started_at_utc": "2026-07-21T11:28:19+00:00",
+  "selection_lock_sha256": "7b1d6922dcb591607730e58a98946511c600bf31bbd8ae2a43ee3be50ada83cb",
+  "sealed_jpx_manifest_sha256": "3c4e5dac4d1f2557f26b1f3c79e29d559e8fd6ec18e4266cff7600e7d4fea532",
+  "holdout_tdnet_hashes": [
+    "365abb2d054704353c1b262d1779afbd52193a7fa5a91df62d2fac8ef5f80593"
+  ],
+  "holdout_tdnet_manifest_hashes": [
+    "0a619dff94eab985e262dc60708f79bade134f5aea618e0275749cbfbc53fcd8"
+  ]
+}

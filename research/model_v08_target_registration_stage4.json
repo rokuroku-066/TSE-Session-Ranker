@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "status": "frozen_before_iteration4_v2_metrics",
+  "supersedes_unrun_protocol": "research/.cache/zero_target_gen2_confirmation_protocol_20260722.json",
+  "registered_after": "zero_target_liquidity_result_20260722",
+  "authority": "retrospective_confirmation_only_no_holdout_remaining",
+  "purpose": "confirm the already frozen L4 mean-return finalist and L6 robustness finalist without selecting a new historical winner",
+  "inputs": {
+    "panel": "/tmp/model_v07_corrected_panel.pkl",
+    "iteration3_protocol": "research/.cache/zero_target_liquidity_protocol_20260722.json",
+    "iteration3_result": "research/.cache/zero_target_liquidity_result_20260722.json",
+    "iteration3_picks": "research/.cache/zero_target_liquidity_result_20260722_picks.csv"
+  },
+  "fixed_roles": {
+    "L4_add_flat20": "primary-objective shadow finalist because it had the highest registered iteration-3 net20 mean",
+    "L6_add_g5_all": "robustness shadow finalist because concentration and top-day-removal diagnostics were stronger",
+    "role_change_after_metrics": false
+  },
+  "confirmation_candidates": [
+    {"id": "K0_G0_expand_a1", "features": "G0", "alpha": 1.0, "window": "expanding", "role": "control"},
+    {"id": "K1_L4_expand_a1", "features": "G0+flat20", "alpha": 1.0, "window": "expanding", "role": "fixed_mean_finalist"},
+    {"id": "K2_L6_expand_a1", "features": "G0+G5", "alpha": 1.0, "window": "expanding", "role": "fixed_robustness_finalist"},
+    {"id": "K3_L4_expand_a10", "features": "G0+flat20", "alpha": 10.0, "window": "expanding", "role": "sensitivity_only"},
+    {"id": "K4_L4_expand_a100", "features": "G0+flat20", "alpha": 100.0, "window": "expanding", "role": "sensitivity_only"},
+    {"id": "K5_L6_expand_a10", "features": "G0+G5", "alpha": 10.0, "window": "expanding", "role": "sensitivity_only"},
+    {"id": "K6_L6_expand_a100", "features": "G0+G5", "alpha": 100.0, "window": "expanding", "role": "sensitivity_only"},
+    {"id": "K7_L4_roll120_a1", "features": "G0+flat20", "alpha": 1.0, "window_sessions": 120, "role": "sensitivity_only"},
+    {"id": "K8_L6_roll120_a1", "features": "G0+G5", "alpha": 1.0, "window_sessions": 120, "role": "sensitivity_only"}
+  ],
+  "required_audits": {
+    "iteration3_multiplicity": "shared circular 5-session blocks, 5000 samples, max candidate-minus-K0 centered mean statistic, one-sided 80% family-wise lower bounds for all 14 registered iteration-3 alternatives",
+    "temporal": "monthly, four fixed blocks and candidate-minus-control uplift in each block",
+    "coefficients": "monthly standardized Ridge coefficients and sign fraction for flat20/G5",
+    "fragility": ["7043 cash", "top four positive-contribution codes cash", "no_trade_rate_20 > 0 cash"],
+    "invariance": "replace July-2025 scoring labels/returns with +/-99; scores and top2 keys must be exact",
+    "pnl": "manual fixed two-sleeve daily arithmetic must match package at 20/40/60bp",
+    "errors": "write best/worst daily cases and high-score losses to a CSV"
+  },
+  "common": {
+    "target": "within-training-date open-close return percentile mapped to [-1,1]",
+    "score_period": ["2024-07-01", "2025-07-31"],
+    "monthly_walk_forward": true,
+    "top_k": 2,
+    "cost_bps": [20.0, 40.0, 60.0],
+    "seed": 31
+  },
+  "decision": {
+    "winner_reselection_allowed": false,
+    "L4_mean_role_retained_if": "implementation and audit invariants pass; otherwise no mean finalist",
+    "L6_robustness_role_retained_if": "implementation and audit invariants pass; otherwise no robustness finalist",
+    "multiplicity_interpretation": "negative adjusted uplift lower bound forbids a superiority claim but does not erase a predeclared robustness substitution",
+    "production": "forbidden",
+    "stop": "after this audit, stop retrospective target/model tuning because no unused outcome remains"
+  }
+}

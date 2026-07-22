@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "production_promotion_allowed": false,
+  "production_changed": false,
+  "result_path": "research/model_v08_tdnet_result.json",
+  "result_sha256": "a49fb6c14bd02855340b2c0eebc3a52dcec8d5ec7a0f23d4cfeef6eac18ebd8e",
+  "protocol_path": "research/model_v08_tdnet_protocol.json",
+  "protocol_sha256": "6cca576b054de7abd2684137e11b2c9b01d489e1b62cb7ce780375868d0ce4a8",
+  "runner_path": "research/evaluate_model_v08_tdnet.py",
+  "runner_sha256": "03ee9ccede56ac8c8722e5d19f47bea9fc43af201ab6283f7f2040fdb64e5a63",
+  "panel_manifest_path": "research/model_v05_panel_manifest.json",
+  "panel_manifest_sha256": "94cb0e8802957318edf522b892b67fe351432f15820d6534985609b9acdfc59d",
+  "panel_cache_path": "/tmp/model_v05_broad_family_panel_r2.pkl",
+  "panel_cache_sha256": "e2d8ef255b8988b0b0773a31f18859d236d8c6350850a5a764da6dbbeba669b9",
+  "tdnet_logical_source_sha256": "fb217159b5b03146cb0868bf87abe8a936e958d69d0f7acfe72a8864824c446e",
+  "implementation": {
+    "files": {
+      "research/evaluate_model_v08_tdnet.py": "03ee9ccede56ac8c8722e5d19f47bea9fc43af201ab6283f7f2040fdb64e5a63",
+      "src/tse_session_ranker/research_candidates.py": "d63aa60d961547ec42cfcd1baea45c7cac96be9556ac595ae6d6335306d3a06d",
+      "src/tse_session_ranker/data/tdnet.py": "4ee9b02566b8ae2f638454e1d1c01e0dfb3c935271e620c3e01abe7c4fe5fc29",
+      "src/tse_session_ranker/profit.py": "7f4c35389970c988723ab69cb428d9b0edce071c79df4ab4f29d03fddf9f311a"
+    },
+    "aggregate_sha256": "1194ac916eeed45c5bcae928512878a3c164ca06c89f5c6ec8fe95c249d58bda"
+  }
+}

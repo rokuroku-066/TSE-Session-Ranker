@@ -11,6 +11,10 @@ from .artifact import ModelArtifact, load_artifact
 from .backtest import WalkForwardResult, monthly_walk_forward
 from .config import RankerConfig
 from .data.jpx import collect_jpx, download_jpx_urls
+from .data.market_context import (
+    MARKET_CONTEXT_COLUMNS,
+    append_market_context,
+)
 from .data.preopen import normalize_preopen_snapshots
 from .data.tdnet import (
     TDnetDataset,
@@ -178,6 +182,12 @@ class SessionRanker:
         prices, manifest = collect_jpx(inputs, existing=existing_frame)
         if output is not None:
             target = write_frame(prices, output)
+            manifest = {
+                **manifest,
+                "schema_version": 2,
+                "export_path": str(target),
+                "export_sha256": _sha256_file(target),
+            }
             manifest_target = manifest_path or target.with_suffix(
                 target.suffix + ".manifest.json"
             )
@@ -240,6 +250,33 @@ class SessionRanker:
         combined = normalize_preopen_snapshots(
             pd.concat(frames, ignore_index=True, sort=False),
             timezone=self.config.preopen.timezone,
+        )
+        if output is not None:
+            write_frame(combined, output)
+        return combined
+
+    def ingest_market_context(
+        self,
+        snapshots: pd.DataFrame | str | Path,
+        output: str | Path | None = None,
+        existing: pd.DataFrame | str | Path | None = None,
+    ) -> pd.DataFrame:
+        """Validate and append exact-date pre-open futures context.
+
+        Existing observations are immutable.  New rows must be observed no
+        later than the configured pre-open decision time, and missing dates
+        are never backfilled or carried forward.
+        """
+
+        current = (
+            pd.DataFrame(columns=MARKET_CONTEXT_COLUMNS)
+            if existing is None
+            else _frame(existing)
+        )
+        combined = append_market_context(
+            current,
+            _frame(snapshots),
+            decision_time=self.config.preopen.decision_time,
         )
         if output is not None:
             write_frame(combined, output)

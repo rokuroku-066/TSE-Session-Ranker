@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "artifact_id": "model_v08_zero_base_feature_and_universe_20260722",
+  "production_promotion_allowed": false,
+  "production_changed": false,
+  "protocol_sha256": "0620d86113bfe6672104e6bfb4d68bc1eaeaf9de0f3e8b6408156fcd83a70a7f",
+  "result_sha256": "824e414fe8cee3e1032cf85f7aad4a7153d203765df4140b5a230e144e0bc402",
+  "files": {
+    "protocol": {
+      "path": "research/model_v08_feature_protocol.json",
+      "sha256": "0620d86113bfe6672104e6bfb4d68bc1eaeaf9de0f3e8b6408156fcd83a70a7f"
+    },
+    "result": {
+      "path": "research/model_v08_feature_result.json",
+      "sha256": "824e414fe8cee3e1032cf85f7aad4a7153d203765df4140b5a230e144e0bc402"
+    },
+    "evaluator": {
+      "path": "research/evaluate_model_v08_features.py",
+      "sha256": "e1d2a0409b74de33202a7c41113abe9e5e3b3b869e51f6ed2e0bf7022e1ba6d5"
+    },
+    "feature_engine": {
+      "path": "research/model_v08_feature_engine.py",
+      "sha256": "aa462ef6838d6db444bb48d7aedbb79763d70175e5eabe2c52defa64630e5d8f"
+    },
+    "registration_generation_1": {
+      "path": "research/model_v08_feature_registration_gen1.json",
+      "sha256": "e47e69decf685c5930b6002325b5b5cc91f7545f41be1d62dd343875c06d3909"
+    },
+    "registration_generation_2": {
+      "path": "research/model_v08_feature_registration_gen2.json",
+      "sha256": "a7c47154be1acffc0d12c458c31890457b6dca3ead337003b34a6665359b9969"
+    },
+    "registration_generation_3": {
+      "path": "research/model_v08_feature_registration_gen3.json",
+      "sha256": "7e12c588c0abf4d8271ca2d33dda5f11dd9a5650e25f192ab4e3e76150768880"
+    },
+    "regression_tests": {
+      "path": "tests/test_model_v08_feature_engine.py",
+      "sha256": "4e2f0649cb2e1030997e1d17e458598f50b5c2380e969b83eb3d1fa9341d5e97"
+    }
+  },
+  "registered_inputs": {
+    "panel_manifest_sha256": "ab896fad3f62d1e3a9829d10f4cc9ca2c9bdcd0a53d226f55cb18d0f32d9b296",
+    "panel_file_sha256": "6b86f994a1d15d1da8ed40469d44fc409adadc6cd5b3df3c08aef6717bcdf0eb",
+    "daily_prices_sha256": "18878ab5597bea531b06e94eef2395a52f94aa64c7265a736bd137a8d48b602d",
+    "panel_rows": 1524104,
+    "scoring_sessions": 266
+  },
+  "reproducibility": {
+    "command": "PYTHONPATH=src:. python research/evaluate_model_v08_features.py --panel /tmp/model_v07_corrected_panel.pkl --daily-prices jpx_daily_2024_2025.pkl --output research/model_v08_feature_result.json",
+    "scratch_path_dependency": false,
+    "outcome_mutation_rank_invariant": true,
+    "candidate_price_source_strictly_prior": true,
+    "pre_safety_fix_metrics_sha256": "987c43562d8205d90eb7cf7af3d58cdfa5aa8aef493d56aefee4734b624b4548",
+    "post_safety_fix_metrics_sha256": "987c43562d8205d90eb7cf7af3d58cdfa5aa8aef493d56aefee4734b624b4548",
+    "metrics_unchanged_after_order_and_alignment_fix": true
+  },
+  "tests": {
+    "targeted_feature_engine": {
+      "passed": 4,
+      "failed": 0,
+      "covers": [
+        "duplicate date/code fails closed",
+        "shuffled row order restores exact features",
+        "non-RangeIndex prior-close assignment is positional",
+        "future outcome mutation cannot change past features or masks"
+      ]
+    }
+  },
+  "decision": {
+    "generation_2_discovery_qualified_count": 0,
+    "generation_2_alpha10_whole_period_shadow_observation": "H07_tradability_quality",
+    "generation_3_alpha1_h07_transfer_passed": false,
+    "selected_feature_or_universe_modifier": null,
+    "production_changed": false
+  },
+  "runtime": {
+    "python": "3.12.13",
+    "numpy": "2.3.5",
+    "pandas": "2.2.3",
+    "scikit_learn": "1.8.0",
+    "joblib": "1.5.3"
+  },
+  "known_limits": [
+    "The registered input panel and JPX daily-price cache are hash-bound but are not repository artifacts.",
+    "Historical volume, turnover, spread, exact one-lot execution cost and exact 08:58 snapshots are unavailable.",
+    "All evaluated outcomes were already visible; no result may promote production without prospective validation."
+  ]
+}

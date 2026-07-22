@@ -1,0 +1,1627 @@
+{
+  "affected_files": 47,
+  "created_at_utc": "2026-07-21T12:01:35+00:00",
+  "marker_counts": {
+    "ｳ": 26,
+    "ｶ": 37
+  },
+  "new_parsed_rows": 622724,
+  "new_parser_sha256": "1bd2e74acced608eb36c3606b593ea407d2d1e5f54b3283790ef8fd0fb1041f7",
+  "new_parser_version": "jpx_daily_text_v6_special_quote_marker",
+  "new_rejected_rows": 0,
+  "old_accepted_rows_canonically_identical": true,
+  "old_parsed_rows": 622661,
+  "old_parser_path": "/tmp/jpx_v5.py",
+  "old_parser_sha256": "9b4a38cb4fd02b4248c3cc5edc8e10b54407ba14eb6cf9c89e02184df2e101e7",
+  "old_parser_version": "jpx_daily_text_v5_domestic_ordinary",
+  "old_rejected_rows": 63,
+  "pdf_count": 160,
+  "per_file": [
+    {
+      "name": "stq_20250801.pdf",
+      "new_parsed_rows": 3945,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3945,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3945,
+      "recovered_rows": 0,
+      "sha256": "6cf19993734428bef231defba216277b5683bd0e5f5a892f21e9495f57774d18"
+    },
+    {
+      "name": "stq_20250804.pdf",
+      "new_parsed_rows": 3944,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3944,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3944,
+      "recovered_rows": 0,
+      "sha256": "77ba64db020561c9600e7cbb10bdfd7dc3ab6c69eb4525cd4af43e4ff1f3037f"
+    },
+    {
+      "name": "stq_20250805.pdf",
+      "new_parsed_rows": 3944,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3944,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3944,
+      "recovered_rows": 0,
+      "sha256": "cf0d12809758dccfe00f0b87d156a1790e9ba149176e683a5c04d09cf935cfee"
+    },
+    {
+      "name": "stq_20250806.pdf",
+      "new_parsed_rows": 3946,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3946,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3946,
+      "recovered_rows": 0,
+      "sha256": "37e4fbcea9115cce0d1f06e82ed95b2b017628e41a012e5a2dcc5465d7e2ff21"
+    },
+    {
+      "name": "stq_20250807.pdf",
+      "new_parsed_rows": 3944,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3944,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3944,
+      "recovered_rows": 0,
+      "sha256": "e4215ed7fa2998ea20d89643f26b050ebe02a0dcb58c344d1f2c94a746cc39bc"
+    },
+    {
+      "name": "stq_20250808.pdf",
+      "new_parsed_rows": 3942,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3942,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3942,
+      "recovered_rows": 0,
+      "sha256": "524163927025c103da6361f8d6eb97b0d9684e694ece7172250cd9d8b7b4cae6"
+    },
+    {
+      "name": "stq_20250812.pdf",
+      "new_parsed_rows": 3943,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3942,
+      "old_rejected_rows": 1,
+      "ordinary_rows": 3943,
+      "recovered_rows": 1,
+      "sha256": "781f956f499b43662ada2ea98b165a6f78b469c9bed496be6c3291760eb268f4"
+    },
+    {
+      "name": "stq_20250813.pdf",
+      "new_parsed_rows": 3947,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3947,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3947,
+      "recovered_rows": 0,
+      "sha256": "e05116318bae9b2b05d6f1ae8497ea5df423498b9f5782d638a3263560e7e27a"
+    },
+    {
+      "name": "stq_20250814.pdf",
+      "new_parsed_rows": 3944,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3942,
+      "old_rejected_rows": 2,
+      "ordinary_rows": 3944,
+      "recovered_rows": 2,
+      "sha256": "75dcc66c8c1cce0074bd8f7996bc1e78479fdf009f2836c15a6c830045a5ef47"
+    },
+    {
+      "name": "stq_20250815.pdf",
+      "new_parsed_rows": 3947,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3946,
+      "old_rejected_rows": 1,
+      "ordinary_rows": 3947,
+      "recovered_rows": 1,
+      "sha256": "732401c77dc0ecf701610921a690a23d3aaecc60d0833845ccf0c76032cd0237"
+    },
+    {
+      "name": "stq_20250818.pdf",
+      "new_parsed_rows": 3945,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3945,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3945,
+      "recovered_rows": 0,
+      "sha256": "3130603c734bdb951356f01f3788370b4077ddfcabd8d0c4f88fd62789cb51b0"
+    },
+    {
+      "name": "stq_20250819.pdf",
+      "new_parsed_rows": 3933,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3932,
+      "old_rejected_rows": 1,
+      "ordinary_rows": 3933,
+      "recovered_rows": 1,
+      "sha256": "02b314186d3bb73b75cf380d514af64fd7a7abd9d7b100f995158a7956378252"
+    },
+    {
+      "name": "stq_20250820.pdf",
+      "new_parsed_rows": 3943,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3942,
+      "old_rejected_rows": 1,
+      "ordinary_rows": 3943,
+      "recovered_rows": 1,
+      "sha256": "b7d74719f514f4c9b55d65374216be56aa330aca9dfbaf2c283e827a90573ee4"
+    },
+    {
+      "name": "stq_20250821.pdf",
+      "new_parsed_rows": 3940,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3940,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3940,
+      "recovered_rows": 0,
+      "sha256": "2f6db4b092da5db9fbcea6745d8451a5ae20430806da5e49efe55b38fda3f63b"
+    },
+    {
+      "name": "stq_20250822.pdf",
+      "new_parsed_rows": 3942,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3942,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3942,
+      "recovered_rows": 0,
+      "sha256": "00f8c60bfcf1ea4561b0c8c822619617694939db8985e9064d364d96ed7df49c"
+    },
+    {
+      "name": "stq_20250825.pdf",
+      "new_parsed_rows": 3942,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3942,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3942,
+      "recovered_rows": 0,
+      "sha256": "6aa709476adcf79cc40772bf34af6d6aecf9c4ff9590c7223e5fb9a4747a3cfb"
+    },
+    {
+      "name": "stq_20250826.pdf",
+      "new_parsed_rows": 3942,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3942,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3942,
+      "recovered_rows": 0,
+      "sha256": "7d2b24f320492c490d347b73997fd50c161997ac6bb55f67de28f3565e357733"
+    },
+    {
+      "name": "stq_20250827.pdf",
+      "new_parsed_rows": 3942,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3941,
+      "old_rejected_rows": 1,
+      "ordinary_rows": 3942,
+      "recovered_rows": 1,
+      "sha256": "409d6fe7bd52074e6c1a5cd1b108ab52fee7304fc96810b5c1b0a97ea203e864"
+    },
+    {
+      "name": "stq_20250828.pdf",
+      "new_parsed_rows": 3614,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3614,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3614,
+      "recovered_rows": 0,
+      "sha256": "67e5b916a563eb73e79d2a506898f60c670afc304095b8837502a9168336ed86"
+    },
+    {
+      "name": "stq_20250829.pdf",
+      "new_parsed_rows": 3939,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3939,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3939,
+      "recovered_rows": 0,
+      "sha256": "e353bdd85e2177608c61248f3570e41353f6ca5a35a419bf74923657270114af"
+    },
+    {
+      "name": "stq_20250901.pdf",
+      "new_parsed_rows": 3938,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3937,
+      "old_rejected_rows": 1,
+      "ordinary_rows": 3938,
+      "recovered_rows": 1,
+      "sha256": "066580fd8ffcc5c285d1d8a3fa8ef5ce85fd4fbd282c7791bfa05a9700f12218"
+    },
+    {
+      "name": "stq_20250902.pdf",
+      "new_parsed_rows": 3939,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3938,
+      "old_rejected_rows": 1,
+      "ordinary_rows": 3939,
+      "recovered_rows": 1,
+      "sha256": "9271e6162198301e9e2ff1f3070fe2bff6cd2556444016a2fc65ae18c84598bc"
+    },
+    {
+      "name": "stq_20250903.pdf",
+      "new_parsed_rows": 3939,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3938,
+      "old_rejected_rows": 1,
+      "ordinary_rows": 3939,
+      "recovered_rows": 1,
+      "sha256": "663e493536340340b4078ec4a2dfb5b9c0c08c07bec893b2b7aea422e0f64cd2"
+    },
+    {
+      "name": "stq_20250904.pdf",
+      "new_parsed_rows": 3937,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3936,
+      "old_rejected_rows": 1,
+      "ordinary_rows": 3937,
+      "recovered_rows": 1,
+      "sha256": "0539a7907aa57f03bbdac490a12c927be5483d86612f62fbcd5bcb452e991882"
+    },
+    {
+      "name": "stq_20250905.pdf",
+      "new_parsed_rows": 3938,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3938,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3938,
+      "recovered_rows": 0,
+      "sha256": "8d2f99571522bd1c89f88d30405eecdce70782715ed7ebd6ac7eb90c13cfcd94"
+    },
+    {
+      "name": "stq_20250908.pdf",
+      "new_parsed_rows": 3937,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3937,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3937,
+      "recovered_rows": 0,
+      "sha256": "7cd4b50cb697be08af6b2f15affcef8e32d4d5efd4db96740ee72101c9f1ac90"
+    },
+    {
+      "name": "stq_20250909.pdf",
+      "new_parsed_rows": 3934,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3934,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3934,
+      "recovered_rows": 0,
+      "sha256": "f87457e61b6b58efba05e6705cf16fab38c758a144cdd304f8bed8589e2f4edf"
+    },
+    {
+      "name": "stq_20250910.pdf",
+      "new_parsed_rows": 3937,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3936,
+      "old_rejected_rows": 1,
+      "ordinary_rows": 3937,
+      "recovered_rows": 1,
+      "sha256": "9993dd09e61ef1b9564b2200e5ef404620b026e807bc0e000455aa937be91d10"
+    },
+    {
+      "name": "stq_20250911.pdf",
+      "new_parsed_rows": 3934,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3934,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3934,
+      "recovered_rows": 0,
+      "sha256": "db08a00bb69e3167bf1ca6ea099983e4aa940829ef9d7e0269e6a7d919201337"
+    },
+    {
+      "name": "stq_20250912.pdf",
+      "new_parsed_rows": 3937,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3937,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3937,
+      "recovered_rows": 0,
+      "sha256": "e664312881e1e9eb4dcd8f8a9839cc56b727a28b170cea7813f0ef4f01b00a7a"
+    },
+    {
+      "name": "stq_20250916.pdf",
+      "new_parsed_rows": 3938,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3938,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3938,
+      "recovered_rows": 0,
+      "sha256": "d6fb71b46e2335c82fb4fd19084d471ee786c94bf0f1263f3044acf6601437fb"
+    },
+    {
+      "name": "stq_20250917.pdf",
+      "new_parsed_rows": 3938,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3938,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3938,
+      "recovered_rows": 0,
+      "sha256": "028848a4fd274f10ba1e14f6d04d167450d0683b7b40ffca61b9dda898f7759e"
+    },
+    {
+      "name": "stq_20250918.pdf",
+      "new_parsed_rows": 3926,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3926,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3926,
+      "recovered_rows": 0,
+      "sha256": "9b53c1f7e59c26f6436c11a7dc8c6e28b4f737d102b863336fb1ac231ea028a8"
+    },
+    {
+      "name": "stq_20250919.pdf",
+      "new_parsed_rows": 3935,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3935,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3935,
+      "recovered_rows": 0,
+      "sha256": "539b9c26146ccb1bf19db53e471c6f1cf510282e90bda4c600a9eeef5c5465e1"
+    },
+    {
+      "name": "stq_20250922.pdf",
+      "new_parsed_rows": 3934,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3933,
+      "old_rejected_rows": 1,
+      "ordinary_rows": 3934,
+      "recovered_rows": 1,
+      "sha256": "8eba86047da0c221673d237102335f4e1fa2eb7c4ea6a2ab8befc98104d33f83"
+    },
+    {
+      "name": "stq_20250924.pdf",
+      "new_parsed_rows": 3934,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3934,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3934,
+      "recovered_rows": 0,
+      "sha256": "f44e108f466a5555ce0811099ac373cdec16fbb0450679ffd56a5a703daced9c"
+    },
+    {
+      "name": "stq_20250925.pdf",
+      "new_parsed_rows": 3937,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3937,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3937,
+      "recovered_rows": 0,
+      "sha256": "5e62b91689e059cd69432e20633e0c61fb50c6bc62ac35418a1abdef6c75b18b"
+    },
+    {
+      "name": "stq_20250926.pdf",
+      "new_parsed_rows": 3936,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3936,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3936,
+      "recovered_rows": 0,
+      "sha256": "5b39826cd858c42087d1cf7335b2b58f14944275e8b4328bca0af47238e3f188"
+    },
+    {
+      "name": "stq_20250929.pdf",
+      "new_parsed_rows": 1563,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 1563,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 1563,
+      "recovered_rows": 0,
+      "sha256": "0a0bfbbff45f776afd16376e3a3ccd57d67e07f2c9dfc4344154447d8f2a74ad"
+    },
+    {
+      "name": "stq_20250930.pdf",
+      "new_parsed_rows": 3926,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3926,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3926,
+      "recovered_rows": 0,
+      "sha256": "e4084ebcdf647b69c47c5f963f5d0331e6a0ac94aa81f902595774ae5a70597f"
+    },
+    {
+      "name": "stq_20251001.pdf",
+      "new_parsed_rows": 3930,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3929,
+      "old_rejected_rows": 1,
+      "ordinary_rows": 3930,
+      "recovered_rows": 1,
+      "sha256": "360d3f46eeddfeb40b9a2b952f93a52c9340a8de09d83c14947ba301d1ac3820"
+    },
+    {
+      "name": "stq_20251002.pdf",
+      "new_parsed_rows": 3930,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3928,
+      "old_rejected_rows": 2,
+      "ordinary_rows": 3930,
+      "recovered_rows": 2,
+      "sha256": "42eeb04ae4aef5bfb62e8f808bc80558d1b16e43224a45729d23e10263292dfa"
+    },
+    {
+      "name": "stq_20251003.pdf",
+      "new_parsed_rows": 3930,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3929,
+      "old_rejected_rows": 1,
+      "ordinary_rows": 3930,
+      "recovered_rows": 1,
+      "sha256": "f22227abd7175d7327fe6c325689b5733a203cfea11e547d927565fc6b41a027"
+    },
+    {
+      "name": "stq_20251006.pdf",
+      "new_parsed_rows": 3933,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3933,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3933,
+      "recovered_rows": 0,
+      "sha256": "16f268bc455d8c5aa6697076becee396984c9c7bed194846124dcaa085e2e353"
+    },
+    {
+      "name": "stq_20251007.pdf",
+      "new_parsed_rows": 3933,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3933,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3933,
+      "recovered_rows": 0,
+      "sha256": "ec184b9cd1ad6bb191ea05ea31f4fbd66c9c40e6672122e0cc3bb05212e4ffc8"
+    },
+    {
+      "name": "stq_20251008.pdf",
+      "new_parsed_rows": 3935,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3935,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3935,
+      "recovered_rows": 0,
+      "sha256": "d0acce4e34fa42963651e25b0596bb724773a17eaa32fac92265ce7e37234c99"
+    },
+    {
+      "name": "stq_20251009.pdf",
+      "new_parsed_rows": 3927,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3927,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3927,
+      "recovered_rows": 0,
+      "sha256": "49af85499f8fd65dc151999aef49924395b08ca872ccd42c939c2d0e25450e34"
+    },
+    {
+      "name": "stq_20251010.pdf",
+      "new_parsed_rows": 3935,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3935,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3935,
+      "recovered_rows": 0,
+      "sha256": "4b6a69cacc945216501bfd74cb688ead596b9b8305b74a6b0b2eb1e3de4cefaf"
+    },
+    {
+      "name": "stq_20251014.pdf",
+      "new_parsed_rows": 3929,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3928,
+      "old_rejected_rows": 1,
+      "ordinary_rows": 3929,
+      "recovered_rows": 1,
+      "sha256": "05cb13f1e20ef83f15ff3c9b2fc9fdd77a618f37c21ed546478746690a182535"
+    },
+    {
+      "name": "stq_20251015.pdf",
+      "new_parsed_rows": 3932,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3932,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3932,
+      "recovered_rows": 0,
+      "sha256": "88ed83a050c52de2a195d2f1b8925d3d8c9fa581a68b2834359550d2daeff0bc"
+    },
+    {
+      "name": "stq_20251016.pdf",
+      "new_parsed_rows": 3932,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3931,
+      "old_rejected_rows": 1,
+      "ordinary_rows": 3932,
+      "recovered_rows": 1,
+      "sha256": "bbc5ef7e55fe0b4358843fdaefad6d8e74d52e0a936428ecddd0c05ba56c142c"
+    },
+    {
+      "name": "stq_20251017.pdf",
+      "new_parsed_rows": 3933,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3932,
+      "old_rejected_rows": 1,
+      "ordinary_rows": 3933,
+      "recovered_rows": 1,
+      "sha256": "691753517cd8a4fcb35ba106a58b1f9125a2943d2cd2d4b60eab97054c047585"
+    },
+    {
+      "name": "stq_20251020.pdf",
+      "new_parsed_rows": 3934,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3934,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3934,
+      "recovered_rows": 0,
+      "sha256": "0020928536469708bc4f1e1d24f6a2b127289b438f951ee4293edf48df369e0e"
+    },
+    {
+      "name": "stq_20251021.pdf",
+      "new_parsed_rows": 3935,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3935,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3935,
+      "recovered_rows": 0,
+      "sha256": "8961eb53d73c3491fbe00d7df43d0ac1be723eeaec1da381160529e699d487a3"
+    },
+    {
+      "name": "stq_20251022.pdf",
+      "new_parsed_rows": 3935,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3935,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3935,
+      "recovered_rows": 0,
+      "sha256": "de5fd725b56d23913946e9c85a6a004c4a2de55e13897b312b0cd3e219a9a076"
+    },
+    {
+      "name": "stq_20251023.pdf",
+      "new_parsed_rows": 3937,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3935,
+      "old_rejected_rows": 2,
+      "ordinary_rows": 3937,
+      "recovered_rows": 2,
+      "sha256": "734a76dc940bde8ef9b97c00ee27e1580472e17806339cbf5572f3306c85c106"
+    },
+    {
+      "name": "stq_20251024.pdf",
+      "new_parsed_rows": 3939,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3939,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3939,
+      "recovered_rows": 0,
+      "sha256": "fa1bd91f82f10772eaa6cc2b563f53f0fe4d32fa1ccb748def7dafe25b2667ec"
+    },
+    {
+      "name": "stq_20251027.pdf",
+      "new_parsed_rows": 3939,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3939,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3939,
+      "recovered_rows": 0,
+      "sha256": "2892f783ff615327371a730121dc20c586120bdd31840908cfb8c7d11be660ab"
+    },
+    {
+      "name": "stq_20251028.pdf",
+      "new_parsed_rows": 3938,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3938,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3938,
+      "recovered_rows": 0,
+      "sha256": "17bf7b633c2369b90fa3adca422783f60be0f04122b74dde8e71367494406f9c"
+    },
+    {
+      "name": "stq_20251029.pdf",
+      "new_parsed_rows": 3940,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3938,
+      "old_rejected_rows": 2,
+      "ordinary_rows": 3940,
+      "recovered_rows": 2,
+      "sha256": "0896e29ce6fa1a23967be8dfc6dffdd133ca952beaa4a8375e6c3399ebb08528"
+    },
+    {
+      "name": "stq_20251030.pdf",
+      "new_parsed_rows": 3807,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3806,
+      "old_rejected_rows": 1,
+      "ordinary_rows": 3807,
+      "recovered_rows": 1,
+      "sha256": "33873c3130536b3a346dd72ef74579e014d1ee4ff9b13e9d5675b0141b2f350a"
+    },
+    {
+      "name": "stq_20251031.pdf",
+      "new_parsed_rows": 3936,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3936,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3936,
+      "recovered_rows": 0,
+      "sha256": "f49d4e9dd0fd717596efbc4eda06fb35b0ed7408950a1885f2b421c64d623f62"
+    },
+    {
+      "name": "stq_20251104.pdf",
+      "new_parsed_rows": 3938,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3938,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3938,
+      "recovered_rows": 0,
+      "sha256": "7f2e6a6449a883ed4f8a52b3186511c5b20d83352d6d6a04beeab9ac006d3811"
+    },
+    {
+      "name": "stq_20251105.pdf",
+      "new_parsed_rows": 3936,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3934,
+      "old_rejected_rows": 2,
+      "ordinary_rows": 3936,
+      "recovered_rows": 2,
+      "sha256": "77afad4d9487b310549cb52dd361e4a45e09ad5eda3b623f14895a80eecaa372"
+    },
+    {
+      "name": "stq_20251106.pdf",
+      "new_parsed_rows": 3934,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3934,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3934,
+      "recovered_rows": 0,
+      "sha256": "2955f94fea3276bfe42ce225b4a9eff1f971d9a7ca6b593f67a390118390bb86"
+    },
+    {
+      "name": "stq_20251107.pdf",
+      "new_parsed_rows": 3937,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3937,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3937,
+      "recovered_rows": 0,
+      "sha256": "04efef29e9df27ceb7f0917dca6c3b2cc52a6dbcb4ae4ee0dbab7fca218b3b94"
+    },
+    {
+      "name": "stq_20251110.pdf",
+      "new_parsed_rows": 3937,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3937,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3937,
+      "recovered_rows": 0,
+      "sha256": "9376530d1001c6569340e67cf52ff4a62e5b034067608b551a59e2fcb71f79af"
+    },
+    {
+      "name": "stq_20251111.pdf",
+      "new_parsed_rows": 3934,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3933,
+      "old_rejected_rows": 1,
+      "ordinary_rows": 3934,
+      "recovered_rows": 1,
+      "sha256": "531f6366a4598b3d53c1859897c8e877099f394fdace11a0e431888972e65a7e"
+    },
+    {
+      "name": "stq_20251112.pdf",
+      "new_parsed_rows": 3936,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3936,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3936,
+      "recovered_rows": 0,
+      "sha256": "21a2884b01b4331cec7c02f630b14e11d2812ce9402ec7513e4d751605b706db"
+    },
+    {
+      "name": "stq_20251113.pdf",
+      "new_parsed_rows": 3935,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3935,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3935,
+      "recovered_rows": 0,
+      "sha256": "d9453595a436d8912e88c78b076b249f44e1d767eb633e3420ea0f73f44c76d0"
+    },
+    {
+      "name": "stq_20251114.pdf",
+      "new_parsed_rows": 3938,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3937,
+      "old_rejected_rows": 1,
+      "ordinary_rows": 3938,
+      "recovered_rows": 1,
+      "sha256": "8a80814082571e4ae78c880624d1d76794bcbf7ccd5b1cdcd209018175cba9c7"
+    },
+    {
+      "name": "stq_20251117.pdf",
+      "new_parsed_rows": 3936,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3936,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3936,
+      "recovered_rows": 0,
+      "sha256": "5b73bead9a386743917e953f874af2bd1802cd673aaf0910fe56fe5b8a5753c7"
+    },
+    {
+      "name": "stq_20251118.pdf",
+      "new_parsed_rows": 3936,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3936,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3936,
+      "recovered_rows": 0,
+      "sha256": "7ec011822e7eda3e0247bdf353ca0e72359b47a4f22bb6211219943efbf4a29f"
+    },
+    {
+      "name": "stq_20251119.pdf",
+      "new_parsed_rows": 3930,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3930,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3930,
+      "recovered_rows": 0,
+      "sha256": "27c450f3e2c5f918a0107c95facef054300317210ceeed929c1f20919ca03e61"
+    },
+    {
+      "name": "stq_20251120.pdf",
+      "new_parsed_rows": 3935,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3935,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3935,
+      "recovered_rows": 0,
+      "sha256": "e294646c1893384b26497cef628058c463a7e2be0d9db25073ce38c2ab0e18bb"
+    },
+    {
+      "name": "stq_20251121.pdf",
+      "new_parsed_rows": 3938,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3938,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3938,
+      "recovered_rows": 0,
+      "sha256": "c70bb27f080c7c26a672e572882f417e76cfab609e53c6e31c53a241023a299d"
+    },
+    {
+      "name": "stq_20251125.pdf",
+      "new_parsed_rows": 3937,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3937,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3937,
+      "recovered_rows": 0,
+      "sha256": "cd228fac7a0f0718f77546c3b2f7baa1a6386a1773116d0bb1271c1862790e6d"
+    },
+    {
+      "name": "stq_20251126.pdf",
+      "new_parsed_rows": 3936,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3936,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3936,
+      "recovered_rows": 0,
+      "sha256": "2564a2ca58e352b8a2ec7caa145aea73245129ed759f5008837937f9a5fb9b91"
+    },
+    {
+      "name": "stq_20251127.pdf",
+      "new_parsed_rows": 3762,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3761,
+      "old_rejected_rows": 1,
+      "ordinary_rows": 3762,
+      "recovered_rows": 1,
+      "sha256": "4ef124136371ee0aba46819763f27f8e34c7b73f4f597f09c5a96afeb4863bbd"
+    },
+    {
+      "name": "stq_20251128.pdf",
+      "new_parsed_rows": 3933,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3933,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3933,
+      "recovered_rows": 0,
+      "sha256": "90497b108011e3fe7faa68a8513deea015236becd3fee659b2a65d27513622b8"
+    },
+    {
+      "name": "stq_20251201.pdf",
+      "new_parsed_rows": 3937,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3937,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3937,
+      "recovered_rows": 0,
+      "sha256": "46ccffe942776a793dcc67ead792010e1f673cfed4d1c35743c74e553c3ae169"
+    },
+    {
+      "name": "stq_20251202.pdf",
+      "new_parsed_rows": 3936,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3936,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3936,
+      "recovered_rows": 0,
+      "sha256": "05fa0dab899b66abcbc3358dd3ca12a554cdb3a5866e9fa0139e3651d7018498"
+    },
+    {
+      "name": "stq_20251203.pdf",
+      "new_parsed_rows": 3936,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3936,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3936,
+      "recovered_rows": 0,
+      "sha256": "f52f47984ff58a8c223b5b88ca709055eae91b05e8cce9b81f3e47713478326a"
+    },
+    {
+      "name": "stq_20251204.pdf",
+      "new_parsed_rows": 3933,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3933,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3933,
+      "recovered_rows": 0,
+      "sha256": "05aad0a7720f0e2be538cd654514e4144eab34283b9d44acd1669fcb82c4b8be"
+    },
+    {
+      "name": "stq_20251205.pdf",
+      "new_parsed_rows": 3937,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3936,
+      "old_rejected_rows": 1,
+      "ordinary_rows": 3937,
+      "recovered_rows": 1,
+      "sha256": "a8b93a03ae6b9a4b172d81782abb4e9825a5fba8d81514c1121b6c8de780041e"
+    },
+    {
+      "name": "stq_20251208.pdf",
+      "new_parsed_rows": 3935,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3935,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3935,
+      "recovered_rows": 0,
+      "sha256": "93ae68ddeef1d44021df7eba44864c288597b67d6051439a424049f15fc6ccf5"
+    },
+    {
+      "name": "stq_20251209.pdf",
+      "new_parsed_rows": 3933,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3933,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3933,
+      "recovered_rows": 0,
+      "sha256": "aa5960bef417a9fc39292804efbf4c6deae24ba32be80cf44e788f8b9341f0d6"
+    },
+    {
+      "name": "stq_20251210.pdf",
+      "new_parsed_rows": 3935,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3935,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3935,
+      "recovered_rows": 0,
+      "sha256": "ee3ebb9587893068f4bf723b2a3b1d00dbbb56e4db03e32df4b70f9669bae965"
+    },
+    {
+      "name": "stq_20251211.pdf",
+      "new_parsed_rows": 3935,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3935,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3935,
+      "recovered_rows": 0,
+      "sha256": "2bea99727bb805c7af032bbbe952c60a62df7662968b9bae66c6f76566262bf0"
+    },
+    {
+      "name": "stq_20251212.pdf",
+      "new_parsed_rows": 3935,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3935,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3935,
+      "recovered_rows": 0,
+      "sha256": "aeaf0c3bd5ad55f7c0a985d8857168a71848b012d17e8980a949f6401bd549a9"
+    },
+    {
+      "name": "stq_20251215.pdf",
+      "new_parsed_rows": 3934,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3933,
+      "old_rejected_rows": 1,
+      "ordinary_rows": 3934,
+      "recovered_rows": 1,
+      "sha256": "c58db015593121b1ce3babe9a76fe527f5b48f92b95c33afda9a292a9e784ac4"
+    },
+    {
+      "name": "stq_20251216.pdf",
+      "new_parsed_rows": 3935,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3933,
+      "old_rejected_rows": 2,
+      "ordinary_rows": 3935,
+      "recovered_rows": 2,
+      "sha256": "e97dfa6ccbe5220bc60f248e326d2bf39e596fbfa5e6c83f0b766b707374a19c"
+    },
+    {
+      "name": "stq_20251217.pdf",
+      "new_parsed_rows": 3936,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3936,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3936,
+      "recovered_rows": 0,
+      "sha256": "8d827bdfd45ee752ab6e3ce7138771e9d0f2122976f011b2b60fc1e853a83744"
+    },
+    {
+      "name": "stq_20251218.pdf",
+      "new_parsed_rows": 3929,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3929,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3929,
+      "recovered_rows": 0,
+      "sha256": "d223981c838abca8729250812d0c14d40a4c6d19f705a62b9008896305f648f6"
+    },
+    {
+      "name": "stq_20251219.pdf",
+      "new_parsed_rows": 3935,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3935,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3935,
+      "recovered_rows": 0,
+      "sha256": "98a9b43837b8306b44a460bf500809445d659a2fed17a3c70043138ad65eebed"
+    },
+    {
+      "name": "stq_20251222.pdf",
+      "new_parsed_rows": 3933,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3933,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3933,
+      "recovered_rows": 0,
+      "sha256": "e82b4b8e7a182e9a83ee7f2e1de003c13d6a9bad8c9a86ce4b0c73e369bd98c8"
+    },
+    {
+      "name": "stq_20251223.pdf",
+      "new_parsed_rows": 3937,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3937,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3937,
+      "recovered_rows": 0,
+      "sha256": "8695e1758375b6355cb51163c8923b0e8473146733b21fe25fa848226dfb96a8"
+    },
+    {
+      "name": "stq_20251224.pdf",
+      "new_parsed_rows": 3940,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3940,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3940,
+      "recovered_rows": 0,
+      "sha256": "b83c4b495ef03637c2bafa3ff71622e4c7b58c5e14aef5baf7185845d283e50c"
+    },
+    {
+      "name": "stq_20251225.pdf",
+      "new_parsed_rows": 3940,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3940,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3940,
+      "recovered_rows": 0,
+      "sha256": "1f645898acb3a03961561e38d07591bcd5448d23e8b05dc2c6854d06be64eca2"
+    },
+    {
+      "name": "stq_20251226.pdf",
+      "new_parsed_rows": 3941,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3941,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3941,
+      "recovered_rows": 0,
+      "sha256": "29fd1f1f89ccbe065983751f7a53b0fffd348119e590b8e171b30a840a1c46ca"
+    },
+    {
+      "name": "stq_20251229.pdf",
+      "new_parsed_rows": 3161,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3161,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3161,
+      "recovered_rows": 0,
+      "sha256": "459f6fb3b44ebeab01aa507dffc7f00379220780ad564d315bba2f68819cb116"
+    },
+    {
+      "name": "stq_20251230.pdf",
+      "new_parsed_rows": 3940,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3940,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3940,
+      "recovered_rows": 0,
+      "sha256": "da695ae373833e05d695eacbd9e7d3d7172f903347a3dad1c24bc1ad2c35cfec"
+    },
+    {
+      "name": "stq_20260105.pdf",
+      "new_parsed_rows": 3939,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3938,
+      "old_rejected_rows": 1,
+      "ordinary_rows": 3939,
+      "recovered_rows": 1,
+      "sha256": "126dda62c99589a62e7dfae76ce6f3126ed877a7f55ebc5e9e49626f45153a48"
+    },
+    {
+      "name": "stq_20260106.pdf",
+      "new_parsed_rows": 3939,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3936,
+      "old_rejected_rows": 3,
+      "ordinary_rows": 3939,
+      "recovered_rows": 3,
+      "sha256": "88e74ac1072559f54cc6f02d718a3db0a75614beb1689b6923135fefece28bf8"
+    },
+    {
+      "name": "stq_20260107.pdf",
+      "new_parsed_rows": 3938,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3938,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3938,
+      "recovered_rows": 0,
+      "sha256": "6de3d7c808e4b58a48af7ea917dc3d1c0b841e8742f00fb9659704470c040e76"
+    },
+    {
+      "name": "stq_20260108.pdf",
+      "new_parsed_rows": 3933,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3933,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3933,
+      "recovered_rows": 0,
+      "sha256": "6ac4b7ee9ed2e3071db297f33d845006de2694d66f01dca155105a68bbc5ffdd"
+    },
+    {
+      "name": "stq_20260109.pdf",
+      "new_parsed_rows": 3938,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3938,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3938,
+      "recovered_rows": 0,
+      "sha256": "2f2e09929da5d76bb4d4e349b4f6badf64b6748f72f89b180bc2f4c4df335a99"
+    },
+    {
+      "name": "stq_20260113.pdf",
+      "new_parsed_rows": 3937,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3937,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3937,
+      "recovered_rows": 0,
+      "sha256": "f346f5c4952478c69297b4eb64541d6d14e131d7b6dc67c0e71742cb81a43e3c"
+    },
+    {
+      "name": "stq_20260114.pdf",
+      "new_parsed_rows": 3930,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3930,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3930,
+      "recovered_rows": 0,
+      "sha256": "50200c6636a495b49a3ef596649274bc5c3207696abdf75b5876b36840cdcfd9"
+    },
+    {
+      "name": "stq_20260115.pdf",
+      "new_parsed_rows": 3934,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3934,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3934,
+      "recovered_rows": 0,
+      "sha256": "1d84a09f5da5a2259634eca162af08dcdda81f1bb090dfe8e369dd4fc6672044"
+    },
+    {
+      "name": "stq_20260116.pdf",
+      "new_parsed_rows": 3934,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3934,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3934,
+      "recovered_rows": 0,
+      "sha256": "44dad248a7f6ba5bcc7cb7dd7134cbafa7ae717695ceeb2e65cc3cca355e5183"
+    },
+    {
+      "name": "stq_20260119.pdf",
+      "new_parsed_rows": 3930,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3930,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3930,
+      "recovered_rows": 0,
+      "sha256": "6a6982750c923927efd1c76cfbf17100140d6bf5ca0f6ea7c12b9233bb363eb3"
+    },
+    {
+      "name": "stq_20260120.pdf",
+      "new_parsed_rows": 3932,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3932,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3932,
+      "recovered_rows": 0,
+      "sha256": "fd04d6ad5dcf33081b8ec08c5420ab25ca72d7a1c199d0e2bc704ffd6637e579"
+    },
+    {
+      "name": "stq_20260121.pdf",
+      "new_parsed_rows": 3933,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3933,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3933,
+      "recovered_rows": 0,
+      "sha256": "ecc6bfd8eb17cc2881823e6fe860a24593a7df207787c31c4df127c11dfc7673"
+    },
+    {
+      "name": "stq_20260122.pdf",
+      "new_parsed_rows": 3928,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3928,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3928,
+      "recovered_rows": 0,
+      "sha256": "40da9baba30b82fe6fa8d616e3404166d9a795605a3d09f9cd307b350971a4da"
+    },
+    {
+      "name": "stq_20260123.pdf",
+      "new_parsed_rows": 3933,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3933,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3933,
+      "recovered_rows": 0,
+      "sha256": "ee578f892cb64408e82b2a97d7068c4df8310e2797e7642596a0a49e6db7e51e"
+    },
+    {
+      "name": "stq_20260126.pdf",
+      "new_parsed_rows": 3932,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3932,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3932,
+      "recovered_rows": 0,
+      "sha256": "674679e7e90861e7d99f4fc5f7f63ac4bf61ccd2a2541fda20b6833873ea636c"
+    },
+    {
+      "name": "stq_20260127.pdf",
+      "new_parsed_rows": 3931,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3931,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3931,
+      "recovered_rows": 0,
+      "sha256": "2af265e15c390d5aaa02da1d52e5991d0ea7d09c261c883e2ac5b5bafe22d3f9"
+    },
+    {
+      "name": "stq_20260128.pdf",
+      "new_parsed_rows": 3930,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3930,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3930,
+      "recovered_rows": 0,
+      "sha256": "9265a3afdf1922ab88ab1d35f8206d0c6c2de8395020b9a5849c5c7599fc6993"
+    },
+    {
+      "name": "stq_20260129.pdf",
+      "new_parsed_rows": 3790,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3790,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3790,
+      "recovered_rows": 0,
+      "sha256": "9e3b9d4debb0fbc7c94f2ffbaa3735b0a6af7720315899d7a2321f7e0cb816cc"
+    },
+    {
+      "name": "stq_20260130.pdf",
+      "new_parsed_rows": 3928,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3928,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3928,
+      "recovered_rows": 0,
+      "sha256": "2a608447d1899f270dd3a67ac5d82de501b1d781ee759cc01bded7f36d674530"
+    },
+    {
+      "name": "stq_20260202.pdf",
+      "new_parsed_rows": 3927,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3926,
+      "old_rejected_rows": 1,
+      "ordinary_rows": 3927,
+      "recovered_rows": 1,
+      "sha256": "dd94564f8a76f9275f46929d872e2045d61dcdef51edf5b4253bb241712488e6"
+    },
+    {
+      "name": "stq_20260203.pdf",
+      "new_parsed_rows": 3926,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3926,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3926,
+      "recovered_rows": 0,
+      "sha256": "176010e49d2eaedd84ff414768a8db2246be48f6dd181fb0babedaaba7b260ef"
+    },
+    {
+      "name": "stq_20260204.pdf",
+      "new_parsed_rows": 3927,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3927,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3927,
+      "recovered_rows": 0,
+      "sha256": "87e91ae5ccfa214ba15ce1eba2122229036606391128eb2b3f378334fdba5742"
+    },
+    {
+      "name": "stq_20260205.pdf",
+      "new_parsed_rows": 3928,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3928,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3928,
+      "recovered_rows": 0,
+      "sha256": "54db536eb1f36a94b25db3374ae78d6e2f1305efd7cdaa2fcbc5ca29b736fe77"
+    },
+    {
+      "name": "stq_20260206.pdf",
+      "new_parsed_rows": 3927,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3927,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3927,
+      "recovered_rows": 0,
+      "sha256": "f44b70d26b12afe7534a816d07b0050837456de58e6a526b8c59e26b24a1cc8b"
+    },
+    {
+      "name": "stq_20260209.pdf",
+      "new_parsed_rows": 3927,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3927,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3927,
+      "recovered_rows": 0,
+      "sha256": "3f52c94863ff4ad6864977eeb2206b56c379698b142603512d83e1d38b1cecd0"
+    },
+    {
+      "name": "stq_20260210.pdf",
+      "new_parsed_rows": 3928,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3927,
+      "old_rejected_rows": 1,
+      "ordinary_rows": 3928,
+      "recovered_rows": 1,
+      "sha256": "4f3d467448b64ed64a8d75369f860d2d61f51878291c88dcc21d50829b9e0554"
+    },
+    {
+      "name": "stq_20260212.pdf",
+      "new_parsed_rows": 3928,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3928,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3928,
+      "recovered_rows": 0,
+      "sha256": "91fd913191647ee1ca083c252a362cfdaf451468d6be0f7958ece092171859e9"
+    },
+    {
+      "name": "stq_20260213.pdf",
+      "new_parsed_rows": 3928,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3928,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3928,
+      "recovered_rows": 0,
+      "sha256": "a40c2297fd8828019043e981062094fe96eca9210baea43aa49866a4531c013b"
+    },
+    {
+      "name": "stq_20260216.pdf",
+      "new_parsed_rows": 3929,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3929,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3929,
+      "recovered_rows": 0,
+      "sha256": "5eed0653fb1147d6c6530f2e6934a74501eed090763121a104b03472dd82d30a"
+    },
+    {
+      "name": "stq_20260217.pdf",
+      "new_parsed_rows": 3928,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3927,
+      "old_rejected_rows": 1,
+      "ordinary_rows": 3928,
+      "recovered_rows": 1,
+      "sha256": "50313fd9be88d60dfcc522b48c4a1dee07d5a6e26719dec4c1041171c9384bc2"
+    },
+    {
+      "name": "stq_20260218.pdf",
+      "new_parsed_rows": 3929,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3929,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3929,
+      "recovered_rows": 0,
+      "sha256": "bf8f63774ef1f6ffb90ce011c4db757a480dd6862264a0156fe2617b5ddc0b9c"
+    },
+    {
+      "name": "stq_20260219.pdf",
+      "new_parsed_rows": 3919,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3919,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3919,
+      "recovered_rows": 0,
+      "sha256": "f1dad5e085a0630dcf00b9b4821b1a758e2aa8a3f2893a48592c7a14ce90b212"
+    },
+    {
+      "name": "stq_20260220.pdf",
+      "new_parsed_rows": 3931,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3931,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3931,
+      "recovered_rows": 0,
+      "sha256": "84f8b8c662a5b42cb282f28f295a408e63eac6c996fd13add8069ff0db923a9d"
+    },
+    {
+      "name": "stq_20260224.pdf",
+      "new_parsed_rows": 3930,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3930,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3930,
+      "recovered_rows": 0,
+      "sha256": "961dc6fa8d5ba0158e3235fd63dd63450552870305aa081e6c8aef6d916d9b39"
+    },
+    {
+      "name": "stq_20260225.pdf",
+      "new_parsed_rows": 3931,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3929,
+      "old_rejected_rows": 2,
+      "ordinary_rows": 3931,
+      "recovered_rows": 2,
+      "sha256": "022b9edba3a5a99e5de04dd3566d304f45a11c58fad0396d91bfec5339a06003"
+    },
+    {
+      "name": "stq_20260226.pdf",
+      "new_parsed_rows": 3606,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3606,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3606,
+      "recovered_rows": 0,
+      "sha256": "2719139b018a72180b064b27af9569fdacbc9256d28609eda0ad8889ee6c142f"
+    },
+    {
+      "name": "stq_20260227.pdf",
+      "new_parsed_rows": 3929,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3928,
+      "old_rejected_rows": 1,
+      "ordinary_rows": 3929,
+      "recovered_rows": 1,
+      "sha256": "b61bce172e0b8341c25b1c6dabaea73338218e5ad682d14466d70906fe372b8e"
+    },
+    {
+      "name": "stq_20260302.pdf",
+      "new_parsed_rows": 3929,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3929,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3929,
+      "recovered_rows": 0,
+      "sha256": "94b9fd8e6c109422a7ab9af2005c2e1f2760de33e3b9adeddd5a6813176826ac"
+    },
+    {
+      "name": "stq_20260303.pdf",
+      "new_parsed_rows": 3929,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3929,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3929,
+      "recovered_rows": 0,
+      "sha256": "a5193fc6dfa1c4d914570e981ad3e8474bdc8002e943c93cdb818fdd604a86a0"
+    },
+    {
+      "name": "stq_20260304.pdf",
+      "new_parsed_rows": 3929,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3924,
+      "old_rejected_rows": 5,
+      "ordinary_rows": 3929,
+      "recovered_rows": 5,
+      "sha256": "83f08242ff932918d85af116d22dcb7520f53a2fa83a647c8c2db4f78d99b364"
+    },
+    {
+      "name": "stq_20260305.pdf",
+      "new_parsed_rows": 3928,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3928,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3928,
+      "recovered_rows": 0,
+      "sha256": "a928b1fee36ea5df9add46f2b51ad41bc1a734240cb3f23e7a86f07c5a53605d"
+    },
+    {
+      "name": "stq_20260306.pdf",
+      "new_parsed_rows": 3930,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3928,
+      "old_rejected_rows": 2,
+      "ordinary_rows": 3930,
+      "recovered_rows": 2,
+      "sha256": "ea6d2c641be5f9f8152a80a38638db3938a71ad356af4ef1bd389e85dda34c6b"
+    },
+    {
+      "name": "stq_20260309.pdf",
+      "new_parsed_rows": 3930,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3928,
+      "old_rejected_rows": 2,
+      "ordinary_rows": 3930,
+      "recovered_rows": 2,
+      "sha256": "8da78050aa3cb48954153b8006c92dd00fb45bccec42890143192f98e0cb4be0"
+    },
+    {
+      "name": "stq_20260310.pdf",
+      "new_parsed_rows": 3928,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3928,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3928,
+      "recovered_rows": 0,
+      "sha256": "49b3f79b751cb948f0cbc7a52c73643e816a5270ee670de481ea8649dd4c0140"
+    },
+    {
+      "name": "stq_20260311.pdf",
+      "new_parsed_rows": 3929,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3929,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3929,
+      "recovered_rows": 0,
+      "sha256": "1a1122749ecceea99cb62eef6da1789b539edeb12a09ef419a096a8efae95037"
+    },
+    {
+      "name": "stq_20260312.pdf",
+      "new_parsed_rows": 3925,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3924,
+      "old_rejected_rows": 1,
+      "ordinary_rows": 3925,
+      "recovered_rows": 1,
+      "sha256": "fa53b45d01028e3bdcb02a2baa5178a06143b5690b8259ea0ec86332951b4563"
+    },
+    {
+      "name": "stq_20260313.pdf",
+      "new_parsed_rows": 3927,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3926,
+      "old_rejected_rows": 1,
+      "ordinary_rows": 3927,
+      "recovered_rows": 1,
+      "sha256": "95d586a26d30dd019d8b8de62d5ed5cb89229d4645dcf30b7c7c497f00c57386"
+    },
+    {
+      "name": "stq_20260316.pdf",
+      "new_parsed_rows": 3927,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3926,
+      "old_rejected_rows": 1,
+      "ordinary_rows": 3927,
+      "recovered_rows": 1,
+      "sha256": "f107d671e21317cfeddab56a78cf5196dfde27fda46bf645892054d3755d23b3"
+    },
+    {
+      "name": "stq_20260317.pdf",
+      "new_parsed_rows": 3924,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3924,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3924,
+      "recovered_rows": 0,
+      "sha256": "d1e3060f67096488ee6f363fddda567e4f7f5cfd914226e20b1464ac8e83af63"
+    },
+    {
+      "name": "stq_20260318.pdf",
+      "new_parsed_rows": 3912,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3912,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3912,
+      "recovered_rows": 0,
+      "sha256": "2c93b06e51bc757441e67e139918315a9969a500705045a41c2a6aaa55498005"
+    },
+    {
+      "name": "stq_20260319.pdf",
+      "new_parsed_rows": 3925,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3923,
+      "old_rejected_rows": 2,
+      "ordinary_rows": 3925,
+      "recovered_rows": 2,
+      "sha256": "ec94953ea12c31dac3b6c2ac0f343791dabf5fedae120d82087d4066830f2950"
+    },
+    {
+      "name": "stq_20260323.pdf",
+      "new_parsed_rows": 3922,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3921,
+      "old_rejected_rows": 1,
+      "ordinary_rows": 3922,
+      "recovered_rows": 1,
+      "sha256": "d195f48d9be55780debe24b003902efc6b524d2bfa32f9180f880b57f45fb0a6"
+    },
+    {
+      "name": "stq_20260324.pdf",
+      "new_parsed_rows": 3922,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3921,
+      "old_rejected_rows": 1,
+      "ordinary_rows": 3922,
+      "recovered_rows": 1,
+      "sha256": "4e9585d2bd6fab6af417b451d4fcb58c45797c87b28932c73c83e143ce5cb50b"
+    },
+    {
+      "name": "stq_20260325.pdf",
+      "new_parsed_rows": 3923,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3923,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3923,
+      "recovered_rows": 0,
+      "sha256": "ad7e91a5efa33a2eb39bb595a7f5ee60873fbd3c71f293e78d6a1f5e542e72ac"
+    },
+    {
+      "name": "stq_20260326.pdf",
+      "new_parsed_rows": 3924,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3923,
+      "old_rejected_rows": 1,
+      "ordinary_rows": 3924,
+      "recovered_rows": 1,
+      "sha256": "9ffd8b3fc95e9c680a266cad22a04dcc455e0ecaa561e05ac25291fca9e45e63"
+    },
+    {
+      "name": "stq_20260327.pdf",
+      "new_parsed_rows": 3925,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3924,
+      "old_rejected_rows": 1,
+      "ordinary_rows": 3925,
+      "recovered_rows": 1,
+      "sha256": "caf04bb6290898c0add26146988e3312d0996d9839b79cd677de02cbee39d735"
+    },
+    {
+      "name": "stq_20260330.pdf",
+      "new_parsed_rows": 1489,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 1488,
+      "old_rejected_rows": 1,
+      "ordinary_rows": 1489,
+      "recovered_rows": 1,
+      "sha256": "47d03e9ba983168bffc0e0d8d5100aab7e87c06dc8a3d81fffbb2d465349203a"
+    },
+    {
+      "name": "stq_20260331.pdf",
+      "new_parsed_rows": 3915,
+      "new_rejected_rows": 0,
+      "old_parsed_rows": 3915,
+      "old_rejected_rows": 0,
+      "ordinary_rows": 3915,
+      "recovered_rows": 0,
+      "sha256": "9d740b037d473f4152f63e7551584f0d2ac435dbc3db40fbde5d8ac18c9f5651"
+    }
+  ],
+  "record_type": "jpx_parser_recovery_audit",
+  "recovered_rows": 63,
+  "return_labels_or_metrics_accessed": false,
+  "schema_version": 1,
+  "sealed_manifest_path": "/tmp/jpx_blind/sealed_download_manifest_v2.json",
+  "sealed_manifest_sha256": "3c4e5dac4d1f2557f26b1f3c79e29d559e8fd6ec18e4266cff7600e7d4fea532"
+}

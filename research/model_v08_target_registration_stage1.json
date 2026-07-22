@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "status": "frozen_before_scratch_metrics",
+  "authority": "retrospective_diagnostic_only_all_outcomes_previously_viewed",
+  "panel": "/tmp/model_v07_corrected_panel.pkl",
+  "decision_target": "rank long-only TSE candidates before the open for same-session open-to-close return",
+  "evaluation": {
+    "score_start": "2024-07-01",
+    "score_end": "2025-07-31",
+    "fold_frequency": "calendar_month",
+    "train_start": "2024-01-04",
+    "minimum_train_sessions": 60,
+    "default_window": "expanding",
+    "top_k": 2,
+    "round_trip_cost_bps": 20.0,
+    "cash_for_unfilled_slots": true,
+    "selection": "none; report every registered candidate and temporal block"
+  },
+  "baseline": {
+    "id": "baseline_expanding_raked_logit",
+    "objective": "return_gt_zero",
+    "model": "L2 logistic regression",
+    "C": 0.03,
+    "date_and_class_equal_weight": true,
+    "features": [
+      "oc_last", "oc_mean_5", "oc_mean_20", "oc_mean_60",
+      "oc_win_20", "oc_std_20", "overnight_last",
+      "overnight_mean_20", "overnight_mean_60", "night_day_corr_60",
+      "xrank_atr14_pct", "xrank_close_momentum_5",
+      "xrank_close_momentum_20", "xrank_close_momentum_60",
+      "xrank_prior_close_location_20"
+    ]
+  },
+  "single_feature_hypotheses": [
+    {
+      "id": "FZ1_oc_reliability_t20",
+      "formula": "clip(oc_mean_20 / (abs(oc_std_20) + 0.10), -5, 5)",
+      "mechanism": "separate persistent intraday drift from an equally sized but noisy mean"
+    },
+    {
+      "id": "FZ2_oc_last_surprise_z20",
+      "formula": "clip((oc_last - oc_mean_20) / (abs(oc_std_20) + 0.10), -5, 5)",
+      "mechanism": "identify an unusually large prior intraday shock whose continuation differs from its raw level"
+    },
+    {
+      "id": "FZ3_oc_sign_consensus",
+      "formula": "(sign(oc_mean_5) + sign(oc_mean_20) + sign(oc_mean_60)) / 3",
+      "mechanism": "encode nonlinear agreement across intraday horizons"
+    },
+    {
+      "id": "FZ4_oc_horizon_dispersion",
+      "formula": "clip((max(oc_mean_5,20,60)-min(oc_mean_5,20,60))/(abs(oc_std_20)+0.10), 0, 5)",
+      "mechanism": "flag unstable or transitioning intraday regimes"
+    },
+    {
+      "id": "FZ5_gap_day_coupling",
+      "formula": "overnight_mean_20 * night_day_corr_60",
+      "mechanism": "summarise the historical overnight-to-intraday coupling that a linear additive model cannot express"
+    },
+    {
+      "id": "FZ6_momentum_sign_consensus",
+      "formula": "(sign(xrank_close_momentum_5)+sign(xrank_close_momentum_20)+sign(xrank_close_momentum_60))/3",
+      "mechanism": "encode nonlinear cross-sectional trend agreement"
+    }
+  ],
+  "target_model_hypotheses": [
+    "rolling120_raked_logit",
+    "daily_centered_ridge",
+    "daily_centered_huber",
+    "daily_rank_ridge",
+    "same_day_top_decile_logit",
+    "same_day_top_five_pct_logit",
+    "top_bottom_decile_spread_logit",
+    "two_part_expected_return",
+    "downside_penalized_centered_ridge",
+    "relevance_weighted_centered_ridge"
+  ],
+  "portfolio_diagnostics": [
+    "top1_equal_cash_sleeve",
+    "top2_equal_weight",
+    "top2_rank_weight_67_33"
+  ],
+  "fixed_temporal_blocks": {
+    "A": ["2024-07-01", "2024-10-31"],
+    "B": ["2024-11-01", "2024-12-30"],
+    "C": ["2025-01-06", "2025-03-31"],
+    "D": ["2025-04-01", "2025-07-31"]
+  },
+  "interpretation": "Because every outcome is already known to the project, no result may promote production. A candidate is merely robust-looking when top2 net20 uplift is positive overall and in at least three of four fixed blocks, top5-positive-days-removed uplift is nonnegative, and rank2 standalone net20 is nonnegative."
+}

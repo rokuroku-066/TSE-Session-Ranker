@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "status": "frozen_before_generation2_metrics",
+  "authority": "retrospective_shadow_diagnostic_only_all_outcomes_previously_viewed",
+  "purpose": "Test whether the twelve zero-base feature hypotheses and five candidate-universe hypotheses remain useful after replacing the failed sign-logit anchor with the independently identified daily-rank Ridge anchor.",
+  "hypothesis_definitions": {
+    "path": ".scratch_zero_regime/hypotheses.json",
+    "sha256": "e47e69decf685c5930b6002325b5b5cc91f7545f41be1d62dd343875c06d3909",
+    "feature_groups": [
+      "H01_cross_sectional_state",
+      "H02_expanding_stock_alpha",
+      "H03_downside_asymmetry",
+      "H04_horizon_transition",
+      "H05_market_regime_switch",
+      "H06_calendar_stock_interaction",
+      "H07_tradability_quality",
+      "H08_lot_price_state",
+      "H09_range_exhaustion",
+      "H10_gap_response_state",
+      "H11_cross_sectional_crowding",
+      "H12_history_source_quality"
+    ],
+    "universe_groups": [
+      "U01_active_history",
+      "U02_middle_atr",
+      "U03_affordable_lot",
+      "U04_mature_history",
+      "U05_tail_clean"
+    ]
+  },
+  "anchor": {
+    "features": "G0 price core 15",
+    "target": "within each training day, average percentile rank of observed open-to-close return mapped to [-1,1]",
+    "pipeline": [
+      "SimpleImputer(strategy=median, add_indicator=true)",
+      "StandardScaler()",
+      "Ridge(alpha=10.0)"
+    ],
+    "sample_weight": "each training date sums to one",
+    "training": "expanding from 2024-01-04, retrained each calendar month, minimum 60 training sessions",
+    "candidate_mask": "price_eligible",
+    "training_mask": "price_training_eligible and observed return"
+  },
+  "periods": {
+    "discovery": ["2024-07-01", "2024-10-31"],
+    "confirmation_a": ["2024-11-01", "2025-03-31"],
+    "confirmation_b": ["2025-04-01", "2025-07-31"],
+    "overall": ["2024-07-01", "2025-07-31"]
+  },
+  "ranking": {
+    "display_slots": 2,
+    "sort": "model score descending then code ascending",
+    "weights": [0.5, 0.5],
+    "unfilled": "cash if the pre-ranking candidate set contains fewer than two rows; candidate-universe recipes rank within their frozen mask and never perform a post-ranking replacement",
+    "round_trip_cost_bps": [20.0, 40.0]
+  },
+  "feature_screen": {
+    "comparison": "G0 plus exactly one registered group versus G0",
+    "discovery_qualification_all_required": [
+      "top2 net20 uplift strictly positive",
+      "recipe-specific top-five-winning-days-removed uplift nonnegative",
+      "positive monthly uplift fraction at least 0.5",
+      "shared twelve-candidate max-t five-session block-bootstrap one-sided 80 percent lower bound nonnegative"
+    ],
+    "reporting": "all twelve groups in discovery, both confirmations and overall regardless of discovery sign"
+  },
+  "universe_screen": {
+    "comparison": "common fitted G0 rank-Ridge scores, then restrict only the scoring candidate set by exactly one registered point-in-time mask",
+    "training_policy": "do not change training rows; this isolates candidate-set value and permits maturity filters whose eligible history starts after the initial training window",
+    "reporting": "all five masks in discovery, both confirmations and overall regardless of discovery sign"
+  },
+  "shadow_survivor_all_required": [
+    "overall top2 net20 strictly positive",
+    "overall top2 net40 nonnegative",
+    "overall top-five-winning-days-removed net20 strictly positive",
+    "at least 9 of 13 monthly net20 means positive",
+    "at least 3 of 4 fixed blocks positive",
+    "overall rank2 standalone net20 nonnegative",
+    "positive uplift versus rank-Ridge G0 in discovery, confirmation A and confirmation B"
+  ],
+  "promotion": "forbidden; a retrospective survivor is only a prospective shadow candidate"
+}

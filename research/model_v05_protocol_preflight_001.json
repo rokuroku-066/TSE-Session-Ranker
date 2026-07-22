@@ -1,0 +1,248 @@
+{
+  "schema_version": 1,
+  "protocol_id": "model_v05_broad_family_retrospective_20260722",
+  "registered_at": "2026-07-22T12:20:00+09:00",
+  "status": "frozen_before_model_v05_metrics",
+  "purpose": "Compare broad model families for one-to-two daily TSE candidates without changing production schema 5.",
+  "objective": {
+    "label": "open_to_close_return",
+    "primary_cost_bps_round_trip": 20.0,
+    "stress_cost_bps_round_trip": 40.0,
+    "display_slots": 2,
+    "primary_selection_score": "top2_equal_weight_net_mean_pct_after_20bp",
+    "point_estimate_tie_breaks": [
+      "top2_5day_block_90pct_lower_bound",
+      "top2_top5_removed_net_mean_pct",
+      "top1_net_mean_pct_at_20bp",
+      "fewer_features",
+      "candidate_id"
+    ],
+    "scheduled_day_policy": "Every exchange session has rank-1 and rank-2 slots. Missing candidates or unfilled outcomes remain cash at zero return and zero cost."
+  },
+  "data_policy": {
+    "price_source": "JPX monthly historical stock-price PDFs, parsed with jpx_daily_text_v6_special_quote_marker",
+    "tdnet_source": "Public TDnet date-index mirror downloaded after every historical page was final",
+    "decision_time_jst": "08:58:59",
+    "training_cutoff": "strictly before each scoring month",
+    "retrain_frequency": "M",
+    "training_window": "expanding_from_2024-01-04",
+    "minimum_training_sessions": 80,
+    "candidate_universe": "Production eligibility policy fixed from prior-session data",
+    "known_limitations": [
+      "All dates through 2025-07-31 have been viewed in earlier research and are retrospective, not a sealed holdout.",
+      "Historical monthly JPX PDFs contain AM/PM OHLC and no-trade rows but no usable volume or turnover fields.",
+      "TDnet calendar-day pages are complete through 2025-03-31; a TDnet-dependent champion cannot be evaluated on the later known benchmark unless every required page is present.",
+      "Exact historical 08:58 futures snapshots are unavailable and must not be proxied with later values."
+    ]
+  },
+  "periods": {
+    "family_screen": {
+      "start": "2024-06-03",
+      "end": "2024-08-30",
+      "feature_block": "session_market",
+      "bootstrap_samples": 2000
+    },
+    "feature_design": {
+      "start": "2024-09-02",
+      "end": "2024-12-30",
+      "bootstrap_samples": 5000
+    },
+    "development_confirmation": {
+      "start": "2025-01-06",
+      "end": "2025-03-31",
+      "bootstrap_samples": 10000
+    },
+    "known_benchmark_reference": {
+      "start": "2025-04-01",
+      "end": "2025-07-31",
+      "bootstrap_samples": 20000,
+      "is_true_holdout": false
+    },
+    "prospective_final": {
+      "start_not_before": "2026-07-23",
+      "minimum_sessions": 100,
+      "may_promote_production": true
+    }
+  },
+  "feature_blocks": [
+    "legacy_price_12",
+    "legacy_v03_18",
+    "session_market",
+    "session_market_tdnet"
+  ],
+  "stage_policy": {
+    "family_screen_policy": "Select exactly the best recipe in each of six preregistered family groups.",
+    "minimum_rank1_and_rank2_display_rate": 0.95,
+    "feature_design_finalists": 3,
+    "research_champion_lock": "Lock the highest-primary-score feature-design finalist before development confirmation; confirmation never reselects.",
+    "development_candidates": "locked research champion, locked price-only reference, their common-window controls, and a diagnostic equal-percentile-rank ensemble",
+    "known_benchmark_access": "Known and non-sealed: evaluate the locked price-only reference; evaluate the champion only when source coverage is complete. Never use this period for selection or gating.",
+    "family_failure": "Any model, fold, input, implementation, or resource failure aborts the experiment; never select from a partially completed registry.",
+    "production_promotion": "Forbidden from retrospective results, even if all numeric gates pass."
+  },
+  "family_groups": {
+    "linear_classifier": [
+      "legacy_logit_c008",
+      "raked_logit_c003",
+      "raked_logit_net20_c003",
+      "return_weighted_logit_c003"
+    ],
+    "linear_return": [
+      "ridge_return_a10",
+      "elastic_net_sgd_return",
+      "huber_sgd_return"
+    ],
+    "gradient_boosting": [
+      "hgb_return_shallow",
+      "hgb_return_absolute",
+      "hgb_top_quintile",
+      "hgb_rank_percentile"
+    ],
+    "bagged_trees": [
+      "extra_trees_return",
+      "extra_trees_top_quintile",
+      "random_forest_return"
+    ],
+    "pairwise_rank": ["pairwise_linear_rank"],
+    "ordinal_return": ["multi_threshold_expected_return"]
+  },
+  "model_registry": [
+    {
+      "name": "legacy_logit_c008",
+      "family": "legacy_weight_logit",
+      "objective": "positive_session",
+      "random_state": 31,
+      "parameters": {"C": 0.08, "class_balance": true, "max_iter": 1000}
+    },
+    {
+      "name": "raked_logit_c003",
+      "family": "raked_logit",
+      "objective": "positive_session",
+      "random_state": 31,
+      "parameters": {"C": 0.03, "class_balance": true, "max_iter": 1000}
+    },
+    {
+      "name": "raked_logit_net20_c003",
+      "family": "raked_logit",
+      "objective": "net_positive_20bp",
+      "random_state": 31,
+      "parameters": {"C": 0.03, "class_balance": true, "cost_bps": 20.0, "max_iter": 1000}
+    },
+    {
+      "name": "return_weighted_logit_c003",
+      "family": "return_weighted_logit",
+      "objective": "net_positive_20bp",
+      "random_state": 31,
+      "parameters": {"C": 0.03, "class_balance": true, "cost_bps": 20.0, "magnitude_floor_pct": 0.25, "magnitude_cap_pct": 3.0, "max_iter": 1000}
+    },
+    {
+      "name": "ridge_return_a10",
+      "family": "ridge_return",
+      "objective": "raw_return",
+      "random_state": 31,
+      "parameters": {"alpha": 10.0, "return_clip_pct": 5.0}
+    },
+    {
+      "name": "elastic_net_sgd_return",
+      "family": "elastic_net_sgd_return",
+      "objective": "raw_return",
+      "random_state": 31,
+      "parameters": {"alpha": 0.0001, "l1_ratio": 0.15, "return_clip_pct": 5.0, "max_iter": 2000, "tol": 0.0001, "average": true}
+    },
+    {
+      "name": "huber_sgd_return",
+      "family": "huber_sgd_return",
+      "objective": "raw_return",
+      "random_state": 31,
+      "parameters": {"alpha": 0.0001, "epsilon": 1.0, "return_clip_pct": 5.0, "max_iter": 2000, "tol": 0.0001, "average": true}
+    },
+    {
+      "name": "hgb_return_shallow",
+      "family": "hist_gradient_boosting_return",
+      "objective": "raw_return",
+      "random_state": 31,
+      "parameters": {"loss": "squared_error", "learning_rate": 0.05, "max_iter": 120, "max_leaf_nodes": 15, "min_samples_leaf": 200, "l2_regularization": 1.0, "max_bins": 63, "return_clip_pct": 5.0}
+    },
+    {
+      "name": "hgb_return_absolute",
+      "family": "hist_gradient_boosting_return",
+      "objective": "raw_return",
+      "random_state": 31,
+      "parameters": {"loss": "absolute_error", "learning_rate": 0.05, "max_iter": 120, "max_leaf_nodes": 15, "min_samples_leaf": 200, "l2_regularization": 1.0, "max_bins": 63, "return_clip_pct": 5.0}
+    },
+    {
+      "name": "hgb_top_quintile",
+      "family": "hist_gradient_boosting_classifier",
+      "objective": "same_day_top_quintile",
+      "random_state": 31,
+      "parameters": {"class_balance": true, "learning_rate": 0.05, "max_iter": 120, "max_leaf_nodes": 15, "min_samples_leaf": 200, "l2_regularization": 1.0, "max_bins": 63}
+    },
+    {
+      "name": "hgb_rank_percentile",
+      "family": "hist_gradient_boosting_rank",
+      "objective": "same_day_return_percentile",
+      "random_state": 31,
+      "parameters": {"loss": "squared_error", "learning_rate": 0.05, "max_iter": 120, "max_leaf_nodes": 15, "min_samples_leaf": 200, "l2_regularization": 1.0, "max_bins": 63, "return_clip_pct": 5.0}
+    },
+    {
+      "name": "extra_trees_return",
+      "family": "extra_trees_return",
+      "objective": "raw_return",
+      "random_state": 31,
+      "parameters": {"n_estimators": 64, "max_depth": 8, "min_samples_leaf": 200, "max_features": 0.7, "bootstrap": false, "n_jobs": 1, "return_clip_pct": 5.0}
+    },
+    {
+      "name": "extra_trees_top_quintile",
+      "family": "extra_trees_classifier",
+      "objective": "same_day_top_quintile",
+      "random_state": 31,
+      "parameters": {"n_estimators": 64, "max_depth": 8, "min_samples_leaf": 200, "max_features": 0.7, "bootstrap": false, "n_jobs": 1, "class_balance": true}
+    },
+    {
+      "name": "random_forest_return",
+      "family": "random_forest_return",
+      "objective": "raw_return",
+      "random_state": 31,
+      "parameters": {"n_estimators": 64, "max_depth": 8, "min_samples_leaf": 200, "max_features": 0.7, "bootstrap": false, "n_jobs": 1, "return_clip_pct": 5.0}
+    },
+    {
+      "name": "pairwise_linear_rank",
+      "family": "pairwise_linear_rank",
+      "objective": "same_day_pairwise_return",
+      "random_state": 31,
+      "parameters": {"C": 0.08, "pairs_per_date": 64, "max_iter": 1000}
+    },
+    {
+      "name": "multi_threshold_expected_return",
+      "family": "multi_threshold_expected_return",
+      "objective": "threshold_integrated_return",
+      "random_state": 31,
+      "parameters": {"C": 0.08, "thresholds_pct": [-2.0, -0.5, 0.5, 2.0], "return_clip_pct": 3.0, "max_iter": 1000}
+    }
+  ],
+  "common_window_controls": {
+    "v03_parameter_feature_control": {
+      "model": "legacy_logit_c008",
+      "feature_block": "legacy_v03_18",
+      "description": "v0.3 algorithm/feature recipe under the common v0.5 training window; not an exact production replay"
+    },
+    "v04_parameter_feature_control": {
+      "model": "raked_logit_c003",
+      "feature_block": "session_market_tdnet",
+      "description": "v0.4 algorithm/feature recipe under the common v0.5 training window; not an exact v0.4 replay"
+    }
+  },
+  "retrospective_gate": {
+    "top2_net_mean_20bp_min": 0.0,
+    "top2_top5_removed_min": 0.0,
+    "top2_profit_factor_min": 1.0,
+    "positive_month_ratio_min": 0.6,
+    "top2_5day_block_90pct_lcb_min": 0.0,
+    "minimum_display_rate": 0.95
+  },
+  "prospective_features": {
+    "futures": "Collect exact 08:58:59-or-earlier Nikkei 225 and TOPIX futures snapshots append-only. No historical proxy.",
+    "liquidity": "Add lagged turnover, volume, Amihud and order-size impact only after a source with explicit units is sealed.",
+    "tdnet_quantitative": "Add PDF-derived revision, buyback, dividend and dilution ratios only with immutable source bytes and parser version."
+  }
+}

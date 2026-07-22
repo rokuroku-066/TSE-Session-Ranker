@@ -1,0 +1,131 @@
+{
+  "schema_version": 1,
+  "protocol_id": "model_v07_posthoc_tail_risk_diagnostic_20260722",
+  "registered_at": "2026-07-22T15:05:00+09:00",
+  "status": "locked_posthoc_retrospective_diagnostic",
+  "purpose": "Reproduce five nonlinear tail-risk observations on the already displayed G0 top-two candidates, separate loss avoidance from positive standalone economics, and document why adding the same variables as unrestricted linear model features is not equivalent to a monotone cash veto.",
+  "authority": {
+    "result_class": "known_outcome_posthoc_retrospective_diagnostic_only",
+    "production_promotion_allowed": false,
+    "hypothesis_was_selected_after_outcome_inspection": true,
+    "known_outcome_warning": "The five conditions and their cut points were chosen after inspecting errors across these historical periods. No period in this run is sealed or out of sample for the tail-risk hypothesis.",
+    "allowed_conclusion": "A recipe may be retained only as a shadow risk marker. It cannot authorize a trade, replace a displayed candidate, or promote a production model.",
+    "prospective_requirement": "Lock one marker before collecting at least 100 new source-complete sessions; evaluate it once without threshold changes."
+  },
+  "decision": {
+    "time_jst": "08:58:59",
+    "target": "same-session open-to-close return percent",
+    "display_anchor": "G0 price-core top two",
+    "display_slots": 2,
+    "slot_weight": 0.5,
+    "primary_cost_bps_round_trip": 20.0,
+    "stress_cost_bps_round_trip": 40.0,
+    "veto_policy": "Evaluate each of the two displayed slots independently. A rejected slot remains 50 percent cash; do not inspect or promote rank 3.",
+    "missing_policy": "A missing condition is recorded as unavailable and cannot fire. Single-condition recipes pass that slot through; count recipes require all five inputs and likewise pass an incomplete slot through. This avoids silently inventing a sixth missingness veto, and the unavailable cohort is reported separately. Production remains prohibited."
+  },
+  "inputs": {
+    "discovery_display_picks": "research/model_v06_feature_result_group_screen_display_picks.csv",
+    "discovery_recipe_id": "G0_price_core",
+    "replay_display_picks": "/tmp/v07_G0_replay.csv",
+    "unrestricted_feature_model_picks": "/tmp/v07_G0_E0_replay.csv",
+    "feature_panel": "/tmp/model_v06_feature_panel.pkl",
+    "feature_panel_manifest": "/tmp/model_v06_feature_panel.pkl.manifest.json"
+  },
+  "periods": {
+    "error_discovery": {"start": "2024-07-01", "end": "2024-10-31"},
+    "replay_a": {"start": "2024-11-01", "end": "2024-12-30"},
+    "replay_b": {"start": "2025-01-06", "end": "2025-03-31"},
+    "replay_c": {"start": "2025-04-01", "end": "2025-07-31"},
+    "retrospective_union": {"start": "2024-07-01", "end": "2025-07-31"}
+  },
+  "tail_conditions": [
+    {
+      "condition_id": "range_expansion",
+      "feature": "session_range_ratio_5_20",
+      "operator": ">=",
+      "threshold": 1.5
+    },
+    {
+      "condition_id": "close_volatility_expansion",
+      "feature": "cc_vol_ratio_5_20",
+      "operator": ">=",
+      "threshold": 1.7
+    },
+    {
+      "condition_id": "deep_60d_relative_loser",
+      "feature": "xrank_close_momentum_60",
+      "operator": "<=",
+      "threshold": -0.6
+    },
+    {
+      "condition_id": "frequent_flat_session",
+      "feature": "flat_oc_rate_20",
+      "operator": ">=",
+      "threshold": 0.1
+    },
+    {
+      "condition_id": "large_positive_overnight",
+      "feature": "overnight_last",
+      "operator": ">=",
+      "threshold": 1.7
+    }
+  ],
+  "recipe_registry": [
+    {"recipe_id": "forced_top2", "veto": "never"},
+    {"recipe_id": "veto_range_expansion", "veto": "range_expansion"},
+    {"recipe_id": "veto_close_volatility_expansion", "veto": "close_volatility_expansion"},
+    {"recipe_id": "veto_deep_60d_relative_loser", "veto": "deep_60d_relative_loser"},
+    {"recipe_id": "veto_frequent_flat_session", "veto": "frequent_flat_session"},
+    {"recipe_id": "veto_large_positive_overnight", "veto": "large_positive_overnight"},
+    {"recipe_id": "veto_any_1_of_5", "veto": "tail_condition_count >= 1"},
+    {"recipe_id": "veto_any_2_of_5", "veto": "tail_condition_count >= 2"},
+    {"recipe_id": "veto_any_3_of_5", "veto": "tail_condition_count >= 3"}
+  ],
+  "bootstrap": {
+    "block_length": 5,
+    "samples": 10000,
+    "confidence": 0.8,
+    "random_state": 31
+  },
+  "shadow_marker_gate": {
+    "evaluation_period": "replay_a + replay_b + replay_c",
+    "minimum_executed_days": 110,
+    "net20_mean_strictly_positive": true,
+    "net40_mean_nonnegative": true,
+    "top5_removed_net20_mean_strictly_positive": true,
+    "profit_factor_min": 1.1,
+    "positive_month_fraction_min": 0.6,
+    "largest_day_share_of_positive_profit_max": 0.25,
+    "absolute_block5_one_sided_80pct_lower_nonnegative": true,
+    "paired_uplift_vs_forced_strictly_positive": true,
+    "paired_block5_one_sided_80pct_lower_nonnegative": true,
+    "minimum_absolute_positive_replay_periods": 2,
+    "all_replay_periods_must_beat_forced": true,
+    "classification": {
+      "all_checks_pass": "shadow_risk_marker_candidate_only",
+      "improves_forced_but_fails_any_absolute_check": "loss_mitigation_observation_only",
+      "otherwise": "rejected"
+    }
+  },
+  "unrestricted_e0_diagnostic": {
+    "name": "G0 plus seven freely estimated tail features",
+    "role": "independent retrospective comparison; never substituted for a registered veto recipe",
+    "features": [
+      "max(session_range_ratio_5_20 - 1.5, 0)",
+      "max(cc_vol_ratio_5_20 - 1.7, 0)",
+      "max(-xrank_close_momentum_60 - 0.6, 0)",
+      "max(overnight_last - 1.7, 0)",
+      "flat_oc_rate_20 >= 0.10",
+      "tail_condition_count",
+      "tail_condition_count >= 2"
+    ],
+    "interpretation_guardrail": "Unrestricted coefficients can change the displayed securities and can assign either sign. Better or worse P&L does not validate the monotone veto mechanism."
+  },
+  "artifacts": [
+    "result_json",
+    "result_manifest",
+    "candidate_picks_csv",
+    "period_recipe_slice_csv",
+    "extreme_case_csv"
+  ]
+}

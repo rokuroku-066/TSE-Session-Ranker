@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "result_path": "research/model_v06_feature_result.json",
+  "result_sha256": "bdf91871e05dde03579b2521e4fcd558683b2ed9ab9de750b9535614261be6c1",
+  "checks": [
+    {
+      "name": "manifest_binds_result",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "protocol_hash",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "catalog_hash",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "input_lock_hash",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "artifact_hash:group_screen_display_picks",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "artifact_hash:union_prune_display_picks",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "artifact_hash:stability_display_picks",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "artifact_hash:trade_picks",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "all_recipe_metrics_recomputed",
+      "passed": true,
+      "detail": {
+        "recipes": 12,
+        "max_absolute_difference": 2.842170943040401e-14
+      }
+    },
+    {
+      "name": "max_t_uplifts_recomputed",
+      "passed": true,
+      "detail": {
+        "max_absolute_difference": 5.551115123125783e-17
+      }
+    },
+    {
+      "name": "qualification_predicates",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "formal_survivor_selection",
+      "passed": true,
+      "detail": {
+        "recomputed": [
+          "G3_session_dynamics"
+        ]
+      }
+    },
+    {
+      "name": "union_leave_one_out",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "retained_groups",
+      "passed": true,
+      "detail": {
+        "recomputed": []
+      }
+    },
+    {
+      "name": "stability_delta",
+      "passed": true,
+      "detail": null
+    }
+  ],
+  "checks_passed": 15,
+  "checks_total": 15,
+  "failed_checks": [],
+  "recipes_recomputed": 12,
+  "numeric_values_compared": 1926,
+  "max_absolute_metric_difference": 2.842170943040401e-14,
+  "max_absolute_max_t_difference": 5.551115123125783e-17,
+  "decision_recomputed": {
+    "formal_survivors": [
+      "G3_session_dynamics"
+    ],
+    "retained_after_union_prune": [],
+    "stability_delta_vs_price_core_pct": 0.0
+  },
+  "passed": true
+}

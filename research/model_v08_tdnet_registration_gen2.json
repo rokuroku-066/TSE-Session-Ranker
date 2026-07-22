@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "protocol_id": "zero_tdnet_title_posthoc_gen2_20260722",
+  "authority": "posthoc retrospective diagnostic only; all outcomes are known",
+  "decision_time_jst": "08:58:59",
+  "target": "same-session open-to-close return",
+  "baseline": {
+    "features": "frozen G0_price_core (15 columns)",
+    "model": "raked_logit positive_session C=0.03 class-balanced/date-equal",
+    "fit": "monthly expanding from 2024-01-04",
+    "display_slots": 2
+  },
+  "evaluation": {
+    "start": "2024-07-01",
+    "end": "2025-03-31",
+    "exploration": ["2024-07-01", "2024-12-30"],
+    "confirmation": ["2025-01-06", "2025-03-31"],
+    "primary_round_trip_cost_bps": 20,
+    "stress_round_trip_cost_bps": 40,
+    "top5_positive_days_removed": true,
+    "leave_one_calendar_month_out": true,
+    "minimum_intervention_days_full": 30,
+    "minimum_intervention_days_each_subperiod": 10
+  },
+  "recipes": {
+    "A_event_specialist_rerank": {
+      "kind": "event-only specialist",
+      "specialist_training_rows": "fresh_classified_economic_any=1 only, dates strictly before score month",
+      "specialist_model": "raked_logit positive_session C=0.03 class-balanced/date-equal",
+      "specialist_features": [
+        "G0_price_core",
+        "forecast_initial",
+        "forecast_revision",
+        "shareholder_dividend",
+        "fresh_buyback",
+        "fresh_equity",
+        "fresh_share_cancellation",
+        "fresh_ma",
+        "ma_acquisition",
+        "ma_divestiture",
+        "ma_reorganization",
+        "economic_family_count_log1p",
+        "xrank_close_momentum_20"
+      ],
+      "policy": "within daily baseline top50, take highest specialist-probability fresh event if probability>=0.50; replace rank2 only; never replace rank1; no replacement if already top2"
+    },
+    "B_capital_monotonic_rerank": {
+      "kind": "fixed score overlay",
+      "positive": "fresh_buyback OR fresh_share_cancellation",
+      "negative": "fresh_equity",
+      "mixed": "zero overlay",
+      "policy": "within baseline top50 add +0.05 baseline percentile for positive-only and -0.05 for negative-only, then select top2"
+    },
+    "B_capital_dilution_cash_veto": {
+      "kind": "cash veto",
+      "policy": "if a baseline top2 slot has fresh_equity=1 and neither fresh_buyback nor fresh_share_cancellation, leave that 50% sleeve in cash; do not backfill rank3"
+    },
+    "C_fresh_low_runup_rerank": {
+      "kind": "fixed score overlay",
+      "policy": "within baseline top50 add +0.05 baseline percentile when fresh economic and xrank 20-day close momentum<=-0.5; subtract 0.05 when fresh economic and momentum>=+0.5; otherwise zero; select top2"
+    },
+    "C_fresh_high_runup_cash_veto": {
+      "kind": "cash veto",
+      "policy": "if a baseline top2 slot has fresh economic and xrank 20-day close momentum>=+0.5, leave that 50% sleeve in cash; do not backfill rank3"
+    }
+  },
+  "qualification_all_required": {
+    "full_net20_uplift_over_G0_strictly_positive": true,
+    "exploration_and_confirmation_net20_uplift_strictly_positive": true,
+    "full_net20_absolute_strictly_positive": true,
+    "full_net40_absolute_nonnegative": true,
+    "full_top5_removed_net20_strictly_positive": true,
+    "positive_monthly_uplift_fraction_min": 0.6666666667,
+    "minimum_leave_one_month_out_uplift_strictly_positive": true,
+    "minimum_intervention_exposure_met": true
+  },
+  "known_limits": [
+    "Every outcome is already known; temporal folds do not create promotion authority.",
+    "TDnet data contains title and timestamp only, not PDF body values or transaction magnitude.",
+    "No historical 08:58 board, indicative open, PTS, exact futures, volume or turnover is available.",
+    "The five recipes were fixed after diagnosing generation-1 results and before generation-2 outcome computation."
+  ]
+}

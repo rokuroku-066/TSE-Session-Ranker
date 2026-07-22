@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "result_path": "research/model_v05_broad_family_result.json",
+  "result_sha256": "80ce66830b3dd2f7dd56260f807f936bbc9945e82184e9f39034b1213a59facd",
+  "manifest_sha256": "46c0983660617474d6e6a06bafb065dccc3bf63e638968aaed8468ae8ee00f29",
+  "protocol_sha256": "d2efa76555a5a4b62a1eefa186c8077e0c1891fa27a7bc0f01dacc463a721d3f",
+  "input_lock_sha256": "02370bda9c5fe73b166c557bcdc837d363f5deafbe91baa2d450b33dfcd45272",
+  "status": "passed",
+  "checks": {
+    "result_manifest_hash": true,
+    "protocol_hash": true,
+    "input_lock_hash": true,
+    "embedded_input_lock": true,
+    "calendar_hash": true,
+    "known_benchmark_not_gate": true,
+    "production_unchanged": true,
+    "atomic_run_receipt": true,
+    "pick_hash_family_screen": true,
+    "pick_hash_feature_design": true,
+    "pick_hash_development_confirmation": true,
+    "pick_hash_known_benchmark_reference": true,
+    "all_metrics_recomputed": true,
+    "family_group_shortlist": true,
+    "feature_design_finalists": true,
+    "champion_locked_before_confirmation": true,
+    "price_only_reference": true,
+    "confirmation_contains_locked_champion": true
+  },
+  "checks_passed": 18,
+  "checks_total": 18,
+  "metric_candidates_recomputed": 47,
+  "maximum_absolute_metric_difference": 4.618527782440651e-14
+}

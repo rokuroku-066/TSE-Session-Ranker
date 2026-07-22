@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "result_path": "research/model_v07_tdnet_semantics_audit.json",
+  "result_sha256": "1cd257170114cf200ed7e49182dba7c24454edf57a8f2b52761414315e805bbb",
+  "audit_script_path": "research/audit_model_v07_tdnet_semantics.py",
+  "audit_script_sha256": "455add37ea6efd5e109bbae158a5533f3a1935fae232a7ca8b6ebf866d38bc2d",
+  "implementation_aggregate_sha256": "6136108c38277a732399705499c2fb4f0c8b4db1b31f5d34b6c27196d7a42c35",
+  "panel_manifest_path": "research/model_v05_panel_manifest.json",
+  "panel_manifest_sha256": "94cb0e8802957318edf522b892b67fe351432f15820d6534985609b9acdfc59d",
+  "tdnet_logical_source_sha256": "fb217159b5b03146cb0868bf87abe8a936e958d69d0f7acfe72a8864824c446e",
+  "cache_inventory_sha256": "68fc7ad0649e89cf224f1304aa43795dc7a8d7b8146f50d66a67292ef12bb755"
+}
