@@ -44,6 +44,9 @@
 
 </details>
 
+---
+
+
 ## Entry 001 — tse-session-ranker 0.2.0：モデル手法比較
 
 | 項目 | 内容 |
@@ -1111,5 +1114,311 @@ production model変更:       なし
 ```
 
 将来期間では08:58:59以前の先物snapshot、TDnet完全日、実測の板・約定・slippageをappend-onlyで保存する。protocolを事前固定し、100営業日が完了するまで途中の成績でmodel、特徴、top-kを差し替えない。
+
+</details>
+---
+
+## Entry 006 — 研究プロトコルv0.6：特徴量候補棚卸し・group ablation
+
+| 項目 | 内容 |
+|---|---|
+| 検証日 | 2026-07-22 |
+| 検証対象コミット | 本PRへ収録。catalog・protocol・実装・入力・成果物のSHA-256で固定 |
+| 親Entry | Entry 005 |
+| 検証対象 | 共通価格core + 7単独追加block + 1条件付きinteraction block。固定raked logitで特徴寄与だけを比較 |
+| 候補台帳 | `research/model_v06_feature_catalog.json`<br>SHA-256 `bbf87983979d48afbe1eaa51f3368cca713c306f2b7d4cdc8cda54e5fe43414a` |
+| authoritative protocol | `model_v06_feature_group_diagnostic_20260722`<br>SHA-256 `20038eb33d87a1fbcd187548f7f14c65dca136d00850566311a6888bd0083021` |
+| 採用判断 | 一次通過した前後場shapeは次期間で逆転したため撤回。production変更なし |
+| 当時の運用判断 | **retrospective development diagnostic only。実発注不可** |
+| 主指標 | 一次首位`G0+G3_session_dynamics` top2・20bp後 `-0.218990%/日`。次期間で価格core比 `-0.593191pt/日` |
+| 機械可読成果物 | `research/model_v06_feature_result.json`<br>SHA-256 `bdf91871e05dde03579b2521e4fcd558683b2ed9ab9de750b9535614261be6c1` |
+| 独立再集計 | `research/model_v06_feature_result_audit.json`<br>SHA-256 `2e36b3a68cfe60f059f8859aa6e84967b4d9a3523e2636f71074b1151720be90` |
+
+> **一行結論:** 特徴候補を時点・データ可用性・機構ごとに先に固定して再検証したが、既存履歴から安定して残る追加blockは0個だった。次は実始値を代用せず、08:58先物・予想gap・板・PTS・定量TDnetを前向き収集する。
+
+<details>
+<summary><strong>候補棚卸し、taxonomy修正、検証結果、再現情報</strong></summary>
+
+### なぜ候補棚卸しからやり直したか
+
+v0.5の12/18/39/62特徴は、同じbaseへ一群ずつ足した比較ではなかった。そのため成績差が価格、前後場、市場、TDnetのどの機構によるものか分離できなかった。v0.6では損益を見る前に候補を次の4区分へ分けた。
+
+```text
+historical_screen:
+  既存JPX PDF / TDnet HTMLから時点を守って再生成可能
+
+forward_only:
+  08:58時点では使えるが、正確な履歴snapshotがない
+
+blocked_source:
+  有力だが、当時の原本・単位・構成銘柄履歴がない
+
+exclude:
+  target-session leakage、意味の誤ったproxy、または高重複
+```
+
+候補一覧、算式、機構、最低履歴、source制約、採否理由は次の2ファイルだけで追える。
+
+```text
+human-readable inventory:
+research/model_v06_feature_candidates.md
+e8907787b9227504eec2939d775f3926b1fde0a126af3dbcb8de0f6716b2f7e3
+
+machine-readable catalog:
+research/model_v06_feature_catalog.json
+bbf87983979d48afbe1eaa51f3368cca713c306f2b7d4cdc8cda54e5fe43414a
+```
+
+### 固定したhistorical block
+
+| Block | 追加特徴数 | 機構 |
+|---|---:|---|
+| `G0_price_core` | 15 | 既存のOC、overnight、volatility、close momentum/location。全比較の共通base |
+| `G1_short_reversal` | 4 | 前日close-to-close shock、3日momentum、range shock、短長vol比 |
+| `G2_gap_trait` | 4 | 過去gapの分散、fill率、反応beta、gap頻度 |
+| `G3_session_dynamics` | 7 | AM平均・勝率、midday gap、AM/PM相関、close location、range圧縮 |
+| `G4_market_regime` | 17 | 市場breadth、dispersion、tail、trend、volとbeta/ATR interaction |
+| `G5_liquidity_proxy` | 4 | 無約定率、flat OC率、高安同値率。出来高の偽proxyは不使用 |
+| `T0_clean_event` | 24 | 修正版TDnet title taxonomy |
+| `T1_event_structure` | 13 | 件数、時刻、bundle、stage、過去60/252日開示強度 |
+| `X0_event_context` | 6 | TDnet family×事前run-up、市場tail。`T0`通過時だけ評価 |
+
+前日市場平均のように全銘柄で同値の特徴は、線形モデルの同日順位を単独では変えない。そのため`G4`には`beta×市場trend`、`ATR×dispersion`など、順位へ作用するinteractionを最初から限定登録した。結果を見て任意の掛け合わせを追加していない。
+
+### TDnet taxonomyの修正
+
+既存461日・97,006タイトルを調べ、次の汚染を確認した。
+
+```text
+旧ma_alliance 4,288件中、buybackとの重複: 1,303件（30.4%）
+原因: 裸の「株式取得」が「自己株式取得」にも一致
+
+旧equity_financing 2,694件中、
+株式報酬・SO・役職員向けと見られるタイトル: 1,437件（53.3%）
+
+業績修正4,496件中、タイトルだけで上方/下方を判定可能: 136件（3.0%）
+```
+
+研究用`T0`では、自己株買いをM&Aから除外し、外部資金調達と株式報酬を分け、業績・配当の方向不明を明示した。ToSTNeTも「取得決定を消す」のではなくstageとmethodを別列にした。production 6特徴の意味はこのEntryでは変更していない。
+
+### 時点制約と自動テスト
+
+価格候補はすべて`D-1`以前で計算する。対象日以降のOHLC・前後場OHLCを一括で2.75倍に変更して再構築し、対象日までの36個の追加価格特徴がbit-exactで不変であることを確認した。
+
+TDnetは各文書を、公開時刻以後で最初に到来する`08:58:59 JST` cutoffへ割り当てる。次を自動テストした。
+
+- `自己株式取得`がM&Aにならない
+- 譲渡制限付株式報酬が外部増資にならない
+- 方向語のない業績修正は`direction_unknown=1`
+- 08:59開示は当日08:58 cutoffへ入らない
+- TDnet source欠落はNaNのまま、完全日に開示なしだけ0
+- 登録外interactionを生成しない
+- catalogの列順と実装定数が一致
+
+```text
+PYTHONPATH=src:. python -m unittest discover -v
+128 tests passed
+```
+
+### 入力とpanel
+
+catalog、protocol、runner実装、JPX PDF 19件、TDnet HTML/sidecar 461日をmetric前にinput lockへ結合した。
+
+```text
+input lock:
+research/model_v06_feature_input_lock.json
+06d0fbf6f4395a0a760f73b8a35f23a20505df3c34658bb4e5bb6d96bfd31d86
+
+panel:
+1,524,104行 / 4,124コード / 386営業日
+calendar SHA:
+966f4a416d0929487d850b16be87c9c1cd69cd9f8c0447a3e76214a5715c489e
+
+panel file SHA:
+f2494efe6e66c02307b736b231a6759895ba8dc8471b4060ebc34dbd87e82cfd
+```
+
+label-blind QAでは全price sourceがtargetより前であることを確認した。group availabilityは`G2_gap_trait`だけ94.999%で98%基準未達、その他追加groupは99.03～100%。絶対相関0.95以上は4組で、主に`revision`と`revision_direction_unknown`、TDnet event有無とevent時だけ非ゼロになる構造値だった。
+
+### 比較設計
+
+特徴寄与を分離する間だけモデルを固定した。
+
+```text
+model:           raked LogisticRegression
+C:               0.03
+label:           close > open
+weight:          日別合計同一 + class margin同一
+retrain:         月次expanding
+primary metric:  毎日top2・50:50、往復20bp後平均
+stress:          往復40bp
+display:         source-complete日はrank1/2を常に保存
+trade:           OOF expected-net gate未確定のため別CSVを空で保存
+```
+
+期間は次の順に固定した。すべて既知期間なので、名称にかかわらずproductionを昇格できるholdoutではない。
+
+| 段階 | 期間 | 営業日 | 用途 |
+|---|---|---:|---|
+| group screen | 2024-07-01～10-31 | 84 | `G0`対`G0+1 block` |
+| union prune | 2024-11-01～12-30 | 41 | 通過block unionと1回だけのleave-one-group-out |
+| stability report | 2025-01-06～03-31 | 57 | 固定recipeを再選択なしで報告 |
+
+単独block通過には、availability 98%以上、G0比uplift正、プラス月50%以上、top5除外uplift非負、共通5日block resampleによるmax-T調整片側80%下限非負をすべて要求した。
+
+### group screen結果
+
+すべてtop2等金額・往復20bp後。
+
+| 追加block | 特徴数合計 | 平均 | G0比uplift | max-T 80%下限 | プラス月 | 判定 |
+|---|---:|---:|---:|---:|---:|---|
+| `G0_price_core` | 15 | -0.593657% | — | — | 1/4 | base |
+| `G1_short_reversal` | 19 | -0.421963% | +0.171695pt | -0.152613pt | 0/4 | 不通過 |
+| `G2_gap_trait` | 19 | -0.723076% | -0.129418pt | -0.453726pt | 0/4 | 不通過 |
+| **`G3_session_dynamics`** | 22 | **-0.218990%** | **+0.374668pt** | **+0.050360pt** | **2/4** | 一次通過 |
+| `G4_market_regime` | 32 | -0.238768% | +0.354890pt | +0.030582pt | 1/4 | 月次条件不通過 |
+| `G5_liquidity_proxy` | 19 | -0.658416% | -0.064759pt | -0.389067pt | 1/4 | 不通過 |
+| `T0_clean_event` | 39 | -0.581658% | +0.011999pt | -0.312309pt | 1/4 | 不通過 |
+| `T1_event_structure` | 28 | -0.591744% | +0.001913pt | -0.322395pt | 1/4 | 不通過 |
+
+一次通過した`G3`も20bp後の絶対損益は負、40bp後は`-0.416609%/日`、block-5片側90%下限は`-0.551913%`だった。相対改善だけで実発注候補にはしない。
+
+### union pruneとstability
+
+次の2024年11～12月では結果が逆転した。
+
+```text
+G0 + G3:
+  top2 net20  -0.174880%/日
+  プラス月    0/2
+
+G0 only:
+  top2 net20  +0.418311%/日
+
+G3の期間外寄与:
+  -0.593191pt/日
+```
+
+事前規則どおり`G3`を外し、retrospective locked recipeは`G0_price_core`へ戻した。2025年1～3月のstability reportは次のとおり。
+
+```text
+top1 net20:            -0.543763%/日
+top2 net20:            -0.421878%/日
+top2 net40:            -0.621878%/日
+top2 median net20:     -0.254140%/日
+top2 profit factor:     0.4892
+プラス月:              0/3
+block-5片側90%下限:   -0.615878%
+```
+
+したがって、今回のhistorical blockから固定できる追加特徴は0個。screenの点推定首位へ後付けで切り替えず、production artifact、CLI既定モデル、発注可否を変更しない。
+
+### 独立再集計
+
+独立audit runnerはresult内の集計値を信用せず、3つのdisplay-picks CSVから12 recipeの損益、bootstrap、max-T uplift、qualification、survivor、leave-one-out、stability差を再計算した。
+
+```text
+audit checks:                     15 / 15 passed
+再計算recipe:                     12
+比較した数値:                     1,926
+最大絶対metric差:                 2.84e-14
+最大絶対max-T差:                  5.55e-17
+
+audit runner:
+research/audit_model_v06_feature_result.py
+5b538a6b27da64fbab1713a31fc0ecc1491a0b241c62fc32a454d9375e23c54a
+
+audit artifact:
+research/model_v06_feature_result_audit.json
+2e36b3a68cfe60f059f8859aa6e84967b4d9a3523e2636f71074b1151720be90
+```
+
+displayとtradeは別成果物にした。trade gateは未校正なので、display結果を自動的にtradeと呼び替えていない。
+
+```text
+group screen display picks:
+0b784c8d472aee2ad64def2098ffaaeb7a4e162b6b294ddb07692592f16cbbca
+
+union prune display picks:
+aea2c793a256ef4b759166855d593a2eb5239108adf491ff8d40c5bacb31cd82
+
+stability display picks:
+202a79f00202e2092da354f3353a6cb5449692d47948254cb0e4b899457b74de
+
+empty trade-picks marker:
+1c2531a02ced07b36e9f63d729aff862d60c70c7f74a9b03efedebc18011a94a
+```
+
+### 次に検証する特徴
+
+履歴に正確な08:58 snapshotがないため、実始値や日足終値で代用せず、次を前向き収集する。
+
+```text
+F0_market_0858:
+  Nikkei/TOPIX先物、spread、USDJPY、米株先物、volatility
+
+F1_indicative_gap:
+  08:58予想gap、gap/ATR、市場調整後gap、過去gap反応とのinteraction
+
+F2_auction_pts:
+  成行imbalance、板depth、特別気配、予想寄り時刻、PTS価格/出来高
+
+F3_exact_liquidity:
+  売買代金、ADV20、Amihud、単元金額、注文額/ADV、実測slippage
+
+F4_tdnet_quantitative:
+  本業利益増加/時価総額、増配利回り、買付規模・日次圧力、
+  希薄化率、M&A・受注規模
+```
+
+前向きfeature-developmentは120営業日かつ6暦月。そこでfeature、model、0～2件のOOF trade gateを固定し、その次の100営業日をsealed confirmationにする。途中損益で変更した場合は、それまでをburnしてconfirmationを最初からやり直す。
+
+</details>
+
+---
+
+## Entry 007 — 研究プロトコルv0.6.1：v0.6独立監査と訂正
+
+| 項目 | 内容 |
+|---|---|
+| 検証日 | 2026-07-22 |
+| 検証対象コミット | 本PRへ収録。Entry 006のresultとauditを独立再計算 |
+| 親Entry | Entry 006 |
+| 検証対象 | 12 recipeの損益、shared block resample、選抜判定、966個のprovenance hash、TDnet実効イベント露出 |
+| 採用判断 | 追加特徴block 0個、production変更なしを維持 |
+| 当時の運用判断 | retrospective development diagnostic only。実発注不可 |
+| 主指標 | 最大計算差 `2.84e-14`、hash 966/966一致、漏洩違反0件 |
+| 機械可読成果物 | `research/model_v06_feature_result_audit_supplement.json`<br>SHA-256 `43226162dbb194868ecbeb164843709bfe366ea020debbcae404569d71139a57` |
+
+> **一行結論:** Entry 006の数値と最終判断は再現したが、`max-T`の呼称とTDnetの`event_days`の意味を訂正する。訂正後も生き残る追加blockは0個で変わらない。
+
+<details>
+<summary><strong>訂正内容と影響</strong></summary>
+
+Entry 006の各値をdisplay-picks CSVから再計算し、12 recipe・1,926数値の最大差は`2.84e-14`、shared resampleの最大差は`4.44e-16`だった。`G3_session_dynamics`の一次通過とunion-pruneでの削除も再現した。
+
+### 統計量名
+
+Entry 006の`max-T`は標準誤差でstudentizeしていない。正確には`shared moving-block max-mean adjustment`である。これは呼称の訂正で、臨界値、下限、選抜結果に影響はない。今後、studentizeしない限り`max-T`とは呼ばない。
+
+### TDnetの実効標本数
+
+Entry 006の`event_days = 84`は市場全体にclean eventがあった日数で、選択銄柄の実効露出ではなかった。再集計では市場全体に84日・14,003 security-daysのeventがあった一方、top2でのevent露出は次のとおり。
+
+| 指標 | `T0_clean_event` | `T1_event_structure` |
+|---|---:|---:|
+| top2表示枠 | 168 | 168 |
+| event保有表示枠 | 20 | 23 |
+| event露出があった独立日 | 18 | 17 |
+
+「top2でevent露出が30独立日以上」を正しい疎イベントgateとするとT0/T1はどちらも不通過。元々return-uplift系の基準でも不通過なので、survivorと最終recipeは変わらない。今後は、event保有security-days、event保有独立日、top-k内のevent保有枠数、top-k内のevent露出独立日を併記する。
+
+```text
+historical追加特徴block:  0個
+locked retrospective recipe:     G0_price_core
+G0自体の損益優位性:        未実証
+production変更:                なし
+次の対象:                       F0～F4の前向きsnapshot
+```
 
 </details>

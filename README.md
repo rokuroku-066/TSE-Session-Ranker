@@ -5,7 +5,7 @@
 現行CLI/APIの既定モデルは0.3.0互換の`session_v3_tdnet_clear`です。正則化ロジスティック回帰に、価格履歴12特徴と寄り前までのTDnet適時開示6特徴を入力し、1位を`CORE`、2位を`RESERVE`として表示します。
 
 > [!WARNING]
-> **自動発注には使用できません。** v0.5では正則化logitへの固定を外し、16レシピ・6モデル群・4特徴blockを比較しました。選定期に首位だった18特徴のraked logitは、固定後の確認期でtop2・20bp控除後 `-0.484256%/日`、block-5 bootstrap片側90%下限 `-0.686340%`となり再現しませんでした。retrospective gateは不合格で、既定のv0.3を含む全候補はshadow・研究用途だけです。
+> **自動発注には使用できません。** v0.6で候補特徴を機構別に固定し、同一モデルでgroup ablationをやり直しました。一次通過した前後場shapeも次期間で価格core比 `-0.593191pt/日`に反転し、追加採用は0群です。既定のv0.3を含む全候補はshadow・研究用途だけです。
 
 ## 最新の研究判断
 
@@ -15,14 +15,17 @@
 | v0.4固定候補 | 価格・前後場・市場・TDnet 62、logit | 負のresearch baseline | 既知診断top1 `-0.086199%/日` |
 | v0.5選定winner | 価格12 + TDnet 6、raked logit | retrospectiveで棄却 | 確認期top2 `-0.484256%/日` |
 | v0.5 TDnet診断対照 | 価格・前後場・市場・TDnet 62、raked logit | 後付け採用禁止 | 確認期top2 `+0.039661%/日` |
+| v0.6一次首位 | 価格core + 前後場shape、raked logit | 次期間で棄却 | screen top2 `-0.218990%/日` |
+| v0.6最終lock | 価格coreのみ、raked logit | 損益優位性未実証 | stability top2 `-0.421878%/日` |
 
-v0.5は、分類logitだけでなく収益回帰、Huber/elastic-net、勾配ブースティング、ExtraTrees、RandomForest、pairwise順位学習、ordinal期待収益を月次walk-forwardで比較しました。主目的は毎日top2を等金額で保有した20bp控除後損益です。TDnet 23特徴を含む診断対照は確認期の点推定だけ正でしたが、40bp、上位5日除外、期間安定性、bootstrap下限がすべて不合格です。確認期を見てwinnerを差し替えず、productionは変更しません。詳しい経緯と全成果物hashは追記専用の[VALIDATION.md](VALIDATION.md) Entry 005にあります。
+v0.6は損益を見る前に、価格反転、過去gap特性、前後場shape、市場レジーム、流動性proxy、整理済みTDnet、開示構造の7追加群を固定しました。特徴寄与を分離するためraked logitは共通です。独立監査で12 recipe・1,926数値と966個のprovenance hashを再現し、追加特徴なしという負の結果を確定しました。候補の定義は[feature candidate inventory](research/model_v06_feature_candidates.md)、経緯と訂正は[VALIDATION.md](VALIDATION.md) Entry 006・007にあります。
 
 ## 設計の要点
 
 - production互換の既定推定器は`LogisticRegression(C=0.08, class_weight="balanced")`で固定
 - v0.4研究winnerも同じL2正則化logitで、`C=0.03`、日別・クラス均衡、expanding学習窓
 - v0.5研究ではモデル固定を外したが、選定winnerが確認期で再現せず、production推定器は変更なし
+- v0.6では特徴候補を先に7群へ固定し、共通モデルのgroup ablationで追加寄与を分離。次期間まで残った追加群は0
 - 学習ラベルは`close > open`または損益・同日順位。研究仕様の採否は勝率ではなくコスト後損益で決定し、v0.5の主指標はtop2等金額
 - 対象日OHLCを特徴量へ入れず、価格特徴はすべて1セッション以上shift
 - 適時開示は各文書を「公開時刻以前で最初に到来する08:58:59 JSTの取引日」へ割当

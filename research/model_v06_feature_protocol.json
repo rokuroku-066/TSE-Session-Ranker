@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "protocol_id": "model_v06_feature_group_diagnostic_20260722",
+  "registered_at": "2026-07-22T15:10:00+09:00",
+  "status": "frozen_before_model_v06_feature_metrics",
+  "catalog": {
+    "path": "research/model_v06_feature_catalog.json",
+    "sha256": "bbf87983979d48afbe1eaa51f3368cca713c306f2b7d4cdc8cda54e5fe43414a"
+  },
+  "purpose": "Isolate economically motivated feature-group contributions before any further model-family comparison.",
+  "authority": {
+    "retrospective_result": "development_diagnostic_only",
+    "production_promotion_allowed": false,
+    "reason": "Every available outcome through 2026-07-22 was viewed in earlier research. No historical interval is a sealed holdout.",
+    "earliest_prospective_session": "2026-07-23"
+  },
+  "decision": {
+    "time_jst": "08:58:59",
+    "target": "same-session open-to-close return",
+    "display_slots": 2,
+    "display_policy": "Always preserve rank 1 and rank 2 on every source-complete scheduled day.",
+    "trade_policy_during_feature_screen": "No trade gate is selected in the retrospective feature screen. Display-portfolio returns are a common diagnostic control.",
+    "future_trade_policy": "An out-of-fold expected-net gate may independently leave either 50% sleeve in cash; rank 3 may never replace a gated-off slot. Display and trade picks must be separate artifacts.",
+    "primary_cost_bps_round_trip": 20.0,
+    "stress_cost_bps_round_trip": 40.0
+  },
+  "anchor_model": {
+    "family": "raked_logit",
+    "objective": "positive_session",
+    "C": 0.03,
+    "class_balance": true,
+    "date_weight": "equal total weight per training date",
+    "random_state": 31,
+    "imputer": "training median plus missing indicators",
+    "scaler": "training StandardScaler",
+    "retrain_frequency": "monthly",
+    "training_window": "expanding from 2024-01-04",
+    "minimum_training_sessions": 60,
+    "why_fixed": "The model is held constant only to identify feature contribution. Model families may be compared after the feature bundle is locked."
+  },
+  "retrospective_periods": {
+    "group_screen": {
+      "start": "2024-07-01",
+      "end": "2024-10-31",
+      "use": "G0 versus one all-or-none group at a time"
+    },
+    "union_prune": {
+      "start": "2024-11-01",
+      "end": "2024-12-30",
+      "use": "one fixed survivor union and leave-one-group-out"
+    },
+    "stability_report": {
+      "start": "2025-01-06",
+      "end": "2025-03-31",
+      "use": "report the locked retrospective recipe without reselection; still not a holdout"
+    }
+  },
+  "screen": {
+    "base_group": "G0_price_core",
+    "single_addition_groups": [
+      "G1_short_reversal",
+      "G2_gap_trait",
+      "G3_session_dynamics",
+      "G4_market_regime",
+      "G5_liquidity_proxy",
+      "T0_clean_event",
+      "T1_event_structure"
+    ],
+    "conditional_interaction": {
+      "group": "X0_event_context",
+      "requires_survivor": "T0_clean_event"
+    },
+    "maximum_survivor_groups": 3,
+    "survivor_order": [
+      "larger top2 net20 uplift over G0",
+      "larger paired five-session-block one-sided 80% lower bound",
+      "larger top5-removed uplift",
+      "fewer added features",
+      "group id"
+    ],
+    "all_required": {
+      "feature_availability_rate": 0.98,
+      "top2_net20_uplift_over_g0_strictly_positive": true,
+      "positive_month_fraction": 0.5,
+      "top5_removed_uplift_nonnegative": true,
+      "paired_max_t_block5_one_sided_80pct_lower_bound_nonnegative": true,
+      "minimum_independent_event_days_for_sparse_event_group": 30
+    },
+    "no_survivor_policy": "Keep G0. Record the point-estimate leader as a hypothesis only; do not force an addition.",
+    "union_policy": "Union at most three qualifying groups in survivor order. In union_prune, retain a group only if the union minus that group has lower top2 net20 return. Apply this once; do not iterate.",
+    "interaction_policy": "Evaluate X0 only when T0 survives the single-addition screen, and only as T0 plus the registered X0 columns."
+  },
+  "metrics": {
+    "primary": "scheduled-day top2 equal-weight open-to-close mean after 20 bp",
+    "secondary": [
+      "top1 net mean after 20 bp",
+      "top2 net mean after 40 bp",
+      "top2 median after 20 bp",
+      "top2 profit factor",
+      "positive month fraction",
+      "top5-positive-days-removed mean",
+      "five-session moving-block lower bound",
+      "rank1 and rank2 display rates"
+    ],
+    "cash_accounting": "Unfilled or unobserved slots are zero return and zero cost; remaining sleeves are not reweighted.",
+    "multiple_testing": "Use a shared five-session moving-block resample and the maximum candidate-minus-G0 statistic for the screen lower bound."
+  },
+  "data": {
+    "price_source": "JPX monthly historical stock-price PDFs parsed with the repository parser",
+    "tdnet_source": "cached public TDnet date-index mirror pages with observation sidecars",
+    "tdnet_required_through": "2025-03-31",
+    "known_limits": [
+      "The JPX monthly PDFs have AM/PM OHLC and explicit no-trade rows but no usable volume, turnover or lot fields.",
+      "The cached TDnet indexes contain titles and PDF URLs, not original disclosure PDF bytes.",
+      "Exact historical 08:58 futures, board, indicative-open and PTS snapshots are unavailable.",
+      "Retrospective dates are already outcome-known and cannot promote production."
+    ]
+  },
+  "leakage_checks": [
+    "Mutating target-day and future OHLC/labels cannot change target-day features or ranks.",
+    "Every historical price source date is strictly before the target date.",
+    "TDnet, futures, board and PTS timestamps must be timezone-aware and no later than target 08:58:59 JST; no carry-forward.",
+    "Training, imputation, scaling, calibration and selection use dates strictly before each scoring month.",
+    "Cross-sectional ranks use the prior-session point-in-time universe, never target outcome/traded status.",
+    "Actual target open, open time, volume, high, low and close are banned from features.",
+    "A missing source cannot be converted to no event or zero market move.",
+    "Conflicting duplicate snapshots and append-only history rewrites are rejected.",
+    "No-trade, missing and unfilled outcomes remain in scheduled-day accounting."
+  ],
+  "prospective_plan": {
+    "feature_development": {
+      "minimum_sessions": 120,
+      "minimum_calendar_months": 6,
+      "interim_access": "collector and leakage QA only; no feature changes from interim PnL"
+    },
+    "sealed_confirmation": {
+      "sessions": 100,
+      "starts_after": "feature, model and trade gate are content-addressed and locked",
+      "restart_on_spec_change": true,
+      "promotion_gate": {
+        "gated_top2_net20_mean_strictly_positive": true,
+        "block5_one_sided_90pct_lower_bound_nonnegative": true,
+        "paired_lower_bound_vs_fixed_price_control_nonnegative": true,
+        "top5_removed_net20_strictly_positive": true,
+        "net40_nonnegative": true,
+        "profit_factor_min": 1.1,
+        "positive_month_fraction_min": 0.6,
+        "largest_day_share_of_positive_profit_max": 0.25,
+        "minimum_trade_days": 60,
+        "display_and_source_coverage_min": 0.98,
+        "rank2_marginal_net_if_used_nonnegative": true
+      }
+    }
+  }
+}

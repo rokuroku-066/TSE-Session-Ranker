@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "created_on": "2026-07-22",
+  "parent_result": {
+    "path": "research/model_v06_feature_result.json",
+    "sha256": "bdf91871e05dde03579b2521e4fcd558683b2ed9ab9de750b9535614261be6c1"
+  },
+  "parent_audit": {
+    "path": "research/model_v06_feature_result_audit.json",
+    "sha256": "2e36b3a68cfe60f059f8859aa6e84967b4d9a3523e2636f71074b1151720be90"
+  },
+  "independent_audit": {
+    "recipes_recomputed": 12,
+    "numeric_values_recomputed": 1926,
+    "maximum_absolute_metric_difference": 2.842170943040401e-14,
+    "maximum_absolute_shared_block_resample_difference": 4.440892098500626e-16,
+    "hashes_verified": 966,
+    "hash_failures": 0,
+    "leakage_violations": {
+      "price_source_on_or_after_target": 0,
+      "tdnet_source_after_085859_jst": 0
+    },
+    "decision_reproduced": true
+  },
+  "corrections": [
+    {
+      "id": "statistic_name",
+      "recorded_label": "max-T",
+      "correct_label": "shared moving-block max-mean adjustment",
+      "reason": "The bootstrap statistic is the maximum centered candidate-minus-base mean and is not divided by a candidate-specific standard error.",
+      "numeric_effect": "none",
+      "decision_effect": "none",
+      "future_rule": "Use the correct max-mean name unless the statistic is explicitly studentized."
+    },
+    {
+      "id": "sparse_event_support",
+      "recorded_value": {
+        "event_days": 84,
+        "meaning": "sessions with at least one clean TDnet event anywhere in the market"
+      },
+      "effective_support": {
+        "market_event_security_days": 14003,
+        "market_event_sessions": 84,
+        "T0_top2_event_slots": 20,
+        "T0_top2_event_exposure_sessions": 18,
+        "T1_top2_event_slots": 23,
+        "T1_top2_event_exposure_sessions": 17
+      },
+      "reason": "Market-wide event-day counts do not measure how often sparse event features influence displayed candidates.",
+      "decision_effect": "none: T0 and T1 already failed the return-uplift family of gates; both also fail a 30 effective-exposure-session interpretation.",
+      "future_rule": "Report event-bearing security-days, event-bearing sessions, selected event slots and selected event-exposure sessions. Apply sparse-support gates to effective exposure, not market-wide event presence."
+    }
+  ],
+  "final_decision": {
+    "historical_additional_groups_locked": [],
+    "production_change": false,
+    "reason": "G3 passed the relative screen but reversed in union-prune; all TDnet groups fail even after the support-count correction."
+  }
+}

@@ -1,0 +1,218 @@
+{
+  "schema_version": 1,
+  "catalog_id": "model_v06_feature_candidates_20260722",
+  "registered_at": "2026-07-22T15:00:00+09:00",
+  "decision_time_jst": "08:58:59",
+  "target": "same_session_open_to_close_return_pct",
+  "policy": {
+    "feature_groups_are_all_or_none": true,
+    "historical_price_max_source_date": "target_date_minus_one_session",
+    "current_actual_open_is_forbidden": true,
+    "operational_missing_is_not_zero": true,
+    "historical_proxy_for_forward_snapshot_is_forbidden": true,
+    "sector_membership_must_be_dated": true,
+    "quantitative_tdnet_requires_source_bytes": true
+  },
+  "historical_screen": {
+    "G0_price_core": {
+      "mechanism": "prior intraday persistence, overnight behaviour, volatility and price state",
+      "features": [
+        "oc_last",
+        "oc_mean_5",
+        "oc_mean_20",
+        "oc_mean_60",
+        "oc_win_20",
+        "oc_std_20",
+        "overnight_last",
+        "overnight_mean_20",
+        "overnight_mean_60",
+        "night_day_corr_60",
+        "xrank_atr14_pct",
+        "xrank_close_momentum_5",
+        "xrank_close_momentum_20",
+        "xrank_close_momentum_60",
+        "xrank_prior_close_location_20"
+      ]
+    },
+    "G1_short_reversal": {
+      "mechanism": "short close-to-close shock, momentum and range expansion",
+      "features": [
+        "cc_reversal_1_atr",
+        "cc_momentum_3_atr",
+        "range_shock_1_20",
+        "cc_vol_ratio_5_20"
+      ]
+    },
+    "G2_gap_trait": {
+      "mechanism": "historical tendency to fade or continue overnight gaps",
+      "features": [
+        "overnight_std_20",
+        "gap_fill_rate_20",
+        "gap_response_beta_60",
+        "gap_frequency_20"
+      ]
+    },
+    "G3_session_dynamics": {
+      "mechanism": "AM/PM continuation, midday repricing and session close location",
+      "features": [
+        "am_return_mean_5",
+        "am_return_mean_20",
+        "am_win_rate_20",
+        "midday_gap_mean_20",
+        "am_pm_corr_20",
+        "prior_session_close_location",
+        "session_range_ratio_5_20"
+      ]
+    },
+    "G4_market_regime": {
+      "mechanism": "prior breadth, dispersion and market trend interacted with stock sensitivity",
+      "features": [
+        "prior_market_cc_return_pct",
+        "prior_market_overnight_return_pct",
+        "prior_market_am_return_pct",
+        "prior_market_pm_return_pct",
+        "prior_market_breadth",
+        "prior_market_dispersion",
+        "prior_market_tail_balance",
+        "market_cc_momentum_5",
+        "market_cc_momentum_20",
+        "market_cc_vol_5",
+        "market_cc_vol_20",
+        "market_cc_vol_ratio_5_20",
+        "market_beta_x_prior_market_cc_return",
+        "market_beta_x_market_cc_momentum_5",
+        "market_beta_x_market_cc_momentum_20",
+        "atr_x_market_dispersion",
+        "atr_x_market_cc_vol_20"
+      ]
+    },
+    "G5_liquidity_proxy": {
+      "mechanism": "lagged no-trade and flat-session propensity",
+      "features": [
+        "no_trade_rate_20",
+        "no_trade_rate_60",
+        "flat_oc_rate_20",
+        "zero_range_rate_20"
+      ]
+    },
+    "T0_clean_event": {
+      "mechanism": "semantically separated TDnet title families",
+      "features": [
+        "tdnet_clean_any",
+        "tdnet_clean_has_earnings",
+        "tdnet_clean_has_revision",
+        "tdnet_clean_revision_up_title",
+        "tdnet_clean_revision_down_title",
+        "tdnet_clean_revision_direction_unknown",
+        "tdnet_clean_has_dividend",
+        "tdnet_clean_dividend_up_title",
+        "tdnet_clean_dividend_down_title",
+        "tdnet_clean_dividend_direction_unknown",
+        "tdnet_clean_has_buyback_decision",
+        "tdnet_clean_has_buyback_tostnet",
+        "tdnet_clean_has_buyback_status",
+        "tdnet_clean_has_external_equity_financing",
+        "tdnet_clean_has_equity_compensation",
+        "tdnet_clean_has_equity_financing_status",
+        "tdnet_clean_has_benefit",
+        "tdnet_clean_has_split",
+        "tdnet_clean_has_ma_transaction",
+        "tdnet_clean_has_business_alliance",
+        "tdnet_clean_has_control_transaction",
+        "tdnet_clean_has_impairment_loss",
+        "tdnet_clean_has_audit_problem",
+        "tdnet_clean_has_correction"
+      ]
+    },
+    "T1_event_structure": {
+      "mechanism": "document timing, bundle complexity, stage and recent disclosure intensity",
+      "features": [
+        "tdnet_clean_document_count_log1p",
+        "tdnet_clean_family_count_log1p",
+        "tdnet_clean_premarket_count_log1p",
+        "tdnet_clean_intraday_count_log1p",
+        "tdnet_clean_postclose_count_log1p",
+        "tdnet_clean_latest_age_hours_log1p",
+        "tdnet_clean_bundle_width_minutes_log1p",
+        "tdnet_clean_has_progress_stage",
+        "tdnet_clean_single_family",
+        "tdnet_clean_support_adverse_conflict",
+        "tdnet_clean_prior_bundle_count_60_log1p",
+        "tdnet_clean_prior_bundle_count_252_log1p",
+        "tdnet_clean_weekend_age"
+      ]
+    },
+    "X0_event_context": {
+      "mechanism": "registered TDnet event interactions with prior run-up and market state",
+      "requires": ["T0_clean_event"],
+      "features": [
+        "tdnet_clean_revision_x_xrank_close_momentum_20",
+        "tdnet_clean_dividend_x_xrank_close_momentum_20",
+        "tdnet_clean_buyback_x_xrank_close_momentum_20",
+        "tdnet_clean_external_financing_x_xrank_close_momentum_20",
+        "tdnet_clean_ma_x_xrank_close_momentum_20",
+        "tdnet_clean_any_x_prior_market_tail_balance"
+      ]
+    }
+  },
+  "forward_only": {
+    "F0_market_0858": [
+      "nikkei_futures_return_0858",
+      "topix_futures_return_0858",
+      "nikkei_topix_futures_spread_0858",
+      "usdjpy_return_0858",
+      "us_futures_return_0858",
+      "volatility_index_0858"
+    ],
+    "F1_indicative_gap": [
+      "indicative_gap_0858",
+      "indicative_gap_atr_0858",
+      "market_adjusted_indicative_gap_0858",
+      "indicative_gap_x_historical_gap_response"
+    ],
+    "F2_auction_pts": [
+      "auction_market_order_imbalance_0858",
+      "auction_depth_imbalance_0858",
+      "buy_special_quote_0858",
+      "sell_special_quote_0858",
+      "expected_open_minutes_after_0900",
+      "indicative_volume_0858",
+      "pts_return",
+      "pts_relative_volume"
+    ],
+    "F3_exact_liquidity": [
+      "lagged_turnover_ratio_20",
+      "amihud_20",
+      "lot_value_over_adv20",
+      "order_value_over_adv20",
+      "observed_round_trip_cost_bps"
+    ],
+    "F4_tdnet_quantitative": [
+      "operating_profit_change_over_market_cap",
+      "ordinary_profit_change_over_market_cap",
+      "new_profit_over_market_cap",
+      "dividend_change_yield",
+      "buyback_amount_over_market_cap",
+      "buyback_daily_pressure_over_adv20",
+      "potential_dilution_ratio",
+      "offering_supply_ratio",
+      "mna_price_over_market_cap",
+      "target_profit_over_market_cap",
+      "contract_profit_over_market_cap"
+    ]
+  },
+  "blocked_source": {
+    "sector_relative": "requires dated sector membership and delisting-safe history",
+    "size_and_fundamental": "requires point-in-time shares, market cap and fundamental vintages",
+    "historical_quantitative_tdnet": "cached indexes contain URLs but not original PDF bytes",
+    "historical_exact_liquidity": "monthly JPX archive lacks usable volume, turnover and lot fields"
+  },
+  "exclude": {
+    "actual_target_gap_or_open": "unknown at the decision cutoff and therefore target-session leakage",
+    "post_cutoff_market_values": "not known by 08:58:59 JST",
+    "current_sector_backfill": "survivorship and look-ahead bias",
+    "share_price_as_size": "price per share is not company size",
+    "range_as_volume_proxy": "volatility and liquidity are not interchangeable",
+    "large_technical_indicator_menu": "high redundancy and excessive search surface in the first screen"
+  }
+}
