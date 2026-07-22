@@ -765,3 +765,351 @@ formal validation:         未成立
 同じ2025-08～2026-03期間で特徴、C、top-kを再選択しない。v0.3 control top2も今回の結果から採用しない。次の仕様変更は新しいprotocolとして登録し、PR後に収集した先物snapshotを含む完全新規期間で評価する。
 
 </details>
+
+---
+
+## Entry 005 — 研究プロトコルv0.5：広域モデル・特徴量比較（r2）
+
+| 項目 | 内容 |
+|---|---|
+| 検証日 | 2026-07-22 |
+| 検証対象コミット | 本PRへ収録。protocol・実装・入力・成果物のSHA-256で固定 |
+| 親Entry | Entry 004 |
+| 検証対象 | 16モデルrecipe・6 family group・4特徴block。計47候補評価 |
+| authoritative protocol | `model_v05_broad_family_retrospective_r2_20260722`<br>SHA-256 `d2efa76555a5a4b62a1eefa186c8077e0c1891fa27a7bc0f01dacc463a721d3f` |
+| 採用判断 | 選定winnerは確認期で再現せず棄却。production変更なし |
+| 当時の運用判断 | **retrospective research only。実発注不可** |
+| 主指標 | 固定winnerの確認期top2・往復20bp後 `-0.484256%/日`、block-5片側90%下限 `-0.686340%` |
+| gate | `retrospective_gate_failed`。7条件中、表示率2条件だけ通過 |
+| 機械可読成果物 | `research/model_v05_broad_family_result.json`<br>SHA-256 `80ce66830b3dd2f7dd56260f807f936bbc9945e82184e9f39034b1213a59facd` |
+| 独立再集計 | `research/model_v05_broad_family_result_audit.json`<br>SHA-256 `131cccb8923bff43615d8d0a559407553644f23ad41892160d71b21b3f17678b` |
+
+> **一行結論:** logit固定を外して幅広く比較したが、選定期首位の18特徴raked logitは固定後の確認期で大幅なマイナスへ反転した。TDnet 62特徴の診断対照も頑健性条件を満たさず、採用できる損益優位性は確認できなかった。
+
+<details>
+<summary><strong>preflight、固定設計、結果、制約、再現情報</strong></summary>
+
+### Preflight failureとr2への改訂
+
+r1はモデル指標を1件も計算する前に停止した。価格履歴60日を必要とするため、当初のfamily screen開始日`2024-06-03`以前に使える学習日は40日しかなく、事前固定した最低80日を満たさなかった。
+
+```text
+r1 protocol:
+research/model_v05_protocol_preflight_001.json
+da1a1498c663678e8044838c6b03ed89d656c4747157d94c44e9fcebd579b2a2
+
+r1 input lock:
+research/model_v05_input_lock_preflight_001.json
+a765980d9ab989f8bcc55f83b7bc3459ef6106c5bd75dc1d4451ede787180d6d
+
+r1 failure record:
+research/model_v05_preflight_failure_001.json
+a236c688ef19025d84835e7b670ae628857f40d96199a82e21541ed976c43f71
+
+completed_candidate_metrics: 0
+```
+
+損益、順位、候補銘柄を一切見ていない段階だったため、r2では実データの利用可能境界に合わせて次の2条件だけを改訂した。識別子、登録時刻、r1への参照も更新し、入力lockとpanelを作り直した。
+
+```text
+family screen開始:       2024-06-03 → 2024-07-01
+最低eligible学習日数:   80 → 60
+```
+
+最初の2024年7月foldは、2024-04-03～06-28のちょうど60学習日・201,708行で境界を通過する。39個の`session_market`特徴に全欠測列はない。r1の失敗記録とprotocol bytesは上書きせず保存した。
+
+### 目的と固定評価設計
+
+勝率ではなく、毎日1～2件を表示したときのコスト控除後損益を主目的にした。
+
+```text
+ラベル:             当日始値→終値騰落率
+主指標:             top2を50:50で保有した日次平均
+主コスト:           約定時に往復20bp
+stress cost:        往復40bp
+表示枠:             全営業日2枠
+欠員・未約定:       現金0%、他枠へ事後再配分しない
+最低表示率:         rank1、rank2とも95%
+学習窓:             expanding、月初に再学習
+学習cutoff:         各採点月より厳密に前
+```
+
+期間を次の順に固定した。
+
+| 区分 | 期間 | 用途 |
+|---|---|---|
+| family screen | 2024-07-01～08-30 | 16 recipeを比較し、6 familyごとに1件だけ通過 |
+| feature design | 2024-09-02～12-30 | 6 family代表 × 4特徴blockと固定controlを比較 |
+| development confirmation | 2025-01-06～03-31 | feature designで固定したwinnerを再選択なしで確認 |
+| known benchmark reference | 2025-04-01～07-31 | 既知・非sealed。選定にもgateにも使用しない |
+| prospective final | 2026-07-23以降100営業日 | 唯一production昇格を判断できる将来期間 |
+
+feature designの上位3件を記録したが、research championは同段階の主指標1位へ固定した。confirmationで別候補の成績が良くても差し替えない。途中のmodel failure、非収束、入力変更、実装変更は実験全体を停止する設計とし、部分完走したregistryからは選ばない。
+
+### 比較したモデルと特徴量
+
+正則化ロジスティック回帰への固定を外し、次の6 family group・16 recipeを事前登録した。
+
+```text
+linear classifier:
+  legacy / date-class raked / net20 label / return-weighted logit
+
+linear return:
+  ridge / elastic-net SGD / Huber SGD
+
+gradient boosting:
+  squared / absolute return / top-quintile分類 / 日次return percentile
+
+bagged trees:
+  ExtraTrees回帰 / ExtraTrees top-quintile分類 / RandomForest回帰
+
+ranking・ordinal:
+  pairwise linear rank / multi-threshold expected return
+```
+
+全recipeはcontent-addressed ID、固定parameter whitelist、固定random stateを持つ。学習日は日別等weightとし、該当recipeではクラス周辺もrakingした。tree系は一様なrow bootstrapで日別weightを崩さないよう`bootstrap=False`で固定した。
+
+| 特徴block | 特徴数 | 内容 |
+|---|---:|---|
+| `legacy_price_12` | 12 | 前営業日までの価格・overnight履歴 |
+| `legacy_v03_18` | 18 | 価格12 + 寄り前TDnet 6 |
+| `session_market` | 39 | 価格、前後場shape、市場context |
+| `session_market_tdnet` | 62 | 39特徴 + TDnet・interaction 23 |
+
+TDnetは開示タイトルの有無、件数、公開時刻、決算、業績・配当修正、自己株取得、ToSTNeT、資金調達、優待、分割、M&A、減損、監査問題などを08:58:59 JST以前だけで生成した。PDF本文の修正額、配当利回り、買付規模、取得倍率は構造化していない。
+
+### データとprovenance
+
+JPX月次相場表PDF 19件をparser v6で解析した。個別URL・ファイルSHA・runtimeはinput lockに保存した。
+
+```text
+元JPX行数:             1,523,928
+full session:          1,431,968
+partial session:          34,495
+no-trade:                 57,465
+rejected:                      0
+銘柄コード:                4,124
+営業日:                      386
+期間:             2024-01-04～2025-07-31
+calendar SHA:     966f4a416d0929487d850b16be87c9c1cd69cd9f8c0447a3e76214a5715c489e
+```
+
+元PDFには前場・後場OHLCがある一方、利用可能な出来高、売買代金、売買単位はない。これらを他の列で代用していない。
+
+特徴生成後のpanelは1,524,104行、4,124コード、386営業日。
+
+```text
+panel SHA:
+e2d8ef255b8988b0b0773a31f18859d236d8c6350850a5a764da6dbbeba669b9
+
+panel manifest:
+research/model_v05_panel_manifest.json
+94cb0e8802957318edf522b892b67fe351432f15820d6534985609b9acdfc59d
+
+input lock:
+research/model_v05_input_lock.json
+02370bda9c5fe73b166c557bcdc837d363f5deafbe91baa2d450b33dfcd45272
+```
+
+TDnetは第三者の日別公開ミラーから461 HTMLと461 sidecarを取得し、97,006開示を解析した。全sidecarのprovenanceは`network_request_start_recorded`で、観測時刻は2026-07-22 12:10:43～12:17:52 JST。選定・confirmationに必要な日別ページは2025-03-31まで完全だった。第三者ミラーの配信遅延や後日の訂正を完全には排除できない。
+
+```text
+TDnet dataset SHA:
+fb217159b5b03146cb0868bf87abe8a936e958d69d0f7acfe72a8864824c446e
+```
+
+runnerはpanel全列・dtypeのsemantic hash、営業日、入力・protocol・全実装SHA、runtime fingerprintをinput lockへ結合し、モデル評価前後に再照合した。run receiptは排他的に作成した。
+
+### Family screen
+
+7～8月の43営業日で各family groupから1件を選んだ。全候補が両枠を100%表示したが、6代表の主指標はすべてマイナスだった。
+
+| family代表 | 目的 | top2・20bp後 | block-5片側90%下限 | rank2表示率 |
+|---|---|---:|---:|---:|
+| raked logit `C=0.03` | 上昇分類 | -0.463808% | -0.967333% | 100% |
+| ridge `alpha=10` | raw return | -0.543373% | -1.051507% | 100% |
+| HGB rank percentile | 日次return順位 | -0.390728% | -0.917068% | 100% |
+| ExtraTrees top quintile | 日次上位20%分類 | **-0.009938%** | -0.566123% | 100% |
+| pairwise linear rank | 同日pairwise | -0.770386% | -1.302295% | 100% |
+| multi-threshold | 閾値積分return | -0.644450% | -0.947327% | 100% |
+
+### Feature designとwinner固定
+
+9～12月で上位3件は次のとおりだった。
+
+| 順位 | model・特徴block | 特徴数 | top2・20bp後 | block-5下限 | 上位5日除外 | top1・20bp後 |
+|---:|---|---:|---:|---:|---:|---:|
+| 1 | raked logit・`legacy_v03_18` | 18 | **+0.210773%** | -0.044446% | -0.036103% | -0.068103% |
+| 2 | raked logit・`legacy_price_12` | 12 | +0.100476% | -0.159399% | -0.149331% | -0.101164% |
+| 3 | ridge return・`session_market` | 39 | +0.076696% | -0.566666% | -0.694987% | -0.773118% |
+
+主指標1位の次をresearch championとして、この時点で固定した。
+
+```text
+model:             raked LogisticRegression
+C:                 0.03
+objective:         close > open
+weight:            学習日・クラス周辺をraking
+features:          価格12 + TDnet 6
+candidate ID:      raked_logit_c003__636907555fe518d0__f_legacy_v03_18
+```
+
+ただし選定時点でもblock-5下限、上位5日除外、top1は負で、点推定は脆弱だった。同じraked logitでは、TDnet追加により選定期の点推定が12特徴`+0.100476%`から18特徴`+0.210773%`へ改善した。一方、39特徴は`-0.271138%`、TDnetを加えた62特徴も`-0.121333%`で、特徴増加そのものに一貫した優位性はなかった。
+
+### Development confirmation
+
+固定後の2025年1～3月・57営業日で再選択せず評価した。
+
+| 仕様 | top1・20bp後 | top2 gross | top2・20bp後 | 40bp後 | PF | プラス月 | 上位5日除外 | block-5下限 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| **固定winner：raked logit・18特徴** | -0.487961% | -0.284256% | **-0.484256%** | -0.684256% | 0.4437 | 0/3 | -0.729231% | -0.686340% |
+| 固定price-only reference：raked logit・12特徴 | -0.515772% | -0.311120% | -0.511120% | -0.711120% | 0.4292 | 0/3 | -0.755213% | -0.695925% |
+| legacy logit・18特徴control | -0.606472% | -0.315839% | -0.515839% | -0.715839% | 0.4672 | 0/3 | -0.792530% | -0.726790% |
+| raked logit・62特徴TDnet診断control | -0.030024% | +0.239661% | **+0.039661%** | -0.160339% | 1.0541 | 1/3 | -0.373447% | -0.318735% |
+| 上位3件equal-rank ensemble | -0.370969% | +0.091508% | -0.108492% | -0.308492% | 0.8874 | 1/3 | -0.706907% | -0.588760% |
+
+固定winnerはrank1・rank2を57/57日表示し、top2は114/114枠約定した。それでも20bp後中央値`-0.360154%`、複利損益`-24.7342%`、最大drawdown`-24.7342%`だった。選定期の正の点推定は確認期で再現しなかった。
+
+62特徴TDnet診断controlだけは20bp後の点推定が正だったが、これはfeature designの首位ではなく、confirmationを見てから差し替えることは禁止されている。さらに40bp、上位5日除外、3か月中2か月、bootstrap下限が負で、頑健な優位性を示していない。次期winnerとして採用せず、仮説として将来データへ持ち越すだけとした。
+
+retrospective gateは次のとおり。
+
+| 条件 | 実績 | 判定 |
+|---|---:|---|
+| top2・20bp後平均 `>= 0` | -0.484256% | 不合格 |
+| top2・上位5日除外平均 `>= 0` | -0.729231% | 不合格 |
+| top2 PF `>= 1` | 0.4437 | 不合格 |
+| プラス月比率 `>= 60%` | 0/3 | 不合格 |
+| top2 block-5片側90%下限 `>= 0` | -0.686340% | 不合格 |
+| rank1表示率 `>= 95%` | 100% | 合格 |
+| rank2表示率 `>= 95%` | 100% | 合格 |
+
+```text
+numeric_gate_passed:          false
+production_promotion_allowed: false
+decision:                     retrospective_gate_failed
+```
+
+### Known benchmark reference
+
+2025年4～7月は過去調査ですでに閲覧済みで、真のholdoutではない。選定・gate・候補差し替えには使わなかった。
+
+固定winnerはTDnetを必要とするが、必要な84営業日のうち完全な日別ページは5日、coverageは5.95%だけだった。このため損益0として扱わず、winnerのbenchmark評価そのものを行っていない。欠落79営業日はresult JSONに列挙した。
+
+価格のみの固定referenceは84営業日で評価できた。
+
+```text
+top2 gross平均:             -0.092995%/日
+top2・20bp後:               -0.291805%/日
+top2・40bp後:               -0.490614%/日
+block-5片側90%下限:        -0.444794%
+PF:                          0.5977
+プラス月:                    1/4
+約定枠:                    167/168
+```
+
+これは参考値であり、retrospective gateへ含めていない。
+
+### 独立監査と再現情報
+
+独立監査runnerはresultに埋め込まれた指標を信用せず、4つのpicks CSVからコスト、日次portfolio、月次値、drawdown、bootstrap、family shortlist、feature finalist、winner固定を再計算した。
+
+```text
+audit checks:                         18 / 18 passed
+再計算したcandidate metrics:          47
+最大絶対差:                           4.62e-14
+
+audit runner:
+research/audit_model_v05_broad_family_result.py
+71bd914c2220cea3b38bf67ca180970660c1818752a7daa6cc9b42af1099afb9
+
+audit artifact:
+research/model_v05_broad_family_result_audit.json
+131cccb8923bff43615d8d0a559407553644f23ad41892160d71b21b3f17678b
+```
+
+主要成果物は次のとおり。
+
+```text
+protocol:
+research/model_v05_protocol.json
+d2efa76555a5a4b62a1eefa186c8077e0c1891fa27a7bc0f01dacc463a721d3f
+
+result:
+research/model_v05_broad_family_result.json
+80ce66830b3dd2f7dd56260f807f936bbc9945e82184e9f39034b1213a59facd
+
+result manifest:
+research/model_v05_broad_family_result.manifest.json
+46c0983660617474d6e6a06bafb065dccc3bf63e638968aaed8468ae8ee00f29
+
+exclusive run receipt:
+research/model_v05_broad_family_result.run.json
+f9a602db78caacd3105c293903bf21ef8f9aa32d36b903f52e4986a37dd1a882
+
+runner:
+research/compare_model_families_v05.py
+b32b4f64d00e432a5ae95f1fc723afd0d93b697c4f910914fda2c843fd56539d
+
+model family implementation:
+src/tse_session_ranker/research_models.py
+0e8dd5bbbaea784e40975d3567163f2e153d05e7cf3ae2cd33bcd09e63467a16
+```
+
+stage別picksのSHAは次のとおり。
+
+```text
+family_screen:              da9c3f0989afd9d67ef9c621d4fbc37dfc33f0eea7328c8a62037839d288e10c
+feature_design:             80f0f0f70f3d302178ba303f5d685d173c875c9ac94ce333e834a87a6695a66f
+development_confirmation:  3117e316d7095c785892a6cac1887c3749dde74d9aa6aeef2077b26364ac301b
+known_benchmark_reference:  aadbaf42104805b7f1b52e0aed7f459f1d5ad6eb15230fbccfa4a4fec0f345b1
+```
+
+実行環境と検証結果。
+
+```text
+Python 3.12.13
+NumPy 2.3.5
+pandas 2.2.3
+scikit-learn 1.8.0
+joblib 1.5.3
+pdftotext 24.02.0
+thread limit 1
+metric elapsed 1,957.14秒
+peak RSS 2,496,752 KiB
+
+PYTHONPATH=src python -m unittest -v
+122 tests passed
+
+compileall: passed
+artifact SHA cross-check: 30 / 30 passed
+wheel build: passed
+wheel SHA: dc7983c5a108b801fd7eb95fd6c8b860c1560bd12422e420088022a7b2e1508a
+```
+
+### 制約と最終判断
+
+この比較には次の制約がある。
+
+- 2025-07-31までの全期間は既知のretrospective dataで、sealed holdoutではない。
+- 16 recipeと4特徴blockを探索しており、段階分離後もmodel-selection biasは残る。
+- 正確な過去08:58:59時点の日経225先物・TOPIX先物snapshotがなく、先物特徴は今回使用していない。9:00以後や日足終値で代用していない。
+- 元JPX PDFに出来高、売買代金、売買単位がなく、流動性・約定容量を評価できない。
+- 20bp・40bpは固定仮定で、実測slippageやmarket impactではない。
+- TDnetはタイトル分類で、本文の定量情報を利用していない。
+- model scoreは同日順位用で、校正済みの上昇確率ではない。
+- production artifact、CLI/API既定モデル、発注可否は変更していない。
+
+今回確定できたのは「モデルを広げても、既知期間で再現可能な損益優位性は見つからなかった」という負の結果である。正の点推定だった62特徴TDnet controlへ後付けで切り替えず、同じ期間で閾値やfeatureを再調整しない。
+
+```text
+research champion:          確認期で棄却
+retrospective edge:         未実証
+production model変更:       なし
+自動発注:                   不可
+次の正式判断:               2026-07-23以降100新規営業日
+```
+
+将来期間では08:58:59以前の先物snapshot、TDnet完全日、実測の板・約定・slippageをappend-onlyで保存する。protocolを事前固定し、100営業日が完了するまで途中の成績でmodel、特徴、top-kを差し替えない。
+
+</details>

@@ -1,0 +1,16 @@
+{
+  "input_lock_sha256": "02370bda9c5fe73b166c557bcdc837d363f5deafbe91baa2d450b33dfcd45272",
+  "output_path": "research/model_v05_broad_family_result.json",
+  "panel_manifest_sha256": "94cb0e8802957318edf522b892b67fe351432f15820d6534985609b9acdfc59d",
+  "panel_sha256": "e2d8ef255b8988b0b0773a31f18859d236d8c6350850a5a764da6dbbeba669b9",
+  "planned_pick_paths": [
+    "research/model_v05_broad_family_result_family_screen_picks.csv",
+    "research/model_v05_broad_family_result_feature_design_picks.csv",
+    "research/model_v05_broad_family_result_development_confirmation_picks.csv",
+    "research/model_v05_broad_family_result_known_benchmark_reference_picks.csv"
+  ],
+  "protocol_sha256": "d2efa76555a5a4b62a1eefa186c8077e0c1891fa27a7bc0f01dacc463a721d3f",
+  "schema_version": 1,
+  "started_at_utc": "2026-07-22T04:26:02.432709+00:00",
+  "status": "model_v05_metric_run_started"
+}

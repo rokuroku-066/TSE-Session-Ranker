@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "result_path": "research/model_v05_broad_family_result.json",
+  "result_sha256": "80ce66830b3dd2f7dd56260f807f936bbc9945e82184e9f39034b1213a59facd",
+  "protocol_sha256": "d2efa76555a5a4b62a1eefa186c8077e0c1891fa27a7bc0f01dacc463a721d3f",
+  "panel_sha256": "e2d8ef255b8988b0b0773a31f18859d236d8c6350850a5a764da6dbbeba669b9",
+  "input_lock_sha256": "02370bda9c5fe73b166c557bcdc837d363f5deafbe91baa2d450b33dfcd45272",
+  "pick_sha256": {
+    "family_screen": "da9c3f0989afd9d67ef9c621d4fbc37dfc33f0eea7328c8a62037839d288e10c",
+    "feature_design": "80f0f0f70f3d302178ba303f5d685d173c875c9ac94ce333e834a87a6695a66f",
+    "development_confirmation": "3117e316d7095c785892a6cac1887c3749dde74d9aa6aeef2077b26364ac301b",
+    "known_benchmark_reference": "aadbaf42104805b7f1b52e0aed7f459f1d5ad6eb15230fbccfa4a4fec0f345b1"
+  },
+  "run_receipt_sha256": "f9a602db78caacd3105c293903bf21ef8f9aa32d36b903f52e4986a37dd1a882",
+  "implementation_sha256": {
+    "research/compare_model_families_v05.py": "b32b4f64d00e432a5ae95f1fc723afd0d93b697c4f910914fda2c843fd56539d",
+    "research/finalize_logit_v04.py": "55db8008bccfe503977394d8cf3ba64e033e14714059f2862144710e43b1e260",
+    "src/tse_session_ranker/__init__.py": "81bf8384eb6b1e6bef976315d500cabf43bc827c9051ac156d873e412ee9c481",
+    "src/tse_session_ranker/__main__.py": "d7815f9da17bcd8e79d1d47170e5795e29cc5837f97d1049664813068a9e563f",
+    "src/tse_session_ranker/api.py": "7ed3da89258432b919a95d319500b08af9b19fbb974bdc38eb5a35df51629c01",
+    "src/tse_session_ranker/artifact.py": "241296a98abdedb8e2d2917d570f4d831de19980ed36928ec3e1e393833fab65",
+    "src/tse_session_ranker/backtest.py": "cb9c393bd707a7e324fd7bb3951fd5c1d95f4e8772db21b0f98b0b5e7a743c8e",
+    "src/tse_session_ranker/cli.py": "02aa4ae321d1b553dbaad9b0d1b5b5ff9644bb1cb0bfa45412243ddd26060e06",
+    "src/tse_session_ranker/config.py": "ad48e274ae4226234555ac96df73722ef2804bdec260e79234016e4226898ad0",
+    "src/tse_session_ranker/data/__init__.py": "980f5457b0b67442f03c99a4b694fab12a2d3afb86700427888b64814a40cad8",
+    "src/tse_session_ranker/data/common.py": "98992fd9675246c81617ee5ea3c565b7f8420f6248cc58d43d19ac71950f31f4",
+    "src/tse_session_ranker/data/jpx.py": "1bd2e74acced608eb36c3606b593ea407d2d1e5f54b3283790ef8fd0fb1041f7",
+    "src/tse_session_ranker/data/market_context.py": "16a9179b1a795abe3e5e634bbe0d9fca8d67945c7eac8ab1b0a3cc70b08500ae",
+    "src/tse_session_ranker/data/preopen.py": "4915caa75ff2c4b20f546e8403db20220562d1e5ba9b9ca86ec5d8993ff44fd5",
+    "src/tse_session_ranker/data/tdnet.py": "4ee9b02566b8ae2f638454e1d1c01e0dfb3c935271e620c3e01abe7c4fe5fc29",
+    "src/tse_session_ranker/exceptions.py": "8b86d822fd081e6dcef7c99826e0317eb579c0c9e5e291de9b730fc726301388",
+    "src/tse_session_ranker/features.py": "aafeeae021d3917bbe5dd9c36acf1993b8b2e24130cc630b7f67c9a46d622e92",
+    "src/tse_session_ranker/inference.py": "adcc46936928cf9a1311199ee84986177bc70e3e9df74469d3470fbc51bc54b8",
+    "src/tse_session_ranker/io.py": "b45a7b21cca7c80e9a08e326f2e374ef51a64d2e61f6f81557cd92479dd72674",
+    "src/tse_session_ranker/profit.py": "7f4c35389970c988723ab69cb428d9b0edce071c79df4ab4f29d03fddf9f311a",
+    "src/tse_session_ranker/research_features.py": "7c1cfb92853137569bcf8e59c77dbeb61726461afc406b2512ef432a59bf593c",
+    "src/tse_session_ranker/research_models.py": "0e8dd5bbbaea784e40975d3567163f2e153d05e7cf3ae2cd33bcd09e63467a16",
+    "src/tse_session_ranker/training.py": "bdeb2e459a491986630907570d9855fcfd45bb773b2dd3d242153f59a0f03072",
+    "src/tse_session_ranker/validation.py": "676c4e17a9355b537205cc3106ec2bc9694f11a1eae231609e96b4db680194f1"
+  }
+}

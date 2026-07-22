@@ -18,5 +18,6 @@ var/
 artifacts/
 *.joblib
 *.pkl
+research/.cache/
 
 .DS_Store
