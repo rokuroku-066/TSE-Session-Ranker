@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "status": "frozen_before_generation3_metrics",
+  "authority": "retrospective_shadow_confirmation_only_all_outcomes_previously_viewed",
+  "purpose": "Test whether the only alpha-10 feature candidate that improved all three chronological periods and passed every whole-period shadow robustness condition survives transfer to the independently registered alpha-1 daily-rank Ridge anchor.",
+  "inputs": {
+    "generation2_protocol_sha256": "a7c47154be1acffc0d12c458c31890457b6dca3ead337003b34a6665359b9969",
+    "generation2_result_sha256": "1068139f64fc9f441f4d2d3561ffd72026c3898526e563312b9fc40d43f751c4",
+    "feature_definition_sha256": "e47e69decf685c5930b6002325b5b5cc91f7545f41be1d62dd343875c06d3909"
+  },
+  "baseline": {
+    "id": "daily_rank_ridge_expand_alpha1_G0",
+    "features": "G0 price core 15",
+    "target": "within each training day, average percentile rank of observed open-to-close return mapped to [-1,1]",
+    "pipeline": [
+      "SimpleImputer(strategy=median, add_indicator=true)",
+      "StandardScaler()",
+      "Ridge(alpha=1.0)"
+    ],
+    "sample_weight": "each training date sums to one",
+    "training": "expanding from 2024-01-04, calendar-month retraining, minimum 60 sessions"
+  },
+  "candidate": {
+    "id": "daily_rank_ridge_expand_alpha1_G0_plus_H07",
+    "feature_group": "H07_tradability_quality",
+    "features": [
+      "h07_activity_score",
+      "h07_alpha_x_activity",
+      "h07_vol_per_activity",
+      "h07_liquidity_disagreement"
+    ],
+    "selection_reason_frozen_from_generation2": {
+      "all_three_period_uplifts_positive": true,
+      "generation2_overall_net20": 0.239232,
+      "generation2_overall_net40": 0.046375,
+      "generation2_top5_removed_net20": 0.145797,
+      "generation2_positive_months": 11,
+      "generation2_rank2_net20": 0.297361,
+      "generation2_positive_blocks": 4
+    }
+  },
+  "combination_policy": "No combination is tested: H07 was the only generation-2 group with positive uplift in discovery, confirmation A and confirmation B while also passing every whole-period shadow condition.",
+  "periods": {
+    "discovery": ["2024-07-01", "2024-10-31"],
+    "confirmation_a": ["2024-11-01", "2025-03-31"],
+    "confirmation_b": ["2025-04-01", "2025-07-31"],
+    "overall": ["2024-07-01", "2025-07-31"]
+  },
+  "ranking": {
+    "display_slots": 2,
+    "weights": [0.5, 0.5],
+    "cost_bps": [20.0, 40.0],
+    "tie_break": "score descending then code ascending",
+    "unfilled": "cash"
+  },
+  "acceptance_all_required": [
+    "candidate uplift versus alpha-1 G0 strictly positive in discovery, confirmation A and confirmation B",
+    "overall candidate-minus-baseline five-session paired-bootstrap one-sided 80 percent lower bound nonnegative",
+    "overall candidate top2 net20 strictly positive",
+    "overall candidate top2 net40 nonnegative",
+    "overall candidate top-five-winning-days-removed net20 strictly positive",
+    "at least 9 of 13 candidate monthly net20 means positive",
+    "at least 3 of 4 candidate fixed blocks net20 positive",
+    "overall candidate rank2 standalone net20 nonnegative"
+  ],
+  "promotion": "forbidden; passing retains H07 only as a prospective shadow hypothesis"
+}

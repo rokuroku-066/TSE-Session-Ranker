@@ -5,7 +5,7 @@
 現行CLI/APIの既定モデルは0.3.0互換の`session_v3_tdnet_clear`です。正則化ロジスティック回帰に、価格履歴12特徴と寄り前までのTDnet適時開示6特徴を入力し、1位を`CORE`、2位を`RESERVE`として表示します。
 
 > [!WARNING]
-> **自動発注には使用できません。** 個別誤差、4系統のmeta-gate、5つのtail cash-vetoまで検証しましたが、往復コスト・上位日除外・期間安定性を同時に通過した仕様は0件です。毎日top2のshadow表示は維持しますが、v0.7研究gateの合格仕様は0件です。CLIの既存`CORE` / `ORDER_ELIGIBLE`は研究上の発注承認を意味しません。
+> **自動発注には使用できません。** v0.8の同日順位Ridgeは既知期間でプラスでしたが、全結果を見た後のretrospective探索であり、追加特徴の多重比較調整後の優位性は未証明です。毎日top2のshadow表示は維持しますが、productionモデルは変更していません。CLIの既存`CORE` / `ORDER_ELIGIBLE`も研究上の発注承認を意味しません。
 
 ## 最新の研究判断
 
@@ -20,8 +20,26 @@
 | v0.6.2訂正T1 | 価格core + TDnet開示構造 | 整列訂正後も棄却 | screen top2 `-0.565582%/日` |
 | v0.7 meta-gate | G0 top2の各50%枠をOOF発注判定 | 4 gateすべて不合格 | `locked_gate = null` |
 | v0.7.1 tail veto | 5 tail条件で各枠を現金化 | 損失軽減の後付け観察のみ | net20 `+0.005473%/日`、net40 `-0.084087%/日`（不合格） |
+| v0.8 G0対照 | 価格core 15、同日順位Ridge | retrospective対照 | net20 `+0.255321%/日`、net40 `+0.058705%/日` |
+| v0.8 L4平均役 | G0 + `flat_oc_rate_20`、同日順位Ridge | 固定shadow候補 | net20 `+0.283192%/日`、net40 `+0.086575%/日` |
+| v0.8 L6頑健役 | G0 + 売買不能・横ばいproxy 4列、同日順位Ridge | 固定shadow候補 | net20 `+0.259376%/日`、net40 `+0.068023%/日` |
+| v0.8 TDnet | fresh/follow-up・時刻・bundle等12群 | 追加採用0群 | source-complete `187/266日`、全群不合格 |
 
-v0.6は損益を見る前に7つの追加群を固定し、最終的に追加特徴なしという負の結果になりました。その後、T1のfamily count整列バグを訂正したものの、絶対損益と調整下限は依然として負で、最終判断は変わりません。v0.7では個別の大損失・大利益を調べ、meta-gateとtail vetoを未使用期間へ適用しました。tail vetoは損失を減らしましたが、40bpコスト後、上位5日除外、絶対bootstrap下限に失敗したため採用しません。v0.6候補の定義は[feature candidate inventory](research/model_v06_feature_candidates.md)、v0.7 TDnet 26列は[VALIDATION.md](VALIDATION.md) Entry 010、全検証経緯は同ファイルのEntry 001～010にあります。
+v0.8ではゼロベースで、価格・市場状態12群、売買可能性13群、TDnet 12群、非線形変換6群の計43特徴仮説と5つのユニバース仮説をすべてwalk-forward評価しました。単純な上昇確率より、各日の始値→終値リターン順位を目的変数にしたRidgeが良好でした。ただしL4のG0比改善は`+0.027871pt/日`に対してmax-statistic調整後の片側80%下限が`-0.094078pt`で、特徴追加の優位性は証明できていません。同じ結果を再利用する探索はここで停止し、2026-07-23以降の未使用セッションへ仕様を固定します。v0.6候補は[feature candidate inventory](research/model_v06_feature_candidates.md)、v0.8の全候補定義は[feature protocol](research/model_v08_feature_protocol.json)・[target protocol](research/model_v08_target_protocol.json)・[TDnet protocol](research/model_v08_tdnet_protocol.json)、全経緯は追記専用の[VALIDATION.md](VALIDATION.md)にあります。3系統のhash chainと全候補の収録は[aggregate audit](research/audit_model_v08_zero_base.py)で機械検証できます。
+
+### v0.8固定shadow仕様
+
+学習日`d`内の実現始値→終値リターン順位を、次の目的変数へ変換します。
+
+```text
+y(i, d) = 2 * percentile_rank_d(open_to_close_return_i) - 1
+```
+
+この既存評価式は有限の横断銘柄数`n`では最小値が`2/n - 1`、tieがなければ日次平均が`1/n`で、厳密なゼロ中心ではありません。過去結果との同一性を保つため式は変えず、今後の仕様比較では別candidateとして扱います。
+
+Ridgeのlossでは各学習日の重み合計を1にそろえ、欠測は学習期間中央値と欠測indicatorで処理し、標準化後に`Ridge(alpha=1)`を月次で再学習します。再現対象のimputerとscaler自体は行等重みでfitされるため、pipeline全体が日付等重みという意味ではありません。対象月の行は学習へ入れず、score降順・銘柄コード昇順で毎日2件を50%ずつ表示します。L4はG0 15列へ`flat_oc_rate_20`だけを追加し、L6はさらに`no_trade_rate_20`、`no_trade_rate_60`、`zero_range_rate_20`を加えます。未約定枠は現金です。
+
+L4・L6とも60bpコストではマイナスで、L4は単一銘柄が総損益の24.53%を占めます。また各proxyの係数は概ね正であり、「流動性の低い銘柄を避けるpenalty」ではありません。正確な出来高・売買代金・単元・spread・08:58板がないため、現段階の用途は毎日1～2件のshadow候補生成だけです。
 
 ## 設計の要点
 
@@ -30,6 +48,7 @@ v0.6は損益を見る前に7つの追加群を固定し、最終的に追加特
 - v0.5研究ではモデル固定を外したが、選定winnerが確認期で再現せず、production推定器は変更なし
 - v0.6では特徴候補を先に7群へ固定し、共通モデルのgroup ablationで追加寄与を分離。次期間まで残った追加群は0
 - v0.7では表示top2を固定し、モデル間合意・スコア形状・downsideと、事前日足tailを発注gateとして分離。未合格枠はrank 3で置換せず現金
+- v0.8ではモデル固定を外して17 target/model案を比較し、日内の市場共通変動を落とす同日順位Ridgeを固定shadowへ採用。追加特徴のproduction採用は0群
 - 学習ラベルは`close > open`または損益・同日順位。研究仕様の採否は勝率ではなくコスト後損益で決定し、v0.5の主指標はtop2等金額
 - 対象日OHLCを特徴量へ入れず、価格特徴はすべて1セッション以上shift
 - 適時開示は各文書を「公開時刻以前で最初に到来する08:58:59 JSTの取引日」へ割当
@@ -140,7 +159,7 @@ tdnet_has_equity_financing
 
 v0.4研究では、開示有無・件数・時刻、決算、ToSTNeT、優待、分割、M&A、減損、監査問題などを含むTDnet 20特徴と3 interactionまで広げました。これは`research/finalize_logit_v04.py`の比較専用registryで、通常の`train`・`predict`が使うproduction 6特徴へは昇格していません。
 
-v0.7研究用には、開示観測とfresh材料、初回予想と予想修正、株主配当と受取配当、自己株買い・エクイティ・M&Aのfresh/follow-upを分離する`tdnet_v07_*` 26列を追加しました。旧`tdnet_clean_*`は凍結成果物再現のため意味を変えません。新規26列は誤検知・時点契約を整えた「候補」であり、損益改善は未検証でproduction 6特徴には入りません。
+v0.7研究用には、開示観測とfresh材料、初回予想と予想修正、株主配当と受取配当、自己株買い・エクイティ・M&Aのfresh/follow-upを分離する`tdnet_v07_*` 26列を追加しました。旧`tdnet_clean_*`は凍結成果物再現のため意味を変えません。v0.8では新26列と既存の時刻・bundle列を12群へ分けて検証しましたが、source-completeは187/266日で、追加採用は0群でした。production 6特徴は変更していません。
 
 ## 3. 学習
 
@@ -221,7 +240,7 @@ tse-session-ranker predict \
 
 ## 6. 先物contextの前向き収集
 
-日経225先物・TOPIX先物の寄り前騰落率は、v0.4の次に検証する候補です。正確な過去08:58 snapshotを復元できないため、現在のモデル順位には入れません。日足終値、9:00以後の値、後から確定した値で代用しないでください。
+日経225先物・TOPIX先物の寄り前騰落率は、次の前向き検証候補です。正確な過去08:58 snapshotを復元できないため、v0.8の順位にも入れていません。日足終値、9:00以後の値、後から確定した値で代用しないでください。
 
 最低列:
 

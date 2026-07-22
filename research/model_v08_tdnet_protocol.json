@@ -1,0 +1,208 @@
+{
+  "schema_version": 1,
+  "protocol_id": "model_v08_tdnet_title_screen_20260722",
+  "status": "canonicalized_after_posthoc_completion",
+  "authority": {
+    "retrospective_only": true,
+    "production_promotion_allowed": false,
+    "reason": "All outcomes were already known. The canonical file binds the two scratch protocols that were fixed before their respective generation-3 and generation-4 computations; it is not itself a pre-outcome registration."
+  },
+  "historical_precommit_bindings": {
+    "generation_1_executable_contract": {
+      "original_path": "/tmp/zero_tdnet_text/screen_tdnet_zero.py",
+      "stable_path": "research/model_v08_tdnet_registration_gen1.py",
+      "sha256": "719f39a78a5b8bce4530ad49b05aba2189c9c4b1c2e6e9caef1bde598a7ede1c"
+    },
+    "generation_2_protocol": {
+      "original_path": "/tmp/zero_tdnet_text/gen2_protocol.json",
+      "stable_path": "research/model_v08_tdnet_registration_gen2.json",
+      "sha256": "de7850005b1ddfc1f98a6a3cb3e69eef1242b39f0589f1a1bf2fad9d99a45b39"
+    },
+    "generation_3_protocol": {
+      "original_path": "/tmp/zero_tdnet_text/gen3_ridge_protocol.json",
+      "stable_path": "research/model_v08_tdnet_registration_gen3.json",
+      "sha256": "8071e5f574028ad30853dbca4e986875b9d9958fa65fe20556f3b0f4c86b9b1e"
+    },
+    "generation_4_protocol": {
+      "original_path": "/tmp/zero_tdnet_text/gen4_alpha1_protocol.json",
+      "stable_path": "research/model_v08_tdnet_registration_gen4.json",
+      "sha256": "3e97c5795c43ace38adb99054b4b3300bc8104c4f8bf3f948b214436ae25c4ac"
+    }
+  },
+  "decision": {
+    "time_jst": "08:58:59",
+    "target": "same-session open-to-close return",
+    "display_slots": 2,
+    "primary_round_trip_cost_bps": 20.0,
+    "stress_round_trip_cost_bps": 40.0,
+    "cash_accounting": "Unfilled source-incomplete slots remain cash and incur no cost. Feature comparisons use only common source-complete sessions."
+  },
+  "data": {
+    "panel_manifest": "research/model_v05_panel_manifest.json",
+    "default_panel_cache": "/tmp/model_v05_broad_family_panel_r2.pkl",
+    "default_tdnet_cache": "research/.cache/model_v05_tdnet",
+    "requested_score_window": [
+      "2024-07-01",
+      "2025-07-31"
+    ],
+    "requested_scheduled_sessions": 266,
+    "tdnet_source_complete_sessions": 187,
+    "tdnet_source_complete_fraction": 0.7030075187969925,
+    "last_tdnet_source_complete_session": "2025-04-07",
+    "comparable_window": [
+      "2024-07-01",
+      "2025-04-07"
+    ],
+    "source_policy": "Never convert an incomplete TDnet source into a no-event zero."
+  },
+  "shared_model": {
+    "base_group": "G0_price_core",
+    "base_features": [
+      "oc_last",
+      "oc_mean_5",
+      "oc_mean_20",
+      "oc_mean_60",
+      "oc_win_20",
+      "oc_std_20",
+      "overnight_last",
+      "overnight_mean_20",
+      "overnight_mean_60",
+      "night_day_corr_60",
+      "xrank_atr14_pct",
+      "xrank_close_momentum_5",
+      "xrank_close_momentum_20",
+      "xrank_close_momentum_60",
+      "xrank_prior_close_location_20"
+    ],
+    "preprocess": "training SimpleImputer(strategy=median, add_indicator=true), then training StandardScaler",
+    "target": "within-training-date percentile rank of open-to-close return multiplied by 2 then minus 1",
+    "sample_weight": "equal total weight per training date",
+    "retrain_frequency": "monthly",
+    "training_window": "expanding from 2024-01-04"
+  },
+  "feature_groups": {
+    "H01_stage_fresh_followup": [
+      "tdnet_v07_fresh_classified_economic_any",
+      "tdnet_v07_followup_family_count_log1p",
+      "tdnet_v07_has_progress_stage"
+    ],
+    "H02_forecast_stage": [
+      "tdnet_v07_has_forecast_initial",
+      "tdnet_v07_has_forecast_revision"
+    ],
+    "H03_dividend_role": [
+      "tdnet_v07_has_shareholder_dividend",
+      "tdnet_v07_has_received_dividend",
+      "tdnet_v07_has_intercompany_dividend",
+      "tdnet_v07_has_subsidiary_dividend"
+    ],
+    "H04_capital_action_stage": [
+      "tdnet_v07_has_fresh_buyback",
+      "tdnet_v07_has_followup_buyback",
+      "tdnet_v07_has_fresh_equity",
+      "tdnet_v07_has_followup_equity",
+      "tdnet_v07_has_fresh_share_cancellation",
+      "tdnet_v07_has_followup_share_cancellation"
+    ],
+    "H05_ma_direction_stage": [
+      "tdnet_v07_has_fresh_ma",
+      "tdnet_v07_has_followup_ma",
+      "tdnet_v07_has_ma_acquisition",
+      "tdnet_v07_has_ma_divestiture",
+      "tdnet_v07_has_ma_reorganization",
+      "tdnet_v07_has_ma_internal_reorganization"
+    ],
+    "H06_economic_family_mix": [
+      "tdnet_v07_economic_family_count_log1p",
+      "tdnet_v07_single_economic_family",
+      "tdnet_v08_economic_count_ge_2",
+      "tdnet_v08_economic_count_ge_3"
+    ],
+    "H07_stage_cooccurrence": [
+      "tdnet_v08_fresh_only",
+      "tdnet_v08_followup_only",
+      "tdnet_v08_fresh_and_followup"
+    ],
+    "H08_arrival_timing": [
+      "tdnet_clean_premarket_count_log1p",
+      "tdnet_clean_intraday_count_log1p",
+      "tdnet_clean_postclose_count_log1p",
+      "tdnet_clean_latest_age_hours_log1p",
+      "tdnet_clean_weekend_age"
+    ],
+    "H09_bundle_density_cadence": [
+      "tdnet_clean_document_count_log1p",
+      "tdnet_clean_bundle_width_minutes_log1p",
+      "tdnet_v08_bundle_intensity",
+      "tdnet_clean_prior_bundle_count_60_log1p",
+      "tdnet_clean_prior_bundle_count_252_log1p",
+      "tdnet_v08_repeat_pressure"
+    ],
+    "H10_stage_linear_runup": [
+      "tdnet_v08_fresh_x_momentum20",
+      "tdnet_v08_fresh_x_momentum60",
+      "tdnet_v08_followup_x_momentum20",
+      "tdnet_v08_followup_x_momentum60"
+    ],
+    "H11_fresh_runup_hinges": [
+      "tdnet_v07_fresh_classified_economic_any",
+      "tdnet_v08_fresh_x_negative_momentum20",
+      "tdnet_v08_fresh_x_positive_momentum20"
+    ],
+    "H12_stage_timing_interaction": [
+      "tdnet_v08_fresh_x_premarket",
+      "tdnet_v08_fresh_x_postclose",
+      "tdnet_v08_fresh_x_age",
+      "tdnet_v08_followup_x_age"
+    ]
+  },
+  "periods": {
+    "full": [
+      "2024-07-01",
+      "2025-04-07"
+    ],
+    "exploration": [
+      "2024-07-01",
+      "2024-12-30"
+    ],
+    "confirmation": [
+      "2025-01-06",
+      "2025-03-31"
+    ],
+    "extension": [
+      "2025-04-01",
+      "2025-04-07"
+    ]
+  },
+  "generation_3": {
+    "estimator": "Ridge(alpha=10)",
+    "recipes": "G0 plus each of all 12 feature groups separately",
+    "minimum_active_event_days": {
+      "exploration": 30,
+      "confirmation": 30
+    },
+    "multiple_testing": "shared circular five-session block max-T, one-sided 80 percent lower bound"
+  },
+  "generation_4": {
+    "estimator": "Ridge(alpha=1)",
+    "selection_basis": "H08 had a small positive full-period point uplift and stable coefficient signs under alpha=10; H10 was the only distinct run-up complement with a positive full-period point uplift.",
+    "recipes": [
+      "G0+H08",
+      "G0+H10",
+      "G0+H08+H10"
+    ],
+    "one_shot": true,
+    "no_threshold_or_parameter_search": true
+  },
+  "qualification_all_required": {
+    "exploration_and_confirmation_uplift_strictly_positive": true,
+    "full_net20_strictly_positive": true,
+    "full_net40_nonnegative": true,
+    "full_top5_removed_net20_strictly_positive": true,
+    "positive_month_fraction_min": 0.6,
+    "max_t_adjusted_80pct_lower_bound_nonnegative": true,
+    "minimum_effective_change_days": 30,
+    "requested_window_tdnet_source_coverage_min": 0.98
+  },
+  "stop_rule": "If neither any alpha=10 single group nor any fixed alpha=1 H08/H10 recipe passes every requirement, stop retrospective title-only iteration. Further work requires complete prospective source capture and PDF-body economic magnitudes."
+}

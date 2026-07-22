@@ -24,6 +24,7 @@ from tse_session_ranker.research_models import (
     date_and_class_equal_weights,
     date_equal_weights,
     fit_research_model,
+    same_day_return_percentile_target,
 )
 
 
@@ -120,6 +121,23 @@ class ResearchModelSpecTests(unittest.TestCase):
             atol=1e-8,
         )
 
+    def test_daily_rank_target_is_date_local_and_monotone_invariant(self) -> None:
+        frame = _synthetic_training_frame()
+        target = same_day_return_percentile_target(frame)
+        changed = frame.copy()
+        per_date_shift = changed["date"].factorize()[0] * 100.0
+        changed["oc_return_pct"] = np.exp(
+            changed["oc_return_pct"] / 10.0
+        ) + per_date_shift
+        transformed = same_day_return_percentile_target(changed)
+        np.testing.assert_allclose(target, transformed, atol=0.0, rtol=0.0)
+        self.assertGreaterEqual(float(target.min()), -1.0)
+        self.assertLessEqual(float(target.max()), 1.0)
+        counts = frame.groupby("date")["date"].transform("size")
+        expected_daily_mean = counts.groupby(frame["date"]).first().rdiv(1.0)
+        actual_daily_mean = target.groupby(frame["date"]).mean()
+        np.testing.assert_allclose(actual_daily_mean, expected_daily_mean, atol=1e-12)
+
 
 class BroadResearchFamilyTests(unittest.TestCase):
     def test_all_registered_families_produce_finite_deterministic_scores(self) -> None:
@@ -134,6 +152,11 @@ class BroadResearchFamilyTests(unittest.TestCase):
                 {"C": 0.03, "magnitude_floor_pct": 0.1, "magnitude_cap_pct": 2.0},
             ),
             ("ridge_return", "raw_return", {"alpha": 10.0}),
+            (
+                "ridge_daily_rank",
+                "same_day_return_percentile",
+                {"alpha": 10.0},
+            ),
             (
                 "elastic_net_sgd_return",
                 "raw_return",

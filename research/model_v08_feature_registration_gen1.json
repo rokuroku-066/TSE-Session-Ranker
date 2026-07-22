@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "status": "frozen_before_group_metrics",
+  "purpose": "Zero-base PIT feature and universe screen for same-session open-to-close top-two ranking.",
+  "authority": "retrospective_diagnostic_only_all_outcomes_previously_visible",
+  "baseline": {
+    "model": "raked_logit",
+    "objective": "positive_session",
+    "C": 0.03,
+    "date_equal_weight": true,
+    "features": "G0_price_core"
+  },
+  "periods": {
+    "discovery": ["2024-07-01", "2024-10-31"],
+    "confirmation_a": ["2024-11-01", "2025-03-31"],
+    "confirmation_b": ["2025-04-01", "2025-07-31"]
+  },
+  "decision": {
+    "display_slots": 2,
+    "display_policy": "rank one and rank two every scheduled source-complete session",
+    "primary_cost_bps_round_trip": 20.0,
+    "stress_cost_bps_round_trip": 40.0,
+    "screen_rule": "A group advances only if discovery net20 uplift is positive, top-five-days-removed uplift is nonnegative, at least half of discovery months have positive uplift, and the shared max-t block-bootstrap 80% lower bound is nonnegative. Confirmation is reported without reselection."
+  },
+  "feature_groups": {
+    "H01_cross_sectional_state": {
+      "mechanism": "Replace unstable raw units with target-day cross-sectional percentiles computed only from prior-price features.",
+      "family": "cross_sectional_ranking",
+      "features": ["xsec ranks of raw G0 state and horizon spreads"]
+    },
+    "H02_expanding_stock_alpha": {
+      "mechanism": "Estimate persistent stock-specific intraday drift with expanding prior outcomes and empirical-Bayes shrinkage toward zero.",
+      "family": "stock_history",
+      "features": ["prior count", "shrunk expanding mean", "shrunk expanding win rate", "expanding t statistic"]
+    },
+    "H03_downside_asymmetry": {
+      "mechanism": "Distinguish equal-volatility stocks by prior downside semideviation and large-loss versus large-gain frequencies.",
+      "family": "tail_history",
+      "features": ["60-session downside mean", "downside semideviation", "2-percent loss rate", "2-percent gain rate", "tail balance"]
+    },
+    "H04_horizon_transition": {
+      "mechanism": "Represent acceleration or decay across 1, 5, 20 and 60-session intraday and overnight horizons.",
+      "family": "trend_transition",
+      "features": ["OC 5-minus-20", "OC 20-minus-60", "overnight 20-minus-60", "last-minus-5", "volatility-normalized transition"]
+    },
+    "H05_market_regime_switch": {
+      "mechanism": "Allow stock reversal, momentum and historical alpha to change sign with prior-session market breadth, tails, dispersion and volatility.",
+      "family": "market_interaction",
+      "features": ["stock-state by prior-market-state interactions"]
+    },
+    "H06_calendar_stock_interaction": {
+      "mechanism": "Capture recurring weekday and month-end stock behavior using known-before-open calendar interactions and prior same-weekday outcomes.",
+      "family": "calendar_interaction",
+      "features": ["weekday cyclic interactions", "month-end interactions", "shrunk same-weekday prior alpha"]
+    },
+    "H07_tradability_quality": {
+      "mechanism": "Use lagged no-trade, flat-session and zero-range propensity as a continuous reliability modifier rather than a tuned hard cutoff.",
+      "family": "liquidity_proxy",
+      "features": ["activity score", "alpha by activity", "volatility per activity", "liquidity disagreement"]
+    },
+    "H08_lot_price_state": {
+      "mechanism": "Use strictly prior share price as a minimum-lot affordability and microstructure proxy, without interpreting it as market capitalisation.",
+      "family": "lot_affordability",
+      "features": ["log prior close", "cross-sectional price rank", "price by ATR", "distance from 1000-yen lot anchor"]
+    },
+    "H09_range_exhaustion": {
+      "mechanism": "Separate continuation from exhaustion by combining the last close-to-close shock, prior close location and lagged range expansion.",
+      "family": "range_path",
+      "features": ["shock by range", "close location by range", "last OC by session range", "three-day momentum by range"]
+    },
+    "H10_gap_response_state": {
+      "mechanism": "Condition the most recent historical gap on each stock's prior gap-fill and response traits.",
+      "family": "gap_path",
+      "features": ["standardised lagged gap", "gap by response beta", "gap by fill rate", "gap novelty by frequency"]
+    },
+    "H11_cross_sectional_crowding": {
+      "mechanism": "Measure whether momentum and volatility signals are crowded across the daily candidate universe and interact crowding with stock state.",
+      "family": "crowding_regime",
+      "features": ["daily momentum dispersion/tails by stock momentum", "daily ATR dispersion/tails by stock alpha"]
+    },
+    "H12_history_source_quality": {
+      "mechanism": "Expose short history, missing technical state and stale prior-price source as model uncertainty rather than silently relying on imputation.",
+      "family": "source_quality",
+      "features": ["prior observed sessions", "G0 missing fraction", "feature age", "history by alpha"]
+    }
+  },
+  "universe_hypotheses": {
+    "U01_active_history": "Require flat_oc_rate_20 <= 0.10, no_trade_rate_60 <= 0.05 and zero_range_rate_20 <= 0.05.",
+    "U02_middle_atr": "Require -0.80 <= xrank_atr14_pct <= +0.80.",
+    "U03_affordable_lot": "Require strictly prior close between 200 and 5000 yen (one standard lot approximately 20,000 to 500,000 yen).",
+    "U04_mature_history": "Require at least 180 prior sessions with an observed open-to-close return.",
+    "U05_tail_clean": "Require prior rolling 60-session frequency of open-to-close losses <= -2 percent to be <= 0.05."
+  }
+}

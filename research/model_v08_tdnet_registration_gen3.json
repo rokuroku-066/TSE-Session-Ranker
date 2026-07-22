@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "protocol_id": "zero_tdnet_title_daily_rank_ridge_gen3_20260722",
+  "authority": "posthoc retrospective diagnostic only; all outcomes are known",
+  "decision_time_jst": "08:58:59",
+  "model": {
+    "family": "daily-rank Ridge",
+    "base_features": "G0_price_core frozen 15 columns",
+    "imputer": "training median with missing indicators",
+    "scaler": "training StandardScaler",
+    "estimator": "Ridge(alpha=10)",
+    "target": "within-training-date percentile rank of open-to-close return multiplied by 2 then minus 1",
+    "sample_weight": "each training date has equal total weight",
+    "fit": "monthly expanding from 2024-01-04"
+  },
+  "score_window": {
+    "requested": ["2024-07-01", "2025-07-31"],
+    "scheduled_sessions": 266,
+    "tdnet_source_complete_sessions": 187,
+    "tdnet_source_complete_fraction": 0.7030075188,
+    "last_complete_session": "2025-04-07",
+    "primary_comparable_policy": "score and compare TDnet additions only on source-complete sessions; never convert missing TDnet source to a no-event zero",
+    "after_source_failure": "report missing/unscored coverage; do not use it for feature uplift"
+  },
+  "portfolio": {
+    "top_k": 2,
+    "primary_round_trip_cost_bps": 20,
+    "stress_round_trip_cost_bps": 40,
+    "cash_accounting": "unfilled source-incomplete slots stay cash and incur no cost; comparable metrics exclude those sessions"
+  },
+  "feature_groups": {
+    "H01_stage_fresh_followup": ["fresh_classified_economic_any", "followup_family_count_log1p", "progress_stage"],
+    "H02_forecast_stage": ["forecast_initial", "forecast_revision"],
+    "H03_dividend_role": ["shareholder_dividend", "received_dividend", "intercompany_dividend", "subsidiary_dividend"],
+    "H04_capital_action_stage": ["fresh_buyback", "followup_buyback", "fresh_equity", "followup_equity", "fresh_share_cancellation", "followup_share_cancellation"],
+    "H05_ma_direction_stage": ["fresh_ma", "followup_ma", "ma_acquisition", "ma_divestiture", "ma_reorganization", "ma_internal_reorganization"],
+    "H06_economic_family_mix": ["economic_family_count_log1p", "single_economic_family", "economic_count_ge_2", "economic_count_ge_3"],
+    "H07_stage_cooccurrence": ["fresh_only", "followup_only", "fresh_and_followup"],
+    "H08_arrival_timing": ["premarket_count_log1p", "intraday_count_log1p", "postclose_count_log1p", "latest_age_hours_log1p", "weekend_age"],
+    "H09_bundle_density_cadence": ["document_count_log1p", "bundle_width_minutes_log1p", "bundle_intensity", "prior_bundle_count_60_log1p", "prior_bundle_count_252_log1p", "repeat_pressure"],
+    "H10_stage_linear_runup": ["fresh_x_momentum20", "fresh_x_momentum60", "followup_x_momentum20", "followup_x_momentum60"],
+    "H11_fresh_runup_hinges": ["fresh_classified_economic_any", "fresh_x_negative_momentum20", "fresh_x_positive_momentum20"],
+    "H12_stage_timing_interaction": ["fresh_x_premarket", "fresh_x_postclose", "fresh_x_age", "followup_x_age"]
+  },
+  "screen": {
+    "all_12_groups_evaluated_as_G0_plus_one_group": true,
+    "exploration": ["2024-07-01", "2024-12-30"],
+    "confirmation": ["2025-01-06", "2025-03-31"],
+    "extension": ["2025-04-01", "2025-04-07"],
+    "minimum_active_event_days_exploration": 30,
+    "minimum_active_event_days_confirmation": 30,
+    "multiple_testing": "shared circular five-session block max-T, one-sided 80 percent lower bound"
+  },
+  "qualification_all_required": {
+    "exploration_and_confirmation_uplift_strictly_positive": true,
+    "full_comparable_net20_strictly_positive": true,
+    "full_comparable_net40_nonnegative": true,
+    "full_top5_removed_net20_strictly_positive": true,
+    "positive_month_fraction_min": 0.6,
+    "max_t_adjusted_80pct_lower_bound_nonnegative": true,
+    "minimum_active_event_days_met": true,
+    "requested_window_source_coverage_min": 0.98
+  },
+  "known_limits": [
+    "Every historical outcome is already known and cannot promote production.",
+    "TDnet inputs contain titles and timestamps only, not PDF body quantities.",
+    "Only 187 of 266 requested sessions have point-in-time-complete TDnet input, so no TDnet group can pass the 98 percent coverage gate.",
+    "The screen still measures comparable-period economics to decide whether further title-only work has merit."
+  ]
+}

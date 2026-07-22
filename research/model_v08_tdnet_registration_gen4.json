@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "protocol_id": "zero_tdnet_title_alpha1_final_combo_20260722",
+  "authority": "final posthoc retrospective diagnostic; no production promotion",
+  "selection_basis": {
+    "H08": "alpha10 full uplift +0.009928 percentage points, confirmation uplift -0.001662, and only 1 of 5 coefficient paths had a sign flip",
+    "H10": "alpha10 full uplift +0.007331 and a distinct event-stage by prior-runup mechanism; retained only as the one semantic complement to H08",
+    "no_other_group": "all other single groups had nonpositive full uplift under alpha10"
+  },
+  "model": {
+    "base_features": "G0_price_core frozen 15 columns",
+    "preprocess": "training median plus missing indicator, then StandardScaler",
+    "estimator": "Ridge(alpha=1)",
+    "target": "within-date open-to-close percentile multiplied by 2 minus 1",
+    "sample_weight": "equal total weight per training date",
+    "fit": "monthly expanding from 2024-01-04"
+  },
+  "recipes": {
+    "G0_alpha1": [],
+    "G0_alpha1_plus_H08_arrival_timing": ["H08_arrival_timing"],
+    "G0_alpha1_plus_H10_stage_linear_runup": ["H10_stage_linear_runup"],
+    "G0_alpha1_plus_H08_H10": ["H08_arrival_timing", "H10_stage_linear_runup"]
+  },
+  "evaluation": {
+    "source_complete_sessions_only": true,
+    "full": ["2024-07-01", "2025-04-07"],
+    "sessions": 187,
+    "exploration": ["2024-07-01", "2024-12-30"],
+    "confirmation": ["2025-01-06", "2025-03-31"],
+    "extension": ["2025-04-01", "2025-04-07"],
+    "top_k": 2,
+    "cost_bps": [20, 40],
+    "top5_positive_days_removed": true,
+    "shared_max_t_block_length": 5,
+    "shared_max_t_one_sided_confidence": 0.8,
+    "no_threshold_or_parameter_search": true
+  },
+  "qualification_all_required": {
+    "exploration_and_confirmation_uplift_strictly_positive": true,
+    "full_net20_strictly_positive": true,
+    "full_net40_nonnegative": true,
+    "full_top5_removed_net20_strictly_positive": true,
+    "positive_month_fraction_min": 0.6,
+    "max_t_adjusted_80pct_lower_bound_nonnegative": true,
+    "effective_change_days_min": 30
+  },
+  "stop_rule": "If no recipe passes every condition, stop title-only feature iteration. Further progress requires prospectively captured TDnet PDF-body magnitudes and complete 08:58 market snapshots, not another retrospective title threshold."
+}

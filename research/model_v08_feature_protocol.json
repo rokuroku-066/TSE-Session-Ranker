@@ -1,0 +1,260 @@
+{
+  "schema_version": 1,
+  "protocol_id": "model_v08_zero_base_feature_and_universe_20260722",
+  "status": "canonical_ledger_of_three_pre_registered_retrospective_generations",
+  "assembled_at": "2026-07-22T17:20:00+09:00",
+  "authority": {
+    "result_class": "known_outcome_retrospective_shadow_research_only",
+    "production_promotion_allowed": false,
+    "reason": "All outcomes through 2025-07-31 were visible before this canonical ledger was assembled. The original generation protocols were hash-frozen before their respective metrics, but none is a sealed future holdout."
+  },
+  "objective": {
+    "decision_time_jst": "08:58:59",
+    "target": "same-session open-to-close return",
+    "display_slots": 2,
+    "display_policy": "Always rank and display two rows on each source-complete scheduled session when at least two masked candidates exist.",
+    "weights": [0.5, 0.5],
+    "unfilled_policy": "An unavailable slot remains cash.",
+    "primary_round_trip_cost_bps": 20.0,
+    "stress_round_trip_cost_bps": 40.0
+  },
+  "original_registrations": {
+    "generation_1_sign_logit": {
+      "path": "research/model_v08_feature_registration_gen1.json",
+      "sha256": "e47e69decf685c5930b6002325b5b5cc91f7545f41be1d62dd343875c06d3909",
+      "frozen_before": "all generation-1 group metrics"
+    },
+    "generation_2_rank_ridge_alpha10": {
+      "path": "research/model_v08_feature_registration_gen2.json",
+      "sha256": "a7c47154be1acffc0d12c458c31890457b6dca3ead337003b34a6665359b9969",
+      "frozen_before": "all generation-2 group metrics"
+    },
+    "generation_3_rank_ridge_alpha1_transfer": {
+      "path": "research/model_v08_feature_registration_gen3.json",
+      "sha256": "7e12c588c0abf4d8271ca2d33dda5f11dd9a5650e25f192ab4e3e76150768880",
+      "frozen_before": "the generation-3 H07 transfer metrics"
+    }
+  },
+  "periods": {
+    "discovery": ["2024-07-01", "2024-10-31"],
+    "confirmation_a": ["2024-11-01", "2025-03-31"],
+    "confirmation_b": ["2025-04-01", "2025-07-31"],
+    "overall": ["2024-07-01", "2025-07-31"],
+    "fixed_blocks": {
+      "A": ["2024-07-01", "2024-10-31"],
+      "B": ["2024-11-01", "2024-12-30"],
+      "C": ["2025-01-06", "2025-03-31"],
+      "D": ["2025-04-01", "2025-07-31"]
+    }
+  },
+  "common_training": {
+    "start": "2024-01-04",
+    "window": "expanding",
+    "retrain_frequency": "calendar month",
+    "minimum_training_sessions": 60,
+    "training_mask": "price_training_eligible and observed open-to-close return",
+    "scoring_mask": "price_eligible",
+    "imputation": "training median with missing indicators",
+    "scaling": "training StandardScaler",
+    "sample_weight": "Each training date sums to one in the Ridge loss only. SimpleImputer medians and StandardScaler moments are fitted with equal row weight by the registered scikit-learn Pipeline; this replay preserves that historical evaluation specification and does not claim weighted preprocessing.",
+    "tie_break": "model score descending, code ascending"
+  },
+  "g0_features": [
+    "oc_last",
+    "oc_mean_5",
+    "oc_mean_20",
+    "oc_mean_60",
+    "oc_win_20",
+    "oc_std_20",
+    "overnight_last",
+    "overnight_mean_20",
+    "overnight_mean_60",
+    "night_day_corr_60",
+    "xrank_atr14_pct",
+    "xrank_close_momentum_5",
+    "xrank_close_momentum_20",
+    "xrank_close_momentum_60",
+    "xrank_prior_close_location_20"
+  ],
+  "feature_groups": {
+    "H01_cross_sectional_state": {
+      "mechanism": "Daily cross-sectional percentile state for raw G0 history.",
+      "features": [
+        "h01_xsec_oc_last",
+        "h01_xsec_oc_mean_5",
+        "h01_xsec_oc_mean_20",
+        "h01_xsec_oc_mean_60",
+        "h01_xsec_oc_win_20",
+        "h01_xsec_oc_std_20",
+        "h01_xsec_overnight_last",
+        "h01_xsec_overnight_mean_20",
+        "h01_xsec_overnight_mean_60",
+        "h01_xsec_night_day_corr_60"
+      ]
+    },
+    "H02_expanding_stock_alpha": {
+      "mechanism": "Empirical-Bayes-shrunk expanding stock-specific intraday drift.",
+      "features": [
+        "h02_prior_count_log1p",
+        "h02_stock_alpha_shrunk",
+        "h02_stock_win_shrunk",
+        "h02_stock_alpha_t"
+      ]
+    },
+    "H03_downside_asymmetry": {
+      "mechanism": "Prior downside semideviation and large-loss versus large-gain frequency.",
+      "features": [
+        "h03_downside_mean_60",
+        "h03_downside_semidev_60",
+        "h03_loss2_rate_60",
+        "h03_gain2_rate_60",
+        "h03_tail_balance_60"
+      ]
+    },
+    "H04_horizon_transition": {
+      "mechanism": "Acceleration or decay across 1, 5, 20 and 60-session horizons.",
+      "features": [
+        "h04_oc_accel_5_20",
+        "h04_oc_accel_20_60",
+        "h04_overnight_accel_20_60",
+        "h04_last_minus_mean5",
+        "h04_oc_accel_volnorm"
+      ]
+    },
+    "H05_market_regime_switch": {
+      "mechanism": "Stock state interacted with strictly prior market breadth, tails, dispersion and volatility.",
+      "features": [
+        "h05_alpha_x_breadth",
+        "h05_reversal_x_market_tail",
+        "h05_momentum_x_market_trend",
+        "h05_alpha_x_dispersion",
+        "h05_alpha_x_vol_regime",
+        "h05_gaptrait_x_market_gap"
+      ]
+    },
+    "H06_calendar_stock_interaction": {
+      "mechanism": "Known-before-open weekday/month-end interactions and shrunk same-weekday alpha.",
+      "features": [
+        "h06_dowsin_x_alpha",
+        "h06_dowcos_x_alpha",
+        "h06_dowsin_x_reversal",
+        "h06_monthend_x_momentum",
+        "h06_monthend_x_reversal",
+        "h06_same_weekday_alpha_shrunk"
+      ]
+    },
+    "H07_tradability_quality": {
+      "mechanism": "Continuous reliability modifier from lagged no-trade, flat-session and zero-range propensity.",
+      "features": [
+        "h07_activity_score",
+        "h07_alpha_x_activity",
+        "h07_vol_per_activity",
+        "h07_liquidity_disagreement"
+      ]
+    },
+    "H08_lot_price_state": {
+      "mechanism": "Strictly prior share price as lot-affordability and microstructure proxy, never market capitalisation.",
+      "features": [
+        "h08_log_prior_close",
+        "h08_xsec_price_rank",
+        "h08_price_x_atr",
+        "h08_log_distance_1000"
+      ]
+    },
+    "H09_range_exhaustion": {
+      "mechanism": "Continuation versus exhaustion from lagged shock, close location and range expansion.",
+      "features": [
+        "h09_shock_x_range",
+        "h09_location_x_range",
+        "h09_lastoc_x_sessionrange",
+        "h09_mom3_x_range"
+      ]
+    },
+    "H10_gap_response_state": {
+      "mechanism": "Most recent historical gap conditioned on each stock's prior gap response traits.",
+      "features": [
+        "h10_lag_gap_z",
+        "h10_gap_x_response",
+        "h10_gap_x_fill",
+        "h10_gap_novelty_x_frequency"
+      ]
+    },
+    "H11_cross_sectional_crowding": {
+      "mechanism": "Daily momentum/volatility crowding interacted with stock state.",
+      "features": [
+        "h11_momentum_x_crowd_std",
+        "h11_momentum_x_crowd_tail",
+        "h11_alpha_x_atr_crowd_std",
+        "h11_alpha_x_atr_crowd_tail"
+      ]
+    },
+    "H12_history_source_quality": {
+      "mechanism": "Explicit prior-history, missing-state and source-age uncertainty.",
+      "features": [
+        "h12_prior_observed_log1p",
+        "h12_g0_missing_fraction",
+        "h12_feature_age_days",
+        "h12_history_x_alpha"
+      ]
+    }
+  },
+  "universe_groups": {
+    "U01_active_history": "flat_oc_rate_20 <= 0.10 and no_trade_rate_60 <= 0.05 and zero_range_rate_20 <= 0.05",
+    "U02_middle_atr": "-0.80 <= xrank_atr14_pct <= +0.80",
+    "U03_affordable_lot": "200 <= strictly prior close <= 5000 yen",
+    "U04_mature_history": "at least 180 strictly prior observed open-to-close returns",
+    "U05_tail_clean": "prior rolling 60-session frequency of return <= -2 percent is <= 0.05"
+  },
+  "generations": {
+    "generation_1": {
+      "model": "date-and-class-raked LogisticRegression(C=0.03)",
+      "target": "positive open-to-close session",
+      "use": "Initial feature and universe screen; all registered candidates were subsequently reported in both confirmation periods."
+    },
+    "generation_2": {
+      "model": "Ridge(alpha=10.0)",
+      "target": "within-training-day average return percentile mapped to [-1,1]",
+      "feature_test": "Refit G0 plus one registered group.",
+      "universe_test": "Keep the common fitted G0 model and restrict only the pre-ranking scoring candidate set."
+    },
+    "generation_3": {
+      "model": "Ridge(alpha=1.0)",
+      "target": "same daily percentile target",
+      "candidate": "G0 plus H07_tradability_quality only",
+      "why_only_h07": "It was the sole alpha-10 candidate with positive uplift in all three periods and all whole-period shadow robustness checks.",
+      "combination": "No combination was registered because no second group met those transport criteria."
+    }
+  },
+  "generation_2_discovery_gate": {
+    "all_required": [
+      "top2 net20 uplift versus G0 strictly positive",
+      "recipe-specific top-five-winning-days-removed uplift nonnegative",
+      "positive monthly uplift fraction at least 0.5",
+      "shared-family maximum-statistic five-session block-bootstrap one-sided 80 percent lower bound nonnegative"
+    ]
+  },
+  "whole_period_shadow_checks": {
+    "all_required": [
+      "top2 net20 strictly positive",
+      "top2 net40 nonnegative",
+      "top-five-winning-days-removed net20 strictly positive",
+      "at least 9 of 13 monthly net20 means positive",
+      "at least 3 of 4 fixed blocks net20 positive",
+      "rank2 standalone net20 nonnegative",
+      "uplift versus the generation anchor strictly positive in discovery, confirmation A and confirmation B"
+    ]
+  },
+  "generation_3_acceptance": {
+    "all_required": [
+      "H07 uplift versus alpha-1 G0 strictly positive in every one of the three chronological periods",
+      "overall paired five-session bootstrap one-sided 80 percent uplift lower bound nonnegative",
+      "all whole-period shadow checks excluding the already stated period-uplift condition"
+    ]
+  },
+  "limitations": [
+    "The historical JPX archive used here does not supply usable volume, turnover, spread or exact one-lot execution cost.",
+    "Strictly prior share price is only a lot-value proxy and cannot represent market capitalisation.",
+    "No exact historical 08:58 indicative gap, futures, order imbalance or PTS snapshot is available.",
+    "Multiple testing is controlled for the registered discovery families, but all dates remain known-outcome retrospective research."
+  ]
+}

@@ -36,6 +36,7 @@ SUPPORTED_RESEARCH_FAMILIES = frozenset(
         "raked_logit",
         "return_weighted_logit",
         "ridge_return",
+        "ridge_daily_rank",
         "elastic_net_sgd_return",
         "huber_sgd_return",
         "hist_gradient_boosting_return",
@@ -74,6 +75,7 @@ _ALLOWED_PARAMETERS: dict[str, frozenset[str]] = {
         }
     ),
     "ridge_return": frozenset({"alpha", "return_clip_pct"}),
+    "ridge_daily_rank": frozenset({"alpha"}),
     "elastic_net_sgd_return": frozenset(
         {
             "alpha",
@@ -217,6 +219,7 @@ def _validate_parameters(family: str, objective: str, parameters: Mapping[str, A
         raise ValueError(f"{family} requires a supported binary objective")
     exact_objectives = {
         "ridge_return": "raw_return",
+        "ridge_daily_rank": "same_day_return_percentile",
         "elastic_net_sgd_return": "raw_return",
         "huber_sgd_return": "raw_return",
         "hist_gradient_boosting_return": "raw_return",
@@ -524,6 +527,39 @@ def binary_objective(
     return result
 
 
+def same_day_return_percentile_target(frame: pd.DataFrame) -> pd.Series:
+    """Map each date's realised return ranks to the interval ``[-1, 1]``.
+
+    This is a research target, not a pre-open feature.  It may therefore use
+    realised returns from the *training* dates, but callers must keep every
+    scoring date strictly outside the fitted frame.  Ranking within each date
+    makes the objective insensitive to market-wide shifts in the absolute
+    return level and aligns training with the daily cross-sectional selection
+    decision.  The frozen formula is ``2 * rank(pct=True) - 1``.  For a finite
+    tie-free cross-section of size ``n`` its minimum is ``2 / n - 1`` and its
+    daily mean is ``1 / n``; it is percentile-scaled but not exactly centred.
+    """
+
+    required = {"date", "oc_return_pct"}
+    missing = sorted(required - set(frame.columns))
+    if missing:
+        raise DataValidationError(
+            f"daily-rank target frame lacks columns: {missing}"
+        )
+    returns = pd.to_numeric(frame["oc_return_pct"], errors="coerce")
+    if returns.isna().any() or not np.isfinite(returns.to_numpy()).all():
+        raise DataValidationError("daily-rank target returns are invalid")
+    target = (
+        returns.groupby(frame["date"], sort=False)
+        .rank(method="average", pct=True)
+        .mul(2.0)
+        .sub(1.0)
+    )
+    if target.shape != (len(frame),) or not np.isfinite(target.to_numpy()).all():
+        raise DataValidationError("daily-rank target is invalid")
+    return target.astype(float)
+
+
 def _linear_pipeline(model: Any) -> Pipeline:
     return Pipeline(
         [
@@ -718,6 +754,12 @@ def fit_research_model(
     if family == "ridge_return":
         estimator = _linear_pipeline(Ridge(alpha=float(params.get("alpha", 10.0))))
         estimator.fit(features, return_target, model__sample_weight=weights)
+        return _EstimatorScorer(estimator, columns, "prediction")
+
+    if family == "ridge_daily_rank":
+        target = same_day_return_percentile_target(frame)
+        estimator = _linear_pipeline(Ridge(alpha=float(params.get("alpha", 10.0))))
+        estimator.fit(features, target, model__sample_weight=weights)
         return _EstimatorScorer(estimator, columns, "prediction")
 
     if family in {"elastic_net_sgd_return", "huber_sgd_return"}:
