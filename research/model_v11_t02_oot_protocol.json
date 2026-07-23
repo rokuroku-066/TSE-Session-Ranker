@@ -1,0 +1,169 @@
+{
+  "schema_version": 1,
+  "protocol_id": "model_v11_t02_out_of_time_202508_202603",
+  "registered_on": "2026-07-23",
+  "timezone": "Asia/Tokyo",
+  "objective": "Test the already-frozen T02 event-value policy on sessions strictly after every session used to discover and estimate its v10 point result.",
+  "authority": {
+    "analysis_type": "out_of_time_validation_of_a_previously_frozen_candidate",
+    "production_promotion_allowed_before_all_gates_pass": false,
+    "untouched_holdout_claim": false,
+    "reason_not_untouched": "The same dates were previously evaluated by unrelated v0.4 classifiers and their aggregate returns have been inspected. T02 itself, its text representation, and its selection rule were frozen using data ending 2025-07-31 before this protocol.",
+    "forbidden": [
+      "changing T02 vectorizer, target, Ridge alpha, universe, rank, fallback, or cash policy",
+      "selecting a subset of dates after reading T02 outcomes",
+      "treating a missing TDnet index page as a no-event day",
+      "using the target-session actual open as an 08:58 feature",
+      "claiming executable production status without spread, slippage, lot, and turnover evidence"
+    ]
+  },
+  "bound_candidate_artifacts": {
+    "retrospective_protocol": {
+      "path": "research/model_v10_tdnet_text_protocol.json",
+      "sha256": "700b0262f805c37659453af72651897d116e8bd1f6329a602989b90b212c5b3a"
+    },
+    "retrospective_runner": {
+      "path": "research/model_v10_tdnet_text_runner.py",
+      "sha256": "f49203ef23a6ff15bb609178c6c3aa278b3d052e6383503703a45ec1b3e67744"
+    },
+    "retrospective_result": {
+      "path": "research/model_v10_tdnet_text_result.json",
+      "sha256": "3a40e3541fb24f89f2b009b48b2af4d3a84afe2e96ce03010ea0a87442800196"
+    },
+    "forward_protocol": {
+      "path": "research/model_v10_forward_protocol.json",
+      "sha256": "493db7bcada6e431ebb3872f903634fbafb7c61c4de38e294bed7a88ba12bed2"
+    }
+  },
+  "evaluation_window": {
+    "warmup_session": "2025-08-01",
+    "score_start": "2025-08-04",
+    "score_end": "2026-03-31",
+    "expected_score_sessions": 159,
+    "minimum_source_complete_sessions": 120,
+    "minimum_calendar_months": 6,
+    "relationship_to_v10": "Every score session is later than the v10 panel end of 2025-07-31."
+  },
+  "required_sources": {
+    "prices": {
+      "publisher": "Tokyo Stock Exchange / JPX",
+      "objects": "official daily stock quotation PDFs for the warmup and score sessions",
+      "required_fields": [
+        "date",
+        "code",
+        "name",
+        "open",
+        "high",
+        "low",
+        "close",
+        "traded",
+        "partial_session"
+      ]
+    },
+    "tdnet": {
+      "objects": "every calendar-date TDnet index page from 2025-08-01 through 2026-03-31 inclusive",
+      "required_fields": [
+        "published_at",
+        "code",
+        "name",
+        "title",
+        "document_url",
+        "index_date"
+      ],
+      "source_completeness": "All intervening calendar-date pages must be present and parser-valid. Any gap excludes affected target sessions."
+    },
+    "provenance": {
+      "required": [
+        "source URL",
+        "byte count",
+        "SHA-256",
+        "request start",
+        "receipt completion",
+        "parser version",
+        "parse completion"
+      ],
+      "historical_archive_limit": "Publication-time PIT can be tested, but historical archive finality cannot be treated as a live observation-time guarantee."
+    }
+  },
+  "candidate": {
+    "id": "v10_t02_char_value_event_top1",
+    "decision_cutoff": "08:58:59",
+    "bundle": "Join all qualifying titles for a code in publication-time order using the frozen separator.",
+    "representation": {
+      "type": "TfidfVectorizer",
+      "analyzer": "char",
+      "ngram_range": [
+        2,
+        5
+      ],
+      "min_df": 3,
+      "max_features": 30000,
+      "sublinear_tf": true,
+      "norm": "l2"
+    },
+    "target": "Training-period open-to-close return clipped to its 1st/99th percentiles and then to [-10,+10] percentage points.",
+    "estimator": {
+      "type": "Ridge",
+      "alpha": 20.0
+    },
+    "walk_forward": "Monthly expanding. Each fold may use only sessions whose close was known before the scored month.",
+    "decision": "Rank qualifying event codes by predicted value descending, then code ascending. Select top1. No qualifying event or incomplete source means cash. No price-model fallback."
+  },
+  "comparators": [
+    "frozen L4 price control top1",
+    "cash",
+    "equal-weight qualifying-event mean as a selection-skill diagnostic"
+  ],
+  "evaluation": {
+    "portfolio_sizes": [
+      1
+    ],
+    "round_trip_cost_bps": [
+      20,
+      40,
+      60
+    ],
+    "primary_metric": "mean daily net return at 40 bps over every scheduled source-complete score session, with cash on valid no-event days",
+    "required_diagnostics": [
+      "gross and net mean, median, win rate, and profit factor",
+      "calendar-month results",
+      "chronological first-half and second-half net40",
+      "non-overlapping 20-session blocks",
+      "best 20 winning days removed net20",
+      "top 10 profit-contributing codes replaced by cash net20",
+      "maximum single-day and single-code profit contribution",
+      "paired block bootstrap difference versus L4",
+      "familywise correction covering all v11 candidates evaluated on the same dates",
+      "candidate-generation, source-completeness, and PIT-compliance rates"
+    ]
+  },
+  "statistical_promotion_gate": {
+    "all_required": true,
+    "requirements": [
+      "at least 120 source-complete score sessions spanning at least 6 calendar months",
+      "mean net40 is positive",
+      "median net20 is positive",
+      "net40 is positive in both chronological halves",
+      "at least 5 of 7 non-overlapping 20-session blocks have positive net40",
+      "best-20-winning-days-removed net20 is positive",
+      "top-10-profit-codes-cash net20 is positive",
+      "one-sided 90% block-bootstrap lower bound for net40 is at least zero",
+      "multiplicity-adjusted one-sided 90% lower bound versus L4 is at least zero",
+      "maximum single code contributes no more than 25% of positive gross profit",
+      "candidate generation and PIT compliance are each at least 98%"
+    ],
+    "failure_action": "Reject T02 as a production candidate without tuning it on this window."
+  },
+  "execution_promotion_gate": {
+    "all_required_after_statistical_gate": true,
+    "requirements": [
+      "exact 08:58 indicative price or executable order simulation",
+      "realized spread and slippage",
+      "minimum trading unit and order value",
+      "20-day median turnover and predicted opening turnover",
+      "special-quote and delayed-open handling",
+      "capacity checks at the intended capital size"
+    ],
+    "status_before_data": "not_evaluable_from_OHLC_and_titles"
+  }
+}

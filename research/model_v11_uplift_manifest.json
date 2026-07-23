@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "experiment_id": "model_v11_uplift_zero_base_20260723",
+  "decision": "REJECT_ALL_UPLIFT_HYPOTHESES",
+  "production_ready": false,
+  "files": {
+    "model_v11_uplift_protocol.json": "611f9d16467fee02d5a17e415d0a0a6490917310509174ed43379c60d04c69cb",
+    "model_v11_uplift_protocol.sha256": "274de68859fcfc9264585599d1c918e0ecaf24c4a3f9408c625228a31083924a",
+    "model_v11_uplift_runner.py": "fa024aad8f4ec468dc5d34cdc35c1fee0c54cb20f376bd1265b5a558682c0eb5",
+    "model_v11_uplift_result.json": "b155a35ad6d8d89324682be39e23c1016bf06a62122698bfab3915bcd6d5d504",
+    "model_v11_uplift_picks.csv": "c443146dcb72555d2fea0cff38948ecf67923f48ee00ebaa6d5a3fe17b93df91",
+    "model_v11_uplift_audit.py": "1b96719d11eba902d83cbbaae4b72b3d30e870c5b9a4be54ff979df07b1ec0d3",
+    "model_v11_uplift_audit.json": "d35de97959c66c28c705aff9a4e44339db2ec800377c20b09c670b3931b42a5d",
+    "model_v11_uplift_report.md": "a1635844fc78a82baac248ced33869ab65900a560a94bcbc4a2f2eb1c04b612f",
+    "test_model_v11_uplift.py": "b16fe52e738e0e1cfd19b98d6e7eb9b0d739028b53facfd211fe4f1b6ce99673"
+  },
+  "reproducibility": {
+    "runner_result_byte_identical": true,
+    "runner_picks_byte_identical": true,
+    "target_session_outcome_mutation_exact": true,
+    "independent_pnl_reproduction_exact": true
+  }
+}

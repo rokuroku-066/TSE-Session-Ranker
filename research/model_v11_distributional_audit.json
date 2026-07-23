@@ -1,0 +1,20 @@
+{
+  "audit_script_sha256": "93ceb58cbc1b575cd2fb5a46138247c16416f63013ec8e7e7fe934d87a6e8b00",
+  "candidate_policy_count": 16,
+  "embedded_outcomes_exact": true,
+  "forward_shadow_finalist": null,
+  "independent_pnl_exact": true,
+  "metric_difference_count": 0,
+  "metric_differences": [],
+  "numeric_comparison_tolerance": 1e-12,
+  "panel_sha256": "6b86f994a1d15d1da8ed40469d44fc409adadc6cd5b3df3c08aef6717bcdf0eb",
+  "picks_sha256": "e648d4dd74eabc1d385b277dd78fb41ce23dfbbda0eaa0afd2a7cb94f0ff4f32",
+  "policy_count": 18,
+  "production_model_changed": false,
+  "protocol_id": "model_v11_distributional_zero_base_20260723",
+  "protocol_sha256": "9e7b98550f3066ee6b6eb8ec0ebdaf8120d211020b7c24be29618786e124e480",
+  "result_sha256_before_audit_finalisation": "469522f0955f7cf95926b2c465d3bba335e7f6f6a29c05b9042f87b7020769b4",
+  "retrospective_gate_passers": [],
+  "schema_version": 1,
+  "score_sessions": 266
+}

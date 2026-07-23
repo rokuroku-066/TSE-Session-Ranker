@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "protocol_id": "model_v11_new_data_zero_base_20260723",
+  "authority": "exploratory_only_no_production_promotion",
+  "files": {
+    "research/model_v11_new_data_protocol.json": {
+      "sha256": "57f2b82e14f799ced47f58ec718e07d5e27dbf3a24f9299f628de03710ec789f",
+      "bytes": 15152
+    },
+    "research/model_v11_new_data_runner.py": {
+      "sha256": "e20764b052cf736e2f5f6d76ec5bd72c05f89b79b0a3d2fbca5428b03ed5f61a",
+      "bytes": 43712
+    },
+    "research/model_v11_new_data_result.json": {
+      "sha256": "911b211d1d73f331127f511df3f7c40bb2d7dfc007a64e0d5673e78937a7b2ed",
+      "bytes": 29672
+    },
+    "research/model_v11_new_data_picks.csv": {
+      "sha256": "dd6d6716b5f29b79d54f96eee03995fe834b9128ba58f6882c4bc524e3cb1d3d",
+      "bytes": 147829
+    },
+    "research/model_v11_new_data_inventory.json": {
+      "sha256": "897a6a905a6dc5cf4ca620baeaccc973e3428dfa5d9c576306a0f4a7c18f7044",
+      "bytes": 6152
+    },
+    "research/model_v11_new_data_audit.py": {
+      "sha256": "a9a10b420b5de0f5455e8678ac411259dcf06a9ee63e1087f024d1dc0ed5ce7d",
+      "bytes": 15975
+    },
+    "research/model_v11_new_data_audit.json": {
+      "sha256": "eb81eaac651375330f07b837d1fdcb795a0b79521c25d664e03f8d2d5c9ab21d",
+      "bytes": 6117
+    },
+    "research/model_v11_new_data_collector_spec.json": {
+      "sha256": "24eda03fe838853fed807c66f13d3c1c865f6883f2f4ec7a53fa854de86307ea",
+      "bytes": 9669
+    },
+    "research/model_v11_new_data_report.md": {
+      "sha256": "455d9596919eb931aa9470c5de86c54d02189760e316e5152c6019c0d7c47c50",
+      "bytes": 7204
+    }
+  },
+  "verification": {
+    "full_runner_reproduction": {
+      "status": "pass",
+      "first_and_second_run_hashes_exact": [
+        "research/model_v11_new_data_result.json",
+        "research/model_v11_new_data_inventory.json",
+        "research/model_v11_new_data_picks.csv"
+      ]
+    },
+    "independent_pnl_audit": {
+      "status": "pass",
+      "sessions": 107,
+      "numeric_or_scalar_checks": 408,
+      "structural_groups": 8,
+      "tolerance": 1e-12
+    },
+    "test_suite": {
+      "command": "PYTHONDONTWRITEBYTECODE=1 .venv/bin/python -m pytest -q",
+      "status": "pass",
+      "tests_passed": 251,
+      "subtests_passed": 130,
+      "warnings": 22
+    },
+    "json_parse": {
+      "status": "pass"
+    }
+  },
+  "scope": {
+    "registered_data_hypotheses": 11,
+    "implementable_information_hypotheses": 2,
+    "fixed_combination_policies": 1,
+    "blocked_hypotheses_scored": 0,
+    "score_sessions": 107,
+    "score_months": [
+      "2024-06",
+      "2024-07",
+      "2025-04",
+      "2025-05",
+      "2025-06",
+      "2025-07"
+    ]
+  },
+  "conclusion": {
+    "production_ready": false,
+    "retrospective_candidate_survived": false,
+    "metadata_line_closed_without_parameter_tuning": true,
+    "next_step": "Acquire append-only official TDnet numeric/body data, PIT liquidity/master, 08:58 futures/auction and venue-specific PTS data under the prospective collector specification before registering a new model test."
+  }
+}

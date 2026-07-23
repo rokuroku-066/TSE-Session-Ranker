@@ -1,0 +1,273 @@
+{
+  "schema_version": 1,
+  "protocol_id": "model_v11_uplift_zero_base_20260723",
+  "registered_at": "2026-07-23T18:20:00+09:00",
+  "status": "registered_before_any_uplift_family_execution_on_an_outcome_panel_already_seen_by_the_wider_project",
+  "purpose": "Falsify eight causal counterfactual mechanisms for ranking pre-open TDnet event names by same-session open-to-close profit. None is a threshold or hyperparameter variation of v10/T02 or v11 analog models.",
+  "authority": {
+    "analysis_type": "retrospective_mechanism_screen",
+    "panel_outcomes_previously_available_to_the_project": true,
+    "uplift_hypotheses_not_scored_before_registration": true,
+    "production_promotion_allowed_from_this_run": false,
+    "maximum_retrospective_action": "freeze exactly one forward-shadow finalist",
+    "earliest_forward_session": "2026-07-24"
+  },
+  "frozen_inputs": {
+    "panel": {
+      "path": "/tmp/model_v07_corrected_panel.pkl",
+      "sha256": "6b86f994a1d15d1da8ed40469d44fc409adadc6cd5b3df3c08aef6717bcdf0eb",
+      "manifest_path": "/tmp/model_v07_corrected_panel.pkl.manifest.json",
+      "manifest_sha256": "25e08c564ef6400b7a29168db9fd7e8220bd0e2386c7a3c7e71b05c2ff950b02",
+      "rows": 1524104,
+      "codes": 4124,
+      "sessions": 386,
+      "calendar_bounds": [
+        "2024-01-04",
+        "2025-07-31"
+      ]
+    },
+    "tdnet_caches": [
+      {
+        "path": "tdnet_date_cache_2024",
+        "html_files": 110,
+        "aggregate_sha256": "795852d3f64f8767191805e339dbd7c16972c9a249996ea6847fbbe023bea0f3"
+      },
+      {
+        "path": "tdnet_date_cache",
+        "html_files": 108,
+        "aggregate_sha256": "012a11b23d09a5931726146cb37cb715f58e8c6e020d67700fa199c912628d38"
+      }
+    ]
+  },
+  "point_in_time": {
+    "decision_time": "08:58:59 Asia/Tokyo",
+    "score_period": [
+      "2024-07-01",
+      "2025-07-31"
+    ],
+    "folds": "calendar-month expanding walk-forward",
+    "training_rule": "All outcomes used by matching, nuisance models, pseudo-outcomes, issuer controls, trees, leaf estimates, and final scorers have date strictly earlier than the first score date of the calendar month.",
+    "cross_fitting": "For doubly robust pseudo-outcomes, assign complete training dates to three folds by chronological date ordinal modulo three; each nuisance prediction is made by a model fit on the other two folds. All dates remain prior to the scored month.",
+    "strict_tdnet_session": "Every calendar day from the preceding panel session through the score session must have a cached TDnet index page. Sessions without this coverage are excluded and contribute neither trade nor cash observations.",
+    "training_filter": "strict TDnet session, price_training_eligible true, observed open-to-close return, tdnet_clean_any observed",
+    "scoring_filter": "strict TDnet session, price_eligible true, tdnet_clean_any observed",
+    "candidate_filter": "tdnet_clean_any equals one; no-event rows are counterfactual controls and can never be selected",
+    "source_rule": "candidate_price_source_max_date is null or strictly earlier than row date; tdnet_clean_feature_source_max_timestamp is no later than 08:58:59 on row date",
+    "target_mutation_test": "In every score fold replace the score-month return and label columns before fitting/scoring and require exact score, allow-mask, and selected-key equality.",
+    "base_covariates": [
+      "oc_last",
+      "oc_mean_5",
+      "oc_mean_20",
+      "oc_mean_60",
+      "oc_win_20",
+      "oc_std_20",
+      "overnight_last",
+      "overnight_mean_20",
+      "overnight_mean_60",
+      "night_day_corr_60",
+      "xrank_atr14_pct",
+      "xrank_close_momentum_5",
+      "xrank_close_momentum_20",
+      "xrank_close_momentum_60",
+      "xrank_prior_close_location_20"
+    ],
+    "event_covariates": [
+      "tdnet_clean_has_earnings",
+      "tdnet_clean_has_revision",
+      "tdnet_clean_revision_up_title",
+      "tdnet_clean_revision_down_title",
+      "tdnet_clean_has_dividend",
+      "tdnet_clean_dividend_up_title",
+      "tdnet_clean_dividend_down_title",
+      "tdnet_clean_has_buyback_decision",
+      "tdnet_clean_has_buyback_tostnet",
+      "tdnet_clean_has_external_equity_financing",
+      "tdnet_clean_has_benefit",
+      "tdnet_clean_has_split",
+      "tdnet_clean_has_ma_transaction",
+      "tdnet_clean_has_business_alliance",
+      "tdnet_clean_has_control_transaction",
+      "tdnet_clean_has_impairment_loss",
+      "tdnet_clean_has_audit_problem",
+      "tdnet_clean_has_correction",
+      "tdnet_clean_document_count_log1p",
+      "tdnet_clean_family_count_log1p",
+      "tdnet_clean_latest_age_hours_log1p",
+      "tdnet_clean_support_adverse_conflict"
+    ]
+  },
+  "treatment_definition": {
+    "treated": "tdnet_clean_any equals one",
+    "control": "tdnet_clean_any equals zero",
+    "estimand": "conditional incremental open-to-close percentage return of the observed pre-open disclosure bundle versus the no-disclosure counterfactual",
+    "primary_family_precedence": [
+      "adverse",
+      "buyback",
+      "revision",
+      "earnings",
+      "dividend",
+      "benefit_or_split",
+      "ma_or_alliance",
+      "other"
+    ],
+    "warning": "Disclosure occurrence is not random. These are falsification screens for stable counterfactual ranking signals, not causal identification claims."
+  },
+  "implementation_lock": {
+    "random_seed": 20260723,
+    "continuous_target": "Open-to-close percentage return clipped to [-5,+5]",
+    "preprocessing": "Fold-local median imputation with missing indicators and fold-local standardisation",
+    "date_weighting": "Every training date has total weight one; rows within a date share it equally",
+    "ridge_alpha": 10.0,
+    "propensity_model": "LogisticRegression(C=1.0, L2, lbfgs, max_iter=500), probabilities clipped to [0.01,0.99]",
+    "matching": {
+      "covariates": [
+        "overnight_last",
+        "oc_mean_20",
+        "oc_std_20",
+        "xrank_close_momentum_20",
+        "xrank_prior_close_location_20"
+      ],
+      "controls": "same historical date only",
+      "neighbors": 10,
+      "distance": "Euclidean after fold-global control median imputation and standardisation"
+    },
+    "overlap": "Closed interval from max of treated/control propensity 5th percentiles to min of treated/control 95th percentiles, estimated on training rows",
+    "positive_tail_threshold_pct": 1.0,
+    "issuer_prior_observations": 20,
+    "policy_tree": {
+      "structure_dates_fraction": 0.5,
+      "max_depth": 3,
+      "min_samples_leaf": 500,
+      "leaf_zero_prior_observations": 100
+    },
+    "gross_break_even_pct": 0.4
+  },
+  "registered_hypotheses": [
+    {
+      "id": "U01_MATCHED_NO_EVENT",
+      "family": "matched no-event counterfactual",
+      "mechanism": "For each historical event row, subtract the mean outcome of ten same-date nearest no-event controls. Fit one Ridge CATE model to this matched pseudo-uplift using base and event covariates.",
+      "prediction": "Local same-date matching removes latent day conditions while retaining event-specific incremental payoff."
+    },
+    {
+      "id": "U02_FAMILY_T_LEARNER",
+      "family": "family-specific T-learner",
+      "mechanism": "Assign each event bundle to one primary family. Within each family fit separate treated and no-event Ridge outcome models and score their difference; require at least 50 treated training rows in the family.",
+      "prediction": "Disclosure families have different response surfaces, so separate potential-outcome models outperform pooled direct prediction."
+    },
+    {
+      "id": "U03_AIPW_CATE",
+      "family": "cross-fitted augmented inverse propensity weighting",
+      "mechanism": "Construct three-fold date-grouped cross-fitted AIPW pseudo-outcomes with propensity and two outcome nuisance models, clip pseudo-outcomes to [-10,+10], then fit a Ridge CATE model using base and event covariates.",
+      "prediction": "Doubly robust orthogonalisation isolates stable incremental disclosure payoff from selection into disclosure."
+    },
+    {
+      "id": "U04_DATE_RESIDUAL_UPLIFT",
+      "family": "same-date no-event benchmark",
+      "mechanism": "Subtract each historical date's date-weighted mean no-event return from each event return, then fit a Ridge model to event rows using base and event covariates.",
+      "prediction": "The relevant target is event excess over contemporaneous non-event opportunity cost, not raw return."
+    },
+    {
+      "id": "U05_ISSUER_SELF_CONTROL",
+      "family": "issuer self-controlled posterior",
+      "mechanism": "For each scored event, estimate its issuer's prior event mean minus prior no-event mean, with each mean shrunk toward zero by twenty observations. No cross-issuer outcome model is fit.",
+      "prediction": "Stable issuer-specific disclosure reaction dominates pooled text or price relations."
+    },
+    {
+      "id": "U06_PROPENSITY_OVERLAP_T",
+      "family": "overlap-restricted pooled T-learner",
+      "mechanism": "Fit pooled treated and no-event Ridge outcome models, but score only event rows whose propensity lies inside the fixed training overlap interval.",
+      "prediction": "Counterfactual rankings are useful only where treated and no-event states have empirical covariate overlap."
+    },
+    {
+      "id": "U07_POSITIVE_TAIL_UPLIFT",
+      "family": "positive-tail probability uplift",
+      "mechanism": "Fit treated and no-event binary Ridge probability models for return above +1%. Multiply their probability difference by the treated training mean positive return conditional on exceeding +1%.",
+      "prediction": "Profit is concentrated in event-driven upside jumps, so positive-tail uplift is a better action value than conditional mean."
+    },
+    {
+      "id": "U08_HONEST_CROSSFIT_POLICY_TREE",
+      "family": "honest cross-fit policy tree",
+      "mechanism": "Build cross-fitted AIPW pseudo-outcomes. Use the first half of training dates to learn a depth-three tree partition, and the second half to estimate each leaf's pseudo-outcome mean with a one-hundred-observation zero prior.",
+      "prediction": "A small honest partition can express discontinuous event-policy regimes without reusing observations for split selection and leaf payoff estimation."
+    }
+  ],
+  "candidate_family_size": 16,
+  "portfolio": {
+    "capacities": [
+      1,
+      2
+    ],
+    "tie_break": [
+      "uplift score descending",
+      "code ascending"
+    ],
+    "cash_rule": "A scheduled slot is executed only when predicted uplift is strictly greater than +0.40%. Empty or rejected slots remain cash; surviving slots retain weight 1/capacity and are not renormalised.",
+    "cost_bps": [
+      20,
+      40,
+      60
+    ],
+    "primary_cost_bps": 40,
+    "scheduled_day_denominator": "Every strict complete score session, including full-cash days"
+  },
+  "evaluation": {
+    "primary_metric": "strict scheduled-day arithmetic mean net40 return",
+    "temporal_slices": {
+      "early": [
+        "2024-07-01",
+        "2024-07-31"
+      ],
+      "middle": [
+        "2025-04-01",
+        "2025-05-31"
+      ],
+      "late": [
+        "2025-06-01",
+        "2025-07-31"
+      ]
+    },
+    "reported": [
+      "gross and net20/net40/net60 scheduled-day mean",
+      "win rate, monthly net40 and three fixed temporal slices",
+      "best and worst 5/10/20 scheduled days removed",
+      "net40 5% expected shortfall",
+      "executed slots, traded days, cash days, unique codes",
+      "largest and top-ten code weight share",
+      "largest positive code P&L share",
+      "top-ten positive-P&L codes replaced by cash"
+    ],
+    "multiplicity": "5000 deterministic circular moving-block resamples of strict sessions, block length 10. Report one-sided studentised familywise max-t 95% lower bounds and White-style reality-check adjusted p-values against zero over all sixteen policies.",
+    "selection_rule": "Freeze the highest net40 candidate only if it passes every retrospective gate; otherwise freeze none."
+  },
+  "retrospective_gate": {
+    "net40_mean_positive": true,
+    "net60_mean_positive": true,
+    "familywise_95_lower_net40_mean_positive": true,
+    "familywise_reality_check_p_at_most": 0.1,
+    "all_three_temporal_slices_net40_positive": true,
+    "positive_months_at_least": 4,
+    "best_20_days_removed_net20_positive": true,
+    "top_10_positive_pnl_codes_to_cash_net20_positive": true,
+    "traded_days_at_least": 50,
+    "executed_slot_fraction_at_least": 0.3,
+    "unique_codes_at_least": 40,
+    "largest_code_weight_share_at_most": 0.08,
+    "top10_code_weight_share_at_most": 0.35,
+    "largest_positive_code_pnl_share_at_most": 0.25,
+    "independent_pnl_audit_exact": true,
+    "target_mutation_exact": true,
+    "deterministic_rerun_exact": true
+  },
+  "production_gate": {
+    "retrospective_gate_must_pass": true,
+    "prospective_sessions_at_least": 60,
+    "prospective_net40_mean_positive": true,
+    "prospective_one_sided_95_block_bootstrap_lower_mean_positive": true,
+    "prospective_all_three_consecutive_20_session_slices_net40_positive": true,
+    "prospective_best_5_days_removed_net20_positive": true,
+    "prospective_independent_pnl_audit_exact": true,
+    "no_refit_or_candidate_substitution": true,
+    "failure_action": "Reject this causal family and preregister a genuinely different mechanism; do not tune these eight hypotheses."
+  }
+}

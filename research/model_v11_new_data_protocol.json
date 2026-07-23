@@ -1,0 +1,401 @@
+{
+  "schema_version": 1,
+  "protocol_id": "model_v11_new_data_zero_base_20260723",
+  "registered_at": "2026-07-23T17:05:00+09:00",
+  "authority": {
+    "purpose": "retrospective exploratory test of genuinely different information channels, plus a fail-closed prospective acquisition specification",
+    "production_promotion_allowed": false,
+    "outcomes_viewed_by_this_lane_before_registration": false,
+    "pre_registration_inspection": [
+      "file names, sizes, hashes, schemas, source date bounds and source fields",
+      "TDnet index URL presence and publication-time distribution",
+      "prior experiment protocols and availability conclusions"
+    ],
+    "forbidden_pre_registration_inspection": [
+      "candidate returns",
+      "candidate portfolio results",
+      "candidate coefficient signs",
+      "candidate tail or code-concentration results"
+    ],
+    "note": "This protocol is intentionally frozen before this lane reads oc_return_pct or label. A retrospective pass cannot promote a production model because historical source observation-time provenance and execution data are incomplete."
+  },
+  "frozen_inputs": {
+    "corrected_panel": {
+      "path": "/tmp/model_v07_corrected_panel.pkl",
+      "sha256": "6b86f994a1d15d1da8ed40469d44fc409adadc6cd5b3df3c08aef6717bcdf0eb",
+      "manifest_path": "/tmp/model_v07_corrected_panel.pkl.manifest.json",
+      "manifest_sha256": "25e08c564ef6400b7a29168db9fd7e8220bd0e2386c7a3c7e71b05c2ff950b02",
+      "rows": 1524104,
+      "codes": 4124
+    },
+    "jpx_daily_ohlc": {
+      "path": "jpx_daily_2024_2025.pkl",
+      "sha256": "18878ab5597bea531b06e94eef2395a52f94aa64c7265a736bd137a8d48b602d",
+      "rows": 1421669,
+      "columns": [
+        "date",
+        "code",
+        "name",
+        "open",
+        "high",
+        "low",
+        "close"
+      ],
+      "availability_limit": "No volume, turnover, VWAP, trading unit, bid, ask or market-cap field."
+    },
+    "tdnet_index_caches": [
+      {
+        "path": "tdnet_date_cache_2024",
+        "html_files": 110,
+        "filename_date_bounds": [
+          "2024-04-02",
+          "2024-07-31"
+        ],
+        "aggregate_sha256": "795852d3f64f8767191805e339dbd7c16972c9a249996ea6847fbbe023bea0f3"
+      },
+      {
+        "path": "tdnet_date_cache",
+        "html_files": 108,
+        "filename_date_bounds": [
+          "2025-03-31",
+          "2025-07-31"
+        ],
+        "aggregate_sha256": "012a11b23d09a5931726146cb37cb715f58e8c6e020d67700fa199c912628d38"
+      }
+    ],
+    "tdnet_index_inventory": {
+      "rows": 50719,
+      "unique_document_urls": 50719,
+      "url_host": "www.release.tdnet.info via a mirror redirect",
+      "locally_cached_document_bodies": 0,
+      "locally_cached_tdnet_pdf_files": 0,
+      "locally_cached_xbrl_files": 0
+    },
+    "monthly_jpx_pdfs": {
+      "path_glob": "research/.cache/model_v05_jpx/20????.pdf",
+      "months": 19,
+      "date_bounds": [
+        "2024-01",
+        "2025-07"
+      ],
+      "fields": "AM/PM OHLC only; no usable volume, turnover, lot, order book, futures or PTS fields"
+    }
+  },
+  "point_in_time_policy": {
+    "timezone": "Asia/Tokyo",
+    "decision_cutoff": "08:58:59",
+    "feature_availability": "published_at and local source_received_at and parse_completed_at must all be at or before the decision cutoff",
+    "historical_limitation": "The HTML caches have publication timestamps but no immutable local receipt sidecars. They are historical-only provenance and therefore exploratory.",
+    "source_completeness": "Require every calendar-date index page from the prior panel session through the target session. Missing source means excluded, never no-event.",
+    "document_completeness": "Numeric/body hypotheses require a byte-identical document object plus receipt timestamp and parser version. URL-only records fail closed.",
+    "outcome_separation": "Feature artifacts must be frozen before open/close labels are joined. Actual open, close, volume and execution records live in a separate label ledger."
+  },
+  "registered_data_generation_hypotheses": [
+    {
+      "id": "ND01_forecast_old_to_new",
+      "information_channel": "TDnet structured numeric forecast table",
+      "raw_fields": [
+        "period",
+        "consolidation_scope",
+        "accounting_standard",
+        "currency",
+        "unit",
+        "old_sales",
+        "new_sales",
+        "old_operating_profit",
+        "new_operating_profit",
+        "old_ordinary_profit",
+        "new_ordinary_profit",
+        "old_net_profit",
+        "new_net_profit",
+        "old_eps",
+        "new_eps"
+      ],
+      "fixed_features": "signed percent change and absolute delta for each same-period/same-scope metric; denominator-zero gets an explicit flag and no invented percentage",
+      "status_before_outcome": "blocked_local_data_absent",
+      "test_policy": "rank event stocks by a regularized model on the frozen numeric vector; no title text"
+    },
+    {
+      "id": "ND02_profit_delta_to_market_cap",
+      "information_channel": "TDnet numeric table plus PIT shares and D-1 close",
+      "raw_fields": [
+        "old/new operating profit",
+        "old/new ordinary profit",
+        "old/new net profit",
+        "shares outstanding excluding treasury at D-1",
+        "D-1 close"
+      ],
+      "fixed_features": "profit delta divided by D-1 market capitalization, with currency/unit validation",
+      "status_before_outcome": "blocked_local_data_absent",
+      "test_policy": "event-only ranking; fail closed on stale shares, mixed currency, period mismatch or missing units"
+    },
+    {
+      "id": "ND03_buyback_pressure",
+      "information_channel": "TDnet buyback decision table plus PIT capital structure",
+      "raw_fields": [
+        "maximum shares",
+        "maximum yen amount",
+        "shares outstanding excluding treasury",
+        "D-1 market capitalization",
+        "method",
+        "start date",
+        "end date"
+      ],
+      "fixed_features": [
+        "maximum shares / non-treasury shares",
+        "maximum amount / D-1 market cap",
+        "business days until start",
+        "program duration",
+        "ToSTNeT versus market purchase"
+      ],
+      "status_before_outcome": "blocked_local_data_absent",
+      "test_policy": "event-only ranking; initial decisions only, never status reports"
+    },
+    {
+      "id": "ND04_simultaneous_adverse_bundle",
+      "information_channel": "all cached disclosures for the same code and target session",
+      "raw_fields": [
+        "published_at",
+        "title",
+        "document URL"
+      ],
+      "fixed_features": [
+        "supportive family count",
+        "adverse family count",
+        "supportive-and-adverse conflict",
+        "same-minute adverse companion",
+        "document count",
+        "bundle span"
+      ],
+      "status_before_outcome": "implementable_exploratory",
+      "test_policy": "monthly walk-forward Ridge on structured flags only; no character or word title vectorizer"
+    },
+    {
+      "id": "ND05_release_clock_and_fiscal_horizon",
+      "information_channel": "TDnet publication clock and deterministic fiscal-period tokens",
+      "raw_fields": [
+        "published_at",
+        "title"
+      ],
+      "fixed_features": [
+        "premarket versus prior-session post-close",
+        "minutes from prior close",
+        "latest information age at 08:58:59",
+        "first/second/third/final/full-year fiscal horizon",
+        "fiscal year month",
+        "earnings plus revision bundle"
+      ],
+      "status_before_outcome": "implementable_exploratory",
+      "test_policy": "monthly walk-forward Ridge on clock/period metadata only; no title TF-IDF"
+    },
+    {
+      "id": "ND06_pdf_table_shape_and_numeric_density",
+      "information_channel": "TDnet PDF bytes or official structured payload",
+      "raw_fields": [
+        "page count",
+        "table coordinates",
+        "numeric token count",
+        "old/new column labels",
+        "parser confidence"
+      ],
+      "fixed_features": "table density, number of revised metrics and cross-table agreement; never OCR-derived signs without confidence threshold",
+      "status_before_outcome": "blocked_document_bodies_absent",
+      "test_policy": "abstain when PDF bytes, receipt timestamp or parser confidence is absent"
+    },
+    {
+      "id": "ND07_body_negation_and_cancellation",
+      "information_channel": "TDnet document body",
+      "raw_fields": [
+        "normalized body text",
+        "section boundaries",
+        "table cells"
+      ],
+      "fixed_features": [
+        "not an upward revision",
+        "unchanged forecast",
+        "withdrawn forecast",
+        "buyback cancellation",
+        "one-off versus recurring qualifier",
+        "going-concern or audit qualification"
+      ],
+      "status_before_outcome": "blocked_document_bodies_absent",
+      "test_policy": "body rules override supportive title flags; URL or title alone cannot assert absence of negation"
+    },
+    {
+      "id": "ND08_ose_futures_0858",
+      "information_channel": "exact OSE futures snapshots",
+      "raw_fields": [
+        "contract",
+        "event_at",
+        "received_at",
+        "last",
+        "best_bid",
+        "best_ask",
+        "day_open",
+        "cumulative_volume",
+        "prior_settlement"
+      ],
+      "fixed_features": [
+        "return from prior settlement",
+        "08:45-to-08:58 return",
+        "spread",
+        "basis",
+        "Nikkei-TOPIX divergence"
+      ],
+      "status_before_outcome": "blocked_no_historical_snapshots",
+      "test_policy": "exact snapshots at or before 08:58:59; daily futures OHLC and CFDs are forbidden proxies"
+    },
+    {
+      "id": "ND09_tse_auction_0858",
+      "information_channel": "pre-open cash auction snapshots",
+      "raw_fields": [
+        "event_at",
+        "received_at",
+        "indicative equilibrium price",
+        "1/3/10-level bid and ask quantities",
+        "market buy and sell quantities",
+        "special quote state"
+      ],
+      "fixed_features": [
+        "market-order imbalance",
+        "depth imbalance",
+        "indicative gap net of futures",
+        "08:57-to-08:58:55 convergence",
+        "tick-normalized indicative moves"
+      ],
+      "status_before_outcome": "blocked_no_historical_snapshots",
+      "test_policy": "freeze four times 08:57:00/08:58:00/08:58:30/08:58:55; never substitute the actual open"
+    },
+    {
+      "id": "ND10_pts_night_and_day",
+      "information_channel": "venue-specific PTS trades and quotes",
+      "raw_fields": [
+        "venue",
+        "session",
+        "event_at",
+        "received_at",
+        "last",
+        "bid",
+        "ask",
+        "volume",
+        "turnover",
+        "trade count"
+      ],
+      "fixed_features": [
+        "night-session return and liquidity",
+        "08:20-to-08:58 day-session return and liquidity",
+        "PTS-versus-D-1-close gap",
+        "venue disagreement"
+      ],
+      "status_before_outcome": "blocked_no_historical_feed",
+      "test_policy": "night and partial day sessions stay separate; no-activity, unavailable and unsupported are distinct"
+    },
+    {
+      "id": "ND11_pit_liquidity_and_unit_cost",
+      "information_channel": "D-1 daily volume/turnover plus effective-dated security master",
+      "raw_fields": [
+        "volume",
+        "turnover",
+        "VWAP",
+        "trading unit",
+        "tick size",
+        "halts",
+        "special quotes",
+        "corporate-action adjustment known at cutoff"
+      ],
+      "fixed_features": [
+        "median turnover 5/20/60",
+        "order notional / median turnover",
+        "one-lot notional",
+        "Amihud proxy",
+        "high-low spread proxy",
+        "tick / price"
+      ],
+      "status_before_outcome": "blocked_local_archive_ohlc_only",
+      "test_policy": "D-1 or earlier only; missing files are not zero volume; proxies never share names with observed spread or slippage"
+    }
+  ],
+  "retrospective_implementation": {
+    "candidate_family": [
+      "ND04_simultaneous_adverse_bundle",
+      "ND05_release_clock_and_fiscal_horizon",
+      "ND04_plus_ND05"
+    ],
+    "estimator": {
+      "pipeline": "median imputation, StandardScaler, Ridge",
+      "alpha": 10.0,
+      "target": "within-session percentile of observed open-to-close return transformed to [-1,1]",
+      "title_vectorizer": "forbidden",
+      "hyperparameter_search": "none"
+    },
+    "walk_forward": "Refit at each score month using only earlier strict-source-complete sessions; require at least 20 prior complete sessions and 100 training event bundles.",
+    "score_windows": [
+      {
+        "name": "previously_unused_early_2024",
+        "start": "2024-05-01",
+        "end": "2024-06-30"
+      },
+      {
+        "name": "later_reference",
+        "start": "2024-07-01",
+        "end": "2025-07-31"
+      }
+    ],
+    "missing_gap": "Sessions without a strict-complete TDnet index bundle are excluded. The 2024-08 through 2025-03 cache gap is not imputed."
+  },
+  "evaluation": {
+    "portfolio_sizes": [
+      1,
+      2
+    ],
+    "slot_weighting": "equal; unfilled event-only slots are cash",
+    "round_trip_cost_bps": [
+      0,
+      20,
+      40,
+      60
+    ],
+    "primary_metric": "mean daily net return at 40 bps",
+    "secondary_metrics": [
+      "mean at 20 and 60 bps",
+      "median",
+      "win rate",
+      "positive calendar months",
+      "early-2024 and later-reference slices",
+      "top-20 winning days removed",
+      "top-10 profit-contributing codes replaced by cash",
+      "daily candidate coverage",
+      "slots filled"
+    ],
+    "comparators": [
+      "L4 price-only monthly walk-forward Ridge",
+      "cash"
+    ],
+    "familywise": {
+      "family": "three implementable candidate policies times top1/top2",
+      "alpha": 0.05,
+      "method": "Holm correction over two-sided daily paired tests versus L4 on intersecting scored sessions",
+      "interpretation": "informational only; dependence and retrospective provenance prevent a production claim"
+    },
+    "tail_and_concentration": {
+      "tail_days_removed": 20,
+      "profit_codes_replaced_by_cash": 10,
+      "report_top_profit_share": true,
+      "report_worst_day": true
+    },
+    "independent_pnl_audit": "A separate audit program must recompute gross/net P&L directly from saved picks, verify equal slot weights and costs, and compare every serialized metric within 1e-12."
+  },
+  "promotion_gate": {
+    "enabled": false,
+    "reason": "Historical receipt-time provenance, actual execution/slippage, auction, futures, PTS and PIT liquidity are absent.",
+    "minimum_future_evidence": [
+      "append-only prospective feature ledger with at least 98% cutoff-valid coverage",
+      "sequestered forward labels and independent P&L audit",
+      "positive mean at 40 bps for top1 and top2 over a predeclared forward horizon",
+      "positive result after top-day and top-code removal",
+      "familywise-adjusted evidence and no material tail deterioration",
+      "observed spread/slippage, lot-size and capacity checks",
+      "operational replay with zero post-cutoff feature violations"
+    ]
+  }
+}

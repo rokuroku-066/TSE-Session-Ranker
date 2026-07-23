@@ -1,0 +1,191 @@
+{
+  "schema_version": 1,
+  "protocol_id": "model_v11_new_data_zero_base_20260723",
+  "audit_status": "pass",
+  "independent_of_runner_imports": true,
+  "tolerance": 1e-12,
+  "hashes": {
+    "protocol_sha256": "57f2b82e14f799ced47f58ec718e07d5e27dbf3a24f9299f628de03710ec789f",
+    "result_sha256": "911b211d1d73f331127f511df3f7c40bb2d7dfc007a64e0d5673e78937a7b2ed",
+    "picks_sha256": "dd6d6716b5f29b79d54f96eee03995fe834b9128ba58f6882c4bc524e3cb1d3d",
+    "audit_program_sha256": "a9a10b420b5de0f5455e8678ac411259dcf06a9ee63e1087f024d1dc0ed5ce7d"
+  },
+  "scope": {
+    "sessions": 107,
+    "first_session": "2024-06-03",
+    "last_session": "2025-07-31",
+    "policies": [
+      "L4_price_control",
+      "ND04_simultaneous_adverse_bundle",
+      "ND05_release_clock_and_fiscal_horizon",
+      "ND04_plus_ND05"
+    ],
+    "top_k": [
+      1,
+      2
+    ],
+    "costs_bps": [
+      0.0,
+      20.0,
+      40.0,
+      60.0
+    ]
+  },
+  "assertions": {
+    "slot_level_gross_return_recomputed": true,
+    "executed_slot_cost_recomputed": true,
+    "equal_weight_divisor_recomputed": true,
+    "cash_slots_zero_return_zero_cost": true,
+    "all_reported_metrics_match": true,
+    "tail_day_removal_matches": true,
+    "top_code_cash_replacement_matches": true,
+    "monthly_and_slice_metrics_match": true,
+    "familywise_tests_match": true,
+    "structural_groups_checked": 8,
+    "numeric_or_scalar_checks": 408
+  },
+  "structural_checks": [
+    {
+      "candidate_id": "L4_price_control",
+      "top_k": 1,
+      "sessions": 107,
+      "rows": 107,
+      "slots_per_day_exact": true,
+      "rank_set_exact": true,
+      "duplicate_code_within_day": false,
+      "execution_flag_exact": true
+    },
+    {
+      "candidate_id": "L4_price_control",
+      "top_k": 2,
+      "sessions": 107,
+      "rows": 214,
+      "slots_per_day_exact": true,
+      "rank_set_exact": true,
+      "duplicate_code_within_day": false,
+      "execution_flag_exact": true
+    },
+    {
+      "candidate_id": "ND04_simultaneous_adverse_bundle",
+      "top_k": 1,
+      "sessions": 107,
+      "rows": 107,
+      "slots_per_day_exact": true,
+      "rank_set_exact": true,
+      "duplicate_code_within_day": false,
+      "execution_flag_exact": true
+    },
+    {
+      "candidate_id": "ND04_simultaneous_adverse_bundle",
+      "top_k": 2,
+      "sessions": 107,
+      "rows": 214,
+      "slots_per_day_exact": true,
+      "rank_set_exact": true,
+      "duplicate_code_within_day": false,
+      "execution_flag_exact": true
+    },
+    {
+      "candidate_id": "ND05_release_clock_and_fiscal_horizon",
+      "top_k": 1,
+      "sessions": 107,
+      "rows": 107,
+      "slots_per_day_exact": true,
+      "rank_set_exact": true,
+      "duplicate_code_within_day": false,
+      "execution_flag_exact": true
+    },
+    {
+      "candidate_id": "ND05_release_clock_and_fiscal_horizon",
+      "top_k": 2,
+      "sessions": 107,
+      "rows": 214,
+      "slots_per_day_exact": true,
+      "rank_set_exact": true,
+      "duplicate_code_within_day": false,
+      "execution_flag_exact": true
+    },
+    {
+      "candidate_id": "ND04_plus_ND05",
+      "top_k": 1,
+      "sessions": 107,
+      "rows": 107,
+      "slots_per_day_exact": true,
+      "rank_set_exact": true,
+      "duplicate_code_within_day": false,
+      "execution_flag_exact": true
+    },
+    {
+      "candidate_id": "ND04_plus_ND05",
+      "top_k": 2,
+      "sessions": 107,
+      "rows": 214,
+      "slots_per_day_exact": true,
+      "rank_set_exact": true,
+      "duplicate_code_within_day": false,
+      "execution_flag_exact": true
+    }
+  ],
+  "familywise_recomputed": {
+    "ND04_simultaneous_adverse_bundle__top1": {
+      "sessions": 107,
+      "candidate_net40_mean_pct": -0.5065920214579722,
+      "L4_net40_mean_pct": 0.06424211328824848,
+      "delta_net40_mean_pct": -0.5708341347462207,
+      "paired_t_statistic": -1.886554011312019,
+      "raw_two_sided_p_value": 0.06195683812892676,
+      "holm_adjusted_p_value": 0.18587051438678026,
+      "reject_familywise_5pct": false
+    },
+    "ND05_release_clock_and_fiscal_horizon__top1": {
+      "sessions": 107,
+      "candidate_net40_mean_pct": -0.23042761157281064,
+      "L4_net40_mean_pct": 0.06424211328824848,
+      "delta_net40_mean_pct": -0.29466972486105913,
+      "paired_t_statistic": -1.047122907369626,
+      "raw_two_sided_p_value": 0.29742471320897074,
+      "holm_adjusted_p_value": 0.29742471320897074,
+      "reject_familywise_5pct": false
+    },
+    "ND04_plus_ND05__top1": {
+      "sessions": 107,
+      "candidate_net40_mean_pct": -0.46696355908878756,
+      "L4_net40_mean_pct": 0.06424211328824848,
+      "delta_net40_mean_pct": -0.5312056723770361,
+      "paired_t_statistic": -1.7242073320181197,
+      "raw_two_sided_p_value": 0.08758552035546574,
+      "holm_adjusted_p_value": 0.18587051438678026,
+      "reject_familywise_5pct": false
+    },
+    "ND04_simultaneous_adverse_bundle__top2": {
+      "sessions": 107,
+      "candidate_net40_mean_pct": -0.4277190708505108,
+      "L4_net40_mean_pct": 0.12428542808377983,
+      "delta_net40_mean_pct": -0.5520044989342907,
+      "paired_t_statistic": -2.685890287413513,
+      "raw_two_sided_p_value": 0.008398513427518168,
+      "holm_adjusted_p_value": 0.04199256713759084,
+      "reject_familywise_5pct": true
+    },
+    "ND05_release_clock_and_fiscal_horizon__top2": {
+      "sessions": 107,
+      "candidate_net40_mean_pct": -0.3959641800353266,
+      "L4_net40_mean_pct": 0.12428542808377983,
+      "delta_net40_mean_pct": -0.5202496081191064,
+      "paired_t_statistic": -2.6815017434567108,
+      "raw_two_sided_p_value": 0.008502233214789353,
+      "holm_adjusted_p_value": 0.04199256713759084,
+      "reject_familywise_5pct": true
+    },
+    "ND04_plus_ND05__top2": {
+      "sessions": 107,
+      "candidate_net40_mean_pct": -0.5402015979673696,
+      "L4_net40_mean_pct": 0.12428542808377983,
+      "delta_net40_mean_pct": -0.6644870260511494,
+      "paired_t_statistic": -3.194272844300219,
+      "raw_two_sided_p_value": 0.00184648532890326,
+      "holm_adjusted_p_value": 0.01107891197341956,
+      "reject_familywise_5pct": true
+    }
+  }
+}

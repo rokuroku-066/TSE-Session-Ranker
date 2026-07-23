@@ -1,0 +1,248 @@
+{
+  "schema_version": 1,
+  "protocol_id": "model_v11_distributional_zero_base_20260723",
+  "registered_at": "2026-07-23T17:00:00+09:00",
+  "status": "registered_before_this_family_read_or_execution_on_an_already_viewed_project_panel",
+  "purpose": "Falsify structurally distinct profit-distribution and selective-trading mechanisms. This is not parameter tuning of v10 quantile or utility candidates.",
+  "authority": {
+    "analysis_type": "retrospective_mechanism_screen",
+    "panel_outcomes_previously_available_to_the_project": true,
+    "panel_outcomes_not_inspected_for_this_family_before_registration": true,
+    "production_promotion_allowed_from_this_panel": false,
+    "maximum_retrospective_action": "freeze exactly one forward-shadow finalist",
+    "earliest_forward_session": "2026-07-24"
+  },
+  "frozen_input": {
+    "panel_path": "/tmp/model_v07_corrected_panel.pkl",
+    "panel_sha256": "6b86f994a1d15d1da8ed40469d44fc409adadc6cd5b3df3c08aef6717bcdf0eb",
+    "manifest_path": "/tmp/model_v07_corrected_panel.pkl.manifest.json",
+    "manifest_sha256": "25e08c564ef6400b7a29168db9fd7e8220bd0e2386c7a3c7e71b05c2ff950b02",
+    "rows": 1524104,
+    "codes": 4124,
+    "sessions": 386,
+    "training_start": "2024-01-04",
+    "score_period": [
+      "2024-07-01",
+      "2025-07-31"
+    ],
+    "score_sessions": 266
+  },
+  "point_in_time": {
+    "decision_time": "08:58:59 Asia/Tokyo",
+    "folds": "calendar-month expanding walk-forward",
+    "training_rule": "Every training and internal-calibration outcome date is strictly earlier than the first scored date of its month.",
+    "training_filter": "price_training_eligible == true and oc_return_pct observed",
+    "scoring_filter": "price_eligible == true",
+    "source_rule": "candidate_price_source_max_date is null or strictly earlier than score date",
+    "target_day_outcome_mutation_test": "For the final fold replace every scoring outcome and label, rerun every scorer and selection rule, and require byte-identical scores, trade masks, and selected keys.",
+    "features": [
+      "oc_last",
+      "oc_mean_5",
+      "oc_mean_20",
+      "oc_mean_60",
+      "oc_win_20",
+      "oc_std_20",
+      "overnight_last",
+      "overnight_mean_20",
+      "overnight_mean_60",
+      "night_day_corr_60",
+      "xrank_atr14_pct",
+      "xrank_close_momentum_5",
+      "xrank_close_momentum_20",
+      "xrank_close_momentum_60",
+      "xrank_prior_close_location_20"
+    ],
+    "routing_context": [
+      "prior_market_dispersion",
+      "prior_market_tail_balance"
+    ]
+  },
+  "portfolio": {
+    "target": "same-session open-to-close gross return",
+    "capacities": [
+      1,
+      2
+    ],
+    "slot_weights": "Each scheduled slot has fixed weight 1 / capacity; rejected or unavailable slots remain cash and surviving slots are not renormalised.",
+    "cost_bps": [
+      20,
+      40,
+      60
+    ],
+    "primary_cost_bps": 40,
+    "tie_break": [
+      "model score descending",
+      "code ascending"
+    ],
+    "scheduled_day_denominator": "All 266 sessions, including full-cash days"
+  },
+  "control": {
+    "id": "C00_DAILY_RANK_RIDGE",
+    "definition": "Ridge(alpha=1) on the expanding within-date average percentile rank target; forced top-k trading.",
+    "comparison": "Each candidate/capacity is compared with the control at the same capacity."
+  },
+  "prohibited_reuse": [
+    "Changing only the alpha, quantile, expectile, downside coefficient, clipping point, or score threshold of a v10 model",
+    "v10 bounded cost utility regression",
+    "v10 single-threshold two-stage expected-return hurdle",
+    "v10 dual-tail probability difference",
+    "v10 lower expectile",
+    "v10 mean minus a fixed multiple of predicted absolute residual",
+    "v10 HistGradientBoosting q35 or median-minus-q20 spread",
+    "v10 temporal-median or dispersion-mixture forced-trade models"
+  ],
+  "implementation_lock": {
+    "random_seed": 20260723,
+    "preprocessing": "Fold-local median imputation with missing-value indicators followed by fold-local standardisation.",
+    "training_weight": "Every training date has total weight one; rows within a date share it equally.",
+    "continuous_target": "Open-to-close percentage return clipped to [-5, +5].",
+    "continuous_ridge_alpha": 10.0,
+    "binary_model": "Ridge(alpha=10) linear-probability model clipped to [0,1].",
+    "control_ridge_alpha": 1.0,
+    "inner_date_splits": "Chronological by unique session, with the stated first fraction used for fitting and the remainder for calibration; no row-random split.",
+    "conformal_coverage": 0.8,
+    "forest": {
+      "n_estimators": 24,
+      "max_depth": 7,
+      "min_samples_leaf": 500,
+      "max_features": 0.75,
+      "max_samples": 0.15,
+      "bootstrap": true
+    },
+    "evt": {
+      "residual_threshold_quantile": 0.9,
+      "gpd_shape_estimator": "method of moments clipped to [-0.25,0.45]",
+      "exceedance_probability_model": "locked binary linear-probability model"
+    },
+    "slot_stop": {
+      "meta_model": "Ridge(alpha=1)",
+      "features": [
+        "cross-sectional score percentile",
+        "adjacent score gap divided by date score standard deviation",
+        "slot-two indicator"
+      ]
+    }
+  },
+  "hypotheses": [
+    {
+      "id": "D01_CODE_EB_RESIDUAL",
+      "family": "hierarchical posterior predictive mean",
+      "mechanism": "Fit a clipped-return Ridge fixed effect, then add a same-code posterior residual mean with a fixed 20-observation zero-centred prior. This partial-pooling identity effect is re-estimated inside every fold.",
+      "prediction": "Persistent code-specific intraday alpha omitted by generic state features survives empirical-Bayes shrinkage and improves net return."
+    },
+    {
+      "id": "D02_SURVIVAL_INTEGRAL",
+      "family": "discrete conditional distribution integration",
+      "mechanism": "Fit four binary models for return exceeding +0.40%, +1.50% and falling below -0.40%, -1.50%. Approximate upside and downside expected magnitude by fixed survival-function rectangles and rank by upside minus 1.25 times downside.",
+      "prediction": "Integrating multiple probability levels separates probability and payoff shape without estimating a single conditional mean or changing a v10 hurdle threshold."
+    },
+    {
+      "id": "D03_DOWNSIDE_FEASIBLE_MEAN",
+      "family": "downside-constrained decision",
+      "mechanism": "Fit a clipped-return conditional mean and a separate probability of a loss below -1.00%. A name is feasible only when its predicted severe-loss probability is no greater than the expanding training base rate; rank feasible names by conditional mean and leave all infeasible slots cash.",
+      "prediction": "A hard downside feasibility constraint dominates scalar mean-minus-risk utility when risk and reward are not smoothly exchangeable."
+    },
+    {
+      "id": "D04_NORMALISED_CONFORMAL_LCB",
+      "family": "heteroscedastic split-conformal abstention",
+      "mechanism": "Use the first 75% of training dates for a clipped-return mean model and absolute-residual scale model, the last 25% for a finite-sample 80% quantile of normalised residuals, and trade only when the conformal lower bound exceeds the 40bp gross break-even.",
+      "prediction": "Distribution-free calibrated uncertainty identifies a smaller set whose lower predictive bound clears cost."
+    },
+    {
+      "id": "D05_FOREST_TREE_LCB",
+      "family": "distributional forest abstention",
+      "mechanism": "Fit a fixed 24-tree random forest to clipped returns; treat the cross-tree predictions as a predictive ensemble and trade only when their 20th percentile exceeds 40bp.",
+      "prediction": "Nonlinear interaction states with agreement across bootstrap trees reveal profitable lower-tail opportunities missed by direct gradient quantiles."
+    },
+    {
+      "id": "D06_EVT_RESIDUAL_ES",
+      "family": "extreme-value residual penalty",
+      "mechanism": "Fit the mean on the first 70% of training dates, estimate a 90th-percentile downside-residual threshold and generalized-Pareto excess mean on the remaining dates, fit the threshold-exceedance probability there, refit the mean on all training rows, and subtract conditional EVT expected shortfall. Trade only above 40bp.",
+      "prediction": "Explicit extrapolation of rare residual losses improves selection where ordinary tail probabilities ignore severity beyond the threshold."
+    },
+    {
+      "id": "D07_REGIME_ABSTAIN",
+      "family": "prequential regime-conditioned no-trade",
+      "mechanism": "Fit the rank control on the first 75% of training dates and evaluate its top-two net40 outcomes on the last 25%. Form four cells from prior-only dispersion high/low and tail-balance positive/negative; trade a score-month day only when its cell has at least 20 calibration days and a Beta(4,4) posterior profitable-day probability above 0.55. Refit the rank model on all training rows for ordering.",
+      "prediction": "The action should be cash in regimes where a genuinely prior simulation of the same ranking policy lacks posterior evidence of positive net outcomes."
+    },
+    {
+      "id": "D08_SLOTWISE_CASH_STOP",
+      "family": "top-one/top-two versus cash stopping",
+      "mechanism": "Fit the rank control on the first 75% of training dates, collect its first two names per calibration day, and regress their realised gross slot return on score percentile, adjacent score gap, and slot identity. Refit ordering on all training rows and execute each prospective slot independently only when its calibrated expected gross return exceeds 40bp.",
+      "prediction": "Dynamic slot-level stopping distinguishes a strong first name, an incremental second name, and cash rather than forcing a fixed breadth."
+    }
+  ],
+  "candidate_family_size": 16,
+  "evaluation": {
+    "primary_metric": "scheduled-day arithmetic mean net40 return",
+    "reported": [
+      "gross and net20/net40/net60 mean",
+      "monthly net40",
+      "three fixed temporal slices net40",
+      "best 5/10/20 days removed at net20",
+      "worst 5/10/20 days removed at net20",
+      "5% expected shortfall at net40",
+      "executed slots, traded days, cash days, unique codes",
+      "largest and top-10 code weight share",
+      "largest positive code P&L share",
+      "top-10 positive-P&L codes replaced by cash at net20"
+    ],
+    "temporal_slices": {
+      "discovery": [
+        "2024-07-01",
+        "2024-10-31"
+      ],
+      "confirmation_a": [
+        "2024-11-01",
+        "2025-03-31"
+      ],
+      "confirmation_b": [
+        "2025-04-01",
+        "2025-07-31"
+      ]
+    },
+    "multiplicity": "5000 deterministic circular moving-block resamples, block length 10 sessions; studentised one-sided 95% familywise max-t lower bound for net40 uplift versus capacity-matched control over all 16 candidate policies.",
+    "selection_rule": "Among retrospective candidates passing every retrospective gate, freeze the highest net40 mean. If none passes, freeze no finalist."
+  },
+  "retrospective_gate": {
+    "net40_mean_positive": true,
+    "net60_mean_positive": true,
+    "net40_greater_than_capacity_matched_control": true,
+    "familywise_95_lower_net40_uplift_positive": true,
+    "all_three_temporal_slices_net40_positive": true,
+    "positive_months_net40_at_least": 10,
+    "best_20_days_removed_net20_positive": true,
+    "top_10_positive_pnl_codes_to_cash_net20_positive": true,
+    "expected_shortfall05_net40_not_worse_than_control": true,
+    "executed_slot_fraction_at_least": 0.3,
+    "traded_days_at_least": 150,
+    "unique_codes_at_least": 100,
+    "largest_code_weight_share_at_most": 0.05,
+    "top10_code_weight_share_at_most": 0.25,
+    "largest_positive_code_pnl_share_at_most": 0.25,
+    "independent_pnl_audit_exact": true,
+    "target_mutation_exact": true
+  },
+  "production_gate": {
+    "retrospective_gate_must_pass": true,
+    "artifact_freeze": "Exact feature list, fitted mechanism, hyperparameters, capacity, cash rule, code version, and hashes are frozen before forward outcomes.",
+    "prospective_sessions_at_least": 60,
+    "prospective_net40_mean_positive": true,
+    "prospective_one_sided_95_block_bootstrap_lower_mean_positive": true,
+    "prospective_all_three_consecutive_20_session_slices_net40_positive": true,
+    "prospective_best_5_days_removed_net20_positive": true,
+    "prospective_independent_pnl_audit_exact": true,
+    "no_refit_or_candidate_substitution": true,
+    "failure_action": "Reject the finalist and require a new economic/statistical mechanism plus a newly registered forward period; do not tune this family."
+  },
+  "required_artifacts": [
+    "model_v11_distributional_protocol.json",
+    "model_v11_distributional_runner.py",
+    "model_v11_distributional_result.json",
+    "model_v11_distributional_picks.csv",
+    "model_v11_distributional_audit.py",
+    "model_v11_distributional_audit.json",
+    "model_v11_distributional_report.md"
+  ]
+}

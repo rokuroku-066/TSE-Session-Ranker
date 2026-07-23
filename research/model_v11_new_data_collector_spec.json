@@ -1,0 +1,257 @@
+{
+  "schema_version": 1,
+  "spec_id": "model_v11_new_data_prospective_collector_20260723",
+  "authority": {
+    "purpose": "prospective acquisition of information channels that are absent from the historical workspace",
+    "production_trading_enabled": false,
+    "secrets_in_repository": false,
+    "append_only": true,
+    "retroactive_feature_rewrite_forbidden": true
+  },
+  "decision": {
+    "timezone": "Asia/Tokyo",
+    "target_time": "08:58:59",
+    "availability_rule": "max(source_received_at, parse_completed_at) <= target_date 08:58:59 Asia/Tokyo",
+    "late_payload_rule": "store the payload with late=true but do not expose it to that target date's feature view",
+    "clock": "NTP-synchronized collector clock with offset and synchronization status persisted on every run"
+  },
+  "record_envelope": {
+    "required": [
+      "schema_version",
+      "target_date",
+      "source",
+      "venue",
+      "instrument_id",
+      "source_record_id",
+      "source_event_at",
+      "source_received_at",
+      "parse_completed_at",
+      "raw_object_sha256",
+      "collector_version",
+      "parser_version",
+      "coverage_status",
+      "activity_status",
+      "values",
+      "field_status"
+    ],
+    "coverage_status": [
+      "complete",
+      "partial",
+      "unavailable",
+      "not_supported"
+    ],
+    "activity_status": [
+      "active",
+      "no_activity",
+      "unknown",
+      "not_applicable"
+    ],
+    "field_status": [
+      "observed",
+      "zero",
+      "missing",
+      "not_applicable"
+    ],
+    "invariants": [
+      "no_activity is valid only when coverage_status is complete",
+      "unavailable never becomes numeric zero",
+      "field_status keys exactly equal value keys",
+      "observed values are non-null; zero values are numeric zero; missing/not_applicable values are null",
+      "raw objects are content-addressed and immutable"
+    ]
+  },
+  "collectors": {
+    "tdnet_numeric_and_body": {
+      "hypotheses": [
+        "ND01_forecast_old_to_new",
+        "ND02_profit_delta_to_market_cap",
+        "ND03_buyback_pressure",
+        "ND06_pdf_table_shape_and_numeric_density",
+        "ND07_body_negation_and_cancellation"
+      ],
+      "required_access": "J-Quants TDnet add-on or J-Quants Pro for official structured fields; immutable official PDF bytes when body semantics are required. Confirm the legal entity, historical depth and internal-use/research terms before activation.",
+      "cadence": "poll continuously from 06:00 through 08:58:59 and persist publisher event time, first local receipt time and parse completion time",
+      "raw_objects": [
+        "official response bytes",
+        "document PDF bytes when licensed",
+        "request and response metadata",
+        "document id and canonical URL"
+      ],
+      "structured_fields": [
+        "period",
+        "consolidated_or_standalone",
+        "accounting_standard",
+        "currency",
+        "unit",
+        "old/new sales",
+        "old/new operating profit",
+        "old/new ordinary profit",
+        "old/new net profit",
+        "old/new EPS",
+        "old/new dividend",
+        "buyback maximum shares",
+        "buyback maximum amount",
+        "buyback method",
+        "buyback start and end dates"
+      ],
+      "validation": [
+        "join old and new values only when period, scope, currency and unit agree",
+        "store source cell coordinates and extraction confidence",
+        "body-level negation overrides title-level supportive flags",
+        "corrections create a new immutable record and supersession edge; they never overwrite the original"
+      ]
+    },
+    "pit_security_master_and_liquidity": {
+      "hypotheses": [
+        "ND02_profit_delta_to_market_cap",
+        "ND03_buyback_pressure",
+        "ND11_pit_liquidity_and_unit_cost"
+      ],
+      "required_access": "J-Quants/DataCube or another licensed source for daily volume, turnover, VWAP and effective-dated listed-issue master; execution records from the actual broker",
+      "cadence": "seal D-1 market and master data after D-1 close and before D 08:58:59",
+      "raw_fields": [
+        "D-1 and earlier OHLC",
+        "volume",
+        "turnover",
+        "VWAP",
+        "shares outstanding",
+        "treasury shares",
+        "trading unit",
+        "tick size",
+        "halt and special-quote flags",
+        "corporate-action announcement and effective timestamps"
+      ],
+      "validation": [
+        "feature_source_max_date <= D-1",
+        "security-master effective interval contains D-1",
+        "no-trade and missing-file states are distinct",
+        "corporate-action adjustments use only actions announced by the decision cutoff",
+        "spread proxies keep a _proxy suffix and never populate observed-spread fields"
+      ]
+    },
+    "ose_futures": {
+      "hypotheses": [
+        "ND08_ose_futures_0858"
+      ],
+      "required_access": "broker market-data API with OSE futures entitlement for prospective collection, or licensed OSE historical feed for backfill",
+      "instruments": [
+        "Nikkei 225 front contract selected by a predeclared roll calendar",
+        "TOPIX front contract selected by the same predeclared roll principle"
+      ],
+      "snapshot_times": [
+        "08:57:00",
+        "08:58:00",
+        "08:58:30",
+        "08:58:55"
+      ],
+      "raw_fields": [
+        "contract",
+        "expiry",
+        "last trade and event time",
+        "best bid",
+        "best ask",
+        "day-session open",
+        "cumulative volume",
+        "prior settlement"
+      ],
+      "validation": [
+        "contract selection is fixed before observing same-day volume",
+        "stale last trade is marked separately from missing quote",
+        "daily futures OHLC and CFD values are not accepted as 08:58 substitutes"
+      ]
+    },
+    "tse_preopen_auction": {
+      "hypotheses": [
+        "ND09_tse_auction_0858"
+      ],
+      "required_access": "broker market-data API for a prospectively fixed candidate set, or licensed JPX 10-level reconstruction data for historical work",
+      "candidate_rule": "freeze candidate instrument ids before 08:57 using only cutoff-valid upstream features; persist the rejected and selected candidate set",
+      "snapshot_times": [
+        "08:57:00",
+        "08:58:00",
+        "08:58:30",
+        "08:58:55"
+      ],
+      "raw_fields": [
+        "indicative equilibrium price",
+        "best bid and ask",
+        "bid/ask quantities at 1, 3 and 10 levels",
+        "market buy and sell quantities",
+        "over and under quantities",
+        "special quote state",
+        "tick size"
+      ],
+      "validation": [
+        "the 09:00 actual open is label-only and cannot repair a missing indicative price",
+        "all four scheduled snapshots report coverage independently",
+        "cancellations or orders received after 08:58:59 are excluded from the frozen view"
+      ]
+    },
+    "pts": {
+      "hypotheses": [
+        "ND10_pts_night_and_day"
+      ],
+      "required_access": "Japannext ITCH/GLIMPSE or an authorized vendor agreement for exact venue/session data",
+      "sessions": {
+        "night": "17:00 through 06:00, collected only after the session-complete marker",
+        "day_partial": "08:20 through 08:58:59, explicitly marked partial"
+      },
+      "raw_fields": [
+        "venue",
+        "session",
+        "last price and time",
+        "best bid and ask",
+        "session open/high/low",
+        "volume",
+        "turnover",
+        "trade count"
+      ],
+      "validation": [
+        "night and day sessions are never combined before raw persistence",
+        "venue-specific observations are not replaced by SOR aggregates",
+        "complete no-trade sessions use volume=0 and last_price=null",
+        "API failure uses missing values, not zero"
+      ]
+    }
+  },
+  "daily_freeze_sequence": [
+    "After D-1 close, seal D-1 liquidity, capital structure, trading unit, tick and known corporate actions.",
+    "At the PTS night-session end, persist the complete venue/session record.",
+    "From 06:00, persist every received TDnet payload and parse attempt.",
+    "At 08:57:00, freeze the auction candidate set and start scheduled futures/auction snapshots.",
+    "At 08:58:59, create a content-addressed feature-view manifest containing only cutoff-valid records.",
+    "After 09:00, persist actual open and execution records into a physically separate label ledger.",
+    "After the close, add the D open-to-close label without mutating the frozen feature manifest."
+  ],
+  "quality_gates_before_any_model_test": {
+    "minimum_pilot_sessions": 20,
+    "required_cutoff_valid_coverage": 0.98,
+    "maximum_post_cutoff_feature_violations": 0,
+    "required_clock_sync_status": "healthy",
+    "required_raw_object_hash_coverage": 1.0,
+    "required_replay_equivalence": 1.0,
+    "note": "The pilot is data-quality-only. Its labels must remain sealed until the subsequent model protocol, hypotheses and forward horizon are preregistered."
+  },
+  "sequestered_forward_test": {
+    "minimum_sessions": 120,
+    "minimum_calendar_months": 6,
+    "portfolio_sizes": [
+      1,
+      2
+    ],
+    "round_trip_cost_bps": [
+      20,
+      40,
+      60
+    ],
+    "required_audits": [
+      "independent slot-level P&L",
+      "realized spread/slippage and fillability",
+      "top-20-day removal",
+      "top-10-profit-code cash replacement",
+      "familywise multiplicity",
+      "operational replay from immutable raw objects"
+    ],
+    "promotion_rule": "Must be frozen in a new protocol before the first forward label is opened; this collector specification does not itself authorize promotion."
+  }
+}

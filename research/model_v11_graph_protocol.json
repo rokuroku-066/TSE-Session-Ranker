@@ -1,0 +1,344 @@
+{
+  "schema_version": 1,
+  "protocol_id": "v11_cross_stock_graph_propagation_20260723",
+  "registered_at": "2026-07-23T17:10:00+09:00",
+  "status": "registered_before_any_v11_graph_candidate_outcome_computation",
+  "research_question": "Can a graph built only from strictly prior cross-stock behavior transmit 08:58:59-known shocks or disclosures into same-session open-to-close rankings that survive an independent production-readiness gate?",
+  "authority": {
+    "purpose": "retrospective zero-base graph and propagation family falsification",
+    "panel_outcomes_previously_viewed_by_upstream_project": true,
+    "v10_price_architecture_and_z17_results_known_before_registration": true,
+    "v11_graph_candidate_outcomes_viewed_before_registration": false,
+    "production_promotion_allowed_from_this_run": false,
+    "orders_allowed": false,
+    "post_result_parameter_or_hypothesis_mutation_allowed": false,
+    "maximum_decision_from_this_run": "retain one frozen candidate for a new prospective forward shadow"
+  },
+  "frozen_inputs": {
+    "panel": {
+      "path": "/tmp/model_v07_corrected_panel.pkl",
+      "sha256": "6b86f994a1d15d1da8ed40469d44fc409adadc6cd5b3df3c08aef6717bcdf0eb",
+      "manifest_path": "/tmp/model_v07_corrected_panel.pkl.manifest.json",
+      "manifest_sha256": "25e08c564ef6400b7a29168db9fd7e8220bd0e2386c7a3c7e71b05c2ff950b02",
+      "rows": 1524104,
+      "codes": 4124,
+      "sessions": 386,
+      "score_sessions": 266,
+      "calendar_bounds": [
+        "2024-01-04",
+        "2025-07-31"
+      ]
+    },
+    "known_references": {
+      "v10_price_architectures_protocol": {
+        "path": "research/model_v10_architectures_protocol.json",
+        "sha256": "bb5224836397070a1945d0226caf1af3f9f2057b9da1265a97a5b1421c82aa7a"
+      },
+      "v10_price_architectures_result": {
+        "path": "research/model_v10_architectures_result.json",
+        "sha256": "c1ef294cac7457734318e1b106ee9d71e5aadabbefa8b6598274a7a3b840406c"
+      },
+      "v10_z17_protocol": {
+        "path": "research/model_v10_peer_residual_protocol.json",
+        "sha256": "c45d854cf35a6af3920e6f763d726b385b33559d18e981174503609cdfa36dbb"
+      },
+      "v10_z17_result": {
+        "path": "research/model_v10_peer_residual_result.json",
+        "sha256": "3eeba440a914c5cfe941f5460bf94f81e89528f755fdf24a0a60f10601fd6fc2"
+      },
+      "v10_summary": {
+        "path": "research/model_v10_summary.json",
+        "sha256": "24764eea56d912f2e1d3a318020088d22e951e59da588688895721808a9d0a44"
+      }
+    }
+  },
+  "prior_research": [
+    {
+      "doi": "10.11517/jsaisigtwo.2020.FIN-024_171",
+      "url": "https://www.jstage.jst.go.jp/article/jsaisigtwo/2020/FIN-024/2020_171/_article/-char/ja/",
+      "title": "経済因果チェーンを用いたリードラグ効果の実証分析",
+      "protocol_use": "Motivates directed shock propagation, but the paper's text-extracted economic causal chain is unavailable here; price-derived edges are not treated as causal substitutes."
+    },
+    {
+      "doi": "10.11517/jsaisigtwo.2026.FIN-036_76",
+      "url": "https://www.jstage.jst.go.jp/article/jsaisigtwo/2026/FIN-036/2026_76/_article/-char/ja/",
+      "title": "部分空間正則化付き主成分分析を用いた日米業種リードラグ投資戦略",
+      "protocol_use": "Motivates low-dimensional propagation and lead-lag structure; US ETF and sector data are unavailable, so no Japanese/US proxy is constructed."
+    },
+    {
+      "doi": "10.11517/jsaisigtwo.2026.BI-028_19",
+      "url": "https://www.jstage.jst.go.jp/article/jsaisigtwo/2026/BI-028/2026_19/_article/-char/ja/",
+      "title": "ニュースセンチメントのGranger因果関係に基づく銘柄間ネットワークを通した日本株式市場の情報伝播構造の分析",
+      "protocol_use": "Motivates directed information networks and supplies an important falsification prior: its major centrality measures had no significant future-return predictive power. Centrality alone is therefore not a candidate."
+    },
+    {
+      "doi": "10.11487/trafst.7.2_92",
+      "url": "https://www.jstage.jst.go.jp/article/trafst/7/2/7_92/_article/-char/ja/",
+      "title": "株式市場に埋め込まれたグループ相関構造―日米比較",
+      "protocol_use": "Motivates signed correlation networks and a fixed four-community archetype, without claiming that the historical four-group finding must persist."
+    }
+  ],
+  "external_data_limit_and_fail_closed_hypotheses": [
+    {
+      "id": "B01_external_economic_causal_chain",
+      "required_data": "firm-to-firm economic causal or supply-chain edges",
+      "availability": "unavailable",
+      "decision": "fail_closed_no_score",
+      "forbidden_proxy": "Do not relabel price correlation or lead-lag edges as economic causal-chain edges."
+    },
+    {
+      "id": "B02_japan_us_sector_lead_lag",
+      "required_data": "timestamped US sector ETF returns and Japanese sector membership",
+      "availability": "unavailable",
+      "decision": "fail_closed_no_score",
+      "forbidden_proxy": "Do not substitute prior_market features or endogenous communities for US sector observations."
+    },
+    {
+      "id": "B03_news_social_sentiment_granger",
+      "required_data": "point-in-time per-stock news and social-media sentiment time series",
+      "availability": "unavailable",
+      "decision": "fail_closed_no_score",
+      "forbidden_proxy": "Do not reinterpret TDnet category flags as news/Twitter sentiment."
+    }
+  ],
+  "separation_from_prior_work": {
+    "z17_same_date_peer_mean_residual_target_reimplemented": false,
+    "same_date_peer_outcome_target_or_feature_allowed": false,
+    "ridge_or_distributional_target_in_graph_candidates": false,
+    "analog_title_retrieval_allowed": false,
+    "relationship_to_z17": "Z17 fit a Ridge to a same-training-date peer-relative target. This family instead freezes a strictly prior graph and propagates already-known lagged or overnight source messages; no score-date peer outcome exists in any feature or target.",
+    "relationship_to_v10_price_architectures": "C00 and L4 are comparators only. Graph candidates contain no fitted price-feature coefficients and no local alpha search."
+  },
+  "point_in_time_contract": {
+    "timezone": "Asia/Tokyo",
+    "decision_cutoff": "08:58:59",
+    "score_target": "same-session open-to-close gross return",
+    "fold_rule": "For score month m, graph node selection, every edge, community, conditional-reaction table, comparator fit, and normalization statistic uses dates strictly before the first scored session of m.",
+    "score_features": [
+      "oc_last, representing the prior exchange session open-to-close reaction",
+      "overnight_last, observed before the 08:58:59 decision",
+      "tdnet_clean_any only where tdnet_source_complete is true and its non-null source timestamp is at or before the cutoff"
+    ],
+    "prohibited_score_information": [
+      "target-session open, high, low, close, volume, open-to-close return, or label",
+      "same-session realized peer return",
+      "post-cutoff TDnet disclosure",
+      "future graph membership or edges"
+    ],
+    "panel_source_date_check": "candidate_price_source_max_date must be strictly earlier than score date whenever populated.",
+    "tdnet_missing_rule": "For G06, any score session that is not marketwide tdnet_source_complete abstains in full. Missing source is never encoded as no event."
+  },
+  "sample_and_folds": {
+    "training_start": "2024-01-04",
+    "score_window": [
+      "2024-07-01",
+      "2025-07-31"
+    ],
+    "walk_forward": "13 calendar-month expanding folds",
+    "expected_score_sessions": 266,
+    "scoring_rows": "price_eligible rows on every score session",
+    "graph_node_scope": {
+      "capacity": 1536,
+      "selection": "Among codes present in the fold's training or score rows, rank by latest strictly prior no_trade_rate_20 ascending, then count of finite observed open-to-close returns in the graph window descending, then code ascending; retain the first 1536 qualified codes.",
+      "qualification": "At least 60 finite price_training_eligible open-to-close returns in the trailing 120 panel sessions before the score month.",
+      "out_of_graph_policy": "No graph score and therefore cash; no centroid, sector, or global-edge fallback."
+    },
+    "temporal_slices": {
+      "discovery": [
+        "2024-07-01",
+        "2024-10-31"
+      ],
+      "confirmation_a": [
+        "2024-11-01",
+        "2025-03-31"
+      ],
+      "confirmation_b": [
+        "2025-04-01",
+        "2025-07-31"
+      ]
+    }
+  },
+  "shared_graph_contract": {
+    "graph_window_sessions": 120,
+    "minimum_observed_returns": 60,
+    "single_neighbor_count": 8,
+    "no_neighbor_or_threshold_grid": true,
+    "no_alpha_grid": true,
+    "missing_vector_entries": "Subtract the code's observed-window mean, set missing centered entries to zero, and L2-normalize the resulting vector. This attenuates incomplete overlap and is not pairwise-complete correlation.",
+    "edge_tie_break": "larger edge strength, then source code ascending",
+    "message_normalization": "For each score session, transform finite source oc_last or overnight_last values among graph nodes to average percentile ranks in [-1,1].",
+    "edge_normalization": "Set the diagonal to zero and normalize each target row by the sum of absolute retained incoming edge weights. A row without valid incoming edges is unavailable.",
+    "community_count": 4,
+    "community_algorithm": "KMeans(n_clusters=4, random_state=20260723, n_init=10) on the first four eigenvectors of the symmetrized normalized positive-OC graph.",
+    "conditional_minimum_per_sign": 20,
+    "tdnet_edge_minimum_event_dates": 3
+  },
+  "comparators": [
+    {
+      "id": "C00_daily_rank_ridge",
+      "definition": "v10 price architecture control: daily-percentile Ridge(alpha=1) on the fixed G0 15-feature bundle."
+    },
+    {
+      "id": "C01_L4_price_control",
+      "definition": "C00 plus flat_oc_rate_20, Ridge(alpha=1), evaluated through the same portfolio engine."
+    },
+    {
+      "id": "Z17_peer_residual_reference",
+      "definition": "Known immutable v10 result reference only; not refit and not used in familywise paired inference.",
+      "top1_net40_mean_pct": -0.4964166195142521,
+      "top2_net40_mean_pct": -0.49913787107355917
+    }
+  ],
+  "hypothesis_family_size": 10,
+  "registered_hypotheses": [
+    {
+      "id": "G01_positive_oc_corr_message",
+      "family": "symmetric positive-correlation propagation",
+      "graph": "For each target, the eight largest positive trailing-window OC cosine correlations.",
+      "score": "Row-normalized positive edge weights times current source oc_last percentile message.",
+      "trade_policy": "Rank available graph-node scores; missing slots are cash.",
+      "hypothesis": "A prior-session shock continues into positively comoving neighbors after the open."
+    },
+    {
+      "id": "G02_signed_oc_corr_message",
+      "family": "signed correlation propagation",
+      "graph": "For each target, the eight largest absolute trailing-window OC cosine correlations, preserving their signs.",
+      "score": "Row-normalized signed edge weights times current source oc_last percentile message.",
+      "trade_policy": "Rank available graph-node scores; missing slots are cash.",
+      "hypothesis": "Both comovement and anticorrelation groups transmit economically useful signed messages."
+    },
+    {
+      "id": "G03_directed_lead_lag_message",
+      "family": "directed one-session lead-lag propagation",
+      "graph": "For each target, the eight largest absolute corr(source OC at t-1, target OC at t), with direction source to target.",
+      "score": "Row-normalized directed signed weights times current source oc_last percentile message.",
+      "trade_policy": "Rank available graph-node scores; missing slots are cash.",
+      "hypothesis": "Lagging stocks continue to incorporate prior-session moves of statistically leading stocks."
+    },
+    {
+      "id": "G04_overnight_corr_message",
+      "family": "overnight network propagation",
+      "graph": "For each target, the eight largest positive trailing-window overnight-return cosine correlations.",
+      "score": "Row-normalized positive weights times current source overnight_last percentile message.",
+      "trade_policy": "Rank available graph-node scores; missing slots are cash.",
+      "hypothesis": "A shared overnight information channel identifies stocks whose post-open reaction remains incomplete."
+    },
+    {
+      "id": "G05_cojump_neighbor_pressure",
+      "family": "signed co-jump pressure",
+      "graph": "On each history date, a jump is abs(OC return) at or above that date's 90th percentile among graph nodes. Edge strength is the cosine similarity of signed jump vectors; retain eight largest positive edges.",
+      "score": "Graph pressure from source nodes whose abs current oc_last percentile message is in the outer 10 percent, preserving source sign.",
+      "trade_policy": "Rank available nonzero-pressure scores; zero or missing pressure abstains to cash.",
+      "hypothesis": "Large prior-session moves propagate mainly through historical co-jump neighborhoods."
+    },
+    {
+      "id": "G06_tdnet_event_neighbor_spillover",
+      "family": "TDnet event-to-neighbor empirical spillover",
+      "graph": "Use G03 directed topology. For each target-source edge, estimate the strictly prior mean target same-session OC return on marketwide TDnet-complete dates where the source had a preopen tdnet_clean_any event; require three event dates.",
+      "score": "Mean of qualified edge reaction estimates for currently event-active source neighbors.",
+      "trade_policy": "Only targets with at least one active qualified source edge are eligible. Entire source-incomplete dates and all other slots are cash.",
+      "hypothesis": "A source firm's preopen disclosure produces a repeatable same-day reaction in historically lagging neighbors."
+    },
+    {
+      "id": "G07_neighbor_conditioned_empirical_uplift",
+      "family": "target-specific nonparametric message response",
+      "graph": "Use the frozen G03 directed graph to reconstruct each target's one-session-lagged message over all strictly prior dates.",
+      "score": "For the current message sign, the target code's strictly prior mean OC return on dates with the same nonzero message sign; require 20 observations for each estimated sign.",
+      "trade_policy": "Unavailable sign/code combinations abstain to cash.",
+      "hypothesis": "Targets differ in how they react to the same network pressure, and a sign-conditioned empirical response captures that heterogeneity without a regression target."
+    },
+    {
+      "id": "G08_dynamic_community_archetype",
+      "family": "spectral community reaction archetype",
+      "graph": "Four fold-specific spectral communities from the strictly prior positive-OC graph.",
+      "score": "For the sign of the current community-average oc_last percentile message, use each target's strictly prior mean OC response on dates when its frozen community had the same lagged message sign; require 20 observations.",
+      "trade_policy": "Unavailable community-sign/code combinations abstain to cash.",
+      "hypothesis": "Endogenous market communities exhibit distinct lagged reaction archetypes even without external sector labels."
+    },
+    {
+      "id": "G09_two_hop_oc_diffusion",
+      "family": "two-hop graph diffusion",
+      "graph": "Square the row-normalized G01 adjacency, set the diagonal to zero, and row-normalize once more.",
+      "score": "Two-hop propagated current source oc_last percentile message.",
+      "trade_policy": "Rank available graph-node scores; missing slots are cash.",
+      "hypothesis": "Information reaches a target through an intermediary when direct pairwise dependence is weak."
+    },
+    {
+      "id": "G10_graph_disagreement_cash",
+      "family": "cross-network agreement with abstention",
+      "graph": "Use separately frozen G03 directed and G04 overnight graphs.",
+      "score": "Average the two daily cross-sectional percentile scores only when both are nonzero and have the same sign.",
+      "trade_policy": "Any sign disagreement, zero, or missing component abstains to cash.",
+      "hypothesis": "Agreement between lagged-price and overnight propagation is a structural confidence signal; disagreement should remain cash."
+    }
+  ],
+  "outcome_and_portfolio": {
+    "target": "same-session open-to-close gross return in percentage points",
+    "portfolio_sizes": [
+      1,
+      2
+    ],
+    "selection": "score descending then code ascending",
+    "slot_weighting": "equal fixed sleeves; unavailable or unobserved slots remain cash and pay no cost; no replacement after selection",
+    "round_trip_cost_bps": [
+      20,
+      40,
+      60
+    ],
+    "primary_portfolio": "top1",
+    "primary_metric": "scheduled-session arithmetic mean after 40 bp round-trip cost"
+  },
+  "required_evaluation": {
+    "point_metrics": [
+      "top1 and top2 mean, median, win rate at gross and 20/40/60 bp",
+      "filled slots, cash slots, filled sessions, unique codes, top-10 selection share"
+    ],
+    "stability": [
+      "all 13 scored calendar months",
+      "discovery, confirmation_a, and confirmation_b",
+      "net20 after removing the best 20 scheduled sessions",
+      "net20 after replacing the top 10 positive-contribution codes by cash",
+      "largest positive code contribution share"
+    ],
+    "multiplicity": {
+      "candidate_family": "all ten G candidates",
+      "primary_comparator": "the higher observed paired top1 net40 mean of C00 and C01",
+      "bootstrap": "10000 deterministic circular moving-block resamples within month, block length 10 sessions, seed 20260723",
+      "adjustment": "single-step familywise max-centered-mean reality check and 90% simultaneous lower bound"
+    }
+  },
+  "integrity_and_reproduction": [
+    "Every frozen input hash exactly matches.",
+    "Every graph edge, node selection, community, conditional table, and model training row is strictly before its fold score month.",
+    "candidate_price_source_max_date is strictly earlier than date wherever populated.",
+    "G06 never treats TDnet source-missing as no-event and every nonzero event timestamp is at or before 08:58:59.",
+    "Mutating every score-month oc_return_pct and label leaves all scores, eligibility decisions, and top1/top2 selection keys exactly unchanged.",
+    "An independent loop recomputes every saved-pick P&L and reported robustness metric.",
+    "A complete second run produces byte-identical picks and identical folds, graph diagnostics, and metrics."
+  ],
+  "independent_gate": {
+    "selection": "Among candidates passing every retrospective requirement, select the largest top1 net40 mean; otherwise retain no winner.",
+    "retrospective_requirements": [
+      "top1 net40 mean > 0",
+      "top2 net40 mean > 0",
+      "top1 net40 uplift versus both C00 and C01 > 0",
+      "top1 90% familywise simultaneous lower bound versus the stronger comparator > 0",
+      "top1 familywise adjusted p-value <= 0.10",
+      "top1 best-20-session-removed net20 mean > 0",
+      "top1 top-10-profit-codes-to-cash net20 mean > 0",
+      "top1 net40 mean > 0 in all three temporal slices",
+      "top1 net40 mean > 0 in at least 9 of 13 months",
+      "top1 fills at least 80 percent of scheduled score sessions",
+      "top1 top-10 selection share < 0.50",
+      "all PIT, source, mutation, P&L, and deterministic reproduction audits pass"
+    ],
+    "production_requirements": [
+      "one immutable candidate passes every retrospective requirement",
+      "at least 120 newly observed strict-PIT prospective sessions after registration pass the same economic and robustness requirements",
+      "prospective top1 net40 has a one-sided 95% moving-block lower confidence bound > 0",
+      "any required external relationship source has timestamped observation provenance and is not replaced by a price proxy",
+      "explicit human production approval is recorded"
+    ],
+    "production_action_this_run": "none"
+  }
+}

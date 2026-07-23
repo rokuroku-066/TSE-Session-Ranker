@@ -1,0 +1,267 @@
+{
+  "schema_version": 1,
+  "protocol_id": "model_v11_shift_zero_base_20260723",
+  "registered_at": "2026-07-23T17:30:00+09:00",
+  "status": "registered_before_execution_of_this_family_on_an_already_viewed_project_panel",
+  "purpose": "Falsify learning principles designed for covariate shift and structural change, rather than tune an existing return model.",
+  "authority": {
+    "analysis_type": "retrospective_mechanism_screen",
+    "panel_outcomes_previously_available_to_the_project": true,
+    "no_shift_family_result_observed_before_registration": true,
+    "production_promotion_allowed_from_this_panel": false,
+    "maximum_retrospective_action": "freeze exactly one forward-shadow finalist",
+    "earliest_forward_session": "2026-07-24"
+  },
+  "frozen_input": {
+    "panel_path": "/tmp/model_v07_corrected_panel.pkl",
+    "panel_sha256": "6b86f994a1d15d1da8ed40469d44fc409adadc6cd5b3df3c08aef6717bcdf0eb",
+    "manifest_path": "/tmp/model_v07_corrected_panel.pkl.manifest.json",
+    "manifest_sha256": "25e08c564ef6400b7a29168db9fd7e8220bd0e2386c7a3c7e71b05c2ff950b02",
+    "rows": 1524104,
+    "codes": 4124,
+    "sessions": 386,
+    "training_start": "2024-01-04",
+    "score_period": [
+      "2024-07-01",
+      "2025-07-31"
+    ],
+    "score_sessions": 266
+  },
+  "point_in_time": {
+    "decision_time": "08:58:59 Asia/Tokyo",
+    "folds": "calendar-month expanding walk-forward",
+    "training_rule": "Every fitted target and every environment observation is strictly earlier than the first scored date of its month.",
+    "training_filter": "price_training_eligible == true and oc_return_pct observed",
+    "scoring_filter": "price_eligible == true",
+    "source_rule": "candidate_price_source_max_date is null or strictly earlier than score date",
+    "target_day_outcome_mutation_test": "For the final fold replace every scoring outcome and label, rerun every scorer and selection rule, and require exact scores, masks, and selected keys.",
+    "prediction_features": [
+      "oc_last",
+      "oc_mean_5",
+      "oc_mean_20",
+      "oc_mean_60",
+      "oc_win_20",
+      "oc_std_20",
+      "overnight_last",
+      "overnight_mean_20",
+      "overnight_mean_60",
+      "night_day_corr_60",
+      "xrank_atr14_pct",
+      "xrank_close_momentum_5",
+      "xrank_close_momentum_20",
+      "xrank_close_momentum_60",
+      "xrank_prior_close_location_20"
+    ],
+    "market_state_features": [
+      "prior_market_breadth",
+      "prior_market_dispersion",
+      "prior_market_tail_balance",
+      "market_cc_vol_ratio_5_20",
+      "market_cc_momentum_5",
+      "no_trade_rate_20"
+    ]
+  },
+  "portfolio": {
+    "target": "same-session open-to-close gross return",
+    "capacities": [
+      1,
+      2
+    ],
+    "slot_weights": "Each slot has fixed weight 1/capacity; rejected or unavailable slots remain cash and surviving slots are not renormalised.",
+    "cost_bps": [
+      20,
+      40,
+      60
+    ],
+    "primary_cost_bps": 40,
+    "scheduled_day_denominator": "all 266 sessions including full-cash days",
+    "tie_break": [
+      "score descending",
+      "code ascending"
+    ]
+  },
+  "control": {
+    "id": "C00_DAILY_RANK_RIDGE",
+    "definition": "Expanding Ridge(alpha=1) on 2 * within-date average percentile rank(return) - 1, forced top-k.",
+    "comparison": "Each candidate/capacity is compared with this control at matching capacity."
+  },
+  "prohibited_reuse": [
+    "Changing only an alpha, threshold, quantile, window length, decay rate, or number of regimes of an existing model",
+    "Ordinary expanding or rolling continuous-return regression",
+    "M09 temporal median of prediction scores",
+    "M10 observed-dispersion two-regime forced-trade mixture",
+    "O01 online outcome-weighted ensemble",
+    "D07 posterior regime abstention",
+    "Any grid search or outcome-selected window, threshold, cluster count, change point, or environment partition"
+  ],
+  "implementation_lock": {
+    "random_seed": 20260723,
+    "prediction_preprocessing": "Fold-local median imputation with missing indicators and standardisation.",
+    "market_state_preprocessing": "One row per strictly prior training date; median imputation and standardisation fit inside the fold.",
+    "target": "Within-date rank target used by the control; no candidate changes the target.",
+    "base_ridge_alpha": 1.0,
+    "training_weight": "Each training date has total base weight one.",
+    "environment_classifier": "SGDClassifier log-loss, alpha=0.0001, max_iter=100, tol=0.0001, random_state fixed; old/recent classes receive equal total weight.",
+    "old_recent_split": "First 70% versus final 30% of unique training dates.",
+    "density_ratio_clip": [
+      0.25,
+      4.0
+    ],
+    "change_point": {
+      "algorithm": "Maximise the norm of the standardised pre/post mean contrast over every split with at least 40 dates on each side.",
+      "outcome_use": "none",
+      "reset_rule": "Train only on and after the selected split date.",
+      "failure_rule": "If fewer than 80 training dates or fewer than 20 post-reset dates are usable, hold cash."
+    },
+    "group_dro": {
+      "groups": "calendar months",
+      "iterations": 6,
+      "multiplicative_step": 2.0,
+      "loss": "date-equal mean squared rank error",
+      "initial_group_weight": "uniform"
+    },
+    "invariant_sign": {
+      "eras": "three consecutive equal-count training-date blocks",
+      "rule": "Retain transformed features whose Ridge coefficient sign is identical in all three era fits, then refit pooled Ridge using only retained coordinates.",
+      "failure_rule": "If no coordinate is retained, hold cash."
+    },
+    "latent_states": {
+      "algorithm": "KMeans on daily market-state features",
+      "clusters": 3,
+      "n_init": 20,
+      "random_state": 20260723,
+      "outcome_use": "none"
+    },
+    "leave_one_state_out": "Fit three pooled rank Ridges, each excluding one latent state; aggregate coefficients and intercepts coordinate-wise by median.",
+    "latent_experts": "Fit one rank Ridge per latent state and route by the nearest point-in-time KMeans centroid; if any state has fewer than 20 dates, the whole mechanism holds cash.",
+    "support_conformal": {
+      "reference": "Final 25% of training dates",
+      "nonconformity": "root-mean-square recent-standardised prediction-feature distance",
+      "coverage": 0.9,
+      "quantile": "finite-sample ceil((n+1)*coverage) order statistic",
+      "decision": "Rows outside support hold cash; supported rows retain control ordering."
+    },
+    "environment_residualisation": "Remove from every standardised prediction row its orthogonal projection onto the old/recent classifier coefficient vector, then fit one pooled rank Ridge in that residual representation; zero environment direction fails closed."
+  },
+  "hypotheses": [
+    {
+      "id": "S01_DENSITY_RATIO_RECENT",
+      "family": "covariate-shift importance weighting",
+      "mechanism": "Classify old versus recent feature rows without labels, convert corrected recent-class odds to a clipped density ratio, renormalise within each date, and fit one pooled rank Ridge.",
+      "prediction": "Training observations whose feature support resembles the recent environment deserve more influence even when every historical date remains available."
+    },
+    {
+      "id": "S02_COVARIATE_CHANGEPOINT_RESET",
+      "family": "outcome-free structural reset",
+      "mechanism": "Detect the maximum multivariate market-state mean contrast using no return labels and discard all target observations before that change point.",
+      "prediction": "A structural break in the observable pre-open environment invalidates earlier label relationships enough that a clean reset generalises better."
+    },
+    {
+      "id": "S03_WORST_MONTH_GROUP_DRO",
+      "family": "distributionally robust optimisation",
+      "mechanism": "Use multiplicative Group-DRO weights over calendar-month training environments so that months with the largest rank loss drive a minimax-like pooled model.",
+      "prediction": "Coefficients that reduce the worst historical environment loss are more stable than average-risk ERM under future shifts."
+    },
+    {
+      "id": "S04_ERA_INVARIANT_SIGN",
+      "family": "invariant feature mechanism",
+      "mechanism": "Require coefficient direction to agree across three chronological eras, discard sign-unstable coordinates, and refit a single pooled model on the invariant representation.",
+      "prediction": "Directionally stable relationships are less likely to encode era-specific shortcuts."
+    },
+    {
+      "id": "S05_LEAVE_ONE_STATE_OUT_MEDIAN_COEF",
+      "family": "state-omission robust aggregation",
+      "mechanism": "Discover three label-free market states, fit one model while omitting each state in turn, and aggregate coefficients rather than predictions by coordinate-wise median.",
+      "prediction": "A parameter vector that survives removal of any one market state is robust to state-composition shift without routing or temporal ensembling."
+    },
+    {
+      "id": "S06_UNSUPERVISED_LATENT_EXPERTS",
+      "family": "label-free latent-state conditional learning",
+      "mechanism": "Cluster multivariate daily market state without outcomes, fit three state-specific experts, and route score-date rows to the nearest latent state.",
+      "prediction": "Multivariate latent environments expose distinct conditional mappings not captured by the observed two-way dispersion split."
+    },
+    {
+      "id": "S07_RECENT_SUPPORT_CONFORMAL",
+      "family": "covariate-support selective prediction",
+      "mechanism": "Use a finite-sample conformal quantile of feature nonconformity in the most recent training era and reject unsupported score rows to cash without consulting outcomes.",
+      "prediction": "Abstaining outside recent covariate support protects against extrapolation failures while retaining the same return ordering inside support."
+    },
+    {
+      "id": "S08_ENVIRONMENT_RESIDUALISED",
+      "family": "adversarial environment-invariant representation",
+      "mechanism": "Learn the linear direction that separates old and recent feature environments, remove that direction from the representation, and fit return ranks only on the residual subspace.",
+      "prediction": "Suppressing the most time-discriminative feature direction removes temporal shortcuts and improves stability under distribution shift."
+    }
+  ],
+  "candidate_family_size": 16,
+  "evaluation": {
+    "primary_metric": "scheduled-day arithmetic mean net40 return",
+    "reported": [
+      "gross and net20/net40/net60 means",
+      "13 monthly net40 means",
+      "three fixed temporal-slice net40 means",
+      "best and worst 5/10/20 days removed at net20",
+      "5% expected shortfall at net40",
+      "executed slots, traded days, cash days, unique codes",
+      "largest and top-10 code weight share",
+      "largest positive code P&L share",
+      "top-10 positive-P&L codes replaced by cash at net20"
+    ],
+    "temporal_slices": {
+      "discovery": [
+        "2024-07-01",
+        "2024-10-31"
+      ],
+      "confirmation_a": [
+        "2024-11-01",
+        "2025-03-31"
+      ],
+      "confirmation_b": [
+        "2025-04-01",
+        "2025-07-31"
+      ]
+    },
+    "multiplicity": "5000 deterministic circular moving-block resamples, block length 10 sessions; studentised one-sided 95% familywise max-t lower bound for net40 uplift versus capacity-matched control across all 16 policies.",
+    "selection_rule": "Among candidates passing every retrospective gate, freeze the highest net40 mean; freeze none when no candidate passes."
+  },
+  "retrospective_gate": {
+    "net40_mean_positive": true,
+    "net60_mean_positive": true,
+    "net40_greater_than_capacity_matched_control": true,
+    "familywise_95_lower_net40_uplift_positive": true,
+    "all_three_temporal_slices_net40_positive": true,
+    "positive_months_net40_at_least": 10,
+    "best_20_days_removed_net20_positive": true,
+    "top_10_positive_pnl_codes_to_cash_net20_positive": true,
+    "expected_shortfall05_net40_not_worse_than_control": true,
+    "executed_slot_fraction_at_least": 0.3,
+    "traded_days_at_least": 150,
+    "unique_codes_at_least": 100,
+    "largest_code_weight_share_at_most": 0.05,
+    "top10_code_weight_share_at_most": 0.25,
+    "largest_positive_code_pnl_share_at_most": 0.25,
+    "independent_pnl_audit_exact": true,
+    "target_mutation_exact": true
+  },
+  "production_gate": {
+    "retrospective_gate_must_pass": true,
+    "artifact_freeze": "Exact mechanism, representation, hyperparameters, capacity, cash rule, code, and hashes are frozen before forward outcomes.",
+    "prospective_sessions_at_least": 60,
+    "prospective_net40_mean_positive": true,
+    "prospective_one_sided_95_block_bootstrap_lower_mean_positive": true,
+    "prospective_all_three_consecutive_20_session_slices_net40_positive": true,
+    "prospective_best_5_days_removed_net20_positive": true,
+    "prospective_independent_pnl_audit_exact": true,
+    "no_refit_or_candidate_substitution": true,
+    "failure_action": "Reject the finalist; require a new registered mechanism and future period rather than tune this family."
+  },
+  "required_artifacts": [
+    "model_v11_shift_protocol.json",
+    "model_v11_shift_runner.py",
+    "model_v11_shift_result.json",
+    "model_v11_shift_picks.csv",
+    "model_v11_shift_audit.py",
+    "model_v11_shift_audit.json",
+    "model_v11_shift_report.md"
+  ]
+}

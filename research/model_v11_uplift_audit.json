@@ -1,0 +1,683 @@
+{
+  "schema_version": 1,
+  "experiment_id": "model_v11_uplift_zero_base_20260723",
+  "protocol_sha256": "611f9d16467fee02d5a17e415d0a0a6490917310509174ed43379c60d04c69cb",
+  "artifact_hashes_before_audit": {
+    "result_sha256": "b155a35ad6d8d89324682be39e23c1016bf06a62122698bfab3915bcd6d5d504",
+    "picks_sha256": "c443146dcb72555d2fea0cff38948ecf67923f48ee00ebaa6d5a3fe17b93df91"
+  },
+  "integrity": {
+    "protocol_hash_exact": true,
+    "panel_hash_exact": true,
+    "manifest_hash_exact": true,
+    "target_session_outcome_mutation_passes": true,
+    "monthly_expanding_strict_prior": true,
+    "future_source_violations_zero": true,
+    "passes": true
+  },
+  "pnl_reproduction": {
+    "embedded_outcomes_match_independent_join": true,
+    "metric_mismatch_count": 0,
+    "metric_mismatch_examples": [],
+    "passes": true
+  },
+  "deterministic_reproduction": {
+    "passes": true,
+    "returncode": 0,
+    "result_byte_identical": true,
+    "picks_byte_identical": true,
+    "result_sha256": "b155a35ad6d8d89324682be39e23c1016bf06a62122698bfab3915bcd6d5d504",
+    "picks_sha256": "c443146dcb72555d2fea0cff38948ecf67923f48ee00ebaa6d5a3fe17b93df91"
+  },
+  "multiplicity": {
+    "resamples": 5000,
+    "block_length_sessions": 10,
+    "family_size": 16,
+    "critical_max_t_95": 2.3031988168771313,
+    "global_reality_check_p_value": 0.9224155168966207,
+    "candidates": {
+      "U01_MATCHED_NO_EVENT_K1": {
+        "mean_net40_pct": -0.13762817278754005,
+        "standard_error_pct": 0.1378078249622844,
+        "studentised_statistic": -0.998696357229399,
+        "familywise_max_t_lower95_pct": -0.4550269921970843,
+        "familywise_max_t_adjusted_p_value": 1.0,
+        "reality_check_adjusted_p_value": 1.0
+      },
+      "U01_MATCHED_NO_EVENT_K2": {
+        "mean_net40_pct": -0.03680386425570168,
+        "standard_error_pct": 0.1002904833958976,
+        "studentised_statistic": -0.36697264794724427,
+        "familywise_max_t_lower95_pct": -0.2677927869571686,
+        "familywise_max_t_adjusted_p_value": 0.9998000399920016,
+        "reality_check_adjusted_p_value": 1.0
+      },
+      "U02_FAMILY_T_LEARNER_K1": {
+        "mean_net40_pct": -0.05290244425194655,
+        "standard_error_pct": 0.23532313843133335,
+        "studentised_statistic": -0.22480766066862284,
+        "familywise_max_t_lower95_pct": -0.5948984182708069,
+        "familywise_max_t_adjusted_p_value": 0.9982003599280144,
+        "reality_check_adjusted_p_value": 1.0
+      },
+      "U02_FAMILY_T_LEARNER_K2": {
+        "mean_net40_pct": -0.2876548164023086,
+        "standard_error_pct": 0.16683166537752195,
+        "studentised_statistic": -1.7242219320377639,
+        "familywise_max_t_lower95_pct": -0.6719013107174586,
+        "familywise_max_t_adjusted_p_value": 1.0,
+        "reality_check_adjusted_p_value": 1.0
+      },
+      "U03_AIPW_CATE_K1": {
+        "mean_net40_pct": -0.17855671940530668,
+        "standard_error_pct": 0.20647880538788857,
+        "studentised_statistic": -0.8647702076243234,
+        "familywise_max_t_lower95_pct": -0.6541184596848951,
+        "familywise_max_t_adjusted_p_value": 1.0,
+        "reality_check_adjusted_p_value": 1.0
+      },
+      "U03_AIPW_CATE_K2": {
+        "mean_net40_pct": -0.19292921159746468,
+        "standard_error_pct": 0.16372297730868698,
+        "studentised_statistic": -1.1783881210131648,
+        "familywise_max_t_lower95_pct": -0.5700157792304339,
+        "familywise_max_t_adjusted_p_value": 1.0,
+        "reality_check_adjusted_p_value": 1.0
+      },
+      "U04_DATE_RESIDUAL_UPLIFT_K1": {
+        "mean_net40_pct": -0.05610744812919182,
+        "standard_error_pct": 0.1593206246310599,
+        "studentised_statistic": -0.3521668852298333,
+        "familywise_max_t_lower95_pct": -0.42305452228357454,
+        "familywise_max_t_adjusted_p_value": 0.9998000399920016,
+        "reality_check_adjusted_p_value": 1.0
+      },
+      "U04_DATE_RESIDUAL_UPLIFT_K2": {
+        "mean_net40_pct": 0.07063255126911919,
+        "standard_error_pct": 0.11340393715367982,
+        "studentised_statistic": 0.6228403796369185,
+        "familywise_max_t_lower95_pct": -0.19055926261244474,
+        "familywise_max_t_adjusted_p_value": 0.8590281943611278,
+        "reality_check_adjusted_p_value": 0.9224155168966207
+      },
+      "U05_ISSUER_SELF_CONTROL_K1": {
+        "mean_net40_pct": -0.492811321856939,
+        "standard_error_pct": 0.25672080076302395,
+        "studentised_statistic": -1.9196392360580377,
+        "familywise_max_t_lower95_pct": -1.0840903664420853,
+        "familywise_max_t_adjusted_p_value": 1.0,
+        "reality_check_adjusted_p_value": 1.0
+      },
+      "U05_ISSUER_SELF_CONTROL_K2": {
+        "mean_net40_pct": -0.5241727734472336,
+        "standard_error_pct": 0.17069122789274366,
+        "studentised_statistic": -3.0708829031132474,
+        "familywise_max_t_lower95_pct": -0.9173086075811056,
+        "familywise_max_t_adjusted_p_value": 1.0,
+        "reality_check_adjusted_p_value": 1.0
+      },
+      "U06_PROPENSITY_OVERLAP_T_K1": {
+        "mean_net40_pct": 0.0,
+        "standard_error_pct": 0.0,
+        "studentised_statistic": 0.0,
+        "familywise_max_t_lower95_pct": 0.0,
+        "familywise_max_t_adjusted_p_value": 1.0,
+        "reality_check_adjusted_p_value": 1.0
+      },
+      "U06_PROPENSITY_OVERLAP_T_K2": {
+        "mean_net40_pct": 0.0,
+        "standard_error_pct": 0.0,
+        "studentised_statistic": 0.0,
+        "familywise_max_t_lower95_pct": 0.0,
+        "familywise_max_t_adjusted_p_value": 1.0,
+        "reality_check_adjusted_p_value": 1.0
+      },
+      "U07_POSITIVE_TAIL_UPLIFT_K1": {
+        "mean_net40_pct": -0.03299684186780957,
+        "standard_error_pct": 0.029875778559550033,
+        "studentised_statistic": -1.1044680158556694,
+        "familywise_max_t_lower95_pct": -0.10180669969944837,
+        "familywise_max_t_adjusted_p_value": 1.0,
+        "reality_check_adjusted_p_value": 1.0
+      },
+      "U07_POSITIVE_TAIL_UPLIFT_K2": {
+        "mean_net40_pct": -0.016498420933904787,
+        "standard_error_pct": 0.014937889279775017,
+        "studentised_statistic": -1.1044680158556694,
+        "familywise_max_t_lower95_pct": -0.05090334984972419,
+        "familywise_max_t_adjusted_p_value": 1.0,
+        "reality_check_adjusted_p_value": 1.0
+      },
+      "U08_HONEST_CROSSFIT_POLICY_TREE_K1": {
+        "mean_net40_pct": -0.3913526505334232,
+        "standard_error_pct": 0.3566666369156975,
+        "studentised_statistic": -1.0972505135823067,
+        "familywise_max_t_lower95_pct": -1.212826826697203,
+        "familywise_max_t_adjusted_p_value": 1.0,
+        "reality_check_adjusted_p_value": 1.0
+      },
+      "U08_HONEST_CROSSFIT_POLICY_TREE_K2": {
+        "mean_net40_pct": -0.46667456422478304,
+        "standard_error_pct": 0.22296388760795563,
+        "studentised_statistic": -2.0930499967122547,
+        "familywise_max_t_lower95_pct": -0.9802047263697521,
+        "familywise_max_t_adjusted_p_value": 1.0,
+        "reality_check_adjusted_p_value": 1.0
+      }
+    }
+  },
+  "candidate_gates": {
+    "U01_MATCHED_NO_EVENT_K1": {
+      "checks": {
+        "net40_mean_positive": false,
+        "net60_mean_positive": false,
+        "familywise_95_lower_net40_mean_positive": false,
+        "familywise_reality_check_p_at_most_0_10": false,
+        "all_three_temporal_slices_net40_positive": false,
+        "positive_months_at_least_4": false,
+        "best_20_days_removed_net20_positive": false,
+        "top_10_positive_pnl_codes_to_cash_net20_positive": false,
+        "traded_days_at_least_50": false,
+        "executed_slot_fraction_at_least_0_3": true,
+        "unique_codes_at_least_40": true,
+        "largest_code_weight_share_at_most_0_08": true,
+        "top10_code_weight_share_at_most_0_35": true,
+        "largest_positive_code_pnl_share_at_most_0_25": true,
+        "all_integrity_audits_pass": true
+      },
+      "failed_checks": [
+        "net40_mean_positive",
+        "net60_mean_positive",
+        "familywise_95_lower_net40_mean_positive",
+        "familywise_reality_check_p_at_most_0_10",
+        "all_three_temporal_slices_net40_positive",
+        "positive_months_at_least_4",
+        "best_20_days_removed_net20_positive",
+        "top_10_positive_pnl_codes_to_cash_net20_positive",
+        "traded_days_at_least_50"
+      ],
+      "passes_all": false
+    },
+    "U01_MATCHED_NO_EVENT_K2": {
+      "checks": {
+        "net40_mean_positive": false,
+        "net60_mean_positive": false,
+        "familywise_95_lower_net40_mean_positive": false,
+        "familywise_reality_check_p_at_most_0_10": false,
+        "all_three_temporal_slices_net40_positive": false,
+        "positive_months_at_least_4": false,
+        "best_20_days_removed_net20_positive": false,
+        "top_10_positive_pnl_codes_to_cash_net20_positive": false,
+        "traded_days_at_least_50": false,
+        "executed_slot_fraction_at_least_0_3": true,
+        "unique_codes_at_least_40": true,
+        "largest_code_weight_share_at_most_0_08": true,
+        "top10_code_weight_share_at_most_0_35": true,
+        "largest_positive_code_pnl_share_at_most_0_25": true,
+        "all_integrity_audits_pass": true
+      },
+      "failed_checks": [
+        "net40_mean_positive",
+        "net60_mean_positive",
+        "familywise_95_lower_net40_mean_positive",
+        "familywise_reality_check_p_at_most_0_10",
+        "all_three_temporal_slices_net40_positive",
+        "positive_months_at_least_4",
+        "best_20_days_removed_net20_positive",
+        "top_10_positive_pnl_codes_to_cash_net20_positive",
+        "traded_days_at_least_50"
+      ],
+      "passes_all": false
+    },
+    "U02_FAMILY_T_LEARNER_K1": {
+      "checks": {
+        "net40_mean_positive": false,
+        "net60_mean_positive": false,
+        "familywise_95_lower_net40_mean_positive": false,
+        "familywise_reality_check_p_at_most_0_10": false,
+        "all_three_temporal_slices_net40_positive": false,
+        "positive_months_at_least_4": false,
+        "best_20_days_removed_net20_positive": false,
+        "top_10_positive_pnl_codes_to_cash_net20_positive": false,
+        "traded_days_at_least_50": true,
+        "executed_slot_fraction_at_least_0_3": true,
+        "unique_codes_at_least_40": true,
+        "largest_code_weight_share_at_most_0_08": true,
+        "top10_code_weight_share_at_most_0_35": true,
+        "largest_positive_code_pnl_share_at_most_0_25": true,
+        "all_integrity_audits_pass": true
+      },
+      "failed_checks": [
+        "net40_mean_positive",
+        "net60_mean_positive",
+        "familywise_95_lower_net40_mean_positive",
+        "familywise_reality_check_p_at_most_0_10",
+        "all_three_temporal_slices_net40_positive",
+        "positive_months_at_least_4",
+        "best_20_days_removed_net20_positive",
+        "top_10_positive_pnl_codes_to_cash_net20_positive"
+      ],
+      "passes_all": false
+    },
+    "U02_FAMILY_T_LEARNER_K2": {
+      "checks": {
+        "net40_mean_positive": false,
+        "net60_mean_positive": false,
+        "familywise_95_lower_net40_mean_positive": false,
+        "familywise_reality_check_p_at_most_0_10": false,
+        "all_three_temporal_slices_net40_positive": false,
+        "positive_months_at_least_4": false,
+        "best_20_days_removed_net20_positive": false,
+        "top_10_positive_pnl_codes_to_cash_net20_positive": false,
+        "traded_days_at_least_50": true,
+        "executed_slot_fraction_at_least_0_3": true,
+        "unique_codes_at_least_40": true,
+        "largest_code_weight_share_at_most_0_08": true,
+        "top10_code_weight_share_at_most_0_35": true,
+        "largest_positive_code_pnl_share_at_most_0_25": true,
+        "all_integrity_audits_pass": true
+      },
+      "failed_checks": [
+        "net40_mean_positive",
+        "net60_mean_positive",
+        "familywise_95_lower_net40_mean_positive",
+        "familywise_reality_check_p_at_most_0_10",
+        "all_three_temporal_slices_net40_positive",
+        "positive_months_at_least_4",
+        "best_20_days_removed_net20_positive",
+        "top_10_positive_pnl_codes_to_cash_net20_positive"
+      ],
+      "passes_all": false
+    },
+    "U03_AIPW_CATE_K1": {
+      "checks": {
+        "net40_mean_positive": false,
+        "net60_mean_positive": false,
+        "familywise_95_lower_net40_mean_positive": false,
+        "familywise_reality_check_p_at_most_0_10": false,
+        "all_three_temporal_slices_net40_positive": false,
+        "positive_months_at_least_4": false,
+        "best_20_days_removed_net20_positive": false,
+        "top_10_positive_pnl_codes_to_cash_net20_positive": false,
+        "traded_days_at_least_50": true,
+        "executed_slot_fraction_at_least_0_3": true,
+        "unique_codes_at_least_40": true,
+        "largest_code_weight_share_at_most_0_08": true,
+        "top10_code_weight_share_at_most_0_35": true,
+        "largest_positive_code_pnl_share_at_most_0_25": true,
+        "all_integrity_audits_pass": true
+      },
+      "failed_checks": [
+        "net40_mean_positive",
+        "net60_mean_positive",
+        "familywise_95_lower_net40_mean_positive",
+        "familywise_reality_check_p_at_most_0_10",
+        "all_three_temporal_slices_net40_positive",
+        "positive_months_at_least_4",
+        "best_20_days_removed_net20_positive",
+        "top_10_positive_pnl_codes_to_cash_net20_positive"
+      ],
+      "passes_all": false
+    },
+    "U03_AIPW_CATE_K2": {
+      "checks": {
+        "net40_mean_positive": false,
+        "net60_mean_positive": false,
+        "familywise_95_lower_net40_mean_positive": false,
+        "familywise_reality_check_p_at_most_0_10": false,
+        "all_three_temporal_slices_net40_positive": false,
+        "positive_months_at_least_4": false,
+        "best_20_days_removed_net20_positive": false,
+        "top_10_positive_pnl_codes_to_cash_net20_positive": false,
+        "traded_days_at_least_50": true,
+        "executed_slot_fraction_at_least_0_3": true,
+        "unique_codes_at_least_40": true,
+        "largest_code_weight_share_at_most_0_08": true,
+        "top10_code_weight_share_at_most_0_35": true,
+        "largest_positive_code_pnl_share_at_most_0_25": true,
+        "all_integrity_audits_pass": true
+      },
+      "failed_checks": [
+        "net40_mean_positive",
+        "net60_mean_positive",
+        "familywise_95_lower_net40_mean_positive",
+        "familywise_reality_check_p_at_most_0_10",
+        "all_three_temporal_slices_net40_positive",
+        "positive_months_at_least_4",
+        "best_20_days_removed_net20_positive",
+        "top_10_positive_pnl_codes_to_cash_net20_positive"
+      ],
+      "passes_all": false
+    },
+    "U04_DATE_RESIDUAL_UPLIFT_K1": {
+      "checks": {
+        "net40_mean_positive": false,
+        "net60_mean_positive": false,
+        "familywise_95_lower_net40_mean_positive": false,
+        "familywise_reality_check_p_at_most_0_10": false,
+        "all_three_temporal_slices_net40_positive": false,
+        "positive_months_at_least_4": false,
+        "best_20_days_removed_net20_positive": false,
+        "top_10_positive_pnl_codes_to_cash_net20_positive": false,
+        "traded_days_at_least_50": true,
+        "executed_slot_fraction_at_least_0_3": true,
+        "unique_codes_at_least_40": true,
+        "largest_code_weight_share_at_most_0_08": true,
+        "top10_code_weight_share_at_most_0_35": true,
+        "largest_positive_code_pnl_share_at_most_0_25": true,
+        "all_integrity_audits_pass": true
+      },
+      "failed_checks": [
+        "net40_mean_positive",
+        "net60_mean_positive",
+        "familywise_95_lower_net40_mean_positive",
+        "familywise_reality_check_p_at_most_0_10",
+        "all_three_temporal_slices_net40_positive",
+        "positive_months_at_least_4",
+        "best_20_days_removed_net20_positive",
+        "top_10_positive_pnl_codes_to_cash_net20_positive"
+      ],
+      "passes_all": false
+    },
+    "U04_DATE_RESIDUAL_UPLIFT_K2": {
+      "checks": {
+        "net40_mean_positive": true,
+        "net60_mean_positive": false,
+        "familywise_95_lower_net40_mean_positive": false,
+        "familywise_reality_check_p_at_most_0_10": false,
+        "all_three_temporal_slices_net40_positive": false,
+        "positive_months_at_least_4": true,
+        "best_20_days_removed_net20_positive": false,
+        "top_10_positive_pnl_codes_to_cash_net20_positive": false,
+        "traded_days_at_least_50": true,
+        "executed_slot_fraction_at_least_0_3": true,
+        "unique_codes_at_least_40": true,
+        "largest_code_weight_share_at_most_0_08": true,
+        "top10_code_weight_share_at_most_0_35": true,
+        "largest_positive_code_pnl_share_at_most_0_25": true,
+        "all_integrity_audits_pass": true
+      },
+      "failed_checks": [
+        "net60_mean_positive",
+        "familywise_95_lower_net40_mean_positive",
+        "familywise_reality_check_p_at_most_0_10",
+        "all_three_temporal_slices_net40_positive",
+        "best_20_days_removed_net20_positive",
+        "top_10_positive_pnl_codes_to_cash_net20_positive"
+      ],
+      "passes_all": false
+    },
+    "U05_ISSUER_SELF_CONTROL_K1": {
+      "checks": {
+        "net40_mean_positive": false,
+        "net60_mean_positive": false,
+        "familywise_95_lower_net40_mean_positive": false,
+        "familywise_reality_check_p_at_most_0_10": false,
+        "all_three_temporal_slices_net40_positive": false,
+        "positive_months_at_least_4": false,
+        "best_20_days_removed_net20_positive": false,
+        "top_10_positive_pnl_codes_to_cash_net20_positive": false,
+        "traded_days_at_least_50": true,
+        "executed_slot_fraction_at_least_0_3": true,
+        "unique_codes_at_least_40": true,
+        "largest_code_weight_share_at_most_0_08": true,
+        "top10_code_weight_share_at_most_0_35": true,
+        "largest_positive_code_pnl_share_at_most_0_25": true,
+        "all_integrity_audits_pass": true
+      },
+      "failed_checks": [
+        "net40_mean_positive",
+        "net60_mean_positive",
+        "familywise_95_lower_net40_mean_positive",
+        "familywise_reality_check_p_at_most_0_10",
+        "all_three_temporal_slices_net40_positive",
+        "positive_months_at_least_4",
+        "best_20_days_removed_net20_positive",
+        "top_10_positive_pnl_codes_to_cash_net20_positive"
+      ],
+      "passes_all": false
+    },
+    "U05_ISSUER_SELF_CONTROL_K2": {
+      "checks": {
+        "net40_mean_positive": false,
+        "net60_mean_positive": false,
+        "familywise_95_lower_net40_mean_positive": false,
+        "familywise_reality_check_p_at_most_0_10": false,
+        "all_three_temporal_slices_net40_positive": false,
+        "positive_months_at_least_4": false,
+        "best_20_days_removed_net20_positive": false,
+        "top_10_positive_pnl_codes_to_cash_net20_positive": false,
+        "traded_days_at_least_50": true,
+        "executed_slot_fraction_at_least_0_3": true,
+        "unique_codes_at_least_40": true,
+        "largest_code_weight_share_at_most_0_08": true,
+        "top10_code_weight_share_at_most_0_35": true,
+        "largest_positive_code_pnl_share_at_most_0_25": true,
+        "all_integrity_audits_pass": true
+      },
+      "failed_checks": [
+        "net40_mean_positive",
+        "net60_mean_positive",
+        "familywise_95_lower_net40_mean_positive",
+        "familywise_reality_check_p_at_most_0_10",
+        "all_three_temporal_slices_net40_positive",
+        "positive_months_at_least_4",
+        "best_20_days_removed_net20_positive",
+        "top_10_positive_pnl_codes_to_cash_net20_positive"
+      ],
+      "passes_all": false
+    },
+    "U06_PROPENSITY_OVERLAP_T_K1": {
+      "checks": {
+        "net40_mean_positive": false,
+        "net60_mean_positive": false,
+        "familywise_95_lower_net40_mean_positive": false,
+        "familywise_reality_check_p_at_most_0_10": false,
+        "all_three_temporal_slices_net40_positive": false,
+        "positive_months_at_least_4": false,
+        "best_20_days_removed_net20_positive": false,
+        "top_10_positive_pnl_codes_to_cash_net20_positive": false,
+        "traded_days_at_least_50": false,
+        "executed_slot_fraction_at_least_0_3": false,
+        "unique_codes_at_least_40": false,
+        "largest_code_weight_share_at_most_0_08": true,
+        "top10_code_weight_share_at_most_0_35": true,
+        "largest_positive_code_pnl_share_at_most_0_25": false,
+        "all_integrity_audits_pass": true
+      },
+      "failed_checks": [
+        "net40_mean_positive",
+        "net60_mean_positive",
+        "familywise_95_lower_net40_mean_positive",
+        "familywise_reality_check_p_at_most_0_10",
+        "all_three_temporal_slices_net40_positive",
+        "positive_months_at_least_4",
+        "best_20_days_removed_net20_positive",
+        "top_10_positive_pnl_codes_to_cash_net20_positive",
+        "traded_days_at_least_50",
+        "executed_slot_fraction_at_least_0_3",
+        "unique_codes_at_least_40",
+        "largest_positive_code_pnl_share_at_most_0_25"
+      ],
+      "passes_all": false
+    },
+    "U06_PROPENSITY_OVERLAP_T_K2": {
+      "checks": {
+        "net40_mean_positive": false,
+        "net60_mean_positive": false,
+        "familywise_95_lower_net40_mean_positive": false,
+        "familywise_reality_check_p_at_most_0_10": false,
+        "all_three_temporal_slices_net40_positive": false,
+        "positive_months_at_least_4": false,
+        "best_20_days_removed_net20_positive": false,
+        "top_10_positive_pnl_codes_to_cash_net20_positive": false,
+        "traded_days_at_least_50": false,
+        "executed_slot_fraction_at_least_0_3": false,
+        "unique_codes_at_least_40": false,
+        "largest_code_weight_share_at_most_0_08": true,
+        "top10_code_weight_share_at_most_0_35": true,
+        "largest_positive_code_pnl_share_at_most_0_25": false,
+        "all_integrity_audits_pass": true
+      },
+      "failed_checks": [
+        "net40_mean_positive",
+        "net60_mean_positive",
+        "familywise_95_lower_net40_mean_positive",
+        "familywise_reality_check_p_at_most_0_10",
+        "all_three_temporal_slices_net40_positive",
+        "positive_months_at_least_4",
+        "best_20_days_removed_net20_positive",
+        "top_10_positive_pnl_codes_to_cash_net20_positive",
+        "traded_days_at_least_50",
+        "executed_slot_fraction_at_least_0_3",
+        "unique_codes_at_least_40",
+        "largest_positive_code_pnl_share_at_most_0_25"
+      ],
+      "passes_all": false
+    },
+    "U07_POSITIVE_TAIL_UPLIFT_K1": {
+      "checks": {
+        "net40_mean_positive": false,
+        "net60_mean_positive": false,
+        "familywise_95_lower_net40_mean_positive": false,
+        "familywise_reality_check_p_at_most_0_10": false,
+        "all_three_temporal_slices_net40_positive": false,
+        "positive_months_at_least_4": false,
+        "best_20_days_removed_net20_positive": false,
+        "top_10_positive_pnl_codes_to_cash_net20_positive": false,
+        "traded_days_at_least_50": false,
+        "executed_slot_fraction_at_least_0_3": false,
+        "unique_codes_at_least_40": false,
+        "largest_code_weight_share_at_most_0_08": false,
+        "top10_code_weight_share_at_most_0_35": false,
+        "largest_positive_code_pnl_share_at_most_0_25": false,
+        "all_integrity_audits_pass": true
+      },
+      "failed_checks": [
+        "net40_mean_positive",
+        "net60_mean_positive",
+        "familywise_95_lower_net40_mean_positive",
+        "familywise_reality_check_p_at_most_0_10",
+        "all_three_temporal_slices_net40_positive",
+        "positive_months_at_least_4",
+        "best_20_days_removed_net20_positive",
+        "top_10_positive_pnl_codes_to_cash_net20_positive",
+        "traded_days_at_least_50",
+        "executed_slot_fraction_at_least_0_3",
+        "unique_codes_at_least_40",
+        "largest_code_weight_share_at_most_0_08",
+        "top10_code_weight_share_at_most_0_35",
+        "largest_positive_code_pnl_share_at_most_0_25"
+      ],
+      "passes_all": false
+    },
+    "U07_POSITIVE_TAIL_UPLIFT_K2": {
+      "checks": {
+        "net40_mean_positive": false,
+        "net60_mean_positive": false,
+        "familywise_95_lower_net40_mean_positive": false,
+        "familywise_reality_check_p_at_most_0_10": false,
+        "all_three_temporal_slices_net40_positive": false,
+        "positive_months_at_least_4": false,
+        "best_20_days_removed_net20_positive": false,
+        "top_10_positive_pnl_codes_to_cash_net20_positive": false,
+        "traded_days_at_least_50": false,
+        "executed_slot_fraction_at_least_0_3": false,
+        "unique_codes_at_least_40": false,
+        "largest_code_weight_share_at_most_0_08": false,
+        "top10_code_weight_share_at_most_0_35": false,
+        "largest_positive_code_pnl_share_at_most_0_25": false,
+        "all_integrity_audits_pass": true
+      },
+      "failed_checks": [
+        "net40_mean_positive",
+        "net60_mean_positive",
+        "familywise_95_lower_net40_mean_positive",
+        "familywise_reality_check_p_at_most_0_10",
+        "all_three_temporal_slices_net40_positive",
+        "positive_months_at_least_4",
+        "best_20_days_removed_net20_positive",
+        "top_10_positive_pnl_codes_to_cash_net20_positive",
+        "traded_days_at_least_50",
+        "executed_slot_fraction_at_least_0_3",
+        "unique_codes_at_least_40",
+        "largest_code_weight_share_at_most_0_08",
+        "top10_code_weight_share_at_most_0_35",
+        "largest_positive_code_pnl_share_at_most_0_25"
+      ],
+      "passes_all": false
+    },
+    "U08_HONEST_CROSSFIT_POLICY_TREE_K1": {
+      "checks": {
+        "net40_mean_positive": false,
+        "net60_mean_positive": false,
+        "familywise_95_lower_net40_mean_positive": false,
+        "familywise_reality_check_p_at_most_0_10": false,
+        "all_three_temporal_slices_net40_positive": false,
+        "positive_months_at_least_4": false,
+        "best_20_days_removed_net20_positive": false,
+        "top_10_positive_pnl_codes_to_cash_net20_positive": false,
+        "traded_days_at_least_50": true,
+        "executed_slot_fraction_at_least_0_3": true,
+        "unique_codes_at_least_40": true,
+        "largest_code_weight_share_at_most_0_08": true,
+        "top10_code_weight_share_at_most_0_35": true,
+        "largest_positive_code_pnl_share_at_most_0_25": true,
+        "all_integrity_audits_pass": true
+      },
+      "failed_checks": [
+        "net40_mean_positive",
+        "net60_mean_positive",
+        "familywise_95_lower_net40_mean_positive",
+        "familywise_reality_check_p_at_most_0_10",
+        "all_three_temporal_slices_net40_positive",
+        "positive_months_at_least_4",
+        "best_20_days_removed_net20_positive",
+        "top_10_positive_pnl_codes_to_cash_net20_positive"
+      ],
+      "passes_all": false
+    },
+    "U08_HONEST_CROSSFIT_POLICY_TREE_K2": {
+      "checks": {
+        "net40_mean_positive": false,
+        "net60_mean_positive": false,
+        "familywise_95_lower_net40_mean_positive": false,
+        "familywise_reality_check_p_at_most_0_10": false,
+        "all_three_temporal_slices_net40_positive": false,
+        "positive_months_at_least_4": false,
+        "best_20_days_removed_net20_positive": false,
+        "top_10_positive_pnl_codes_to_cash_net20_positive": false,
+        "traded_days_at_least_50": true,
+        "executed_slot_fraction_at_least_0_3": true,
+        "unique_codes_at_least_40": true,
+        "largest_code_weight_share_at_most_0_08": true,
+        "top10_code_weight_share_at_most_0_35": true,
+        "largest_positive_code_pnl_share_at_most_0_25": true,
+        "all_integrity_audits_pass": true
+      },
+      "failed_checks": [
+        "net40_mean_positive",
+        "net60_mean_positive",
+        "familywise_95_lower_net40_mean_positive",
+        "familywise_reality_check_p_at_most_0_10",
+        "all_three_temporal_slices_net40_positive",
+        "positive_months_at_least_4",
+        "best_20_days_removed_net20_positive",
+        "top_10_positive_pnl_codes_to_cash_net20_positive"
+      ],
+      "passes_all": false
+    }
+  },
+  "decision": {
+    "best_point_estimate_policy": "U04_DATE_RESIDUAL_UPLIFT_K2",
+    "best_point_estimate_net40_pct": 0.07063255126911916,
+    "passing_retrospective_candidates": [],
+    "forward_shadow_finalist": null,
+    "retrospective_decision": "REJECT_ALL_UPLIFT_HYPOTHESES",
+    "production_ready": false,
+    "production_blockers": [
+      "Retrospective panel cannot authorize production promotion.",
+      "No candidate passes all retrospective gates."
+    ]
+  }
+}

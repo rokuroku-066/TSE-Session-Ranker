@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "protocol_id": "model_v11_shift_zero_base_20260723",
+  "protocol_sha256": "76d8c4129f57526c6d0a4d826779414c3ee4dcba48e818c72697ba8d3627a0cc",
+  "occurred_at": "2026-07-23",
+  "stage": "result JSON serialisation after folds, picks, metrics, and bootstrap computation",
+  "performance_metrics_printed_or_viewed": false,
+  "failure": "The outcome-free change-point fit_allowed diagnostic contained numpy.bool_, which the locked allow_nan=False JSON writer rejected.",
+  "action": "Convert that diagnostic scalar to the built-in Python bool type and rerun the unchanged protocol and mechanisms from the beginning.",
+  "hypothesis_or_gate_changed": false,
+  "protocol_changed": false,
+  "production_model_changed": false
+}

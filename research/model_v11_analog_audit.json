@@ -1,0 +1,412 @@
+{
+  "schema_version": 1,
+  "protocol_id": "v11_historical_analog_zero_base_20260723",
+  "protocol_sha256": "823012afa89fe9ec982a7ca82c78c3f24697b6969d1d3fcaa73f5ee7d3b82e86",
+  "runner_sha256": "c2312997ec50f440cafef02de1ef6b11bc4993606d37203819c2f819ddd4ce8b",
+  "result_sha256": "6e2b2a12a27f11c5ce1c78e3bbf4080aeb50d3f4b76ced38b82d918d45860768",
+  "picks_sha256": "73f84f7d072fc889368380a445d187d80b41c0e25c576092f9f72c8eafafb76e",
+  "repro_result_sha256": "077c2d04e3eb5928e493d1d2824f107ab848742658c8096d699b89aae4972d26",
+  "repro_picks_sha256": "73f84f7d072fc889368380a445d187d80b41c0e25c576092f9f72c8eafafb76e",
+  "integrity": {
+    "checks": {
+      "protocol_sidecar_matches": true,
+      "runner_hash_matches_result": true,
+      "strictly_prior_training_all_folds": true,
+      "future_publication_violations_zero": true,
+      "source_missing_never_encoded_no_event": true,
+      "target_session_outcome_mutation_passes": true,
+      "historical_cache_observation_metadata_available": false
+    },
+    "passes": true,
+    "note": "Historical observation provenance is a production gate, not a retrospective implementation-integrity check."
+  },
+  "pnl_reproduction": {
+    "passes": true,
+    "failure_count": 0,
+    "failures": []
+  },
+  "known_comparator_reproduction": {
+    "v10_result_sha256": "3a40e3541fb24f89f2b009b48b2af4d3a84afe2e96ce03010ea0a87442800196",
+    "passes": true,
+    "failure_count": 0,
+    "failures": []
+  },
+  "deterministic_reproduction": {
+    "picks_byte_identical": true,
+    "metrics_identical": true,
+    "folds_identical": true,
+    "metric_failures": [],
+    "fold_failures": []
+  },
+  "multiplicity": {
+    "seed": 20260723,
+    "replicates": 10000,
+    "block_length_sessions_within_month": 5,
+    "stronger_comparator": "T02_char_value_event_only",
+    "simultaneous_90pct_critical_value": 0.6529648559257576,
+    "best_candidate_by_uplift": "A06_dual_tail_neighbor_utility",
+    "best_observed_uplift_pct": -0.5675361284524484,
+    "familywise_reality_check_p_value": 1.0,
+    "candidates": {
+      "A01_global_similarity_mean": {
+        "delta_vs_stronger_comparator_net40_mean_pct": -0.7885738222953717,
+        "simultaneous_90pct_lower_bound_pct": -1.4415386782211292,
+        "familywise_adjusted_p_value": 1.0
+      },
+      "A02_issuer_excluded_mean": {
+        "delta_vs_stronger_comparator_net40_mean_pct": -1.1723540047064522,
+        "simultaneous_90pct_lower_bound_pct": -1.8253188606322097,
+        "familywise_adjusted_p_value": 1.0
+      },
+      "A03_time_decay_mean": {
+        "delta_vs_stronger_comparator_net40_mean_pct": -0.735247648908418,
+        "simultaneous_90pct_lower_bound_pct": -1.3882125048341756,
+        "familywise_adjusted_p_value": 1.0
+      },
+      "A04_cross_code_one_per_issuer": {
+        "delta_vs_stronger_comparator_net40_mean_pct": -1.0042920273898628,
+        "simultaneous_90pct_lower_bound_pct": -1.6572568833156205,
+        "familywise_adjusted_p_value": 1.0
+      },
+      "A05_neighbor_lower_quantile": {
+        "delta_vs_stronger_comparator_net40_mean_pct": -0.6877098595850685,
+        "simultaneous_90pct_lower_bound_pct": -1.340674715510826,
+        "familywise_adjusted_p_value": 1.0
+      },
+      "A06_dual_tail_neighbor_utility": {
+        "delta_vs_stronger_comparator_net40_mean_pct": -0.5675361284524484,
+        "simultaneous_90pct_lower_bound_pct": -1.220500984378206,
+        "familywise_adjusted_p_value": 1.0
+      },
+      "A07_event_family_prototype": {
+        "delta_vs_stronger_comparator_net40_mean_pct": -0.8016948311173903,
+        "simultaneous_90pct_lower_bound_pct": -1.4546596870431479,
+        "familywise_adjusted_p_value": 1.0
+      },
+      "A08_same_issuer_memory": {
+        "delta_vs_stronger_comparator_net40_mean_pct": -0.949607027164173,
+        "simultaneous_90pct_lower_bound_pct": -1.6025718830899307,
+        "familywise_adjusted_p_value": 1.0
+      },
+      "A09_robust_neighbor_consensus": {
+        "delta_vs_stronger_comparator_net40_mean_pct": -0.8407923180000025,
+        "simultaneous_90pct_lower_bound_pct": -1.49375717392576,
+        "familywise_adjusted_p_value": 1.0
+      },
+      "A10_family_then_text_cross_code": {
+        "delta_vs_stronger_comparator_net40_mean_pct": -0.7339133421004831,
+        "simultaneous_90pct_lower_bound_pct": -1.3868781980262406,
+        "familywise_adjusted_p_value": 1.0
+      }
+    }
+  },
+  "candidate_gates": {
+    "A01_global_similarity_mean": {
+      "checks": {
+        "top1_net40_positive": false,
+        "top2_net40_positive": false,
+        "top1_uplift_vs_L4_positive": false,
+        "top1_uplift_vs_T02_positive": false,
+        "familywise_lower_bound_positive": false,
+        "familywise_p_at_most_0_10": false,
+        "best20_removed_net20_positive": false,
+        "top10_codes_cash_net20_positive": false,
+        "all_three_slices_net40_positive": false,
+        "at_least_four_of_five_months_net40_positive": false,
+        "at_least_80pct_days_filled": true,
+        "all_integrity_audits_pass": true
+      },
+      "failed_checks": [
+        "top1_net40_positive",
+        "top2_net40_positive",
+        "top1_uplift_vs_L4_positive",
+        "top1_uplift_vs_T02_positive",
+        "familywise_lower_bound_positive",
+        "familywise_p_at_most_0_10",
+        "best20_removed_net20_positive",
+        "top10_codes_cash_net20_positive",
+        "all_three_slices_net40_positive",
+        "at_least_four_of_five_months_net40_positive"
+      ],
+      "passes_all": false
+    },
+    "A02_issuer_excluded_mean": {
+      "checks": {
+        "top1_net40_positive": false,
+        "top2_net40_positive": false,
+        "top1_uplift_vs_L4_positive": false,
+        "top1_uplift_vs_T02_positive": false,
+        "familywise_lower_bound_positive": false,
+        "familywise_p_at_most_0_10": false,
+        "best20_removed_net20_positive": false,
+        "top10_codes_cash_net20_positive": false,
+        "all_three_slices_net40_positive": false,
+        "at_least_four_of_five_months_net40_positive": false,
+        "at_least_80pct_days_filled": true,
+        "all_integrity_audits_pass": true
+      },
+      "failed_checks": [
+        "top1_net40_positive",
+        "top2_net40_positive",
+        "top1_uplift_vs_L4_positive",
+        "top1_uplift_vs_T02_positive",
+        "familywise_lower_bound_positive",
+        "familywise_p_at_most_0_10",
+        "best20_removed_net20_positive",
+        "top10_codes_cash_net20_positive",
+        "all_three_slices_net40_positive",
+        "at_least_four_of_five_months_net40_positive"
+      ],
+      "passes_all": false
+    },
+    "A03_time_decay_mean": {
+      "checks": {
+        "top1_net40_positive": false,
+        "top2_net40_positive": false,
+        "top1_uplift_vs_L4_positive": false,
+        "top1_uplift_vs_T02_positive": false,
+        "familywise_lower_bound_positive": false,
+        "familywise_p_at_most_0_10": false,
+        "best20_removed_net20_positive": false,
+        "top10_codes_cash_net20_positive": false,
+        "all_three_slices_net40_positive": false,
+        "at_least_four_of_five_months_net40_positive": false,
+        "at_least_80pct_days_filled": true,
+        "all_integrity_audits_pass": true
+      },
+      "failed_checks": [
+        "top1_net40_positive",
+        "top2_net40_positive",
+        "top1_uplift_vs_L4_positive",
+        "top1_uplift_vs_T02_positive",
+        "familywise_lower_bound_positive",
+        "familywise_p_at_most_0_10",
+        "best20_removed_net20_positive",
+        "top10_codes_cash_net20_positive",
+        "all_three_slices_net40_positive",
+        "at_least_four_of_five_months_net40_positive"
+      ],
+      "passes_all": false
+    },
+    "A04_cross_code_one_per_issuer": {
+      "checks": {
+        "top1_net40_positive": false,
+        "top2_net40_positive": false,
+        "top1_uplift_vs_L4_positive": false,
+        "top1_uplift_vs_T02_positive": false,
+        "familywise_lower_bound_positive": false,
+        "familywise_p_at_most_0_10": false,
+        "best20_removed_net20_positive": false,
+        "top10_codes_cash_net20_positive": false,
+        "all_three_slices_net40_positive": false,
+        "at_least_four_of_five_months_net40_positive": false,
+        "at_least_80pct_days_filled": true,
+        "all_integrity_audits_pass": true
+      },
+      "failed_checks": [
+        "top1_net40_positive",
+        "top2_net40_positive",
+        "top1_uplift_vs_L4_positive",
+        "top1_uplift_vs_T02_positive",
+        "familywise_lower_bound_positive",
+        "familywise_p_at_most_0_10",
+        "best20_removed_net20_positive",
+        "top10_codes_cash_net20_positive",
+        "all_three_slices_net40_positive",
+        "at_least_four_of_five_months_net40_positive"
+      ],
+      "passes_all": false
+    },
+    "A05_neighbor_lower_quantile": {
+      "checks": {
+        "top1_net40_positive": false,
+        "top2_net40_positive": false,
+        "top1_uplift_vs_L4_positive": false,
+        "top1_uplift_vs_T02_positive": false,
+        "familywise_lower_bound_positive": false,
+        "familywise_p_at_most_0_10": false,
+        "best20_removed_net20_positive": false,
+        "top10_codes_cash_net20_positive": false,
+        "all_three_slices_net40_positive": false,
+        "at_least_four_of_five_months_net40_positive": false,
+        "at_least_80pct_days_filled": false,
+        "all_integrity_audits_pass": true
+      },
+      "failed_checks": [
+        "top1_net40_positive",
+        "top2_net40_positive",
+        "top1_uplift_vs_L4_positive",
+        "top1_uplift_vs_T02_positive",
+        "familywise_lower_bound_positive",
+        "familywise_p_at_most_0_10",
+        "best20_removed_net20_positive",
+        "top10_codes_cash_net20_positive",
+        "all_three_slices_net40_positive",
+        "at_least_four_of_five_months_net40_positive",
+        "at_least_80pct_days_filled"
+      ],
+      "passes_all": false
+    },
+    "A06_dual_tail_neighbor_utility": {
+      "checks": {
+        "top1_net40_positive": false,
+        "top2_net40_positive": false,
+        "top1_uplift_vs_L4_positive": false,
+        "top1_uplift_vs_T02_positive": false,
+        "familywise_lower_bound_positive": false,
+        "familywise_p_at_most_0_10": false,
+        "best20_removed_net20_positive": false,
+        "top10_codes_cash_net20_positive": false,
+        "all_three_slices_net40_positive": false,
+        "at_least_four_of_five_months_net40_positive": false,
+        "at_least_80pct_days_filled": true,
+        "all_integrity_audits_pass": true
+      },
+      "failed_checks": [
+        "top1_net40_positive",
+        "top2_net40_positive",
+        "top1_uplift_vs_L4_positive",
+        "top1_uplift_vs_T02_positive",
+        "familywise_lower_bound_positive",
+        "familywise_p_at_most_0_10",
+        "best20_removed_net20_positive",
+        "top10_codes_cash_net20_positive",
+        "all_three_slices_net40_positive",
+        "at_least_four_of_five_months_net40_positive"
+      ],
+      "passes_all": false
+    },
+    "A07_event_family_prototype": {
+      "checks": {
+        "top1_net40_positive": false,
+        "top2_net40_positive": false,
+        "top1_uplift_vs_L4_positive": false,
+        "top1_uplift_vs_T02_positive": false,
+        "familywise_lower_bound_positive": false,
+        "familywise_p_at_most_0_10": false,
+        "best20_removed_net20_positive": false,
+        "top10_codes_cash_net20_positive": false,
+        "all_three_slices_net40_positive": false,
+        "at_least_four_of_five_months_net40_positive": false,
+        "at_least_80pct_days_filled": true,
+        "all_integrity_audits_pass": true
+      },
+      "failed_checks": [
+        "top1_net40_positive",
+        "top2_net40_positive",
+        "top1_uplift_vs_L4_positive",
+        "top1_uplift_vs_T02_positive",
+        "familywise_lower_bound_positive",
+        "familywise_p_at_most_0_10",
+        "best20_removed_net20_positive",
+        "top10_codes_cash_net20_positive",
+        "all_three_slices_net40_positive",
+        "at_least_four_of_five_months_net40_positive"
+      ],
+      "passes_all": false
+    },
+    "A08_same_issuer_memory": {
+      "checks": {
+        "top1_net40_positive": false,
+        "top2_net40_positive": false,
+        "top1_uplift_vs_L4_positive": false,
+        "top1_uplift_vs_T02_positive": false,
+        "familywise_lower_bound_positive": false,
+        "familywise_p_at_most_0_10": false,
+        "best20_removed_net20_positive": false,
+        "top10_codes_cash_net20_positive": false,
+        "all_three_slices_net40_positive": false,
+        "at_least_four_of_five_months_net40_positive": false,
+        "at_least_80pct_days_filled": true,
+        "all_integrity_audits_pass": true
+      },
+      "failed_checks": [
+        "top1_net40_positive",
+        "top2_net40_positive",
+        "top1_uplift_vs_L4_positive",
+        "top1_uplift_vs_T02_positive",
+        "familywise_lower_bound_positive",
+        "familywise_p_at_most_0_10",
+        "best20_removed_net20_positive",
+        "top10_codes_cash_net20_positive",
+        "all_three_slices_net40_positive",
+        "at_least_four_of_five_months_net40_positive"
+      ],
+      "passes_all": false
+    },
+    "A09_robust_neighbor_consensus": {
+      "checks": {
+        "top1_net40_positive": false,
+        "top2_net40_positive": false,
+        "top1_uplift_vs_L4_positive": false,
+        "top1_uplift_vs_T02_positive": false,
+        "familywise_lower_bound_positive": false,
+        "familywise_p_at_most_0_10": false,
+        "best20_removed_net20_positive": false,
+        "top10_codes_cash_net20_positive": false,
+        "all_three_slices_net40_positive": false,
+        "at_least_four_of_five_months_net40_positive": false,
+        "at_least_80pct_days_filled": true,
+        "all_integrity_audits_pass": true
+      },
+      "failed_checks": [
+        "top1_net40_positive",
+        "top2_net40_positive",
+        "top1_uplift_vs_L4_positive",
+        "top1_uplift_vs_T02_positive",
+        "familywise_lower_bound_positive",
+        "familywise_p_at_most_0_10",
+        "best20_removed_net20_positive",
+        "top10_codes_cash_net20_positive",
+        "all_three_slices_net40_positive",
+        "at_least_four_of_five_months_net40_positive"
+      ],
+      "passes_all": false
+    },
+    "A10_family_then_text_cross_code": {
+      "checks": {
+        "top1_net40_positive": false,
+        "top2_net40_positive": false,
+        "top1_uplift_vs_L4_positive": false,
+        "top1_uplift_vs_T02_positive": false,
+        "familywise_lower_bound_positive": false,
+        "familywise_p_at_most_0_10": false,
+        "best20_removed_net20_positive": false,
+        "top10_codes_cash_net20_positive": false,
+        "all_three_slices_net40_positive": false,
+        "at_least_four_of_five_months_net40_positive": false,
+        "at_least_80pct_days_filled": true,
+        "all_integrity_audits_pass": true
+      },
+      "failed_checks": [
+        "top1_net40_positive",
+        "top2_net40_positive",
+        "top1_uplift_vs_L4_positive",
+        "top1_uplift_vs_T02_positive",
+        "familywise_lower_bound_positive",
+        "familywise_p_at_most_0_10",
+        "best20_removed_net20_positive",
+        "top10_codes_cash_net20_positive",
+        "all_three_slices_net40_positive",
+        "at_least_four_of_five_months_net40_positive"
+      ],
+      "passes_all": false
+    }
+  },
+  "decision": {
+    "stronger_comparator": "T02_char_value_event_only",
+    "best_point_estimate_candidate": "A06_dual_tail_neighbor_utility",
+    "passing_candidate_ids": [],
+    "selected_forward_shadow_candidate": null,
+    "retrospective_decision": "reject_family",
+    "production_checks": {
+      "retrospective_gate_has_winner": false,
+      "historical_observation_provenance_proven": false,
+      "new_120_session_prospective_gate_passed": false,
+      "human_production_approval_recorded": false
+    },
+    "production_gate_passes": false,
+    "production_model_changed": false,
+    "orders_allowed": false
+  }
+}

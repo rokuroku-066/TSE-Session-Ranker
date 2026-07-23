@@ -1,0 +1,205 @@
+{
+  "schema_version": 1,
+  "protocol_id": "model_v11_new_data_zero_base_20260723",
+  "inspection_scope": [
+    "/workspace/scratch/8678b1d14f37",
+    "/tmp"
+  ],
+  "tdnet_index": {
+    "cached_index_pages": 218,
+    "cached_index_rows": 50719,
+    "empty_index_pages": 61,
+    "first_cached_date": "2024-04-02",
+    "last_cached_date": "2025-07-31",
+    "nonempty_document_urls": 50719,
+    "release_tdnet_urls": 50719,
+    "unique_document_urls": 50719,
+    "extractable_document_ids": 50719,
+    "local_tdnet_document_bodies": 0,
+    "local_tdnet_pdf_files": 0,
+    "local_tdnet_xbrl_files": 0,
+    "contains_publication_timestamp": true,
+    "contains_code_name_title_and_document_url": true,
+    "contains_local_receipt_timestamp": false,
+    "contains_document_body": false,
+    "contains_structured_numeric_fields": false,
+    "url_is_not_body": true
+  },
+  "local_body_and_structured_files": {
+    "tdnet_pdf_count": 0,
+    "tdnet_pdf_examples": [],
+    "xbrl_parquet_feather_count": 0,
+    "note": "Monthly JPX OHLC PDFs are market-price archives, not TDnet document bodies."
+  },
+  "periods": {
+    "panel_bounds": [
+      "2024-01-04",
+      "2025-07-31"
+    ],
+    "cached_tdnet_bounds": [
+      "2024-04-02",
+      "2025-07-31"
+    ],
+    "strict_complete_early_2024_sessions": 33,
+    "early_2024_session_bounds": [
+      "2024-05-01",
+      "2024-06-28"
+    ],
+    "cache_gap_2024_08_to_2025_03_panel_sessions": 159,
+    "cache_gap_strict_complete_sessions": 0,
+    "missing_source_examples": {
+      "2024-01-04": [
+        "prior panel session unavailable"
+      ],
+      "2024-01-05": [
+        "2024-01-04",
+        "2024-01-05"
+      ],
+      "2024-01-09": [
+        "2024-01-05",
+        "2024-01-06",
+        "2024-01-07",
+        "2024-01-08",
+        "2024-01-09"
+      ],
+      "2024-01-10": [
+        "2024-01-09",
+        "2024-01-10"
+      ],
+      "2024-01-11": [
+        "2024-01-10",
+        "2024-01-11"
+      ],
+      "2024-01-12": [
+        "2024-01-11",
+        "2024-01-12"
+      ],
+      "2024-01-15": [
+        "2024-01-12",
+        "2024-01-13",
+        "2024-01-14",
+        "2024-01-15"
+      ],
+      "2024-01-16": [
+        "2024-01-15",
+        "2024-01-16"
+      ],
+      "2024-01-17": [
+        "2024-01-16",
+        "2024-01-17"
+      ],
+      "2024-01-18": [
+        "2024-01-17",
+        "2024-01-18"
+      ],
+      "2024-01-19": [
+        "2024-01-18",
+        "2024-01-19"
+      ],
+      "2024-01-22": [
+        "2024-01-19",
+        "2024-01-20",
+        "2024-01-21",
+        "2024-01-22"
+      ],
+      "2024-01-23": [
+        "2024-01-22",
+        "2024-01-23"
+      ],
+      "2024-01-24": [
+        "2024-01-23",
+        "2024-01-24"
+      ],
+      "2024-01-25": [
+        "2024-01-24",
+        "2024-01-25"
+      ],
+      "2024-01-26": [
+        "2024-01-25",
+        "2024-01-26"
+      ],
+      "2024-01-29": [
+        "2024-01-26",
+        "2024-01-27",
+        "2024-01-28",
+        "2024-01-29"
+      ],
+      "2024-01-30": [
+        "2024-01-29",
+        "2024-01-30"
+      ],
+      "2024-01-31": [
+        "2024-01-30",
+        "2024-01-31"
+      ],
+      "2024-02-01": [
+        "2024-01-31",
+        "2024-02-01"
+      ]
+    },
+    "qualifying_bundles_early_2024": 6935
+  },
+  "availability_matrix": {
+    "ND01_forecast_old_to_new": {
+      "local": false,
+      "reason": "Index URLs and titles exist, but PDF/structured cells and receipt sidecars do not.",
+      "needed": "J-Quants TDnet add-on or Pro statements feed, or immutable PDF archive plus a versioned table parser."
+    },
+    "ND02_profit_delta_to_market_cap": {
+      "local": false,
+      "reason": "ND01 inputs plus effective-dated shares outstanding and PIT market cap are absent.",
+      "needed": "Structured forecast feed, shares/treasury-share security master and D-1 close."
+    },
+    "ND03_buyback_pressure": {
+      "local": false,
+      "reason": "Buyback title flags exist but maximum shares/amount/method/dates and PIT capital structure do not.",
+      "needed": "J-Quants Pro share-buyback TDnet fields or versioned PDF extraction plus security master."
+    },
+    "ND04_simultaneous_adverse_bundle": {
+      "local": true,
+      "provenance": "historical-only; publication time is present, receipt time is absent",
+      "rows": 23275
+    },
+    "ND05_release_clock_and_fiscal_horizon": {
+      "local": true,
+      "provenance": "historical-only; publication time is present, receipt time is absent",
+      "rows": 23275
+    },
+    "ND06_pdf_table_shape_and_numeric_density": {
+      "local": false,
+      "reason": "No TDnet PDF bytes are cached.",
+      "needed": "Immutable document bytes, receipt hash/time, parser version and confidence."
+    },
+    "ND07_body_negation_and_cancellation": {
+      "local": false,
+      "reason": "No TDnet body text or PDF bytes are cached.",
+      "needed": "Official body/PDF archive plus section-aware Japanese parser."
+    },
+    "ND08_ose_futures_0858": {
+      "local": false,
+      "reason": "No exact historical 08:58 futures snapshots are present.",
+      "needed": "Broker market-data API for prospective capture or a licensed historical OSE feed."
+    },
+    "ND09_tse_auction_0858": {
+      "local": false,
+      "reason": "No pre-open order-book snapshot is present; actual open is a forbidden proxy.",
+      "needed": "Prospective broker API capture or licensed JPX 10-level reconstruction data."
+    },
+    "ND10_pts_night_and_day": {
+      "local": false,
+      "reason": "No venue/session-specific PTS trade or quote history is present.",
+      "needed": "Japannext ITCH/GLIMPSE or an authorized vendor contract."
+    },
+    "ND11_pit_liquidity_and_unit_cost": {
+      "local": false,
+      "reason": "The frozen JPX daily table and monthly PDFs contain OHLC but no usable volume, turnover, lot, spread or market cap.",
+      "needed": "J-Quants/DataCube daily volume/turnover plus effective-dated security master and execution ledger."
+    }
+  },
+  "fail_closed": {
+    "blocked_hypotheses_scored": 0,
+    "missing_source_encoded_as_no_event": false,
+    "URL_treated_as_document_body": false,
+    "daily_OHLC_treated_as_0858_snapshot": false
+  }
+}

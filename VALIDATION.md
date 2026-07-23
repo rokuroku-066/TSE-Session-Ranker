@@ -2545,3 +2545,264 @@ retrospective点推定首位:       T02 char-value event-only top1
 移した判断である。
 
 </details>
+
+---
+
+## Entry 016 — 研究プロトコルv1.1：7系統ゼロベース反証と本番readinessのfail-closed統合
+
+| 項目 | 内容 |
+|---|---|
+| 検証日 | 2026-07-23 |
+| 親Entry | Entry 015 |
+| 目的 | T02の微調整ではなく、情報源・推定対象・意思決定構造が異なる7系統をゼロベースで反証し、本番採用の証拠権限を統合監査する |
+| 7系統 | new data、historical analog、distributional decision、uplift、cross-stock graph、distribution shift、calendar/institution |
+| 探索規模 | 概念仮説67件、実行可能spec 59件、capacity別候補variant 118件 |
+| 選択の独立性 | family内の経済的に異なるselection sequenceは112件。comparator 14件を含むscored seriesは132件 |
+| 評価窓 | strict-source 88日、new-data 107日、price-panel 266日が混在 |
+| family gate | 通過0/118、forward-shadow finalist 0 |
+| 最終判断 | 現行freeze/dataの下で本番採用を支持する証拠は0件。production変更なし、orders不許可 |
+| 機械可読成果物 | `research/model_v11_integration_audit.json`、`research/model_v11_production_readiness.json`、各`model_v11_*_{protocol,result,audit}.json` |
+
+> **一行結論:** 67の概念仮説を7つの異なる機構familyへ分け、59 spec・118 candidate variantを事前固定して検証したが、family固有の全gateを通過したvariantは0件だった。窓・universe・cash denominator・controlが異なるためfamily間の点推定順位は作らず、共有済み履歴panel上のfamily-local多重性補正も横断選抜の権限には使わない。凍結T02のfresh OOT rawと08:58実行データも未充足なので、本番候補は0のままとする。
+
+<details>
+<summary><strong>7系統の結果、統合監査、fresh OOT/readiness</strong></summary>
+
+### 権限と数え方
+
+7系統はいずれも各runnerの実行前にprotocolを固定し、月次expanding
+walk-forward、対象月outcome mutation、独立P&L再計算を行った。ただし
+全系統がprojectで既に参照した同一panel
+`6b86f994a1d15d1da8ed40469d44fc409adadc6cd5b3df3c08aef6717bcdf0eb`
+を再利用している。family内の未来混入を防いでも、project-levelのfresh
+holdoutには戻らない。
+
+```text
+概念仮説:                         67
+実行可能な概念仮説:               58
+固定combination spec:              1
+実行可能spec合計:                 59
+capacity別candidate variant:      118
+family内unique selection sequence: 112
+comparator variant:                14
+scored series合計:                132
+family gate通過:                 0/118
+forward-shadow finalist:            0
+production candidate:               0
+```
+
+118 variantはすべて経済的に別ではない。日付・銘柄・実行weightの
+selection sequenceをfamily内でhashすると112件になる。
+`D07_REGIME_ABSTAIN_K1/K2`、`U06_PROPENSITY_OVERLAP_T_K1/K2`、
+`S06_UNSUPERVISED_LATENT_EXPERTS_K1/K2`、calendarの
+`C11_RELEASE_CLOCK_FAMILY_EB_K1/K2`と
+`C12_HIGH_DENSITY_FAMILY_EB_K1/K2`は、それぞれ全cashのため重複する。
+非互換なfamily間は同じcash pathでも同一試行としてdeduplicateしない。
+
+new-dataの凍結resultが列挙するblocked hypothesisは9件
+（ND01、ND02、ND03、ND06、ND07、ND08、ND09、ND10、ND11）である。
+取得routeではND01/ND02がstructured forecast numeric feedを共有するため
+8 groupにまとめられるが、登録仮説数を8へ書き換えない。
+
+### family間順位を作らない
+
+数値は各family内の代表的な点推定であり、横断ランキングではない。
+
+| family | representative | scheduled sessions | net40 | familywise evidence | 結論 |
+|---|---|---:|---:|---|---|
+| new data | `ND05_release_clock_and_fiscal_horizon__top1` | 107 | `-0.230428%` | L4差`-0.294670pt`、Holm p=`0.2974` | promotion gate自体を無効化、0件 |
+| historical analog | `A06_dual_tail_neighbor_utility` top1 | 88 | `-0.048478%` | T02差`-0.567536pt`、simultaneous L90=`-1.220501pt` | 0/10 |
+| distributional | `D08_SLOTWISE_CASH_STOP_K1` | 266 | `+0.118420%` | matched control差`+0.110518pt`、FW L95=`-0.134116pt` | tail・集中・sliceを含む全gate不合格 |
+| uplift | `U04_DATE_RESIDUAL_UPLIFT_K2` | 88 | `+0.070633%` | FW L95=`-0.190559%`、global p=`0.9224` | 0/16 |
+| graph | `G10_graph_disagreement_cash` top1 | 266 | `-0.176527%` | C00差`-0.184429pt`、simultaneous L90=`-0.486103pt` | 0/10 |
+| distribution shift | `S08_ENVIRONMENT_RESIDUALISED_K1` | 266 | `+0.076608%` | matched control差`+0.068707pt`、FW L95=`-0.052917pt` | slice・tail・集中を含む全gate不合格 |
+| calendar/institution | `C03_PRE_HOLIDAY_ISSUER_EB_K1` | 266 | `+0.058234%` | FW L95=`-0.250769%`、global p=`0.8376` | 0/24 |
+
+calendarのC03はnet20/net40/net60が
+`+0.100339/+0.058234/+0.016129%`だったが、取引は56/266日、unique codeは
+9だけだった。confirmation Aはnet40 `-0.164160%`、best 20日除外net20は
+`-0.211241%`、上位利益10 code現金化net20は`-0.128115%`である。
+calendar全24 policyのfamilywise現実性検定もglobal p=`0.837632`で、
+forward finalistはない。
+
+88日、107日、266日は同じ母集団ではない。さらにsource-completeness、
+候補universe、cashを含むscheduled-day denominator、capacity、control、
+familywise手法が異なる。したがって、
+
+```text
+cross-family ranking permitted: false
+common-window posthoc reranking: false
+global 118-variant multiplicity correction: 未実施
+selection authority from family-local correction: なし
+```
+
+とする。各familyの補正はfamily内の反証には使えるが、7 familyを見た後の
+winner選択を補正しない。窓が非互換なまま横断p値を作る代わりに、
+retrospective panelから候補を選ばないことを保守的な措置とした。
+
+### canonical decisionの優先順位
+
+analog、graph、uplift、calendarのrunner resultは、独立監査前の
+`pending_independent_audit`を意図的に保持している。最終判断には後発の
+auditを使う。
+
+| family | canonical decision source |
+|---|---|
+| new data | independent audit + hash-binding manifest |
+| analog | independent audit |
+| distributional | independent auditを埋め込んだfinalized result + standalone audit |
+| uplift | independent audit |
+| graph | independent audit |
+| shift | independent auditを埋め込んだfinalized result + standalone audit |
+| calendar | independent audit |
+
+runner resultの`pending`表示だけを読んで、auditの0 passersを上書きしては
+ならない。7 familyすべてでprotocol hash、result binding、target mutation、
+独立P&L、production falseを統合auditが再確認した。
+
+### PIT・archive finality・calendar provenance
+
+new-data/analogの履歴TDnet cacheはpublication timestampを持つが、当時の
+local receipt timestampとarchive finalityを証明するsidecarを持たない。
+uplift/calendarのPIT PASSも、publication-time cutoffと
+source-completeness filterを検証したという限定された意味であり、履歴時点で
+同じarchive bytesを受領済みだったことの証明ではない。
+
+calendar featureはfrozen panelのsession indexから決定論的に生成した。
+official holiday/SQ calendar datasetはbindされておらず、C09のSQはproxyで
+ある。これは実装の未来混入がないことと、制度calendarの公式provenanceが
+あることを区別するための制限である。
+
+### 凍結T02のfresh OOT
+
+`research/model_v11_t02_oot_protocol.json`は、v1.0 T02のvectorizer、target、
+Ridge alpha、universe、rank、fallback、cash ruleを変更せず、次の期間だけを
+評価する。
+
+```text
+warmup:                        2025-08-01
+score:                         2025-08-04 ... 2026-03-31
+expected score sessions:       159
+minimum source-complete:        120
+minimum calendar months:          6
+untouched_holdout_claim:       false
+T02 result/audit:              なし
+```
+
+`untouched_holdout_claim=false`なのは、同じ日付のaggregate returnが無関係な
+v0.4分析で既に参照されたためである。一方、T02仕様自体は2025-07-31までの
+データで固定され、bound artifact 4/4のhashは一致した。
+
+現在のworkspaceでは対象期間のJPX raw PDFはhash-exact `0/160`、TDnet日別
+pageは`0/243`、joint provenance-complete score sessionは`0/120` minimumで
+ある。したがってexact no-tuning OOT統計gateもexecution gateも実行できない。
+
+統合auditのexact data blockerは次の6件。
+
+```text
+frozen T02 OOT raw data missing
+08:58 execution data missing
+08:58 futures data missing
+08:58 orderbook data missing
+08:58 PTS data missing
+08:58 liquidity data missing
+```
+
+data-readiness verifier v3はGit管理rootとevidence registryへ明示登録した
+source rootだけを探索し、protocolが要求するraw、provenance、実行/context
+fieldが揃うかをfail-closedで点検した。過去auditに残る絶対pathから`/tmp`を
+推測して走査しないため、別test runの一時fileで結果は変わらない。
+20件のblocking requirementと、未取得のoptional research-context 3 fieldを
+分離して記録する。blocker件数は重複し得るfailed requirement数であり、
+独立した欠測dataset数ではない。
+
+ファイル名・CSV/TSV headerの探索結果はdiagnostic candidateに限定し、
+header-only fileはgate evidenceにならない。positive certificationには、
+明示的に凍結したmanifest/content reader、非空のOOT行、PIT timestamp、
+型・非欠測率、provenance/hash、joint-session coverageが必要である。
+verifier自身はdata readinessだけを判定し、本番を認可しない。
+`model_v11_data_evidence_registry.json`には、T02 protocol hash、parser-audit
+hash、160取引日のdate-set digest、JPX/TDnet parser SHA、許可source host/path
+を固定し、registry自体のSHAもverifierへ固定した。
+TDnetの空pageは日付見出しだけでなくtable headerと前日・翌日linkを要求し、
+page/meta双方を243日manifestへhash bindする。JPXは公式host、raw byte count、
+parser version/SHAを照合したうえでcanonical parserにより各PDFを再parseし、
+日付・必須列・row数・reject数をauditと照合する。runtime importのpath/SHAも
+canonical parserへ一致させる。execution evidenceには正方向のregistry-bound
+CSV validatorを実装し、T02 decision artifactと独立replay audit、approved
+source、policy/simulator hashへ結合する。全order decisionを`filled`、
+`cancelled_special_quote`、`cancelled_delayed_open`、
+`cancelled_liquidity`、`unfilled`のいずれかで過不足なく被覆し、cash decisionは
+ledgerへ混入させない。40約定・30約定日、08:58:00～08:58:59 PIT、bid/ask、
+tick/lot、価格からのspread/slippage、予定注文額、実売買代金0.5%、
+予想寄付売買代金5%、予定額と実約定額双方の日次合計intended capitalを
+再計算する。自己申告されたreplay/policy auditは内部整合性までしか通さず、
+dated security master・JPX履歴からのtick/lot/20日売買代金再導出と
+provider-authenticated originがない限りexecution evidenceの`valid`をfalseにする。
+このregistryはrepository hashで固定されるが外部署名ではないため、verifierは
+引き続き本番を認可しない。
+
+### 本番認可rule
+
+本番候補には次をすべて要求する。
+
+1. 該当familyの事前登録retrospective gateを全て通過
+2. 横断選抜も事前固定した、genuinely laterなfresh OOT gateを通過
+3. source receipt/finalityとPIT complianceを独立検証
+4. 08:58 indicative/bid/askまたはorder simulation、realized spread/slippage、
+   special quote、delayed open、turnover、tick/lot、予想寄付turnover、
+   outcome完全被覆、日次capacityを検証
+5. 独立P&L auditと明示的人手承認
+
+現在は1～4が未充足なので、その積集合は空である。
+先物、PTS、volumeは追加研究contextであり、現行execution gateの必須項目とは
+数えない。bid/askとtickはspread/slippage・指値・丸めを再計算するため必須である。
+また登録済みhistorical windowはgenuinely untouchedではないため、これを通過しても
+事前固定したpaper-liveまたはさらに後年のholdoutを通過するまで本番認可しない。
+
+```text
+production candidate:    0
+production model changed: false
+orders allowed:          false
+```
+
+これは「edgeが存在しない」という結論ではない。正確な結論は
+**「現行freezeと利用可能dataの下で、本番採用を支持する証拠がない」**である。
+不足dataを取得した後も、既存結果へ閾値を合わせるのではなく、新しいprotocolと
+fresh periodを登録して検証する。
+
+### 再現と成果物
+
+```bash
+python research/model_v11_integration_audit.py
+PYTHONPATH=src:. python research/model_v11_production_readiness.py
+python -m unittest tests.test_model_v11_integration -v
+python -m pytest -q
+```
+
+最終回帰結果：
+
+```text
+307 passed
+166 subtests passed
+```
+
+主要成果物：
+
+```text
+research/model_v11_new_data_{protocol,result,audit}.json
+research/model_v11_analog_{protocol,result,audit}.json
+research/model_v11_distributional_{protocol,result,audit}.json
+research/model_v11_uplift_{protocol,result,audit}.json
+research/model_v11_graph_{protocol,result,audit}.json
+research/model_v11_shift_{protocol,result,audit}.json
+research/model_v11_calendar_{protocol,result,audit}.json
+research/model_v11_integration_audit.json
+research/model_v11_integration_report.md
+research/model_v11_t02_oot_protocol.json
+research/model_v11_data_evidence_registry.json
+research/model_v11_production_readiness.json
+research/model_v11_production_readiness_report.md
+```
+
+</details>

@@ -1,0 +1,3900 @@
+{
+  "schema_version": 1,
+  "protocol_id": "v11_historical_analog_zero_base_20260723",
+  "authority": {
+    "classification": "retrospective_exploratory_no_production_promotion",
+    "production_model_changed": false,
+    "orders_allowed": false
+  },
+  "protocol_sha256": "823012afa89fe9ec982a7ca82c78c3f24697b6969d1d3fcaa73f5ee7d3b82e86",
+  "runner_sha256": "c2312997ec50f440cafef02de1ef6b11bc4993606d37203819c2f819ddd4ce8b",
+  "integrity": {
+    "protocol_sha256": "823012afa89fe9ec982a7ca82c78c3f24697b6969d1d3fcaa73f5ee7d3b82e86",
+    "panel_sha256": "6b86f994a1d15d1da8ed40469d44fc409adadc6cd5b3df3c08aef6717bcdf0eb",
+    "panel_manifest_sha256": "25e08c564ef6400b7a29168db9fd7e8220bd0e2386c7a3c7e71b05c2ff950b02",
+    "cache_checks": [
+      {
+        "path": "tdnet_date_cache_2024",
+        "html_files": 110,
+        "aggregate_sha256": "795852d3f64f8767191805e339dbd7c16972c9a249996ea6847fbbe023bea0f3"
+      },
+      {
+        "path": "tdnet_date_cache",
+        "html_files": 108,
+        "aggregate_sha256": "012a11b23d09a5931726146cb37cb715f58e8c6e020d67700fa199c912628d38"
+      }
+    ],
+    "known_comparator_checks": {
+      "v10_tdnet_protocol": "700b0262f805c37659453af72651897d116e8bd1f6329a602989b90b212c5b3a",
+      "v10_tdnet_result": "3a40e3541fb24f89f2b009b48b2af4d3a84afe2e96ce03010ea0a87442800196"
+    },
+    "strictly_prior_training_all_folds": true,
+    "future_publication_violations": 0,
+    "source_missing_never_encoded_no_event": true,
+    "target_session_outcome_mutation": {
+      "passes": true,
+      "folds": [
+        {
+          "period": "2024-07",
+          "original_score_and_fill_digest": "e2e149e05145b05f01dc4ebbab8bd35be7b93cdf845a496f97e29c32fe51997d",
+          "mutated_score_and_fill_digest": "e2e149e05145b05f01dc4ebbab8bd35be7b93cdf845a496f97e29c32fe51997d",
+          "passes": true
+        },
+        {
+          "period": "2025-04",
+          "original_score_and_fill_digest": "e3272ab591c7ef4a7027b004dc296bc658627ce9b1b9f1784b9240329157358e",
+          "mutated_score_and_fill_digest": "e3272ab591c7ef4a7027b004dc296bc658627ce9b1b9f1784b9240329157358e",
+          "passes": true
+        },
+        {
+          "period": "2025-05",
+          "original_score_and_fill_digest": "7bbcf676d0d5ef6e470bcdf67b596df77d430a78ad512c76d351e58708f7c98c",
+          "mutated_score_and_fill_digest": "7bbcf676d0d5ef6e470bcdf67b596df77d430a78ad512c76d351e58708f7c98c",
+          "passes": true
+        },
+        {
+          "period": "2025-06",
+          "original_score_and_fill_digest": "beb431ee02b472042aed26788a965f4a41ae7b9cd533c89d6a7c50b2d54bf555",
+          "mutated_score_and_fill_digest": "beb431ee02b472042aed26788a965f4a41ae7b9cd533c89d6a7c50b2d54bf555",
+          "passes": true
+        },
+        {
+          "period": "2025-07",
+          "original_score_and_fill_digest": "078b6a1471ff1928bf8008ef10a114b5b840e92022e01cc658dde664481f38bb",
+          "mutated_score_and_fill_digest": "078b6a1471ff1928bf8008ef10a114b5b840e92022e01cc658dde664481f38bb",
+          "passes": true
+        }
+      ]
+    }
+  },
+  "coverage": {
+    "pages": 218,
+    "disclosures": 50719,
+    "empty_pages": 61,
+    "first_page": "2024-04-02",
+    "last_page": "2025-07-31",
+    "mapped_disclosures": 50024,
+    "excluded_intraday_prior_session": 9755,
+    "excluded_target_source_missing": 4413,
+    "qualifying_disclosures": 35856,
+    "future_publication_violations": 0,
+    "panel_sessions": 386,
+    "strict_complete_sessions_all_panel": 134,
+    "strict_complete_score_sessions": 88,
+    "score_months": [
+      "2024-07",
+      "2025-04",
+      "2025-05",
+      "2025-06",
+      "2025-07"
+    ],
+    "source_missing_score_sessions": 178,
+    "source_missing_examples": {
+      "2024-08-01": [
+        "2024-08-01"
+      ],
+      "2024-08-02": [
+        "2024-08-01",
+        "2024-08-02"
+      ],
+      "2024-08-05": [
+        "2024-08-02",
+        "2024-08-03",
+        "2024-08-04",
+        "2024-08-05"
+      ],
+      "2024-08-06": [
+        "2024-08-05",
+        "2024-08-06"
+      ],
+      "2024-08-07": [
+        "2024-08-06",
+        "2024-08-07"
+      ],
+      "2024-08-08": [
+        "2024-08-07",
+        "2024-08-08"
+      ],
+      "2024-08-09": [
+        "2024-08-08",
+        "2024-08-09"
+      ],
+      "2024-08-13": [
+        "2024-08-09",
+        "2024-08-10",
+        "2024-08-11",
+        "2024-08-12",
+        "2024-08-13"
+      ],
+      "2024-08-14": [
+        "2024-08-13",
+        "2024-08-14"
+      ],
+      "2024-08-15": [
+        "2024-08-14",
+        "2024-08-15"
+      ],
+      "2024-08-16": [
+        "2024-08-15",
+        "2024-08-16"
+      ],
+      "2024-08-19": [
+        "2024-08-16",
+        "2024-08-17",
+        "2024-08-18",
+        "2024-08-19"
+      ],
+      "2024-08-20": [
+        "2024-08-19",
+        "2024-08-20"
+      ],
+      "2024-08-21": [
+        "2024-08-20",
+        "2024-08-21"
+      ],
+      "2024-08-22": [
+        "2024-08-21",
+        "2024-08-22"
+      ],
+      "2024-08-23": [
+        "2024-08-22",
+        "2024-08-23"
+      ],
+      "2024-08-26": [
+        "2024-08-23",
+        "2024-08-24",
+        "2024-08-25",
+        "2024-08-26"
+      ],
+      "2024-08-27": [
+        "2024-08-26",
+        "2024-08-27"
+      ],
+      "2024-08-28": [
+        "2024-08-27",
+        "2024-08-28"
+      ],
+      "2024-08-29": [
+        "2024-08-28",
+        "2024-08-29"
+      ]
+    },
+    "qualifying_bundles": 23275,
+    "qualifying_score_bundles": 14770,
+    "score_days_with_event_bundle": 88,
+    "historical_cache_observation_metadata_available": false
+  },
+  "implementation": {
+    "candidate_ids": [
+      "A01_global_similarity_mean",
+      "A02_issuer_excluded_mean",
+      "A03_time_decay_mean",
+      "A04_cross_code_one_per_issuer",
+      "A05_neighbor_lower_quantile",
+      "A06_dual_tail_neighbor_utility",
+      "A07_event_family_prototype",
+      "A08_same_issuer_memory",
+      "A09_robust_neighbor_consensus",
+      "A10_family_then_text_cross_code"
+    ],
+    "comparator_ids": [
+      "L4_price_control",
+      "T02_char_value_event_only"
+    ],
+    "neighbor_count": 31,
+    "time_half_life_sessions": 126.0,
+    "primary_cost_hurdle_pct": 0.4,
+    "family_features": [
+      "earnings",
+      "revision_up",
+      "revision_down",
+      "dividend_up",
+      "dividend_down",
+      "buyback_decision",
+      "benefit",
+      "split",
+      "external_equity_financing",
+      "impairment_loss",
+      "audit_problem",
+      "ma_alliance",
+      "control_transaction",
+      "correction"
+    ],
+    "outcome_coefficients_fitted_for_analog_candidates": false,
+    "hyperparameter_grid_searched": false
+  },
+  "folds": [
+    {
+      "period": "2024-07",
+      "score_sessions": 22,
+      "score_session_first": "2024-07-01",
+      "score_session_last": "2024-07-31",
+      "panel_train_rows": 201708,
+      "panel_train_end": "2024-06-28",
+      "panel_score_rows": 70947,
+      "event_train_bundles": 6752,
+      "event_train_end": "2024-06-28",
+      "event_score_bundles": 2630,
+      "tfidf_features": 24947,
+      "value_target_clip": [
+        -7.849713608532491,
+        7.674024377752728
+      ],
+      "strictly_prior_training": true,
+      "analog_support": {
+        "A01_global_similarity_mean": {
+          "minimum": 31,
+          "median": 31.0,
+          "maximum": 31,
+          "abstained_bundles": 0
+        },
+        "A02_issuer_excluded_mean": {
+          "minimum": 31,
+          "median": 31.0,
+          "maximum": 31,
+          "abstained_bundles": 0
+        },
+        "A03_time_decay_mean": {
+          "minimum": 31,
+          "median": 31.0,
+          "maximum": 31,
+          "abstained_bundles": 0
+        },
+        "A04_cross_code_one_per_issuer": {
+          "minimum": 31,
+          "median": 31.0,
+          "maximum": 31,
+          "abstained_bundles": 0
+        },
+        "A05_neighbor_lower_quantile": {
+          "minimum": 31,
+          "median": 31.0,
+          "maximum": 31,
+          "abstained_bundles": 2620
+        },
+        "A06_dual_tail_neighbor_utility": {
+          "minimum": 31,
+          "median": 31.0,
+          "maximum": 31,
+          "abstained_bundles": 2310
+        },
+        "A07_event_family_prototype": {
+          "minimum": 16,
+          "median": 6752.0,
+          "maximum": 6752,
+          "abstained_bundles": 0
+        },
+        "A08_same_issuer_memory": {
+          "minimum": 0,
+          "median": 2.0,
+          "maximum": 10,
+          "abstained_bundles": 228
+        },
+        "A09_robust_neighbor_consensus": {
+          "minimum": 31,
+          "median": 31.0,
+          "maximum": 31,
+          "abstained_bundles": 0
+        },
+        "A10_family_then_text_cross_code": {
+          "minimum": 1,
+          "median": 31.0,
+          "maximum": 31,
+          "abstained_bundles": 0
+        }
+      }
+    },
+    {
+      "period": "2025-04",
+      "score_sessions": 15,
+      "score_session_first": "2025-04-01",
+      "score_session_last": "2025-04-30",
+      "panel_train_rows": 810434,
+      "panel_train_end": "2025-03-31",
+      "panel_score_rows": 39186,
+      "event_train_bundles": 9536,
+      "event_train_end": "2024-07-31",
+      "event_score_bundles": 1143,
+      "tfidf_features": 30000,
+      "value_target_clip": [
+        -7.82408925643402,
+        7.549387208951805
+      ],
+      "strictly_prior_training": true,
+      "analog_support": {
+        "A01_global_similarity_mean": {
+          "minimum": 31,
+          "median": 31.0,
+          "maximum": 31,
+          "abstained_bundles": 0
+        },
+        "A02_issuer_excluded_mean": {
+          "minimum": 31,
+          "median": 31.0,
+          "maximum": 31,
+          "abstained_bundles": 0
+        },
+        "A03_time_decay_mean": {
+          "minimum": 31,
+          "median": 31.0,
+          "maximum": 31,
+          "abstained_bundles": 0
+        },
+        "A04_cross_code_one_per_issuer": {
+          "minimum": 31,
+          "median": 31.0,
+          "maximum": 31,
+          "abstained_bundles": 0
+        },
+        "A05_neighbor_lower_quantile": {
+          "minimum": 31,
+          "median": 31.0,
+          "maximum": 31,
+          "abstained_bundles": 1139
+        },
+        "A06_dual_tail_neighbor_utility": {
+          "minimum": 31,
+          "median": 31.0,
+          "maximum": 31,
+          "abstained_bundles": 962
+        },
+        "A07_event_family_prototype": {
+          "minimum": 20,
+          "median": 9536.0,
+          "maximum": 9536,
+          "abstained_bundles": 0
+        },
+        "A08_same_issuer_memory": {
+          "minimum": 0,
+          "median": 3.0,
+          "maximum": 13,
+          "abstained_bundles": 87
+        },
+        "A09_robust_neighbor_consensus": {
+          "minimum": 31,
+          "median": 31.0,
+          "maximum": 31,
+          "abstained_bundles": 0
+        },
+        "A10_family_then_text_cross_code": {
+          "minimum": 1,
+          "median": 31.0,
+          "maximum": 31,
+          "abstained_bundles": 0
+        }
+      }
+    },
+    {
+      "period": "2025-05",
+      "score_sessions": 15,
+      "score_session_first": "2025-05-01",
+      "score_session_last": "2025-05-30",
+      "panel_train_rows": 882045,
+      "panel_train_end": "2025-04-30",
+      "panel_score_rows": 47411,
+      "event_train_bundles": 11023,
+      "event_train_end": "2025-04-30",
+      "event_score_bundles": 2688,
+      "tfidf_features": 30000,
+      "value_target_clip": [
+        -7.82677693020603,
+        7.722249890487231
+      ],
+      "strictly_prior_training": true,
+      "analog_support": {
+        "A01_global_similarity_mean": {
+          "minimum": 31,
+          "median": 31.0,
+          "maximum": 31,
+          "abstained_bundles": 0
+        },
+        "A02_issuer_excluded_mean": {
+          "minimum": 31,
+          "median": 31.0,
+          "maximum": 31,
+          "abstained_bundles": 0
+        },
+        "A03_time_decay_mean": {
+          "minimum": 31,
+          "median": 31.0,
+          "maximum": 31,
+          "abstained_bundles": 0
+        },
+        "A04_cross_code_one_per_issuer": {
+          "minimum": 31,
+          "median": 31.0,
+          "maximum": 31,
+          "abstained_bundles": 0
+        },
+        "A05_neighbor_lower_quantile": {
+          "minimum": 31,
+          "median": 31.0,
+          "maximum": 31,
+          "abstained_bundles": 2683
+        },
+        "A06_dual_tail_neighbor_utility": {
+          "minimum": 31,
+          "median": 31.0,
+          "maximum": 31,
+          "abstained_bundles": 2434
+        },
+        "A07_event_family_prototype": {
+          "minimum": 26,
+          "median": 3162.0,
+          "maximum": 11023,
+          "abstained_bundles": 0
+        },
+        "A08_same_issuer_memory": {
+          "minimum": 0,
+          "median": 3.0,
+          "maximum": 17,
+          "abstained_bundles": 163
+        },
+        "A09_robust_neighbor_consensus": {
+          "minimum": 31,
+          "median": 31.0,
+          "maximum": 31,
+          "abstained_bundles": 0
+        },
+        "A10_family_then_text_cross_code": {
+          "minimum": 1,
+          "median": 31.0,
+          "maximum": 31,
+          "abstained_bundles": 0
+        }
+      }
+    },
+    {
+      "period": "2025-06",
+      "score_sessions": 19,
+      "score_session_first": "2025-06-02",
+      "score_session_last": "2025-06-30",
+      "panel_train_rows": 949687,
+      "panel_train_end": "2025-05-30",
+      "panel_score_rows": 59852,
+      "event_train_bundles": 13895,
+      "event_train_end": "2025-05-30",
+      "event_score_bundles": 2155,
+      "tfidf_features": 30000,
+      "value_target_clip": [
+        -7.837837837837835,
+        8.443094132145221
+      ],
+      "strictly_prior_training": true,
+      "analog_support": {
+        "A01_global_similarity_mean": {
+          "minimum": 31,
+          "median": 31.0,
+          "maximum": 31,
+          "abstained_bundles": 0
+        },
+        "A02_issuer_excluded_mean": {
+          "minimum": 31,
+          "median": 31.0,
+          "maximum": 31,
+          "abstained_bundles": 0
+        },
+        "A03_time_decay_mean": {
+          "minimum": 31,
+          "median": 31.0,
+          "maximum": 31,
+          "abstained_bundles": 0
+        },
+        "A04_cross_code_one_per_issuer": {
+          "minimum": 31,
+          "median": 31.0,
+          "maximum": 31,
+          "abstained_bundles": 0
+        },
+        "A05_neighbor_lower_quantile": {
+          "minimum": 31,
+          "median": 31.0,
+          "maximum": 31,
+          "abstained_bundles": 2142
+        },
+        "A06_dual_tail_neighbor_utility": {
+          "minimum": 31,
+          "median": 31.0,
+          "maximum": 31,
+          "abstained_bundles": 1907
+        },
+        "A07_event_family_prototype": {
+          "minimum": 31,
+          "median": 13895.0,
+          "maximum": 13895,
+          "abstained_bundles": 0
+        },
+        "A08_same_issuer_memory": {
+          "minimum": 0,
+          "median": 5.0,
+          "maximum": 22,
+          "abstained_bundles": 55
+        },
+        "A09_robust_neighbor_consensus": {
+          "minimum": 31,
+          "median": 31.0,
+          "maximum": 31,
+          "abstained_bundles": 0
+        },
+        "A10_family_then_text_cross_code": {
+          "minimum": 1,
+          "median": 31.0,
+          "maximum": 31,
+          "abstained_bundles": 0
+        }
+      }
+    },
+    {
+      "period": "2025-07",
+      "score_sessions": 17,
+      "score_session_first": "2025-07-01",
+      "score_session_last": "2025-07-31",
+      "panel_train_rows": 1019568,
+      "panel_train_end": "2025-06-30",
+      "panel_score_rows": 54017,
+      "event_train_bundles": 16227,
+      "event_train_end": "2025-06-30",
+      "event_score_bundles": 1862,
+      "tfidf_features": 30000,
+      "value_target_clip": [
+        -7.743748833872929,
+        8.389176369124606
+      ],
+      "strictly_prior_training": true,
+      "analog_support": {
+        "A01_global_similarity_mean": {
+          "minimum": 31,
+          "median": 31.0,
+          "maximum": 31,
+          "abstained_bundles": 0
+        },
+        "A02_issuer_excluded_mean": {
+          "minimum": 31,
+          "median": 31.0,
+          "maximum": 31,
+          "abstained_bundles": 0
+        },
+        "A03_time_decay_mean": {
+          "minimum": 31,
+          "median": 31.0,
+          "maximum": 31,
+          "abstained_bundles": 0
+        },
+        "A04_cross_code_one_per_issuer": {
+          "minimum": 31,
+          "median": 31.0,
+          "maximum": 31,
+          "abstained_bundles": 0
+        },
+        "A05_neighbor_lower_quantile": {
+          "minimum": 31,
+          "median": 31.0,
+          "maximum": 31,
+          "abstained_bundles": 1854
+        },
+        "A06_dual_tail_neighbor_utility": {
+          "minimum": 31,
+          "median": 31.0,
+          "maximum": 31,
+          "abstained_bundles": 1659
+        },
+        "A07_event_family_prototype": {
+          "minimum": 35,
+          "median": 16227.0,
+          "maximum": 16227,
+          "abstained_bundles": 0
+        },
+        "A08_same_issuer_memory": {
+          "minimum": 0,
+          "median": 6.0,
+          "maximum": 27,
+          "abstained_bundles": 38
+        },
+        "A09_robust_neighbor_consensus": {
+          "minimum": 31,
+          "median": 31.0,
+          "maximum": 31,
+          "abstained_bundles": 0
+        },
+        "A10_family_then_text_cross_code": {
+          "minimum": 1,
+          "median": 31.0,
+          "maximum": 31,
+          "abstained_bundles": 0
+        }
+      }
+    }
+  ],
+  "metrics": {
+    "L4_price_control": {
+      "top1": {
+        "costs": {
+          "0": {
+            "mean_pct": 0.41768754237986966,
+            "median_pct": 0.2444157339729025,
+            "win_rate": 0.5909090909090909,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": 0.21996026965259705,
+            "median_pct": 0.044415733972902494,
+            "win_rate": 0.5113636363636364,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": 0.022232996925324232,
+            "median_pct": -0.13465653153152923,
+            "win_rate": 0.4090909090909091,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.1754942758019484,
+            "median_pct": -0.3346565315315292,
+            "win_rate": 0.36363636363636365,
+            "days": 88
+          }
+        },
+        "monthly": {
+          "2024-07": {
+            "gross_mean_pct": 1.1121842784508427,
+            "net20_mean_pct": 0.9121842784508428,
+            "net40_mean_pct": 0.7121842784508425,
+            "net60_mean_pct": 0.5121842784508426
+          },
+          "2025-04": {
+            "gross_mean_pct": -1.021886708427972,
+            "net20_mean_pct": -1.2218867084279716,
+            "net40_mean_pct": -1.4218867084279718,
+            "net60_mean_pct": -1.6218867084279716
+          },
+          "2025-05": {
+            "gross_mean_pct": 0.8727444863950502,
+            "net20_mean_pct": 0.6727444863950502,
+            "net40_mean_pct": 0.4727444863950502,
+            "net60_mean_pct": 0.2727444863950503
+          },
+          "2025-06": {
+            "gross_mean_pct": 0.4493259204257775,
+            "net20_mean_pct": 0.2598522362152512,
+            "net40_mean_pct": 0.07037855200472497,
+            "net60_mean_pct": -0.1190951322058015
+          },
+          "2025-07": {
+            "gross_mean_pct": 0.35225826152435585,
+            "net20_mean_pct": 0.15225826152435584,
+            "net40_mean_pct": -0.04774173847564417,
+            "net60_mean_pct": -0.24774173847564415
+          }
+        },
+        "positive_months_net40": 3,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 22,
+            "gross_mean_pct": 1.1121842784508427,
+            "net20_mean_pct": 0.9121842784508428,
+            "net40_mean_pct": 0.7121842784508425,
+            "net60_mean_pct": 0.5121842784508426
+          },
+          "confirmation_a": {
+            "days": 30,
+            "gross_mean_pct": -0.07457111101646076,
+            "net20_mean_pct": -0.2745711110164607,
+            "net40_mean_pct": -0.4745711110164607,
+            "net60_mean_pct": -0.6745711110164607
+          },
+          "confirmation_b": {
+            "days": 36,
+            "gross_mean_pct": 0.4034884148334395,
+            "net20_mean_pct": 0.20904397038899505,
+            "net40_mean_pct": 0.014599525944550659,
+            "net60_mean_pct": -0.17984491849989384
+          }
+        },
+        "best20_session_removal": {
+          "removed_dates": [
+            "2024-07-12",
+            "2024-07-05",
+            "2025-04-08",
+            "2024-07-22",
+            "2024-07-29",
+            "2025-05-14",
+            "2024-07-31",
+            "2025-06-13",
+            "2025-05-15",
+            "2024-07-30",
+            "2025-05-09",
+            "2025-04-14",
+            "2025-06-11",
+            "2025-07-30",
+            "2025-04-11",
+            "2025-06-17",
+            "2025-06-06",
+            "2025-06-19",
+            "2025-07-24",
+            "2024-07-03"
+          ],
+          "remaining_days": 68,
+          "net20_mean_pct": -0.6226345446778838
+        },
+        "top10_code_cash": {
+          "codes": [
+            "7043",
+            "4344",
+            "7345",
+            "9250",
+            "5247",
+            "9340",
+            "4069",
+            "175A",
+            "7808",
+            "6346"
+          ],
+          "net20_mean_pct": -0.49148523979688785
+        },
+        "concentration": {
+          "largest_positive_code_share": 0.3688876353300081,
+          "unique_codes": 42
+        },
+        "filled_slots": 87,
+        "scheduled_slots": 88,
+        "cash_slots": 1,
+        "slot_fill_rate": 0.9886363636363636,
+        "days_with_at_least_one_filled_slot": 87
+      },
+      "top2": {
+        "costs": {
+          "0": {
+            "mean_pct": 0.500687361773058,
+            "median_pct": 0.3786292656414447,
+            "win_rate": 0.6363636363636364,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": 0.3040964526821489,
+            "median_pct": 0.17862926564144477,
+            "win_rate": 0.5795454545454546,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": 0.10750554359123984,
+            "median_pct": -0.0213707343585553,
+            "win_rate": 0.5,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.08908536549966922,
+            "median_pct": -0.22137073435855528,
+            "win_rate": 0.4090909090909091,
+            "days": 88
+          }
+        },
+        "monthly": {
+          "2024-07": {
+            "gross_mean_pct": 0.711692502567671,
+            "net20_mean_pct": 0.511692502567671,
+            "net40_mean_pct": 0.31169250256767095,
+            "net60_mean_pct": 0.11169250256767095
+          },
+          "2025-04": {
+            "gross_mean_pct": 0.04495140198011526,
+            "net20_mean_pct": -0.14838193135321806,
+            "net40_mean_pct": -0.3417152646865515,
+            "net60_mean_pct": -0.5350485980198845
+          },
+          "2025-05": {
+            "gross_mean_pct": 0.7437063703943262,
+            "net20_mean_pct": 0.543706370394326,
+            "net40_mean_pct": 0.3437063703943263,
+            "net60_mean_pct": 0.1437063703943262
+          },
+          "2025-06": {
+            "gross_mean_pct": 0.6073316596570643,
+            "net20_mean_pct": 0.41259481755180105,
+            "net40_mean_pct": 0.2178579754465379,
+            "net60_mean_pct": 0.02312113334127463
+          },
+          "2025-07": {
+            "gross_mean_pct": 0.2961226270846767,
+            "net20_mean_pct": 0.10200498002585312,
+            "net40_mean_pct": -0.09211266703297039,
+            "net60_mean_pct": -0.28623031409179395
+          }
+        },
+        "positive_months_net40": 3,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 22,
+            "gross_mean_pct": 0.711692502567671,
+            "net20_mean_pct": 0.511692502567671,
+            "net40_mean_pct": 0.31169250256767095,
+            "net60_mean_pct": 0.11169250256767095
+          },
+          "confirmation_a": {
+            "days": 30,
+            "gross_mean_pct": 0.3943288861872207,
+            "net20_mean_pct": 0.19766221952055404,
+            "net40_mean_pct": 0.0009955528538873734,
+            "net60_mean_pct": -0.19567111381277924
+          },
+          "confirmation_b": {
+            "days": 36,
+            "gross_mean_pct": 0.46037183872010334,
+            "net20_mean_pct": 0.265927394275659,
+            "net40_mean_pct": 0.07148294983121455,
+            "net60_mean_pct": -0.12296149461322997
+          }
+        },
+        "best20_session_removal": {
+          "removed_dates": [
+            "2025-04-11",
+            "2024-07-12",
+            "2024-07-31",
+            "2024-07-05",
+            "2025-04-08",
+            "2025-05-09",
+            "2025-05-27",
+            "2025-06-06",
+            "2024-07-29",
+            "2025-06-18",
+            "2025-06-05",
+            "2025-04-14",
+            "2025-07-16",
+            "2024-07-01",
+            "2024-07-16",
+            "2025-05-15",
+            "2025-06-11",
+            "2024-07-18",
+            "2024-07-30",
+            "2025-06-30"
+          ],
+          "remaining_days": 68,
+          "net20_mean_pct": -0.2996486092635404
+        },
+        "top10_code_cash": {
+          "codes": [
+            "7043",
+            "3991",
+            "7345",
+            "4344",
+            "4215",
+            "9250",
+            "6492",
+            "5247",
+            "7058",
+            "8139"
+          ],
+          "net20_mean_pct": -0.20131880672261762
+        },
+        "concentration": {
+          "largest_positive_code_share": 0.2125048758866967,
+          "unique_codes": 85
+        },
+        "filled_slots": 173,
+        "scheduled_slots": 176,
+        "cash_slots": 3,
+        "slot_fill_rate": 0.9829545454545454,
+        "days_with_at_least_one_filled_slot": 88
+      }
+    },
+    "T02_char_value_event_only": {
+      "top1": {
+        "costs": {
+          "0": {
+            "mean_pct": 0.9190585910052484,
+            "median_pct": 0.2116991014192049,
+            "win_rate": 0.5681818181818182,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": 0.7190585910052484,
+            "median_pct": 0.011699101419204883,
+            "win_rate": 0.5,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": 0.5190585910052483,
+            "median_pct": -0.18830089858079513,
+            "win_rate": 0.4772727272727273,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": 0.3190585910052483,
+            "median_pct": -0.3883008985807951,
+            "win_rate": 0.3977272727272727,
+            "days": 88
+          }
+        },
+        "monthly": {
+          "2024-07": {
+            "gross_mean_pct": 0.9468226526999138,
+            "net20_mean_pct": 0.7468226526999139,
+            "net40_mean_pct": 0.5468226526999139,
+            "net60_mean_pct": 0.34682265269991414
+          },
+          "2025-04": {
+            "gross_mean_pct": -0.09980641598433596,
+            "net20_mean_pct": -0.29980641598433605,
+            "net40_mean_pct": -0.499806415984336,
+            "net60_mean_pct": -0.6998064159843359
+          },
+          "2025-05": {
+            "gross_mean_pct": 1.1903894169507758,
+            "net20_mean_pct": 0.9903894169507761,
+            "net40_mean_pct": 0.7903894169507758,
+            "net60_mean_pct": 0.590389416950776
+          },
+          "2025-06": {
+            "gross_mean_pct": 1.958522457539577,
+            "net20_mean_pct": 1.758522457539577,
+            "net40_mean_pct": 1.5585224575395769,
+            "net60_mean_pct": 1.3585224575395767
+          },
+          "2025-07": {
+            "gross_mean_pct": 0.3809638789008934,
+            "net20_mean_pct": 0.18096387890089338,
+            "net40_mean_pct": -0.019036121099106552,
+            "net60_mean_pct": -0.21903612109910656
+          }
+        },
+        "positive_months_net40": 3,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 22,
+            "gross_mean_pct": 0.9468226526999138,
+            "net20_mean_pct": 0.7468226526999139,
+            "net40_mean_pct": 0.5468226526999139,
+            "net60_mean_pct": 0.34682265269991414
+          },
+          "confirmation_a": {
+            "days": 30,
+            "gross_mean_pct": 0.5452915004832201,
+            "net20_mean_pct": 0.34529150048321994,
+            "net40_mean_pct": 0.14529150048322,
+            "net60_mean_pct": -0.05470849951678008
+          },
+          "confirmation_b": {
+            "days": 36,
+            "gross_mean_pct": 1.2135642398490876,
+            "net20_mean_pct": 1.0135642398490872,
+            "net40_mean_pct": 0.8135642398490875,
+            "net60_mean_pct": 0.6135642398490874
+          }
+        },
+        "best20_session_removal": {
+          "removed_dates": [
+            "2025-05-21",
+            "2025-06-04",
+            "2025-06-11",
+            "2024-07-23",
+            "2025-06-12",
+            "2024-07-26",
+            "2025-06-25",
+            "2025-06-30",
+            "2024-07-16",
+            "2025-05-09",
+            "2024-07-12",
+            "2025-07-07",
+            "2025-04-08",
+            "2024-07-17",
+            "2025-04-11",
+            "2025-07-24",
+            "2025-04-07",
+            "2025-05-29",
+            "2024-07-11",
+            "2025-05-15"
+          ],
+          "remaining_days": 68,
+          "net20_mean_pct": -0.5720879271486576
+        },
+        "top10_code_cash": {
+          "codes": [
+            "3652",
+            "3415",
+            "3046",
+            "4978",
+            "3399",
+            "4439",
+            "5132",
+            "3719",
+            "4015",
+            "7060"
+          ],
+          "net20_mean_pct": -0.1084843299709387
+        },
+        "concentration": {
+          "largest_positive_code_share": 0.08825794281711515,
+          "unique_codes": 78
+        },
+        "filled_slots": 88,
+        "scheduled_slots": 88,
+        "cash_slots": 0,
+        "slot_fill_rate": 1.0,
+        "days_with_at_least_one_filled_slot": 88
+      },
+      "top2": {
+        "costs": {
+          "0": {
+            "mean_pct": 0.3144833639785686,
+            "median_pct": 0.1814016147377473,
+            "win_rate": 0.5340909090909091,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": 0.11448336397856859,
+            "median_pct": -0.018598385262252715,
+            "win_rate": 0.4772727272727273,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": -0.0855166360214314,
+            "median_pct": -0.21859838526225273,
+            "win_rate": 0.42045454545454547,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.2855166360214314,
+            "median_pct": -0.4185983852622527,
+            "win_rate": 0.375,
+            "days": 88
+          }
+        },
+        "monthly": {
+          "2024-07": {
+            "gross_mean_pct": 0.2400970130417548,
+            "net20_mean_pct": 0.040097013041754746,
+            "net40_mean_pct": -0.15990298695824523,
+            "net60_mean_pct": -0.3599029869582452
+          },
+          "2025-04": {
+            "gross_mean_pct": -0.40099406129123144,
+            "net20_mean_pct": -0.6009940612912315,
+            "net40_mean_pct": -0.8009940612912314,
+            "net60_mean_pct": -1.0009940612912314
+          },
+          "2025-05": {
+            "gross_mean_pct": 0.3116508093258622,
+            "net20_mean_pct": 0.11165080932586215,
+            "net40_mean_pct": -0.08834919067413782,
+            "net60_mean_pct": -0.2883491906741379
+          },
+          "2025-06": {
+            "gross_mean_pct": 0.8688543150867953,
+            "net20_mean_pct": 0.668854315086795,
+            "net40_mean_pct": 0.46885431508679504,
+            "net60_mean_pct": 0.26885431508679514
+          },
+          "2025-07": {
+            "gross_mean_pct": 0.42495991388393317,
+            "net20_mean_pct": 0.22495991388393308,
+            "net40_mean_pct": 0.024959913883933267,
+            "net60_mean_pct": -0.17504008611606683
+          }
+        },
+        "positive_months_net40": 2,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 22,
+            "gross_mean_pct": 0.2400970130417548,
+            "net20_mean_pct": 0.040097013041754746,
+            "net40_mean_pct": -0.15990298695824523,
+            "net60_mean_pct": -0.3599029869582452
+          },
+          "confirmation_a": {
+            "days": 30,
+            "gross_mean_pct": -0.0446716259826846,
+            "net20_mean_pct": -0.24467162598268466,
+            "net40_mean_pct": -0.4446716259826847,
+            "net60_mean_pct": -0.6446716259826847
+          },
+          "confirmation_b": {
+            "days": 36,
+            "gross_mean_pct": 0.659237514518777,
+            "net20_mean_pct": 0.45923751451877703,
+            "net40_mean_pct": 0.25923751451877697,
+            "net60_mean_pct": 0.05923751451877695
+          }
+        },
+        "best20_session_removal": {
+          "removed_dates": [
+            "2025-06-04",
+            "2025-05-21",
+            "2025-06-11",
+            "2025-05-09",
+            "2024-07-26",
+            "2025-06-12",
+            "2024-07-23",
+            "2025-06-25",
+            "2024-07-16",
+            "2025-04-23",
+            "2025-04-11",
+            "2024-07-12",
+            "2024-07-17",
+            "2025-07-07",
+            "2024-07-18",
+            "2025-07-31",
+            "2025-06-03",
+            "2025-04-08",
+            "2025-06-30",
+            "2025-07-24"
+          ],
+          "remaining_days": 68,
+          "net20_mean_pct": -0.6087450735559399
+        },
+        "top10_code_cash": {
+          "codes": [
+            "3652",
+            "3415",
+            "4978",
+            "3399",
+            "4439",
+            "5132",
+            "3719",
+            "4015",
+            "7060",
+            "6240"
+          ],
+          "net20_mean_pct": -0.2863077752985959
+        },
+        "concentration": {
+          "largest_positive_code_share": 0.07092239068859371,
+          "unique_codes": 153
+        },
+        "filled_slots": 176,
+        "scheduled_slots": 176,
+        "cash_slots": 0,
+        "slot_fill_rate": 1.0,
+        "days_with_at_least_one_filled_slot": 88
+      }
+    },
+    "A01_global_similarity_mean": {
+      "top1": {
+        "costs": {
+          "0": {
+            "mean_pct": 0.13048476870987635,
+            "median_pct": -0.07304148451882098,
+            "win_rate": 0.42045454545454547,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": -0.06951523129012376,
+            "median_pct": -0.273041484518821,
+            "win_rate": 0.3977272727272727,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": -0.2695152312901237,
+            "median_pct": -0.473041484518821,
+            "win_rate": 0.36363636363636365,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.4695152312901236,
+            "median_pct": -0.673041484518821,
+            "win_rate": 0.3409090909090909,
+            "days": 88
+          }
+        },
+        "monthly": {
+          "2024-07": {
+            "gross_mean_pct": -0.35415485046499123,
+            "net20_mean_pct": -0.5541548504649912,
+            "net40_mean_pct": -0.7541548504649913,
+            "net60_mean_pct": -0.9541548504649914
+          },
+          "2025-04": {
+            "gross_mean_pct": 0.06562582316877862,
+            "net20_mean_pct": -0.13437417683122146,
+            "net40_mean_pct": -0.33437417683122134,
+            "net60_mean_pct": -0.5343741768312215
+          },
+          "2025-05": {
+            "gross_mean_pct": -0.16216663549029436,
+            "net20_mean_pct": -0.36216663549029443,
+            "net40_mean_pct": -0.5621666354902942,
+            "net60_mean_pct": -0.7621666354902945
+          },
+          "2025-06": {
+            "gross_mean_pct": 1.0110143278884727,
+            "net20_mean_pct": 0.8110143278884727,
+            "net40_mean_pct": 0.6110143278884727,
+            "net60_mean_pct": 0.41101432788847275
+          },
+          "2025-07": {
+            "gross_mean_pct": 0.08899448892004008,
+            "net20_mean_pct": -0.11100551107995978,
+            "net40_mean_pct": -0.31100551107995983,
+            "net60_mean_pct": -0.5110055110799598
+          }
+        },
+        "positive_months_net40": 1,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 22,
+            "gross_mean_pct": -0.35415485046499123,
+            "net20_mean_pct": -0.5541548504649912,
+            "net40_mean_pct": -0.7541548504649913,
+            "net60_mean_pct": -0.9541548504649914
+          },
+          "confirmation_a": {
+            "days": 30,
+            "gross_mean_pct": -0.04827040616075786,
+            "net20_mean_pct": -0.24827040616075796,
+            "net40_mean_pct": -0.44827040616075775,
+            "net60_mean_pct": -0.6482704061607579
+          },
+          "confirmation_b": {
+            "days": 36,
+            "gross_mean_pct": 0.5756160705978242,
+            "net20_mean_pct": 0.37561607059782387,
+            "net40_mean_pct": 0.17561607059782391,
+            "net60_mean_pct": -0.024383929402175902
+          }
+        },
+        "best20_session_removal": {
+          "removed_dates": [
+            "2025-06-13",
+            "2025-06-11",
+            "2024-07-23",
+            "2025-06-12",
+            "2025-06-25",
+            "2025-04-11",
+            "2025-04-08",
+            "2025-07-14",
+            "2025-07-09",
+            "2025-04-07",
+            "2025-05-13",
+            "2025-06-04",
+            "2024-07-25",
+            "2024-07-29",
+            "2025-04-23",
+            "2024-07-18",
+            "2025-05-09",
+            "2025-07-08",
+            "2025-05-12",
+            "2025-06-18"
+          ],
+          "remaining_days": 68,
+          "net20_mean_pct": -1.2053088917055153
+        },
+        "top10_code_cash": {
+          "codes": [
+            "3399",
+            "219A",
+            "7134",
+            "4439",
+            "5132",
+            "4015",
+            "6184",
+            "3252",
+            "3046",
+            "4884"
+          ],
+          "net20_mean_pct": -0.7206712959198714
+        },
+        "concentration": {
+          "largest_positive_code_share": 0.102282043292358,
+          "unique_codes": 75
+        },
+        "filled_slots": 88,
+        "scheduled_slots": 88,
+        "cash_slots": 0,
+        "slot_fill_rate": 1.0,
+        "days_with_at_least_one_filled_slot": 88
+      },
+      "top2": {
+        "costs": {
+          "0": {
+            "mean_pct": -0.06048444551139653,
+            "median_pct": -0.13651956899547457,
+            "win_rate": 0.4431818181818182,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": -0.2604844455113966,
+            "median_pct": -0.3365195689954745,
+            "win_rate": 0.3181818181818182,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": -0.46048444551139656,
+            "median_pct": -0.5365195689954745,
+            "win_rate": 0.2727272727272727,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.6604844455113965,
+            "median_pct": -0.7365195689954747,
+            "win_rate": 0.26136363636363635,
+            "days": 88
+          }
+        },
+        "monthly": {
+          "2024-07": {
+            "gross_mean_pct": -0.10988184168317004,
+            "net20_mean_pct": -0.30988184168317007,
+            "net40_mean_pct": -0.5098818416831699,
+            "net60_mean_pct": -0.7098818416831698
+          },
+          "2025-04": {
+            "gross_mean_pct": -0.2986349739344304,
+            "net20_mean_pct": -0.49863497393443035,
+            "net40_mean_pct": -0.6986349739344303,
+            "net60_mean_pct": -0.8986349739344301
+          },
+          "2025-05": {
+            "gross_mean_pct": -0.4222713646284145,
+            "net20_mean_pct": -0.6222713646284145,
+            "net40_mean_pct": -0.8222713646284144,
+            "net60_mean_pct": -1.0222713646284147
+          },
+          "2025-06": {
+            "gross_mean_pct": 0.5634282936961402,
+            "net20_mean_pct": 0.36342829369614027,
+            "net40_mean_pct": 0.1634282936961402,
+            "net60_mean_pct": -0.03657170630385979
+          },
+          "2025-07": {
+            "gross_mean_pct": -0.1645160699857147,
+            "net20_mean_pct": -0.36451606998571473,
+            "net40_mean_pct": -0.5645160699857148,
+            "net60_mean_pct": -0.7645160699857148
+          }
+        },
+        "positive_months_net40": 1,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 22,
+            "gross_mean_pct": -0.10988184168317004,
+            "net20_mean_pct": -0.30988184168317007,
+            "net40_mean_pct": -0.5098818416831699,
+            "net60_mean_pct": -0.7098818416831698
+          },
+          "confirmation_a": {
+            "days": 30,
+            "gross_mean_pct": -0.3604531692814224,
+            "net20_mean_pct": -0.5604531692814224,
+            "net40_mean_pct": -0.7604531692814223,
+            "net60_mean_pct": -0.9604531692814224
+          },
+          "confirmation_b": {
+            "days": 36,
+            "gross_mean_pct": 0.21967678862415316,
+            "net20_mean_pct": 0.01967678862415326,
+            "net40_mean_pct": -0.1803232113758469,
+            "net60_mean_pct": -0.38032321137584685
+          }
+        },
+        "best20_session_removal": {
+          "removed_dates": [
+            "2025-06-04",
+            "2025-07-09",
+            "2025-04-11",
+            "2024-07-23",
+            "2025-06-13",
+            "2025-06-25",
+            "2025-06-11",
+            "2024-07-25",
+            "2025-06-12",
+            "2025-04-08",
+            "2024-07-29",
+            "2024-07-17",
+            "2025-07-11",
+            "2025-07-08",
+            "2024-07-31",
+            "2024-07-10",
+            "2025-05-12",
+            "2025-04-23",
+            "2025-06-18",
+            "2025-05-19"
+          ],
+          "remaining_days": 68,
+          "net20_mean_pct": -1.0037276649775433
+        },
+        "top10_code_cash": {
+          "codes": [
+            "3415",
+            "3399",
+            "219A",
+            "7134",
+            "4439",
+            "5132",
+            "1419",
+            "4015",
+            "4055",
+            "6184"
+          ],
+          "net20_mean_pct": -0.6540711526765656
+        },
+        "concentration": {
+          "largest_positive_code_share": 0.08098174340867,
+          "unique_codes": 149
+        },
+        "filled_slots": 176,
+        "scheduled_slots": 176,
+        "cash_slots": 0,
+        "slot_fill_rate": 1.0,
+        "days_with_at_least_one_filled_slot": 88
+      }
+    },
+    "A02_issuer_excluded_mean": {
+      "top1": {
+        "costs": {
+          "0": {
+            "mean_pct": -0.25329541370120434,
+            "median_pct": -0.28140629653841676,
+            "win_rate": 0.38636363636363635,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": -0.4532954137012044,
+            "median_pct": -0.4814062965384167,
+            "win_rate": 0.3522727272727273,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": -0.6532954137012045,
+            "median_pct": -0.6814062965384168,
+            "win_rate": 0.29545454545454547,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.8532954137012044,
+            "median_pct": -0.8814062965384167,
+            "win_rate": 0.26136363636363635,
+            "days": 88
+          }
+        },
+        "monthly": {
+          "2024-07": {
+            "gross_mean_pct": 0.0486135815932017,
+            "net20_mean_pct": -0.1513864184067983,
+            "net40_mean_pct": -0.35138641840679835,
+            "net60_mean_pct": -0.5513864184067984
+          },
+          "2025-04": {
+            "gross_mean_pct": -0.2823273571679345,
+            "net20_mean_pct": -0.4823273571679346,
+            "net40_mean_pct": -0.6823273571679345,
+            "net60_mean_pct": -0.8823273571679345
+          },
+          "2025-05": {
+            "gross_mean_pct": -1.2407639206412704,
+            "net20_mean_pct": -1.44076392064127,
+            "net40_mean_pct": -1.6407639206412703,
+            "net60_mean_pct": -1.8407639206412703
+          },
+          "2025-06": {
+            "gross_mean_pct": -0.2578028065123673,
+            "net20_mean_pct": -0.45780280651236743,
+            "net40_mean_pct": -0.6578028065123674,
+            "net60_mean_pct": -0.8578028065123673
+          },
+          "2025-07": {
+            "gross_mean_pct": 0.2579486641245077,
+            "net20_mean_pct": 0.05794866412450769,
+            "net40_mean_pct": -0.14205133587549226,
+            "net60_mean_pct": -0.34205133587549236
+          }
+        },
+        "positive_months_net40": 0,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 22,
+            "gross_mean_pct": 0.0486135815932017,
+            "net20_mean_pct": -0.1513864184067983,
+            "net40_mean_pct": -0.35138641840679835,
+            "net60_mean_pct": -0.5513864184067984
+          },
+          "confirmation_a": {
+            "days": 30,
+            "gross_mean_pct": -0.7615456389046024,
+            "net20_mean_pct": -0.9615456389046023,
+            "net40_mean_pct": -1.1615456389046024,
+            "net60_mean_pct": -1.3615456389046023
+          },
+          "confirmation_b": {
+            "days": 36,
+            "gross_mean_pct": -0.01425350093384302,
+            "net20_mean_pct": -0.2142535009338431,
+            "net40_mean_pct": -0.41425350093384294,
+            "net60_mean_pct": -0.6142535009338431
+          }
+        },
+        "best20_session_removal": {
+          "removed_dates": [
+            "2024-07-23",
+            "2025-06-12",
+            "2025-07-07",
+            "2025-07-09",
+            "2024-07-17",
+            "2025-04-07",
+            "2025-06-04",
+            "2024-07-25",
+            "2024-07-29",
+            "2024-07-18",
+            "2025-07-01",
+            "2025-06-18",
+            "2025-04-23",
+            "2024-07-31",
+            "2025-07-31",
+            "2025-05-30",
+            "2025-05-29",
+            "2025-05-08",
+            "2025-07-02",
+            "2025-07-11"
+          ],
+          "remaining_days": 68,
+          "net20_mean_pct": -1.343232446200277
+        },
+        "top10_code_cash": {
+          "codes": [
+            "3046",
+            "4439",
+            "5132",
+            "3252",
+            "4379",
+            "6039",
+            "4684",
+            "4414",
+            "5888",
+            "2385"
+          ],
+          "net20_mean_pct": -0.9129609007747358
+        },
+        "concentration": {
+          "largest_positive_code_share": 0.1538983314979856,
+          "unique_codes": 80
+        },
+        "filled_slots": 88,
+        "scheduled_slots": 88,
+        "cash_slots": 0,
+        "slot_fill_rate": 1.0,
+        "days_with_at_least_one_filled_slot": 88
+      },
+      "top2": {
+        "costs": {
+          "0": {
+            "mean_pct": -0.17602790102816449,
+            "median_pct": -0.1930169595409703,
+            "win_rate": 0.42045454545454547,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": -0.37602790102816447,
+            "median_pct": -0.39301695954097027,
+            "win_rate": 0.3522727272727273,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": -0.5760279010281645,
+            "median_pct": -0.5930169595409703,
+            "win_rate": 0.3181818181818182,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.7760279010281645,
+            "median_pct": -0.7930169595409704,
+            "win_rate": 0.29545454545454547,
+            "days": 88
+          }
+        },
+        "monthly": {
+          "2024-07": {
+            "gross_mean_pct": -0.13023696761628284,
+            "net20_mean_pct": -0.3302369676162829,
+            "net40_mean_pct": -0.5302369676162827,
+            "net60_mean_pct": -0.730236967616283
+          },
+          "2025-04": {
+            "gross_mean_pct": -0.05554924858016636,
+            "net20_mean_pct": -0.2555492485801665,
+            "net40_mean_pct": -0.45554924858016627,
+            "net60_mean_pct": -0.6555492485801665
+          },
+          "2025-05": {
+            "gross_mean_pct": -0.8706674039843879,
+            "net20_mean_pct": -1.0706674039843878,
+            "net40_mean_pct": -1.2706674039843877,
+            "net60_mean_pct": -1.4706674039843874
+          },
+          "2025-06": {
+            "gross_mean_pct": -0.0891885776033315,
+            "net20_mean_pct": -0.28918857760333155,
+            "net40_mean_pct": -0.48918857760333156,
+            "net60_mean_pct": -0.6891885776033315
+          },
+          "2025-07": {
+            "gross_mean_pct": 0.17427004470655047,
+            "net20_mean_pct": -0.02572995529344953,
+            "net40_mean_pct": -0.22572995529344955,
+            "net60_mean_pct": -0.42572995529344965
+          }
+        },
+        "positive_months_net40": 0,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 22,
+            "gross_mean_pct": -0.13023696761628284,
+            "net20_mean_pct": -0.3302369676162829,
+            "net40_mean_pct": -0.5302369676162827,
+            "net60_mean_pct": -0.730236967616283
+          },
+          "confirmation_a": {
+            "days": 30,
+            "gross_mean_pct": -0.46310832628227716,
+            "net20_mean_pct": -0.6631083262822771,
+            "net40_mean_pct": -0.8631083262822771,
+            "net60_mean_pct": -1.0631083262822771
+          },
+          "confirmation_b": {
+            "days": 36,
+            "gross_mean_pct": 0.03522243848744607,
+            "net20_mean_pct": -0.164777561512554,
+            "net40_mean_pct": -0.3647775615125539,
+            "net60_mean_pct": -0.564777561512554
+          }
+        },
+        "best20_session_removal": {
+          "removed_dates": [
+            "2024-07-23",
+            "2025-06-13",
+            "2025-06-11",
+            "2024-07-25",
+            "2025-06-12",
+            "2025-07-30",
+            "2025-05-16",
+            "2025-04-11",
+            "2025-04-23",
+            "2025-07-09",
+            "2024-07-17",
+            "2025-05-29",
+            "2024-07-29",
+            "2025-07-07",
+            "2025-04-07",
+            "2025-06-18",
+            "2025-06-04",
+            "2025-07-31",
+            "2025-06-02",
+            "2025-04-08"
+          ],
+          "remaining_days": 68,
+          "net20_mean_pct": -1.0660031859333166
+        },
+        "top10_code_cash": {
+          "codes": [
+            "219A",
+            "3399",
+            "4439",
+            "5132",
+            "3747",
+            "5532",
+            "6184",
+            "3252",
+            "4379",
+            "6525"
+          ],
+          "net20_mean_pct": -0.6863015982645368
+        },
+        "concentration": {
+          "largest_positive_code_share": 0.07477902523932418,
+          "unique_codes": 155
+        },
+        "filled_slots": 176,
+        "scheduled_slots": 176,
+        "cash_slots": 0,
+        "slot_fill_rate": 1.0,
+        "days_with_at_least_one_filled_slot": 88
+      }
+    },
+    "A03_time_decay_mean": {
+      "top1": {
+        "costs": {
+          "0": {
+            "mean_pct": 0.18381094209683005,
+            "median_pct": 0.0,
+            "win_rate": 0.4431818181818182,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": -0.016189057903170066,
+            "median_pct": -0.2,
+            "win_rate": 0.4090909090909091,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": -0.21618905790316997,
+            "median_pct": -0.4,
+            "win_rate": 0.375,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.41618905790317,
+            "median_pct": -0.6,
+            "win_rate": 0.3409090909090909,
+            "days": 88
+          }
+        },
+        "monthly": {
+          "2024-07": {
+            "gross_mean_pct": -0.35415485046499123,
+            "net20_mean_pct": -0.5541548504649912,
+            "net40_mean_pct": -0.7541548504649913,
+            "net60_mean_pct": -0.9541548504649914
+          },
+          "2025-04": {
+            "gross_mean_pct": -0.0038662229900365535,
+            "net20_mean_pct": -0.20386622299003665,
+            "net40_mean_pct": -0.40386622299003644,
+            "net60_mean_pct": -0.6038662229900367
+          },
+          "2025-05": {
+            "gross_mean_pct": -0.0667133146982672,
+            "net20_mean_pct": -0.26671331469826715,
+            "net40_mean_pct": -0.4667133146982671,
+            "net60_mean_pct": -0.6667133146982672
+          },
+          "2025-06": {
+            "gross_mean_pct": 1.2614964304070457,
+            "net20_mean_pct": 1.0614964304070456,
+            "net40_mean_pct": 0.8614964304070455,
+            "net60_mean_pct": 0.6614964304070456
+          },
+          "2025-07": {
+            "gross_mean_pct": 0.0621782648436199,
+            "net20_mean_pct": -0.1378217351563802,
+            "net40_mean_pct": -0.33782173515638014,
+            "net60_mean_pct": -0.5378217351563801
+          }
+        },
+        "positive_months_net40": 1,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 22,
+            "gross_mean_pct": -0.35415485046499123,
+            "net20_mean_pct": -0.5541548504649912,
+            "net40_mean_pct": -0.7541548504649913,
+            "net60_mean_pct": -0.9541548504649914
+          },
+          "confirmation_a": {
+            "days": 30,
+            "gross_mean_pct": -0.03528976884415189,
+            "net20_mean_pct": -0.23528976884415193,
+            "net40_mean_pct": -0.4352897688441517,
+            "net60_mean_pct": -0.6352897688441519
+          },
+          "confirmation_b": {
+            "days": 36,
+            "gross_mean_pct": 0.6951517411132058,
+            "net20_mean_pct": 0.4951517411132056,
+            "net40_mean_pct": 0.29515174111320563,
+            "net60_mean_pct": 0.09515174111320578
+          }
+        },
+        "best20_session_removal": {
+          "removed_dates": [
+            "2025-06-13",
+            "2025-06-11",
+            "2024-07-23",
+            "2025-06-12",
+            "2025-06-25",
+            "2025-07-30",
+            "2025-04-11",
+            "2025-04-08",
+            "2025-07-09",
+            "2025-04-07",
+            "2025-06-04",
+            "2024-07-25",
+            "2024-07-29",
+            "2024-07-18",
+            "2025-05-09",
+            "2025-05-12",
+            "2025-06-18",
+            "2025-04-23",
+            "2024-07-31",
+            "2025-05-30"
+          ],
+          "remaining_days": 68,
+          "net20_mean_pct": -1.119739532177819
+        },
+        "top10_code_cash": {
+          "codes": [
+            "3399",
+            "219A",
+            "4439",
+            "5132",
+            "7134",
+            "5532",
+            "4015",
+            "3252",
+            "3046",
+            "2685"
+          ],
+          "net20_mean_pct": -0.6624578613622341
+        },
+        "concentration": {
+          "largest_positive_code_share": 0.10270013455628278,
+          "unique_codes": 78
+        },
+        "filled_slots": 88,
+        "scheduled_slots": 88,
+        "cash_slots": 0,
+        "slot_fill_rate": 1.0,
+        "days_with_at_least_one_filled_slot": 88
+      },
+      "top2": {
+        "costs": {
+          "0": {
+            "mean_pct": 0.003860002091082494,
+            "median_pct": -0.13570911625976068,
+            "win_rate": 0.45454545454545453,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": -0.19613999790891762,
+            "median_pct": -0.3357091162597607,
+            "win_rate": 0.3522727272727273,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": -0.3961399979089176,
+            "median_pct": -0.5357091162597606,
+            "win_rate": 0.32954545454545453,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.5961399979089174,
+            "median_pct": -0.7357091162597608,
+            "win_rate": 0.2840909090909091,
+            "days": 88
+          }
+        },
+        "monthly": {
+          "2024-07": {
+            "gross_mean_pct": -0.12822753643851684,
+            "net20_mean_pct": -0.3282275364385169,
+            "net40_mean_pct": -0.5282275364385167,
+            "net60_mean_pct": -0.7282275364385168
+          },
+          "2025-04": {
+            "gross_mean_pct": 0.01905674109676457,
+            "net20_mean_pct": -0.18094325890323543,
+            "net40_mean_pct": -0.38094325890323544,
+            "net60_mean_pct": -0.5809432589032355
+          },
+          "2025-05": {
+            "gross_mean_pct": -0.1023267564520428,
+            "net20_mean_pct": -0.30232675645204293,
+            "net40_mean_pct": -0.5023267564520427,
+            "net60_mean_pct": -0.7023267564520428
+          },
+          "2025-06": {
+            "gross_mean_pct": 0.311978189515334,
+            "net20_mean_pct": 0.11197818951533389,
+            "net40_mean_pct": -0.088021810484666,
+            "net60_mean_pct": -0.2880218104846659
+          },
+          "2025-07": {
+            "gross_mean_pct": -0.08928525792938512,
+            "net20_mean_pct": -0.28928525792938514,
+            "net40_mean_pct": -0.48928525792938515,
+            "net60_mean_pct": -0.6892852579293852
+          }
+        },
+        "positive_months_net40": 0,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 22,
+            "gross_mean_pct": -0.12822753643851684,
+            "net20_mean_pct": -0.3282275364385169,
+            "net40_mean_pct": -0.5282275364385167,
+            "net60_mean_pct": -0.7282275364385168
+          },
+          "confirmation_a": {
+            "days": 30,
+            "gross_mean_pct": -0.04163500767763916,
+            "net20_mean_pct": -0.24163500767763918,
+            "net40_mean_pct": -0.4416350076776391,
+            "net60_mean_pct": -0.6416350076776393
+          },
+          "confirmation_b": {
+            "days": 36,
+            "gross_mean_pct": 0.12249267266643891,
+            "net20_mean_pct": -0.07750732733356122,
+            "net40_mean_pct": -0.2775073273335611,
+            "net60_mean_pct": -0.47750732733356116
+          }
+        },
+        "best20_session_removal": {
+          "removed_dates": [
+            "2025-07-09",
+            "2025-04-11",
+            "2024-07-23",
+            "2025-06-13",
+            "2025-06-11",
+            "2025-06-04",
+            "2024-07-25",
+            "2025-05-09",
+            "2025-06-12",
+            "2025-04-08",
+            "2025-07-30",
+            "2025-04-23",
+            "2025-07-31",
+            "2024-07-29",
+            "2025-05-30",
+            "2025-06-18",
+            "2024-07-17",
+            "2025-05-15",
+            "2024-07-31",
+            "2025-05-08"
+          ],
+          "remaining_days": 68,
+          "net20_mean_pct": -0.9552457663558748
+        },
+        "top10_code_cash": {
+          "codes": [
+            "3399",
+            "219A",
+            "4439",
+            "5132",
+            "7134",
+            "5532",
+            "4015",
+            "4055",
+            "6184",
+            "2735"
+          ],
+          "net20_mean_pct": -0.5385451196818914
+        },
+        "concentration": {
+          "largest_positive_code_share": 0.06679577151434478,
+          "unique_codes": 154
+        },
+        "filled_slots": 176,
+        "scheduled_slots": 176,
+        "cash_slots": 0,
+        "slot_fill_rate": 1.0,
+        "days_with_at_least_one_filled_slot": 88
+      }
+    },
+    "A04_cross_code_one_per_issuer": {
+      "top1": {
+        "costs": {
+          "0": {
+            "mean_pct": -0.08523343638461452,
+            "median_pct": -0.07359763153230725,
+            "win_rate": 0.4090909090909091,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": -0.28523343638461457,
+            "median_pct": -0.27359763153230726,
+            "win_rate": 0.38636363636363635,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": -0.4852334363846145,
+            "median_pct": -0.4735976315323073,
+            "win_rate": 0.32954545454545453,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.6852334363846145,
+            "median_pct": -0.6735976315323072,
+            "win_rate": 0.2727272727272727,
+            "days": 88
+          }
+        },
+        "monthly": {
+          "2024-07": {
+            "gross_mean_pct": 0.11968785943977345,
+            "net20_mean_pct": -0.08031214056022648,
+            "net40_mean_pct": -0.2803121405602265,
+            "net60_mean_pct": -0.48031214056022653
+          },
+          "2025-04": {
+            "gross_mean_pct": -0.21794837772621664,
+            "net20_mean_pct": -0.41794837772621674,
+            "net40_mean_pct": -0.6179483777262166,
+            "net60_mean_pct": -0.8179483777262165
+          },
+          "2025-05": {
+            "gross_mean_pct": -1.0364810493624383,
+            "net20_mean_pct": -1.236481049362438,
+            "net40_mean_pct": -1.436481049362438,
+            "net60_mean_pct": -1.636481049362438
+          },
+          "2025-06": {
+            "gross_mean_pct": 0.6675769920518801,
+            "net20_mean_pct": 0.46757699205188014,
+            "net40_mean_pct": 0.26757699205187985,
+            "net60_mean_pct": 0.06757699205188016
+          },
+          "2025-07": {
+            "gross_mean_pct": -0.2353645148339408,
+            "net20_mean_pct": -0.4353645148339409,
+            "net40_mean_pct": -0.6353645148339407,
+            "net60_mean_pct": -0.8353645148339408
+          }
+        },
+        "positive_months_net40": 1,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 22,
+            "gross_mean_pct": 0.11968785943977345,
+            "net20_mean_pct": -0.08031214056022648,
+            "net40_mean_pct": -0.2803121405602265,
+            "net60_mean_pct": -0.48031214056022653
+          },
+          "confirmation_a": {
+            "days": 30,
+            "gross_mean_pct": -0.6272147135443273,
+            "net20_mean_pct": -0.8272147135443273,
+            "net40_mean_pct": -1.0272147135443273,
+            "net60_mean_pct": -1.2272147135443272
+          },
+          "confirmation_b": {
+            "days": 36,
+            "gross_mean_pct": 0.24118794713357575,
+            "net20_mean_pct": 0.04118794713357566,
+            "net40_mean_pct": -0.1588120528664244,
+            "net60_mean_pct": -0.35881205286642426
+          }
+        },
+        "best20_session_removal": {
+          "removed_dates": [
+            "2025-06-04",
+            "2025-06-13",
+            "2024-07-23",
+            "2025-06-12",
+            "2024-07-17",
+            "2024-07-10",
+            "2025-04-07",
+            "2024-07-25",
+            "2024-07-29",
+            "2024-07-18",
+            "2025-04-03",
+            "2025-07-01",
+            "2025-06-18",
+            "2025-04-23",
+            "2024-07-31",
+            "2025-07-31",
+            "2025-05-30",
+            "2025-07-09",
+            "2025-05-29",
+            "2025-05-28"
+          ],
+          "remaining_days": 68,
+          "net20_mean_pct": -1.2906184237501315
+        },
+        "top10_code_cash": {
+          "codes": [
+            "3415",
+            "219A",
+            "4439",
+            "5132",
+            "4379",
+            "6525",
+            "4684",
+            "4414",
+            "5888",
+            "2385"
+          ],
+          "net20_mean_pct": -0.8241086225467735
+        },
+        "concentration": {
+          "largest_positive_code_share": 0.1750716641804129,
+          "unique_codes": 78
+        },
+        "filled_slots": 88,
+        "scheduled_slots": 88,
+        "cash_slots": 0,
+        "slot_fill_rate": 1.0,
+        "days_with_at_least_one_filled_slot": 88
+      },
+      "top2": {
+        "costs": {
+          "0": {
+            "mean_pct": -0.09189941571546133,
+            "median_pct": -0.16128580438229956,
+            "win_rate": 0.4318181818181818,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": -0.2918994157154614,
+            "median_pct": -0.3612858043822995,
+            "win_rate": 0.375,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": -0.4918994157154613,
+            "median_pct": -0.5612858043822995,
+            "win_rate": 0.36363636363636365,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.6918994157154613,
+            "median_pct": -0.7612858043822996,
+            "win_rate": 0.3068181818181818,
+            "days": 88
+          }
+        },
+        "monthly": {
+          "2024-07": {
+            "gross_mean_pct": -0.18950329797762533,
+            "net20_mean_pct": -0.3895032979776254,
+            "net40_mean_pct": -0.5895032979776254,
+            "net60_mean_pct": -0.7895032979776253
+          },
+          "2025-04": {
+            "gross_mean_pct": -0.19938318624037013,
+            "net20_mean_pct": -0.3993831862403702,
+            "net40_mean_pct": -0.5993831862403702,
+            "net60_mean_pct": -0.7993831862403701
+          },
+          "2025-05": {
+            "gross_mean_pct": -0.5481781490242262,
+            "net20_mean_pct": -0.7481781490242263,
+            "net40_mean_pct": -0.948178149024226,
+            "net60_mean_pct": -1.148178149024226
+          },
+          "2025-06": {
+            "gross_mean_pct": 0.4535748968381658,
+            "net20_mean_pct": 0.2535748968381658,
+            "net40_mean_pct": 0.053574896838165846,
+            "net60_mean_pct": -0.14642510316183416
+          },
+          "2025-07": {
+            "gross_mean_pct": -0.07779876696523787,
+            "net20_mean_pct": -0.27779876696523786,
+            "net40_mean_pct": -0.4777987669652378,
+            "net60_mean_pct": -0.677798766965238
+          }
+        },
+        "positive_months_net40": 1,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 22,
+            "gross_mean_pct": -0.18950329797762533,
+            "net20_mean_pct": -0.3895032979776254,
+            "net40_mean_pct": -0.5895032979776254,
+            "net60_mean_pct": -0.7895032979776253
+          },
+          "confirmation_a": {
+            "days": 30,
+            "gross_mean_pct": -0.3737806676322982,
+            "net20_mean_pct": -0.5737806676322982,
+            "net40_mean_pct": -0.773780667632298,
+            "net60_mean_pct": -0.9737806676322982
+          },
+          "confirmation_b": {
+            "days": 36,
+            "gross_mean_pct": 0.20264844448655855,
+            "net20_mean_pct": 0.0026484444865585,
+            "net40_mean_pct": -0.19735155551344144,
+            "net60_mean_pct": -0.3973515555134415
+          }
+        },
+        "best20_session_removal": {
+          "removed_dates": [
+            "2025-06-04",
+            "2024-07-23",
+            "2025-06-13",
+            "2025-06-11",
+            "2024-07-25",
+            "2025-07-09",
+            "2025-06-12",
+            "2025-07-30",
+            "2025-05-16",
+            "2025-04-11",
+            "2025-04-23",
+            "2024-07-17",
+            "2024-07-29",
+            "2024-07-10",
+            "2025-06-18",
+            "2025-04-07",
+            "2024-07-31",
+            "2025-07-31",
+            "2025-06-02",
+            "2025-04-03"
+          ],
+          "remaining_days": 68,
+          "net20_mean_pct": -1.0306596573331934
+        },
+        "top10_code_cash": {
+          "codes": [
+            "3415",
+            "3399",
+            "219A",
+            "4439",
+            "5132",
+            "3747",
+            "5532",
+            "6184",
+            "3489",
+            "3252"
+          ],
+          "net20_mean_pct": -0.6538337056546927
+        },
+        "concentration": {
+          "largest_positive_code_share": 0.08691211588130332,
+          "unique_codes": 154
+        },
+        "filled_slots": 176,
+        "scheduled_slots": 176,
+        "cash_slots": 0,
+        "slot_fill_rate": 1.0,
+        "days_with_at_least_one_filled_slot": 88
+      }
+    },
+    "A05_neighbor_lower_quantile": {
+      "top1": {
+        "costs": {
+          "0": {
+            "mean_pct": -0.018651268579819948,
+            "median_pct": 0.0,
+            "win_rate": 0.2159090909090909,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": -0.09365126857981997,
+            "median_pct": 0.0,
+            "win_rate": 0.18181818181818182,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": -0.16865126857981994,
+            "median_pct": 0.0,
+            "win_rate": 0.17045454545454544,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.24365126857981997,
+            "median_pct": 0.0,
+            "win_rate": 0.125,
+            "days": 88
+          }
+        },
+        "monthly": {
+          "2024-07": {
+            "gross_mean_pct": -0.45200859670443505,
+            "net20_mean_pct": -0.5156449603407987,
+            "net40_mean_pct": -0.5792813239771624,
+            "net60_mean_pct": -0.6429176876135259
+          },
+          "2025-04": {
+            "gross_mean_pct": -0.08810181748505637,
+            "net20_mean_pct": -0.14143515081838973,
+            "net40_mean_pct": -0.19476848415172301,
+            "net60_mean_pct": -0.2481018174850564
+          },
+          "2025-05": {
+            "gross_mean_pct": -0.017462385690973914,
+            "net20_mean_pct": -0.08412905235764062,
+            "net40_mean_pct": -0.15079571902430722,
+            "net60_mean_pct": -0.21746238569097395
+          },
+          "2025-06": {
+            "gross_mean_pct": 0.339519946832292,
+            "net20_mean_pct": 0.234256788937555,
+            "net40_mean_pct": 0.12899363104281827,
+            "net60_mean_pct": 0.023730473148081327
+          },
+          "2025-07": {
+            "gross_mean_pct": 0.2020859735470778,
+            "net20_mean_pct": 0.1197330323706072,
+            "net40_mean_pct": 0.037380091194136655,
+            "net60_mean_pct": -0.044972849982333994
+          }
+        },
+        "positive_months_net40": 2,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 22,
+            "gross_mean_pct": -0.45200859670443505,
+            "net20_mean_pct": -0.5156449603407987,
+            "net40_mean_pct": -0.5792813239771624,
+            "net60_mean_pct": -0.6429176876135259
+          },
+          "confirmation_a": {
+            "days": 30,
+            "gross_mean_pct": -0.05278210158801513,
+            "net20_mean_pct": -0.11278210158801513,
+            "net40_mean_pct": -0.17278210158801516,
+            "net60_mean_pct": -0.23278210158801518
+          },
+          "confirmation_b": {
+            "days": 36,
+            "gross_mean_pct": 0.2746205705587186,
+            "net20_mean_pct": 0.18017612611427408,
+            "net40_mean_pct": 0.08573168166982972,
+            "net60_mean_pct": -0.008712762774614777
+          }
+        },
+        "best20_session_removal": {
+          "removed_dates": [
+            "2025-06-10",
+            "2025-06-04",
+            "2025-05-08",
+            "2025-07-11",
+            "2025-04-08",
+            "2025-06-09",
+            "2025-06-11",
+            "2025-06-17",
+            "2024-07-08",
+            "2024-07-03",
+            "2025-05-19",
+            "2025-06-27",
+            "2025-07-08",
+            "2025-07-16",
+            "2025-07-28",
+            "2025-07-29",
+            "2024-07-04",
+            "2024-07-05",
+            "2024-07-09",
+            "2024-07-10"
+          ],
+          "remaining_days": 68,
+          "net20_mean_pct": -0.40440478437719934
+        },
+        "top10_code_cash": {
+          "codes": [
+            "2670",
+            "3179",
+            "3064",
+            "3086",
+            "4978",
+            "9206",
+            "9444",
+            "2154"
+          ],
+          "net20_mean_pct": -0.28028457476169166
+        },
+        "concentration": {
+          "largest_positive_code_share": 0.33318769215071187,
+          "unique_codes": 23
+        },
+        "filled_slots": 33,
+        "scheduled_slots": 88,
+        "cash_slots": 55,
+        "slot_fill_rate": 0.375,
+        "days_with_at_least_one_filled_slot": 33
+      },
+      "top2": {
+        "costs": {
+          "0": {
+            "mean_pct": 0.08547377302746438,
+            "median_pct": 0.0,
+            "win_rate": 0.20454545454545456,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": 0.04115559120928256,
+            "median_pct": 0.0,
+            "win_rate": 0.1590909090909091,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": -0.00316259060889927,
+            "median_pct": 0.0,
+            "win_rate": 0.14772727272727273,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.04748077242708107,
+            "median_pct": 0.0,
+            "win_rate": 0.11363636363636363,
+            "days": 88
+          }
+        },
+        "monthly": {
+          "2024-07": {
+            "gross_mean_pct": -0.2819324036433802,
+            "net20_mean_pct": -0.32284149455247113,
+            "net40_mean_pct": -0.363750585461562,
+            "net60_mean_pct": -0.404659676370653
+          },
+          "2025-04": {
+            "gross_mean_pct": -0.044050908742528185,
+            "net20_mean_pct": -0.07071757540919486,
+            "net40_mean_pct": -0.09738424207586151,
+            "net60_mean_pct": -0.1240509087425282
+          },
+          "2025-05": {
+            "gross_mean_pct": -0.008731192845486957,
+            "net20_mean_pct": -0.04206452617882031,
+            "net40_mean_pct": -0.07539785951215361,
+            "net60_mean_pct": -0.10873119284548698
+          },
+          "2025-06": {
+            "gross_mean_pct": 0.6821200110282248,
+            "net20_mean_pct": 0.6136989583966459,
+            "net40_mean_pct": 0.5452779057650671,
+            "net60_mean_pct": 0.4768568531334881
+          },
+          "2025-07": {
+            "gross_mean_pct": 0.09150918946206964,
+            "net20_mean_pct": 0.04445036593265786,
+            "net40_mean_pct": -0.0026084575967538835,
+            "net60_mean_pct": -0.04966728112616566
+          }
+        },
+        "positive_months_net40": 1,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 22,
+            "gross_mean_pct": -0.2819324036433802,
+            "net20_mean_pct": -0.32284149455247113,
+            "net40_mean_pct": -0.363750585461562,
+            "net60_mean_pct": -0.404659676370653
+          },
+          "confirmation_a": {
+            "days": 30,
+            "gross_mean_pct": -0.026391050794007564,
+            "net20_mean_pct": -0.056391050794007566,
+            "net40_mean_pct": -0.08639105079400758,
+            "net60_mean_pct": -0.11639105079400759
+          },
+          "confirmation_b": {
+            "days": 36,
+            "gross_mean_pct": 0.40322045639976273,
+            "net20_mean_pct": 0.3448871230664294,
+            "net40_mean_pct": 0.2865537897330961,
+            "net60_mean_pct": 0.22822045639976263
+          }
+        },
+        "best20_session_removal": {
+          "removed_dates": [
+            "2025-06-04",
+            "2025-06-11",
+            "2025-06-10",
+            "2025-05-08",
+            "2025-07-11",
+            "2025-04-08",
+            "2025-06-17",
+            "2025-06-09",
+            "2024-07-08",
+            "2025-05-19",
+            "2025-06-27",
+            "2025-07-08",
+            "2025-07-28",
+            "2025-07-29",
+            "2024-07-04",
+            "2024-07-05",
+            "2024-07-09",
+            "2024-07-10",
+            "2024-07-12",
+            "2024-07-16"
+          ],
+          "remaining_days": 68,
+          "net20_mean_pct": -0.22177539650272635
+        },
+        "top10_code_cash": {
+          "codes": [
+            "3415",
+            "3399",
+            "2670",
+            "3179",
+            "3064",
+            "8604",
+            "3086",
+            "4978",
+            "9206",
+            "9444"
+          ],
+          "net20_mean_pct": -0.15878481634507147
+        },
+        "concentration": {
+          "largest_positive_code_share": 0.28968408769924964,
+          "unique_codes": 27
+        },
+        "filled_slots": 39,
+        "scheduled_slots": 176,
+        "cash_slots": 137,
+        "slot_fill_rate": 0.2215909090909091,
+        "days_with_at_least_one_filled_slot": 33
+      }
+    },
+    "A06_dual_tail_neighbor_utility": {
+      "top1": {
+        "costs": {
+          "0": {
+            "mean_pct": 0.35152246255279995,
+            "median_pct": 0.0,
+            "win_rate": 0.48863636363636365,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": 0.15152246255279983,
+            "median_pct": -0.2,
+            "win_rate": 0.4318181818181818,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": -0.04847753744720014,
+            "median_pct": -0.4,
+            "win_rate": 0.375,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.24847753744720008,
+            "median_pct": -0.6,
+            "win_rate": 0.3409090909090909,
+            "days": 88
+          }
+        },
+        "monthly": {
+          "2024-07": {
+            "gross_mean_pct": 0.17890494695492,
+            "net20_mean_pct": -0.02109505304507998,
+            "net40_mean_pct": -0.22109505304508,
+            "net60_mean_pct": -0.4210950530450802
+          },
+          "2025-04": {
+            "gross_mean_pct": -0.06123786183145722,
+            "net20_mean_pct": -0.26123786183145725,
+            "net40_mean_pct": -0.46123786183145726,
+            "net60_mean_pct": -0.6612378618314573
+          },
+          "2025-05": {
+            "gross_mean_pct": 0.18735939451978895,
+            "net20_mean_pct": -0.01264060548021114,
+            "net40_mean_pct": -0.21264060548021096,
+            "net60_mean_pct": -0.4126406054802111
+          },
+          "2025-06": {
+            "gross_mean_pct": 0.7167235651220606,
+            "net20_mean_pct": 0.5167235651220606,
+            "net40_mean_pct": 0.3167235651220606,
+            "net60_mean_pct": 0.11672356512206071
+          },
+          "2025-07": {
+            "gross_mean_pct": 0.6757939496467074,
+            "net20_mean_pct": 0.4757939496467074,
+            "net40_mean_pct": 0.2757939496467074,
+            "net60_mean_pct": 0.07579394964670737
+          }
+        },
+        "positive_months_net40": 2,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 22,
+            "gross_mean_pct": 0.17890494695492,
+            "net20_mean_pct": -0.02109505304507998,
+            "net40_mean_pct": -0.22109505304508,
+            "net60_mean_pct": -0.4210950530450802
+          },
+          "confirmation_a": {
+            "days": 30,
+            "gross_mean_pct": 0.06306076634416585,
+            "net20_mean_pct": -0.13693923365583419,
+            "net40_mean_pct": -0.3369392336558341,
+            "net60_mean_pct": -0.5369392336558342
+          },
+          "confirmation_b": {
+            "days": 36,
+            "gross_mean_pct": 0.6973956911475881,
+            "net20_mean_pct": 0.4973956911475882,
+            "net40_mean_pct": 0.2973956911475882,
+            "net60_mean_pct": 0.09739569114758834
+          }
+        },
+        "best20_session_removal": {
+          "removed_dates": [
+            "2025-06-13",
+            "2025-06-25",
+            "2025-07-07",
+            "2025-04-11",
+            "2024-07-30",
+            "2025-04-08",
+            "2025-05-09",
+            "2025-07-09",
+            "2024-07-10",
+            "2025-04-07",
+            "2024-07-25",
+            "2025-06-10",
+            "2024-07-29",
+            "2025-06-04",
+            "2025-05-12",
+            "2025-07-11",
+            "2024-07-18",
+            "2025-05-13",
+            "2025-07-08",
+            "2025-06-11"
+          ],
+          "remaining_days": 68,
+          "net20_mean_pct": -0.7965204362374501
+        },
+        "top10_code_cash": {
+          "codes": [
+            "219A",
+            "3046",
+            "2735",
+            "4015",
+            "3064",
+            "8927",
+            "6184",
+            "3252",
+            "6525",
+            "9418"
+          ],
+          "net20_mean_pct": -0.44557250750918054
+        },
+        "concentration": {
+          "largest_positive_code_share": 0.10405123044458348,
+          "unique_codes": 74
+        },
+        "filled_slots": 88,
+        "scheduled_slots": 88,
+        "cash_slots": 0,
+        "slot_fill_rate": 1.0,
+        "days_with_at_least_one_filled_slot": 88
+      },
+      "top2": {
+        "costs": {
+          "0": {
+            "mean_pct": 0.19212069865238013,
+            "median_pct": 0.09225913273339381,
+            "win_rate": 0.5454545454545454,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": -0.007879301347619909,
+            "median_pct": -0.10774086726660614,
+            "win_rate": 0.4659090909090909,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": -0.2078793013476198,
+            "median_pct": -0.30774086726660616,
+            "win_rate": 0.4090909090909091,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.4078793013476199,
+            "median_pct": -0.5077408672666063,
+            "win_rate": 0.32954545454545453,
+            "days": 88
+          }
+        },
+        "monthly": {
+          "2024-07": {
+            "gross_mean_pct": 0.21118530620986917,
+            "net20_mean_pct": 0.011185306209869168,
+            "net40_mean_pct": -0.18881469379013066,
+            "net60_mean_pct": -0.3888146937901309
+          },
+          "2025-04": {
+            "gross_mean_pct": 0.034424682664188785,
+            "net20_mean_pct": -0.16557531733581124,
+            "net40_mean_pct": -0.3655753173358112,
+            "net60_mean_pct": -0.5655753173358112
+          },
+          "2025-05": {
+            "gross_mean_pct": 0.18472180758703896,
+            "net20_mean_pct": -0.015278192412960964,
+            "net40_mean_pct": -0.21527819241296087,
+            "net60_mean_pct": -0.41527819241296104
+          },
+          "2025-06": {
+            "gross_mean_pct": 0.21426751477518613,
+            "net20_mean_pct": 0.014267514775186004,
+            "net40_mean_pct": -0.1857324852248139,
+            "net60_mean_pct": -0.38573248522481396
+          },
+          "2025-07": {
+            "gross_mean_pct": 0.2883685064879633,
+            "net20_mean_pct": 0.08836850648796322,
+            "net40_mean_pct": -0.1116314935120366,
+            "net60_mean_pct": -0.3116314935120368
+          }
+        },
+        "positive_months_net40": 0,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 22,
+            "gross_mean_pct": 0.21118530620986917,
+            "net20_mean_pct": 0.011185306209869168,
+            "net40_mean_pct": -0.18881469379013066,
+            "net60_mean_pct": -0.3888146937901309
+          },
+          "confirmation_a": {
+            "days": 30,
+            "gross_mean_pct": 0.10957324512561394,
+            "net20_mean_pct": -0.09042675487438609,
+            "net40_mean_pct": -0.290426754874386,
+            "net60_mean_pct": -0.49042675487438614
+          },
+          "confirmation_b": {
+            "days": 36,
+            "gross_mean_pct": 0.24925964975066417,
+            "net20_mean_pct": 0.04925964975066413,
+            "net40_mean_pct": -0.15074035024933574,
+            "net60_mean_pct": -0.3507403502493358
+          }
+        },
+        "best20_session_removal": {
+          "removed_dates": [
+            "2025-05-09",
+            "2024-07-30",
+            "2025-06-25",
+            "2025-04-11",
+            "2025-06-13",
+            "2025-04-08",
+            "2025-06-04",
+            "2025-07-09",
+            "2024-07-25",
+            "2025-07-14",
+            "2025-07-07",
+            "2024-07-29",
+            "2024-07-18",
+            "2025-06-10",
+            "2025-05-13",
+            "2024-07-10",
+            "2024-07-17",
+            "2025-07-11",
+            "2025-04-23",
+            "2025-07-08"
+          ],
+          "remaining_days": 68,
+          "net20_mean_pct": -0.6678071721965539
+        },
+        "top10_code_cash": {
+          "codes": [
+            "219A",
+            "2735",
+            "4015",
+            "3064",
+            "8927",
+            "6184",
+            "6088",
+            "7134",
+            "3252",
+            "2670"
+          ],
+          "net20_mean_pct": -0.29010118862518686
+        },
+        "concentration": {
+          "largest_positive_code_share": 0.06673032917419909,
+          "unique_codes": 148
+        },
+        "filled_slots": 176,
+        "scheduled_slots": 176,
+        "cash_slots": 0,
+        "slot_fill_rate": 1.0,
+        "days_with_at_least_one_filled_slot": 88
+      }
+    },
+    "A07_event_family_prototype": {
+      "top1": {
+        "costs": {
+          "0": {
+            "mean_pct": 0.11281830534240343,
+            "median_pct": 0.0,
+            "win_rate": 0.4659090909090909,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": -0.08490896738486936,
+            "median_pct": -0.2,
+            "win_rate": 0.42045454545454547,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": -0.28263624011214206,
+            "median_pct": -0.4,
+            "win_rate": 0.375,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.4803635128394148,
+            "median_pct": -0.6,
+            "win_rate": 0.32954545454545453,
+            "days": 88
+          }
+        },
+        "monthly": {
+          "2024-07": {
+            "gross_mean_pct": -0.021575024344067592,
+            "net20_mean_pct": -0.2124841152531585,
+            "net40_mean_pct": -0.4033932061622494,
+            "net60_mean_pct": -0.5943022970713405
+          },
+          "2025-04": {
+            "gross_mean_pct": -0.15671761720531532,
+            "net20_mean_pct": -0.3567176172053154,
+            "net40_mean_pct": -0.5567176172053153,
+            "net60_mean_pct": -0.7567176172053152
+          },
+          "2025-05": {
+            "gross_mean_pct": 0.2021178062881246,
+            "net20_mean_pct": 0.0021178062881245315,
+            "net40_mean_pct": -0.19788219371187543,
+            "net60_mean_pct": -0.39788219371187544
+          },
+          "2025-06": {
+            "gross_mean_pct": 0.48992204710193926,
+            "net20_mean_pct": 0.2899220471019392,
+            "net40_mean_pct": 0.08992204710193927,
+            "net60_mean_pct": -0.11007795289806072
+          },
+          "2025-07": {
+            "gross_mean_pct": 0.02430233379541183,
+            "net20_mean_pct": -0.1756976662045882,
+            "net40_mean_pct": -0.3756976662045883,
+            "net60_mean_pct": -0.5756976662045882
+          }
+        },
+        "positive_months_net40": 1,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 22,
+            "gross_mean_pct": -0.021575024344067592,
+            "net20_mean_pct": -0.2124841152531585,
+            "net40_mean_pct": -0.4033932061622494,
+            "net60_mean_pct": -0.5943022970713405
+          },
+          "confirmation_a": {
+            "days": 30,
+            "gross_mean_pct": 0.022700094541404602,
+            "net20_mean_pct": -0.1772999054585954,
+            "net40_mean_pct": -0.3772999054585954,
+            "net60_mean_pct": -0.5772999054585954
+          },
+          "confirmation_b": {
+            "days": 36,
+            "gross_mean_pct": 0.2700460713738569,
+            "net20_mean_pct": 0.07004607137385681,
+            "net40_mean_pct": -0.1299539286261432,
+            "net60_mean_pct": -0.3299539286261431
+          }
+        },
+        "best20_session_removal": {
+          "removed_dates": [
+            "2025-06-30",
+            "2025-07-09",
+            "2025-04-14",
+            "2025-05-21",
+            "2025-05-14",
+            "2024-07-11",
+            "2025-06-18",
+            "2025-07-16",
+            "2025-04-03",
+            "2024-07-29",
+            "2024-07-08",
+            "2025-04-11",
+            "2024-07-17",
+            "2025-04-23",
+            "2024-07-05",
+            "2025-07-29",
+            "2025-06-02",
+            "2025-05-30",
+            "2024-07-31",
+            "2024-07-26"
+          ],
+          "remaining_days": 68,
+          "net20_mean_pct": -0.7834671808391936
+        },
+        "top10_code_cash": {
+          "codes": [
+            "7060",
+            "4055",
+            "6118",
+            "4196",
+            "5257",
+            "4118",
+            "2602",
+            "7628",
+            "7638",
+            "2811"
+          ],
+          "net20_mean_pct": -0.45389656258611927
+        },
+        "concentration": {
+          "largest_positive_code_share": 0.10410034243856289,
+          "unique_codes": 84
+        },
+        "filled_slots": 87,
+        "scheduled_slots": 88,
+        "cash_slots": 1,
+        "slot_fill_rate": 0.9886363636363636,
+        "days_with_at_least_one_filled_slot": 87
+      },
+      "top2": {
+        "costs": {
+          "0": {
+            "mean_pct": 0.030029776248695347,
+            "median_pct": -0.044581812998994996,
+            "win_rate": 0.48863636363636365,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": -0.168833860114941,
+            "median_pct": -0.24458181299899495,
+            "win_rate": 0.42045454545454547,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": -0.3676974964785773,
+            "median_pct": -0.44458181299899496,
+            "win_rate": 0.38636363636363635,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.5665611328422138,
+            "median_pct": -0.6214760796108079,
+            "win_rate": 0.26136363636363635,
+            "days": 88
+          }
+        },
+        "monthly": {
+          "2024-07": {
+            "gross_mean_pct": -0.3263914633823071,
+            "net20_mean_pct": -0.5218460088368526,
+            "net40_mean_pct": -0.7173005542913983,
+            "net60_mean_pct": -0.9127550997459436
+          },
+          "2025-04": {
+            "gross_mean_pct": -0.09458060727652909,
+            "net20_mean_pct": -0.2945806072765292,
+            "net40_mean_pct": -0.49458060727652914,
+            "net60_mean_pct": -0.6945806072765291
+          },
+          "2025-05": {
+            "gross_mean_pct": 0.21587114075579486,
+            "net20_mean_pct": 0.01587114075579484,
+            "net40_mean_pct": -0.1841288592442051,
+            "net60_mean_pct": -0.3841288592442051
+          },
+          "2025-06": {
+            "gross_mean_pct": 0.2904531770829666,
+            "net20_mean_pct": 0.09045317708296659,
+            "net40_mean_pct": -0.10954682291703338,
+            "net60_mean_pct": -0.3095468229170334
+          },
+          "2025-07": {
+            "gross_mean_pct": 0.14619200809003513,
+            "net20_mean_pct": -0.05380799190996489,
+            "net40_mean_pct": -0.2538079919099649,
+            "net60_mean_pct": -0.4538079919099649
+          }
+        },
+        "positive_months_net40": 0,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 22,
+            "gross_mean_pct": -0.3263914633823071,
+            "net20_mean_pct": -0.5218460088368526,
+            "net40_mean_pct": -0.7173005542913983,
+            "net60_mean_pct": -0.9127550997459436
+          },
+          "confirmation_a": {
+            "days": 30,
+            "gross_mean_pct": 0.06064526673963288,
+            "net20_mean_pct": -0.13935473326036718,
+            "net40_mean_pct": -0.3393547332603671,
+            "net60_mean_pct": -0.5393547332603671
+          },
+          "confirmation_b": {
+            "days": 36,
+            "gross_mean_pct": 0.22232984728074895,
+            "net20_mean_pct": 0.022329847280748952,
+            "net40_mean_pct": -0.17767015271925107,
+            "net60_mean_pct": -0.3776701527192511
+          }
+        },
+        "best20_session_removal": {
+          "removed_dates": [
+            "2025-07-08",
+            "2025-05-21",
+            "2025-04-25",
+            "2025-04-14",
+            "2024-07-31",
+            "2025-05-14",
+            "2024-07-26",
+            "2025-04-03",
+            "2025-05-16",
+            "2024-07-05",
+            "2025-06-18",
+            "2025-06-30",
+            "2025-05-30",
+            "2024-07-17",
+            "2025-07-09",
+            "2025-06-11",
+            "2024-07-29",
+            "2025-07-29",
+            "2025-06-02",
+            "2025-07-16"
+          ],
+          "remaining_days": 68,
+          "net20_mean_pct": -0.7336407771947481
+        },
+        "top10_code_cash": {
+          "codes": [
+            "6395",
+            "2158",
+            "7060",
+            "4055",
+            "6118",
+            "4196",
+            "2754",
+            "8848",
+            "5357",
+            "5257"
+          ],
+          "net20_mean_pct": -0.43112556695750776
+        },
+        "concentration": {
+          "largest_positive_code_share": 0.09305318988258951,
+          "unique_codes": 157
+        },
+        "filled_slots": 175,
+        "scheduled_slots": 176,
+        "cash_slots": 1,
+        "slot_fill_rate": 0.9943181818181818,
+        "days_with_at_least_one_filled_slot": 88
+      }
+    },
+    "A08_same_issuer_memory": {
+      "top1": {
+        "costs": {
+          "0": {
+            "mean_pct": -0.030548436158924473,
+            "median_pct": 0.0,
+            "win_rate": 0.48863636363636365,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": -0.23054843615892448,
+            "median_pct": -0.2,
+            "win_rate": 0.4659090909090909,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": -0.4305484361589244,
+            "median_pct": -0.4,
+            "win_rate": 0.4431818181818182,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.6305484361589243,
+            "median_pct": -0.6,
+            "win_rate": 0.3977272727272727,
+            "days": 88
+          }
+        },
+        "monthly": {
+          "2024-07": {
+            "gross_mean_pct": -0.7528463452509658,
+            "net20_mean_pct": -0.9528463452509656,
+            "net40_mean_pct": -1.1528463452509656,
+            "net60_mean_pct": -1.3528463452509656
+          },
+          "2025-04": {
+            "gross_mean_pct": 0.20553204157479188,
+            "net20_mean_pct": 0.005532041574791939,
+            "net40_mean_pct": -0.19446795842520803,
+            "net60_mean_pct": -0.39446795842520815
+          },
+          "2025-05": {
+            "gross_mean_pct": 1.0794895090933039,
+            "net20_mean_pct": 0.8794895090933039,
+            "net40_mean_pct": 0.6794895090933041,
+            "net60_mean_pct": 0.4794895090933039
+          },
+          "2025-06": {
+            "gross_mean_pct": -0.7669951580033858,
+            "net20_mean_pct": -0.9669951580033861,
+            "net40_mean_pct": -1.166995158003386,
+            "net60_mean_pct": -1.366995158003386
+          },
+          "2025-07": {
+            "gross_mean_pct": 0.5395259973869875,
+            "net20_mean_pct": 0.3395259973869875,
+            "net40_mean_pct": 0.13952599738698762,
+            "net60_mean_pct": -0.060474002613012556
+          }
+        },
+        "positive_months_net40": 2,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 22,
+            "gross_mean_pct": -0.7528463452509658,
+            "net20_mean_pct": -0.9528463452509656,
+            "net40_mean_pct": -1.1528463452509656,
+            "net60_mean_pct": -1.3528463452509656
+          },
+          "confirmation_a": {
+            "days": 30,
+            "gross_mean_pct": 0.6425107753340479,
+            "net20_mean_pct": 0.4425107753340479,
+            "net40_mean_pct": 0.2425107753340479,
+            "net60_mean_pct": 0.042510775334047825
+          },
+          "confirmation_b": {
+            "days": 36,
+            "gross_mean_pct": -0.15002683462459854,
+            "net20_mean_pct": -0.35002683462459855,
+            "net40_mean_pct": -0.5500268346245986,
+            "net60_mean_pct": -0.7500268346245985
+          }
+        },
+        "best20_session_removal": {
+          "removed_dates": [
+            "2024-07-12",
+            "2025-07-09",
+            "2025-05-12",
+            "2025-05-14",
+            "2025-05-16",
+            "2025-07-29",
+            "2025-05-30",
+            "2025-07-14",
+            "2025-05-15",
+            "2024-07-16",
+            "2025-07-31",
+            "2025-04-22",
+            "2025-04-10",
+            "2025-05-29",
+            "2025-07-01",
+            "2025-04-07",
+            "2025-07-07",
+            "2024-07-29",
+            "2025-04-14",
+            "2025-04-24"
+          ],
+          "remaining_days": 68,
+          "net20_mean_pct": -1.1406372897060117
+        },
+        "top10_code_cash": {
+          "codes": [
+            "4390",
+            "5574",
+            "4055",
+            "3625",
+            "3753",
+            "206A",
+            "7689",
+            "3093",
+            "6323",
+            "3987"
+          ],
+          "net20_mean_pct": -0.7110372075729589
+        },
+        "concentration": {
+          "largest_positive_code_share": 0.08237544723613542,
+          "unique_codes": 73
+        },
+        "filled_slots": 88,
+        "scheduled_slots": 88,
+        "cash_slots": 0,
+        "slot_fill_rate": 1.0,
+        "days_with_at_least_one_filled_slot": 88
+      },
+      "top2": {
+        "costs": {
+          "0": {
+            "mean_pct": 0.01163133089153624,
+            "median_pct": 0.09869829636942606,
+            "win_rate": 0.5227272727272727,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": -0.18836866910846384,
+            "median_pct": -0.1013017036305739,
+            "win_rate": 0.4431818181818182,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": -0.3883686691084638,
+            "median_pct": -0.30130170363057396,
+            "win_rate": 0.42045454545454547,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.5883686691084639,
+            "median_pct": -0.501301703630574,
+            "win_rate": 0.36363636363636365,
+            "days": 88
+          }
+        },
+        "monthly": {
+          "2024-07": {
+            "gross_mean_pct": -0.0003111977035447784,
+            "net20_mean_pct": -0.20031119770354486,
+            "net40_mean_pct": -0.40031119770354484,
+            "net60_mean_pct": -0.6003111977035448
+          },
+          "2025-04": {
+            "gross_mean_pct": -0.07145814794370485,
+            "net20_mean_pct": -0.27145814794370493,
+            "net40_mean_pct": -0.4714581479437048,
+            "net60_mean_pct": -0.6714581479437048
+          },
+          "2025-05": {
+            "gross_mean_pct": 0.7487960042620615,
+            "net20_mean_pct": 0.5487960042620614,
+            "net40_mean_pct": 0.34879600426206164,
+            "net60_mean_pct": 0.14879600426206155
+          },
+          "2025-06": {
+            "gross_mean_pct": -0.9947872283429127,
+            "net20_mean_pct": -1.1947872283429126,
+            "net40_mean_pct": -1.3947872283429128,
+            "net60_mean_pct": -1.5947872283429125
+          },
+          "2025-07": {
+            "gross_mean_pct": 0.5747819389219506,
+            "net20_mean_pct": 0.3747819389219506,
+            "net40_mean_pct": 0.17478193892195068,
+            "net60_mean_pct": -0.02521806107804938
+          }
+        },
+        "positive_months_net40": 2,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 22,
+            "gross_mean_pct": -0.0003111977035447784,
+            "net20_mean_pct": -0.20031119770354486,
+            "net40_mean_pct": -0.40031119770354484,
+            "net60_mean_pct": -0.6003111977035448
+          },
+          "confirmation_a": {
+            "days": 30,
+            "gross_mean_pct": 0.3386689281591783,
+            "net20_mean_pct": 0.13866892815917828,
+            "net40_mean_pct": -0.06133107184082167,
+            "net60_mean_pct": -0.26133107184082166
+          },
+          "confirmation_b": {
+            "days": 36,
+            "gross_mean_pct": -0.253601788245616,
+            "net20_mean_pct": -0.45360178824561603,
+            "net40_mean_pct": -0.653601788245616,
+            "net60_mean_pct": -0.8536017882456162
+          }
+        },
+        "best20_session_removal": {
+          "removed_dates": [
+            "2024-07-12",
+            "2024-07-16",
+            "2025-07-10",
+            "2025-05-12",
+            "2024-07-11",
+            "2025-07-14",
+            "2025-05-30",
+            "2025-07-09",
+            "2025-07-29",
+            "2025-05-16",
+            "2025-05-14",
+            "2024-07-31",
+            "2025-04-23",
+            "2025-07-08",
+            "2025-04-08",
+            "2025-04-11",
+            "2025-04-14",
+            "2025-05-13",
+            "2025-07-01",
+            "2024-07-29"
+          ],
+          "remaining_days": 68,
+          "net20_mean_pct": -0.8955019811632001
+        },
+        "top10_code_cash": {
+          "codes": [
+            "3093",
+            "4390",
+            "8260",
+            "5574",
+            "4055",
+            "3625",
+            "3987",
+            "3753",
+            "5577",
+            "206A"
+          ],
+          "net20_mean_pct": -0.5393899551756117
+        },
+        "concentration": {
+          "largest_positive_code_share": 0.08670914305817501,
+          "unique_codes": 137
+        },
+        "filled_slots": 176,
+        "scheduled_slots": 176,
+        "cash_slots": 0,
+        "slot_fill_rate": 1.0,
+        "days_with_at_least_one_filled_slot": 88
+      }
+    },
+    "A09_robust_neighbor_consensus": {
+      "top1": {
+        "costs": {
+          "0": {
+            "mean_pct": 0.0782662730052459,
+            "median_pct": 0.04988992540269077,
+            "win_rate": 0.5113636363636364,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": -0.12173372699475422,
+            "median_pct": -0.15011007459730924,
+            "win_rate": 0.45454545454545453,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": -0.3217337269947541,
+            "median_pct": -0.35011007459730925,
+            "win_rate": 0.3977272727272727,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.5217337269947541,
+            "median_pct": -0.5501100745973092,
+            "win_rate": 0.3522727272727273,
+            "days": 88
+          }
+        },
+        "monthly": {
+          "2024-07": {
+            "gross_mean_pct": 0.04520598520319192,
+            "net20_mean_pct": -0.15479401479680813,
+            "net40_mean_pct": -0.3547940147968081,
+            "net60_mean_pct": -0.5547940147968081
+          },
+          "2025-04": {
+            "gross_mean_pct": -0.7928813303703387,
+            "net20_mean_pct": -0.9928813303703384,
+            "net40_mean_pct": -1.1928813303703385,
+            "net60_mean_pct": -1.392881330370339
+          },
+          "2025-05": {
+            "gross_mean_pct": 0.34733608777050456,
+            "net20_mean_pct": 0.14733608777050444,
+            "net40_mean_pct": -0.05266391222949543,
+            "net60_mean_pct": -0.25266391222949536
+          },
+          "2025-06": {
+            "gross_mean_pct": 0.6990203785944266,
+            "net20_mean_pct": 0.49902037859442655,
+            "net40_mean_pct": 0.2990203785944264,
+            "net60_mean_pct": 0.09902037859442663
+          },
+          "2025-07": {
+            "gross_mean_pct": -0.04148871790030449,
+            "net20_mean_pct": -0.24148871790030454,
+            "net40_mean_pct": -0.44148871790030453,
+            "net60_mean_pct": -0.6414887179003045
+          }
+        },
+        "positive_months_net40": 1,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 22,
+            "gross_mean_pct": 0.04520598520319192,
+            "net20_mean_pct": -0.15479401479680813,
+            "net40_mean_pct": -0.3547940147968081,
+            "net60_mean_pct": -0.5547940147968081
+          },
+          "confirmation_a": {
+            "days": 30,
+            "gross_mean_pct": -0.2227726212999171,
+            "net20_mean_pct": -0.42277262129991705,
+            "net40_mean_pct": -0.622772621299917,
+            "net60_mean_pct": -0.8227726212999171
+          },
+          "confirmation_b": {
+            "days": 36,
+            "gross_mean_pct": 0.34933552747191465,
+            "net20_mean_pct": 0.14933552747191456,
+            "net40_mean_pct": -0.05066447252808543,
+            "net60_mean_pct": -0.2506644725280853
+          }
+        },
+        "best20_session_removal": {
+          "removed_dates": [
+            "2025-06-13",
+            "2025-06-25",
+            "2025-07-09",
+            "2025-05-09",
+            "2024-07-08",
+            "2024-07-10",
+            "2024-07-25",
+            "2025-07-31",
+            "2025-06-10",
+            "2025-06-04",
+            "2025-05-08",
+            "2025-07-11",
+            "2025-04-08",
+            "2025-04-23",
+            "2025-05-30",
+            "2025-04-30",
+            "2025-05-13",
+            "2025-06-17",
+            "2024-07-05",
+            "2024-07-31"
+          ],
+          "remaining_days": 68,
+          "net20_mean_pct": -1.0719933371932069
+        },
+        "top10_code_cash": {
+          "codes": [
+            "219A",
+            "4015",
+            "2670",
+            "3064",
+            "4055",
+            "6088",
+            "9522",
+            "6525",
+            "9418",
+            "7198"
+          ],
+          "net20_mean_pct": -0.6507044787587697
+        },
+        "concentration": {
+          "largest_positive_code_share": 0.11001931929136592,
+          "unique_codes": 76
+        },
+        "filled_slots": 88,
+        "scheduled_slots": 88,
+        "cash_slots": 0,
+        "slot_fill_rate": 1.0,
+        "days_with_at_least_one_filled_slot": 88
+      },
+      "top2": {
+        "costs": {
+          "0": {
+            "mean_pct": 0.06741180847689883,
+            "median_pct": 0.04352274125846711,
+            "win_rate": 0.5340909090909091,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": -0.1325881915231012,
+            "median_pct": -0.1564772587415329,
+            "win_rate": 0.45454545454545453,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": -0.3325881915231011,
+            "median_pct": -0.3564772587415329,
+            "win_rate": 0.4090909090909091,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.5325881915231011,
+            "median_pct": -0.5564772587415329,
+            "win_rate": 0.3522727272727273,
+            "days": 88
+          }
+        },
+        "monthly": {
+          "2024-07": {
+            "gross_mean_pct": -0.0063582983992283215,
+            "net20_mean_pct": -0.20635829839922826,
+            "net40_mean_pct": -0.4063582983992285,
+            "net60_mean_pct": -0.6063582983992283
+          },
+          "2025-04": {
+            "gross_mean_pct": -0.6123989522326415,
+            "net20_mean_pct": -0.8123989522326415,
+            "net40_mean_pct": -1.0123989522326415,
+            "net60_mean_pct": -1.212398952232641
+          },
+          "2025-05": {
+            "gross_mean_pct": 0.48120378257866625,
+            "net20_mean_pct": 0.28120378257866624,
+            "net40_mean_pct": 0.08120378257866633,
+            "net60_mean_pct": -0.11879621742133363
+          },
+          "2025-06": {
+            "gross_mean_pct": 0.6359766312468376,
+            "net20_mean_pct": 0.43597663124683766,
+            "net40_mean_pct": 0.23597663124683751,
+            "net60_mean_pct": 0.03597663124683763
+          },
+          "2025-07": {
+            "gross_mean_pct": -0.23785333753706858,
+            "net20_mean_pct": -0.43785333753706857,
+            "net40_mean_pct": -0.6378533375370685,
+            "net60_mean_pct": -0.8378533375370685
+          }
+        },
+        "positive_months_net40": 2,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 22,
+            "gross_mean_pct": -0.0063582983992283215,
+            "net20_mean_pct": -0.20635829839922826,
+            "net40_mean_pct": -0.4063582983992285,
+            "net60_mean_pct": -0.6063582983992283
+          },
+          "confirmation_a": {
+            "days": 30,
+            "gross_mean_pct": -0.06559758482698759,
+            "net20_mean_pct": -0.2655975848269877,
+            "net40_mean_pct": -0.4655975848269876,
+            "net60_mean_pct": -0.6655975848269875
+          },
+          "confirmation_b": {
+            "days": 36,
+            "gross_mean_pct": 0.2233347015433264,
+            "net20_mean_pct": 0.023334701543326383,
+            "net40_mean_pct": -0.1766652984566737,
+            "net60_mean_pct": -0.3766652984566736
+          }
+        },
+        "best20_session_removal": {
+          "removed_dates": [
+            "2025-06-04",
+            "2025-06-25",
+            "2025-05-13",
+            "2025-05-01",
+            "2025-06-13",
+            "2025-07-31",
+            "2025-07-14",
+            "2025-05-09",
+            "2024-07-08",
+            "2024-07-25",
+            "2025-05-08",
+            "2024-07-10",
+            "2024-07-30",
+            "2025-04-08",
+            "2025-06-18",
+            "2024-07-31",
+            "2025-06-10",
+            "2025-07-11",
+            "2025-06-17",
+            "2025-05-30"
+          ],
+          "remaining_days": 68,
+          "net20_mean_pct": -0.9054835680944473
+        },
+        "top10_code_cash": {
+          "codes": [
+            "3415",
+            "219A",
+            "9719",
+            "2670",
+            "9364",
+            "6090",
+            "4015",
+            "3064",
+            "4055",
+            "6088"
+          ],
+          "net20_mean_pct": -0.4985460667058227
+        },
+        "concentration": {
+          "largest_positive_code_share": 0.07420536885181997,
+          "unique_codes": 152
+        },
+        "filled_slots": 176,
+        "scheduled_slots": 176,
+        "cash_slots": 0,
+        "slot_fill_rate": 1.0,
+        "days_with_at_least_one_filled_slot": 88
+      }
+    },
+    "A10_family_then_text_cross_code": {
+      "top1": {
+        "costs": {
+          "0": {
+            "mean_pct": 0.18514524890476525,
+            "median_pct": -0.017695983011856153,
+            "win_rate": 0.45454545454545453,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": -0.014854751095234658,
+            "median_pct": -0.21769598301185616,
+            "win_rate": 0.4318181818181818,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": -0.21485475109523466,
+            "median_pct": -0.4176959830118562,
+            "win_rate": 0.4090909090909091,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.41485475109523473,
+            "median_pct": -0.6176959830118561,
+            "win_rate": 0.36363636363636365,
+            "days": 88
+          }
+        },
+        "monthly": {
+          "2024-07": {
+            "gross_mean_pct": 0.1811888814507838,
+            "net20_mean_pct": -0.018811118549216202,
+            "net40_mean_pct": -0.21881111854921606,
+            "net60_mean_pct": -0.41881111854921615
+          },
+          "2025-04": {
+            "gross_mean_pct": -0.6944069620747791,
+            "net20_mean_pct": -0.8944069620747792,
+            "net40_mean_pct": -1.0944069620747792,
+            "net60_mean_pct": -1.2944069620747791
+          },
+          "2025-05": {
+            "gross_mean_pct": 1.7490742042142884,
+            "net20_mean_pct": 1.5490742042142887,
+            "net40_mean_pct": 1.3490742042142885,
+            "net60_mean_pct": 1.1490742042142885
+          },
+          "2025-06": {
+            "gross_mean_pct": -0.35166180445103284,
+            "net20_mean_pct": -0.551661804451033,
+            "net40_mean_pct": -0.7516618044510329,
+            "net60_mean_pct": -0.9516618044510328
+          },
+          "2025-07": {
+            "gross_mean_pct": 0.18636424495171086,
+            "net20_mean_pct": -0.013635755048289185,
+            "net40_mean_pct": -0.21363575504828902,
+            "net60_mean_pct": -0.4136357550482892
+          }
+        },
+        "positive_months_net40": 1,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 22,
+            "gross_mean_pct": 0.1811888814507838,
+            "net20_mean_pct": -0.018811118549216202,
+            "net40_mean_pct": -0.21881111854921606,
+            "net60_mean_pct": -0.41881111854921615
+          },
+          "confirmation_a": {
+            "days": 30,
+            "gross_mean_pct": 0.5273336210697548,
+            "net20_mean_pct": 0.32733362106975467,
+            "net40_mean_pct": 0.12733362106975477,
+            "net60_mean_pct": -0.07266637893024537
+          },
+          "confirmation_b": {
+            "days": 36,
+            "gross_mean_pct": -0.09759394778862614,
+            "net20_mean_pct": -0.2975939477886262,
+            "net40_mean_pct": -0.4975939477886262,
+            "net60_mean_pct": -0.6975939477886263
+          }
+        },
+        "best20_session_removal": {
+          "removed_dates": [
+            "2025-05-19",
+            "2024-07-23",
+            "2025-06-12",
+            "2025-05-09",
+            "2025-04-11",
+            "2024-07-24",
+            "2025-05-16",
+            "2025-07-09",
+            "2024-07-17",
+            "2025-05-28",
+            "2025-05-14",
+            "2025-05-15",
+            "2024-07-10",
+            "2024-07-18",
+            "2024-07-16",
+            "2025-07-01",
+            "2025-06-18",
+            "2025-07-31",
+            "2025-04-23",
+            "2025-06-02"
+          ],
+          "remaining_days": 68,
+          "net20_mean_pct": -1.1010442732646522
+        },
+        "top10_code_cash": {
+          "codes": [
+            "4676",
+            "4439",
+            "5132",
+            "8558",
+            "6184",
+            "2653",
+            "2121",
+            "3252",
+            "3491",
+            "8848"
+          ],
+          "net20_mean_pct": -0.6463355648583211
+        },
+        "concentration": {
+          "largest_positive_code_share": 0.15751107800292805,
+          "unique_codes": 81
+        },
+        "filled_slots": 88,
+        "scheduled_slots": 88,
+        "cash_slots": 0,
+        "slot_fill_rate": 1.0,
+        "days_with_at_least_one_filled_slot": 88
+      },
+      "top2": {
+        "costs": {
+          "0": {
+            "mean_pct": 0.1956315936253869,
+            "median_pct": -0.03379454753692779,
+            "win_rate": 0.48863636363636365,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": -0.004368406374613099,
+            "median_pct": -0.23379454753692777,
+            "win_rate": 0.4318181818181818,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": -0.20436840637461307,
+            "median_pct": -0.4337945475369278,
+            "win_rate": 0.4090909090909091,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.4043684063746131,
+            "median_pct": -0.6337945475369278,
+            "win_rate": 0.375,
+            "days": 88
+          }
+        },
+        "monthly": {
+          "2024-07": {
+            "gross_mean_pct": 0.39133465242135607,
+            "net20_mean_pct": 0.19133465242135606,
+            "net40_mean_pct": -0.008665347578643921,
+            "net60_mean_pct": -0.20866534757864397
+          },
+          "2025-04": {
+            "gross_mean_pct": -0.24915018922324206,
+            "net20_mean_pct": -0.4491501892232422,
+            "net40_mean_pct": -0.649150189223242,
+            "net60_mean_pct": -0.8491501892232421
+          },
+          "2025-05": {
+            "gross_mean_pct": 0.7071055469896111,
+            "net20_mean_pct": 0.5071055469896111,
+            "net40_mean_pct": 0.307105546989611,
+            "net60_mean_pct": 0.10710554698961096
+          },
+          "2025-06": {
+            "gross_mean_pct": -0.23006902873679627,
+            "net20_mean_pct": -0.43006902873679637,
+            "net40_mean_pct": -0.6300690287367963,
+            "net60_mean_pct": -0.8300690287367962
+          },
+          "2025-07": {
+            "gross_mean_pct": 0.3593058273686948,
+            "net20_mean_pct": 0.15930582736869472,
+            "net40_mean_pct": -0.0406941726313052,
+            "net60_mean_pct": -0.24069417263130527
+          }
+        },
+        "positive_months_net40": 1,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 22,
+            "gross_mean_pct": 0.39133465242135607,
+            "net20_mean_pct": 0.19133465242135606,
+            "net40_mean_pct": -0.008665347578643921,
+            "net60_mean_pct": -0.20866534757864397
+          },
+          "confirmation_a": {
+            "days": 30,
+            "gross_mean_pct": 0.22897767888318452,
+            "net20_mean_pct": 0.028977678883184383,
+            "net40_mean_pct": -0.17102232111681548,
+            "net60_mean_pct": -0.3710223211168155
+          },
+          "confirmation_b": {
+            "days": 36,
+            "gross_mean_pct": 0.04824687553524117,
+            "net20_mean_pct": -0.15175312446475886,
+            "net40_mean_pct": -0.35175312446475887,
+            "net60_mean_pct": -0.5517531244647589
+          }
+        },
+        "best20_session_removal": {
+          "removed_dates": [
+            "2025-05-19",
+            "2025-05-09",
+            "2024-07-23",
+            "2025-06-12",
+            "2025-04-11",
+            "2024-07-17",
+            "2025-06-11",
+            "2024-07-10",
+            "2025-07-30",
+            "2024-07-29",
+            "2024-07-31",
+            "2025-07-07",
+            "2025-07-09",
+            "2025-04-23",
+            "2024-07-24",
+            "2025-05-29",
+            "2025-06-18",
+            "2025-05-14",
+            "2025-06-04",
+            "2024-07-18"
+          ],
+          "remaining_days": 68,
+          "net20_mean_pct": -0.7895016878658725
+        },
+        "top10_code_cash": {
+          "codes": [
+            "4676",
+            "4439",
+            "3399",
+            "5132",
+            "8558",
+            "5532",
+            "1930",
+            "9628",
+            "6184",
+            "2653"
+          ],
+          "net20_mean_pct": -0.37352813426009823
+        },
+        "concentration": {
+          "largest_positive_code_share": 0.08555704732350246,
+          "unique_codes": 159
+        },
+        "filled_slots": 176,
+        "scheduled_slots": 176,
+        "cash_slots": 0,
+        "slot_fill_rate": 1.0,
+        "days_with_at_least_one_filled_slot": 88
+      }
+    }
+  },
+  "decision": {
+    "status": "pending_independent_audit",
+    "production_model_changed": false
+  },
+  "artifacts": {
+    "picks_csv": "/workspace/scratch/8678b1d14f37/research/model_v11_analog_picks.csv",
+    "picks_sha256": "73f84f7d072fc889368380a445d187d80b41c0e25c576092f9f72c8eafafb76e"
+  }
+}

@@ -1,0 +1,2904 @@
+{
+  "artifacts": {
+    "audit_path": "/workspace/scratch/8678b1d14f37/research/model_v11_distributional_audit.json",
+    "picks_path": "/workspace/scratch/8678b1d14f37/research/model_v11_distributional_picks.csv",
+    "picks_sha256": "e648d4dd74eabc1d385b277dd78fb41ce23dfbbda0eaa0afd2a7cb94f0ff4f32",
+    "report_path": "/workspace/scratch/8678b1d14f37/research/model_v11_distributional_report.md"
+  },
+  "authority": {
+    "analysis_type": "retrospective_mechanism_screen",
+    "earliest_forward_session": "2026-07-24",
+    "maximum_retrospective_action": "freeze exactly one forward-shadow finalist",
+    "panel_outcomes_not_inspected_for_this_family_before_registration": true,
+    "panel_outcomes_previously_available_to_the_project": true,
+    "production_promotion_allowed_from_this_panel": false
+  },
+  "decision": {
+    "forward_shadow_finalist": null,
+    "highest_unadjusted_net40_pct": 0.11841998058140119,
+    "highest_unadjusted_net40_policy": "D08_SLOTWISE_CASH_STOP_K1",
+    "production_action": "none",
+    "production_model_changed": false,
+    "retrospective_gate_passers": [],
+    "summary": "The unadjusted point winner was D08_SLOTWISE_CASH_STOP_K1, but no policy passed every preregistered retrospective return, familywise, stability, tail, coverage, concentration, mutation, and independent-P&L gate. No forward-shadow finalist was frozen and production remains unchanged."
+  },
+  "decision_before_independent_audit": {
+    "forward_shadow_finalist": null,
+    "highest_unadjusted_net40_pct": 0.11841998058140119,
+    "highest_unadjusted_net40_policy": "D08_SLOTWISE_CASH_STOP_K1",
+    "preaudit_gate_passers": [],
+    "production_action": "none",
+    "status": "independent_pnl_audit_pending"
+  },
+  "folds": [
+    {
+      "fold_number": 1,
+      "model_details": {
+        "D01_CODE_EB_RESIDUAL": {
+          "codes_with_posterior_effect": 3710,
+          "prior_strength": 20.0
+        },
+        "D02_SURVIVAL_INTEGRAL": {
+          "downside_multiplier": 1.25,
+          "negative_thresholds_pct": [
+            -0.4,
+            -1.5
+          ],
+          "positive_thresholds_pct": [
+            0.4,
+            1.5
+          ]
+        },
+        "D03_DOWNSIDE_FEASIBLE_MEAN": {
+          "severe_loss_threshold_pct": -1.0,
+          "training_base_rate": 0.22074770329010632
+        },
+        "D04_NORMALISED_CONFORMAL_LCB": {
+          "calibration_rows": 49926,
+          "fit_rows": 151782,
+          "normalised_error_q80": 1.5102964089013546
+        },
+        "D05_FOREST_TREE_LCB": {
+          "bootstrap_row_fraction": 0.15,
+          "bootstrap_rows": 30257,
+          "tree_prediction_quantile": 0.2,
+          "trees": 24
+        },
+        "D06_EVT_RESIDUAL_ES": {
+          "calibration_rows": 59960,
+          "exceedances": 5996,
+          "fit_rows": 141748,
+          "gpd_mean_excess": 0.9983604408011039,
+          "gpd_scale": 1.1029843174645646,
+          "gpd_shape": -0.10479569540987477,
+          "threshold_pct": 1.6999308252634986
+        },
+        "D07_REGIME_ABSTAIN": {
+          "calibration_days": 15,
+          "dispersion_cut": 1.1817716360092163,
+          "regime_posterior": {
+            "0": {
+              "calibration_days": 0,
+              "posterior_probability": 0.5,
+              "profitable_days": 0,
+              "trade": false
+            },
+            "1": {
+              "calibration_days": 11,
+              "posterior_probability": 0.5263157894736842,
+              "profitable_days": 6,
+              "trade": false
+            },
+            "2": {
+              "calibration_days": 2,
+              "posterior_probability": 0.5,
+              "profitable_days": 1,
+              "trade": false
+            },
+            "3": {
+              "calibration_days": 2,
+              "posterior_probability": 0.5,
+              "profitable_days": 1,
+              "trade": false
+            }
+          }
+        },
+        "D08_SLOTWISE_CASH_STOP": {
+          "calibration_slot_rows": 30,
+          "meta_coefficients": [
+            0.00013823394029916354,
+            -0.27148674931524414,
+            -0.4569192178386419
+          ],
+          "meta_intercept": 0.8488966027608418
+        }
+      },
+      "month": "2024-07",
+      "runtime_seconds": 3.9783756732940674,
+      "score_rows": 70947,
+      "score_sessions": 22,
+      "strictly_prior_training": true,
+      "train_end": "2024-06-28",
+      "train_start": "2024-04-03",
+      "training_rows": 201708,
+      "training_sessions": 60
+    },
+    {
+      "fold_number": 2,
+      "model_details": {
+        "D01_CODE_EB_RESIDUAL": {
+          "codes_with_posterior_effect": 3729,
+          "prior_strength": 20.0
+        },
+        "D02_SURVIVAL_INTEGRAL": {
+          "downside_multiplier": 1.25,
+          "negative_thresholds_pct": [
+            -0.4,
+            -1.5
+          ],
+          "positive_thresholds_pct": [
+            0.4,
+            1.5
+          ]
+        },
+        "D03_DOWNSIDE_FEASIBLE_MEAN": {
+          "severe_loss_threshold_pct": -1.0,
+          "training_base_rate": 0.22490418295637296
+        },
+        "D04_NORMALISED_CONFORMAL_LCB": {
+          "calibration_rows": 70788,
+          "fit_rows": 205069,
+          "normalised_error_q80": 1.5864040978100875
+        },
+        "D05_FOREST_TREE_LCB": {
+          "bootstrap_row_fraction": 0.15,
+          "bootstrap_rows": 41379,
+          "tree_prediction_quantile": 0.2,
+          "trees": 24
+        },
+        "D06_EVT_RESIDUAL_ES": {
+          "calibration_rows": 84262,
+          "exceedances": 8427,
+          "fit_rows": 191595,
+          "gpd_mean_excess": 1.0286057938760957,
+          "gpd_scale": 1.1570509572006094,
+          "gpd_shape": -0.12487307002276726,
+          "threshold_pct": 1.8271261574101363
+        },
+        "D07_REGIME_ABSTAIN": {
+          "calibration_days": 21,
+          "dispersion_cut": 1.1625202894210815,
+          "regime_posterior": {
+            "0": {
+              "calibration_days": 4,
+              "posterior_probability": 0.5,
+              "profitable_days": 2,
+              "trade": false
+            },
+            "1": {
+              "calibration_days": 8,
+              "posterior_probability": 0.5625,
+              "profitable_days": 5,
+              "trade": false
+            },
+            "2": {
+              "calibration_days": 5,
+              "posterior_probability": 0.38461538461538464,
+              "profitable_days": 1,
+              "trade": false
+            },
+            "3": {
+              "calibration_days": 4,
+              "posterior_probability": 0.4166666666666667,
+              "profitable_days": 1,
+              "trade": false
+            }
+          }
+        },
+        "D08_SLOTWISE_CASH_STOP": {
+          "calibration_slot_rows": 42,
+          "meta_coefficients": [
+            0.000309268676294501,
+            0.5775630797848853,
+            -1.0393507742439165
+          ],
+          "meta_intercept": 0.6150616695981507
+        }
+      },
+      "month": "2024-08",
+      "runtime_seconds": 4.944516897201538,
+      "score_rows": 45999,
+      "score_sessions": 21,
+      "strictly_prior_training": true,
+      "train_end": "2024-07-31",
+      "train_start": "2024-04-03",
+      "training_rows": 275857,
+      "training_sessions": 82
+    },
+    {
+      "fold_number": 3,
+      "model_details": {
+        "D01_CODE_EB_RESIDUAL": {
+          "codes_with_posterior_effect": 3745,
+          "prior_strength": 20.0
+        },
+        "D02_SURVIVAL_INTEGRAL": {
+          "downside_multiplier": 1.25,
+          "negative_thresholds_pct": [
+            -0.4,
+            -1.5
+          ],
+          "positive_thresholds_pct": [
+            0.4,
+            1.5
+          ]
+        },
+        "D03_DOWNSIDE_FEASIBLE_MEAN": {
+          "severe_loss_threshold_pct": -1.0,
+          "training_base_rate": 0.23356600488754095
+        },
+        "D04_NORMALISED_CONFORMAL_LCB": {
+          "calibration_rows": 89481,
+          "fit_rows": 259021,
+          "normalised_error_q80": 2.1343386564946862
+        },
+        "D05_FOREST_TREE_LCB": {
+          "bootstrap_row_fraction": 0.15,
+          "bootstrap_rows": 52276,
+          "tree_prediction_quantile": 0.2,
+          "trees": 24
+        },
+        "D06_EVT_RESIDUAL_ES": {
+          "calibration_rows": 106344,
+          "exceedances": 10635,
+          "fit_rows": 242158,
+          "gpd_mean_excess": 1.4961528708442846,
+          "gpd_scale": 1.8701910885553557,
+          "gpd_shape": -0.25,
+          "threshold_pct": 2.597989378804723
+        },
+        "D07_REGIME_ABSTAIN": {
+          "calibration_days": 26,
+          "dispersion_cut": 1.1406300067901611,
+          "regime_posterior": {
+            "0": {
+              "calibration_days": 1,
+              "posterior_probability": 0.4444444444444444,
+              "profitable_days": 0,
+              "trade": false
+            },
+            "1": {
+              "calibration_days": 4,
+              "posterior_probability": 0.5833333333333334,
+              "profitable_days": 3,
+              "trade": false
+            },
+            "2": {
+              "calibration_days": 6,
+              "posterior_probability": 0.5,
+              "profitable_days": 3,
+              "trade": false
+            },
+            "3": {
+              "calibration_days": 15,
+              "posterior_probability": 0.5217391304347826,
+              "profitable_days": 8,
+              "trade": false
+            }
+          }
+        },
+        "D08_SLOTWISE_CASH_STOP": {
+          "calibration_slot_rows": 52,
+          "meta_coefficients": [
+            4.7293066769638466e-05,
+            0.6259159514937263,
+            -0.17664715563052402
+          ],
+          "meta_intercept": 0.5692365962253714
+        }
+      },
+      "month": "2024-09",
+      "runtime_seconds": 6.498440742492676,
+      "score_rows": 59553,
+      "score_sessions": 19,
+      "strictly_prior_training": true,
+      "train_end": "2024-08-30",
+      "train_start": "2024-04-03",
+      "training_rows": 348502,
+      "training_sessions": 103
+    },
+    {
+      "fold_number": 4,
+      "model_details": {
+        "D01_CODE_EB_RESIDUAL": {
+          "codes_with_posterior_effect": 3760,
+          "prior_strength": 20.0
+        },
+        "D02_SURVIVAL_INTEGRAL": {
+          "downside_multiplier": 1.25,
+          "negative_thresholds_pct": [
+            -0.4,
+            -1.5
+          ],
+          "positive_thresholds_pct": [
+            0.4,
+            1.5
+          ]
+        },
+        "D03_DOWNSIDE_FEASIBLE_MEAN": {
+          "severe_loss_threshold_pct": -1.0,
+          "training_base_rate": 0.23660875584240018
+        },
+        "D04_NORMALISED_CONFORMAL_LCB": {
+          "calibration_rows": 106445,
+          "fit_rows": 306611,
+          "normalised_error_q80": 1.398236422962665
+        },
+        "D05_FOREST_TREE_LCB": {
+          "bootstrap_row_fraction": 0.15,
+          "bootstrap_rows": 61959,
+          "tree_prediction_quantile": 0.2,
+          "trees": 24
+        },
+        "D06_EVT_RESIDUAL_ES": {
+          "calibration_rows": 127040,
+          "exceedances": 12704,
+          "fit_rows": 286016,
+          "gpd_mean_excess": 1.1195230173737067,
+          "gpd_scale": 1.3116966536326442,
+          "gpd_shape": -0.17165670850587622,
+          "threshold_pct": 1.6875511474604417
+        },
+        "D07_REGIME_ABSTAIN": {
+          "calibration_days": 31,
+          "dispersion_cut": 1.1763921976089478,
+          "regime_posterior": {
+            "0": {
+              "calibration_days": 2,
+              "posterior_probability": 0.4,
+              "profitable_days": 0,
+              "trade": false
+            },
+            "1": {
+              "calibration_days": 9,
+              "posterior_probability": 0.5294117647058824,
+              "profitable_days": 5,
+              "trade": false
+            },
+            "2": {
+              "calibration_days": 5,
+              "posterior_probability": 0.46153846153846156,
+              "profitable_days": 2,
+              "trade": false
+            },
+            "3": {
+              "calibration_days": 15,
+              "posterior_probability": 0.43478260869565216,
+              "profitable_days": 6,
+              "trade": false
+            }
+          }
+        },
+        "D08_SLOTWISE_CASH_STOP": {
+          "calibration_slot_rows": 62,
+          "meta_coefficients": [
+            -3.203688848937932e-06,
+            -0.7980040472760384,
+            -0.08946612636116086
+          ],
+          "meta_intercept": 0.4203908927575996
+        }
+      },
+      "month": "2024-10",
+      "runtime_seconds": 8.076799869537354,
+      "score_rows": 68772,
+      "score_sessions": 22,
+      "strictly_prior_training": true,
+      "train_end": "2024-09-30",
+      "train_start": "2024-04-03",
+      "training_rows": 413056,
+      "training_sessions": 122
+    },
+    {
+      "fold_number": 5,
+      "model_details": {
+        "D01_CODE_EB_RESIDUAL": {
+          "codes_with_posterior_effect": 3768,
+          "prior_strength": 20.0
+        },
+        "D02_SURVIVAL_INTEGRAL": {
+          "downside_multiplier": 1.25,
+          "negative_thresholds_pct": [
+            -0.4,
+            -1.5
+          ],
+          "positive_thresholds_pct": [
+            0.4,
+            1.5
+          ]
+        },
+        "D03_DOWNSIDE_FEASIBLE_MEAN": {
+          "severe_loss_threshold_pct": -1.0,
+          "training_base_rate": 0.23666242579672866
+        },
+        "D04_NORMALISED_CONFORMAL_LCB": {
+          "calibration_rows": 119771,
+          "fit_rows": 365726,
+          "normalised_error_q80": 1.4711210909929007
+        },
+        "D05_FOREST_TREE_LCB": {
+          "bootstrap_row_fraction": 0.15,
+          "bootstrap_rows": 72825,
+          "tree_prediction_quantile": 0.2,
+          "trees": 24
+        },
+        "D06_EVT_RESIDUAL_ES": {
+          "calibration_rows": 147496,
+          "exceedances": 14750,
+          "fit_rows": 338001,
+          "gpd_mean_excess": 1.0489274916314997,
+          "gpd_scale": 1.1912592814225995,
+          "gpd_shape": -0.13569268698422332,
+          "threshold_pct": 1.9275258810404208
+        },
+        "D07_REGIME_ABSTAIN": {
+          "calibration_days": 36,
+          "dispersion_cut": 1.1815662384033203,
+          "regime_posterior": {
+            "0": {
+              "calibration_days": 8,
+              "posterior_probability": 0.5,
+              "profitable_days": 4,
+              "trade": false
+            },
+            "1": {
+              "calibration_days": 11,
+              "posterior_probability": 0.5789473684210527,
+              "profitable_days": 7,
+              "trade": false
+            },
+            "2": {
+              "calibration_days": 9,
+              "posterior_probability": 0.5882352941176471,
+              "profitable_days": 6,
+              "trade": false
+            },
+            "3": {
+              "calibration_days": 8,
+              "posterior_probability": 0.5,
+              "profitable_days": 4,
+              "trade": false
+            }
+          }
+        },
+        "D08_SLOTWISE_CASH_STOP": {
+          "calibration_slot_rows": 72,
+          "meta_coefficients": [
+            -0.00014149781794681627,
+            -0.7137037161683711,
+            0.3347464114240448
+          ],
+          "meta_intercept": 0.4478259741742437
+        }
+      },
+      "month": "2024-11",
+      "runtime_seconds": 11.95962929725647,
+      "score_rows": 61847,
+      "score_sessions": 20,
+      "strictly_prior_training": true,
+      "train_end": "2024-10-31",
+      "train_start": "2024-04-03",
+      "training_rows": 485497,
+      "training_sessions": 144
+    },
+    {
+      "fold_number": 6,
+      "model_details": {
+        "D01_CODE_EB_RESIDUAL": {
+          "codes_with_posterior_effect": 3769,
+          "prior_strength": 20.0
+        },
+        "D02_SURVIVAL_INTEGRAL": {
+          "downside_multiplier": 1.25,
+          "negative_thresholds_pct": [
+            -0.4,
+            -1.5
+          ],
+          "positive_thresholds_pct": [
+            0.4,
+            1.5
+          ]
+        },
+        "D03_DOWNSIDE_FEASIBLE_MEAN": {
+          "severe_loss_threshold_pct": -1.0,
+          "training_base_rate": 0.23590165847952674
+        },
+        "D04_NORMALISED_CONFORMAL_LCB": {
+          "calibration_rows": 134293,
+          "fit_rows": 416404,
+          "normalised_error_q80": 1.4153244496039594
+        },
+        "D05_FOREST_TREE_LCB": {
+          "bootstrap_row_fraction": 0.15,
+          "bootstrap_rows": 82605,
+          "tree_prediction_quantile": 0.2,
+          "trees": 24
+        },
+        "D06_EVT_RESIDUAL_ES": {
+          "calibration_rows": 164614,
+          "exceedances": 16462,
+          "fit_rows": 386083,
+          "gpd_mean_excess": 1.0474394853298898,
+          "gpd_scale": 1.1669456481702885,
+          "gpd_shape": -0.11409362021784042,
+          "threshold_pct": 1.7758259678904773
+        },
+        "D07_REGIME_ABSTAIN": {
+          "calibration_days": 41,
+          "dispersion_cut": 1.1851228475570679,
+          "regime_posterior": {
+            "0": {
+              "calibration_days": 9,
+              "posterior_probability": 0.5294117647058824,
+              "profitable_days": 5,
+              "trade": false
+            },
+            "1": {
+              "calibration_days": 16,
+              "posterior_probability": 0.5416666666666666,
+              "profitable_days": 9,
+              "trade": false
+            },
+            "2": {
+              "calibration_days": 10,
+              "posterior_probability": 0.3888888888888889,
+              "profitable_days": 3,
+              "trade": false
+            },
+            "3": {
+              "calibration_days": 6,
+              "posterior_probability": 0.42857142857142855,
+              "profitable_days": 2,
+              "trade": false
+            }
+          }
+        },
+        "D08_SLOTWISE_CASH_STOP": {
+          "calibration_slot_rows": 82,
+          "meta_coefficients": [
+            8.293384739268888e-05,
+            0.19689581341976395,
+            -0.214472628854065
+          ],
+          "meta_intercept": 0.3242271958835672
+        }
+      },
+      "month": "2024-12",
+      "runtime_seconds": 12.84202265739441,
+      "score_rows": 65084,
+      "score_sessions": 21,
+      "strictly_prior_training": true,
+      "train_end": "2024-11-29",
+      "train_start": "2024-04-03",
+      "training_rows": 550697,
+      "training_sessions": 164
+    },
+    {
+      "fold_number": 7,
+      "model_details": {
+        "D01_CODE_EB_RESIDUAL": {
+          "codes_with_posterior_effect": 3784,
+          "prior_strength": 20.0
+        },
+        "D02_SURVIVAL_INTEGRAL": {
+          "downside_multiplier": 1.25,
+          "negative_thresholds_pct": [
+            -0.4,
+            -1.5
+          ],
+          "positive_thresholds_pct": [
+            0.4,
+            1.5
+          ]
+        },
+        "D03_DOWNSIDE_FEASIBLE_MEAN": {
+          "severe_loss_threshold_pct": -1.0,
+          "training_base_rate": 0.2320974149199471
+        },
+        "D04_NORMALISED_CONFORMAL_LCB": {
+          "calibration_rows": 153298,
+          "fit_rows": 465909,
+          "normalised_error_q80": 1.4699039761484651
+        },
+        "D05_FOREST_TREE_LCB": {
+          "bootstrap_row_fraction": 0.15,
+          "bootstrap_rows": 92882,
+          "tree_prediction_quantile": 0.2,
+          "trees": 24
+        },
+        "D06_EVT_RESIDUAL_ES": {
+          "calibration_rows": 182817,
+          "exceedances": 18282,
+          "fit_rows": 436390,
+          "gpd_mean_excess": 1.0512430707224678,
+          "gpd_scale": 1.166870454290924,
+          "gpd_shape": -0.10999110176202265,
+          "threshold_pct": 1.7085109054680028
+        },
+        "D07_REGIME_ABSTAIN": {
+          "calibration_days": 47,
+          "dispersion_cut": 1.1815662384033203,
+          "regime_posterior": {
+            "0": {
+              "calibration_days": 13,
+              "posterior_probability": 0.47619047619047616,
+              "profitable_days": 6,
+              "trade": false
+            },
+            "1": {
+              "calibration_days": 21,
+              "posterior_probability": 0.4827586206896552,
+              "profitable_days": 10,
+              "trade": false
+            },
+            "2": {
+              "calibration_days": 7,
+              "posterior_probability": 0.5333333333333333,
+              "profitable_days": 4,
+              "trade": false
+            },
+            "3": {
+              "calibration_days": 6,
+              "posterior_probability": 0.35714285714285715,
+              "profitable_days": 1,
+              "trade": false
+            }
+          }
+        },
+        "D08_SLOTWISE_CASH_STOP": {
+          "calibration_slot_rows": 94,
+          "meta_coefficients": [
+            5.508285929342376e-05,
+            0.3774940491812926,
+            -0.17664207439932939
+          ],
+          "meta_intercept": 0.23994060939095463
+        }
+      },
+      "month": "2025-01",
+      "runtime_seconds": 14.01071548461914,
+      "score_rows": 60809,
+      "score_sessions": 19,
+      "strictly_prior_training": true,
+      "train_end": "2024-12-30",
+      "train_start": "2024-04-03",
+      "training_rows": 619207,
+      "training_sessions": 185
+    },
+    {
+      "fold_number": 8,
+      "model_details": {
+        "D01_CODE_EB_RESIDUAL": {
+          "codes_with_posterior_effect": 3795,
+          "prior_strength": 20.0
+        },
+        "D02_SURVIVAL_INTEGRAL": {
+          "downside_multiplier": 1.25,
+          "negative_thresholds_pct": [
+            -0.4,
+            -1.5
+          ],
+          "positive_thresholds_pct": [
+            0.4,
+            1.5
+          ]
+        },
+        "D03_DOWNSIDE_FEASIBLE_MEAN": {
+          "severe_loss_threshold_pct": -1.0,
+          "training_base_rate": 0.2318529898109303
+        },
+        "D04_NORMALISED_CONFORMAL_LCB": {
+          "calibration_rows": 168585,
+          "fit_rows": 514802,
+          "normalised_error_q80": 1.4257528361912835
+        },
+        "D05_FOREST_TREE_LCB": {
+          "bootstrap_row_fraction": 0.15,
+          "bootstrap_rows": 102509,
+          "tree_prediction_quantile": 0.2,
+          "trees": 24
+        },
+        "D06_EVT_RESIDUAL_ES": {
+          "calibration_rows": 204422,
+          "exceedances": 20443,
+          "fit_rows": 478965,
+          "gpd_mean_excess": 1.0746747821414364,
+          "gpd_scale": 1.202606048542614,
+          "gpd_shape": -0.11904184272962748,
+          "threshold_pct": 1.6890079997901892
+        },
+        "D07_REGIME_ABSTAIN": {
+          "calibration_days": 51,
+          "dispersion_cut": 1.1838018894195557,
+          "regime_posterior": {
+            "0": {
+              "calibration_days": 15,
+              "posterior_probability": 0.5217391304347826,
+              "profitable_days": 8,
+              "trade": false
+            },
+            "1": {
+              "calibration_days": 30,
+              "posterior_probability": 0.5263157894736842,
+              "profitable_days": 16,
+              "trade": false
+            },
+            "2": {
+              "calibration_days": 5,
+              "posterior_probability": 0.46153846153846156,
+              "profitable_days": 2,
+              "trade": false
+            },
+            "3": {
+              "calibration_days": 1,
+              "posterior_probability": 0.4444444444444444,
+              "profitable_days": 0,
+              "trade": false
+            }
+          }
+        },
+        "D08_SLOTWISE_CASH_STOP": {
+          "calibration_slot_rows": 102,
+          "meta_coefficients": [
+            -8.404315137295533e-05,
+            0.4141226866946862,
+            0.3513312948920693
+          ],
+          "meta_intercept": 0.07376648574336497
+        }
+      },
+      "month": "2025-02",
+      "runtime_seconds": 17.355299472808838,
+      "score_rows": 56971,
+      "score_sessions": 18,
+      "strictly_prior_training": true,
+      "train_end": "2025-01-31",
+      "train_start": "2024-04-03",
+      "training_rows": 683387,
+      "training_sessions": 204
+    },
+    {
+      "fold_number": 9,
+      "model_details": {
+        "D01_CODE_EB_RESIDUAL": {
+          "codes_with_posterior_effect": 3800,
+          "prior_strength": 20.0
+        },
+        "D02_SURVIVAL_INTEGRAL": {
+          "downside_multiplier": 1.25,
+          "negative_thresholds_pct": [
+            -0.4,
+            -1.5
+          ],
+          "positive_thresholds_pct": [
+            0.4,
+            1.5
+          ]
+        },
+        "D03_DOWNSIDE_FEASIBLE_MEAN": {
+          "severe_loss_threshold_pct": -1.0,
+          "training_base_rate": 0.23227193202292046
+        },
+        "D04_NORMALISED_CONFORMAL_LCB": {
+          "calibration_rows": 186382,
+          "fit_rows": 557160,
+          "normalised_error_q80": 1.4884621365955137
+        },
+        "D05_FOREST_TREE_LCB": {
+          "bootstrap_row_fraction": 0.15,
+          "bootstrap_rows": 111532,
+          "tree_prediction_quantile": 0.2,
+          "trees": 24
+        },
+        "D06_EVT_RESIDUAL_ES": {
+          "calibration_rows": 222184,
+          "exceedances": 22219,
+          "fit_rows": 521358,
+          "gpd_mean_excess": 1.058758050945178,
+          "gpd_scale": 1.18713681147762,
+          "gpd_shape": -0.12125410561727035,
+          "threshold_pct": 1.6898337063032436
+        },
+        "D07_REGIME_ABSTAIN": {
+          "calibration_days": 56,
+          "dispersion_cut": 1.1761531829833984,
+          "regime_posterior": {
+            "0": {
+              "calibration_days": 16,
+              "posterior_probability": 0.375,
+              "profitable_days": 5,
+              "trade": false
+            },
+            "1": {
+              "calibration_days": 27,
+              "posterior_probability": 0.5142857142857142,
+              "profitable_days": 14,
+              "trade": false
+            },
+            "2": {
+              "calibration_days": 7,
+              "posterior_probability": 0.4666666666666667,
+              "profitable_days": 3,
+              "trade": false
+            },
+            "3": {
+              "calibration_days": 6,
+              "posterior_probability": 0.42857142857142855,
+              "profitable_days": 2,
+              "trade": false
+            }
+          }
+        },
+        "D08_SLOTWISE_CASH_STOP": {
+          "calibration_slot_rows": 112,
+          "meta_coefficients": [
+            -2.159261239641506e-05,
+            0.8470678372290896,
+            0.0833984102289323
+          ],
+          "meta_intercept": -0.0671663327563059
+        }
+      },
+      "month": "2025-03",
+      "runtime_seconds": 17.938918828964233,
+      "score_rows": 63000,
+      "score_sessions": 20,
+      "strictly_prior_training": true,
+      "train_end": "2025-02-28",
+      "train_start": "2024-04-03",
+      "training_rows": 743542,
+      "training_sessions": 222
+    },
+    {
+      "fold_number": 10,
+      "model_details": {
+        "D01_CODE_EB_RESIDUAL": {
+          "codes_with_posterior_effect": 3815,
+          "prior_strength": 20.0
+        },
+        "D02_SURVIVAL_INTEGRAL": {
+          "downside_multiplier": 1.25,
+          "negative_thresholds_pct": [
+            -0.4,
+            -1.5
+          ],
+          "positive_thresholds_pct": [
+            0.4,
+            1.5
+          ]
+        },
+        "D03_DOWNSIDE_FEASIBLE_MEAN": {
+          "severe_loss_threshold_pct": -1.0,
+          "training_base_rate": 0.2279797337192392
+        },
+        "D04_NORMALISED_CONFORMAL_LCB": {
+          "calibration_rows": 204667,
+          "fit_rows": 605767,
+          "normalised_error_q80": 1.514715368384378
+        },
+        "D05_FOREST_TREE_LCB": {
+          "bootstrap_row_fraction": 0.15,
+          "bootstrap_rows": 121566,
+          "tree_prediction_quantile": 0.2,
+          "trees": 24
+        },
+        "D06_EVT_RESIDUAL_ES": {
+          "calibration_rows": 243587,
+          "exceedances": 24359,
+          "fit_rows": 566847,
+          "gpd_mean_excess": 1.0594415154881112,
+          "gpd_scale": 1.1809959644948176,
+          "gpd_shape": -0.11473445889148803,
+          "threshold_pct": 1.6368122548439357
+        },
+        "D07_REGIME_ABSTAIN": {
+          "calibration_days": 61,
+          "dispersion_cut": 1.1532518863677979,
+          "regime_posterior": {
+            "0": {
+              "calibration_days": 10,
+              "posterior_probability": 0.4444444444444444,
+              "profitable_days": 4,
+              "trade": false
+            },
+            "1": {
+              "calibration_days": 32,
+              "posterior_probability": 0.55,
+              "profitable_days": 18,
+              "trade": false
+            },
+            "2": {
+              "calibration_days": 10,
+              "posterior_probability": 0.4444444444444444,
+              "profitable_days": 4,
+              "trade": false
+            },
+            "3": {
+              "calibration_days": 9,
+              "posterior_probability": 0.47058823529411764,
+              "profitable_days": 4,
+              "trade": false
+            }
+          }
+        },
+        "D08_SLOTWISE_CASH_STOP": {
+          "calibration_slot_rows": 122,
+          "meta_coefficients": [
+            -3.497268042247944e-05,
+            -0.14927875803562013,
+            0.10589971423162685
+          ],
+          "meta_intercept": 0.20795192669854573
+        }
+      },
+      "month": "2025-04",
+      "runtime_seconds": 20.258363008499146,
+      "score_rows": 52287,
+      "score_sessions": 21,
+      "strictly_prior_training": true,
+      "train_end": "2025-03-31",
+      "train_start": "2024-04-03",
+      "training_rows": 810434,
+      "training_sessions": 242
+    },
+    {
+      "fold_number": 11,
+      "model_details": {
+        "D01_CODE_EB_RESIDUAL": {
+          "codes_with_posterior_effect": 3825,
+          "prior_strength": 20.0
+        },
+        "D02_SURVIVAL_INTEGRAL": {
+          "downside_multiplier": 1.25,
+          "negative_thresholds_pct": [
+            -0.4,
+            -1.5
+          ],
+          "positive_thresholds_pct": [
+            0.4,
+            1.5
+          ]
+        },
+        "D03_DOWNSIDE_FEASIBLE_MEAN": {
+          "severe_loss_threshold_pct": -1.0,
+          "training_base_rate": 0.2315844864150416
+        },
+        "D04_NORMALISED_CONFORMAL_LCB": {
+          "calibration_rows": 222243,
+          "fit_rows": 659802,
+          "normalised_error_q80": 1.6527844380662495
+        },
+        "D05_FOREST_TREE_LCB": {
+          "bootstrap_row_fraction": 0.15,
+          "bootstrap_rows": 132307,
+          "tree_prediction_quantile": 0.2,
+          "trees": 24
+        },
+        "D06_EVT_RESIDUAL_ES": {
+          "calibration_rows": 266203,
+          "exceedances": 26621,
+          "fit_rows": 615842,
+          "gpd_mean_excess": 1.1480832405853763,
+          "gpd_scale": 1.3768868822343676,
+          "gpd_shape": -0.199291857559327,
+          "threshold_pct": 1.8748066913940322
+        },
+        "D07_REGIME_ABSTAIN": {
+          "calibration_days": 66,
+          "dispersion_cut": 1.1493080854415894,
+          "regime_posterior": {
+            "0": {
+              "calibration_days": 8,
+              "posterior_probability": 0.5,
+              "profitable_days": 4,
+              "trade": false
+            },
+            "1": {
+              "calibration_days": 25,
+              "posterior_probability": 0.5151515151515151,
+              "profitable_days": 13,
+              "trade": false
+            },
+            "2": {
+              "calibration_days": 13,
+              "posterior_probability": 0.42857142857142855,
+              "profitable_days": 5,
+              "trade": false
+            },
+            "3": {
+              "calibration_days": 20,
+              "posterior_probability": 0.4642857142857143,
+              "profitable_days": 9,
+              "trade": false
+            }
+          }
+        },
+        "D08_SLOTWISE_CASH_STOP": {
+          "calibration_slot_rows": 132,
+          "meta_coefficients": [
+            2.7663946112699377e-05,
+            -0.6181303590625342,
+            -0.04023299170453911
+          ],
+          "meta_intercept": 0.4730958288456929
+        }
+      },
+      "month": "2025-05",
+      "runtime_seconds": 21.61873769760132,
+      "score_rows": 63126,
+      "score_sessions": 20,
+      "strictly_prior_training": true,
+      "train_end": "2025-04-30",
+      "train_start": "2024-04-03",
+      "training_rows": 882045,
+      "training_sessions": 263
+    },
+    {
+      "fold_number": 12,
+      "model_details": {
+        "D01_CODE_EB_RESIDUAL": {
+          "codes_with_posterior_effect": 3834,
+          "prior_strength": 20.0
+        },
+        "D02_SURVIVAL_INTEGRAL": {
+          "downside_multiplier": 1.25,
+          "negative_thresholds_pct": [
+            -0.4,
+            -1.5
+          ],
+          "positive_thresholds_pct": [
+            0.4,
+            1.5
+          ]
+        },
+        "D03_DOWNSIDE_FEASIBLE_MEAN": {
+          "severe_loss_threshold_pct": -1.0,
+          "training_base_rate": 0.22932500530800484
+        },
+        "D04_NORMALISED_CONFORMAL_LCB": {
+          "calibration_rows": 239613,
+          "fit_rows": 710074,
+          "normalised_error_q80": 1.6519049454184238
+        },
+        "D05_FOREST_TREE_LCB": {
+          "bootstrap_row_fraction": 0.15,
+          "bootstrap_rows": 142454,
+          "tree_prediction_quantile": 0.2,
+          "trees": 24
+        },
+        "D06_EVT_RESIDUAL_ES": {
+          "calibration_rows": 286505,
+          "exceedances": 28651,
+          "fit_rows": 663182,
+          "gpd_mean_excess": 1.1570135014716416,
+          "gpd_scale": 1.3812645547318925,
+          "gpd_shape": -0.19381887331048342,
+          "threshold_pct": 1.7994690425645603
+        },
+        "D07_REGIME_ABSTAIN": {
+          "calibration_days": 71,
+          "dispersion_cut": 1.144378423690796,
+          "regime_posterior": {
+            "0": {
+              "calibration_days": 8,
+              "posterior_probability": 0.5,
+              "profitable_days": 4,
+              "trade": false
+            },
+            "1": {
+              "calibration_days": 23,
+              "posterior_probability": 0.4838709677419355,
+              "profitable_days": 11,
+              "trade": false
+            },
+            "2": {
+              "calibration_days": 16,
+              "posterior_probability": 0.4583333333333333,
+              "profitable_days": 7,
+              "trade": false
+            },
+            "3": {
+              "calibration_days": 24,
+              "posterior_probability": 0.46875,
+              "profitable_days": 11,
+              "trade": false
+            }
+          }
+        },
+        "D08_SLOTWISE_CASH_STOP": {
+          "calibration_slot_rows": 142,
+          "meta_coefficients": [
+            0.0001214679654668969,
+            -0.3393947722691822,
+            -0.3126435908548499
+          ],
+          "meta_intercept": 0.543553022090725
+        }
+      },
+      "month": "2025-06",
+      "runtime_seconds": 24.247244596481323,
+      "score_rows": 66152,
+      "score_sessions": 21,
+      "strictly_prior_training": true,
+      "train_end": "2025-05-30",
+      "train_start": "2024-04-03",
+      "training_rows": 949687,
+      "training_sessions": 283
+    },
+    {
+      "fold_number": 13,
+      "model_details": {
+        "D01_CODE_EB_RESIDUAL": {
+          "codes_with_posterior_effect": 3848,
+          "prior_strength": 20.0
+        },
+        "D02_SURVIVAL_INTEGRAL": {
+          "downside_multiplier": 1.25,
+          "negative_thresholds_pct": [
+            -0.4,
+            -1.5
+          ],
+          "positive_thresholds_pct": [
+            0.4,
+            1.5
+          ]
+        },
+        "D03_DOWNSIDE_FEASIBLE_MEAN": {
+          "severe_loss_threshold_pct": -1.0,
+          "training_base_rate": 0.22693886282190512
+        },
+        "D04_NORMALISED_CONFORMAL_LCB": {
+          "calibration_rows": 255845,
+          "fit_rows": 763723,
+          "normalised_error_q80": 1.6133746964135753
+        },
+        "D05_FOREST_TREE_LCB": {
+          "bootstrap_row_fraction": 0.15,
+          "bootstrap_rows": 152936,
+          "tree_prediction_quantile": 0.2,
+          "trees": 24
+        },
+        "D06_EVT_RESIDUAL_ES": {
+          "calibration_rows": 309494,
+          "exceedances": 30950,
+          "fit_rows": 710074,
+          "gpd_mean_excess": 1.157146562914421,
+          "gpd_scale": 1.3769343134744654,
+          "gpd_shape": -0.18993942306364453,
+          "threshold_pct": 1.780332127288034
+        },
+        "D07_REGIME_ABSTAIN": {
+          "calibration_days": 76,
+          "dispersion_cut": 1.148026943206787,
+          "regime_posterior": {
+            "0": {
+              "calibration_days": 7,
+              "posterior_probability": 0.6,
+              "profitable_days": 5,
+              "trade": false
+            },
+            "1": {
+              "calibration_days": 36,
+              "posterior_probability": 0.5,
+              "profitable_days": 18,
+              "trade": false
+            },
+            "2": {
+              "calibration_days": 13,
+              "posterior_probability": 0.3333333333333333,
+              "profitable_days": 3,
+              "trade": false
+            },
+            "3": {
+              "calibration_days": 20,
+              "posterior_probability": 0.5357142857142857,
+              "profitable_days": 11,
+              "trade": false
+            }
+          }
+        },
+        "D08_SLOTWISE_CASH_STOP": {
+          "calibration_slot_rows": 152,
+          "meta_coefficients": [
+            1.074863018678124e-05,
+            0.4699087656678656,
+            0.09470318045481743
+          ],
+          "meta_intercept": 0.3123511186039058
+        }
+      },
+      "month": "2025-07",
+      "runtime_seconds": 26.922062158584595,
+      "score_rows": 69764,
+      "score_sessions": 22,
+      "strictly_prior_training": true,
+      "train_end": "2025-06-30",
+      "train_start": "2024-04-03",
+      "training_rows": 1019568,
+      "training_sessions": 304
+    }
+  ],
+  "independent_audit": {
+    "audit_path": "/workspace/scratch/8678b1d14f37/research/model_v11_distributional_audit.json",
+    "audit_script_sha256": "93ceb58cbc1b575cd2fb5a46138247c16416f63013ec8e7e7fe934d87a6e8b00",
+    "audit_sha256": "984ddcb65a39a4189d675060fb74e297b086689f0e4f531d2f7a1355ef6c8086",
+    "embedded_outcomes_exact": true,
+    "exact": true,
+    "metric_difference_count": 0
+  },
+  "input": {
+    "codes": 4124,
+    "manifest_sha256": "25e08c564ef6400b7a29168db9fd7e8220bd0e2386c7a3c7e71b05c2ff950b02",
+    "panel_path": "/tmp/model_v07_corrected_panel.pkl",
+    "panel_sha256": "6b86f994a1d15d1da8ed40469d44fc409adadc6cd5b3df3c08aef6717bcdf0eb",
+    "protocol_path": "/workspace/scratch/8678b1d14f37/research/model_v11_distributional_protocol.json",
+    "protocol_sha256": "9e7b98550f3066ee6b6eb8ec0ebdaf8120d211020b7c24be29618786e124e480",
+    "rows": 1524104,
+    "runner_sha256": "6c3c60788353a071493ce1c940c3ea71d6d069ae941b37bebffc09237421f70e",
+    "score_sessions": 266,
+    "sessions": 386
+  },
+  "integrity": {
+    "all_training_strictly_prior": true,
+    "candidate_feature_source_violations": 0,
+    "candidate_policy_count": 16,
+    "cash_slots_not_renormalised": true,
+    "control_policy_count": 2,
+    "monthly_expanding_folds": 13,
+    "target_day_outcome_mutation": {
+      "C00_DAILY_RANK_RIDGE": {
+        "max_abs_score_difference": 0.0,
+        "native_rank_exact": true,
+        "selected_keys_exact_by_capacity": {
+          "1": true,
+          "2": true
+        },
+        "trade_allowed_exact": true
+      },
+      "D01_CODE_EB_RESIDUAL": {
+        "max_abs_score_difference": 0.0,
+        "native_rank_exact": true,
+        "selected_keys_exact_by_capacity": {
+          "1": true,
+          "2": true
+        },
+        "trade_allowed_exact": true
+      },
+      "D02_SURVIVAL_INTEGRAL": {
+        "max_abs_score_difference": 0.0,
+        "native_rank_exact": true,
+        "selected_keys_exact_by_capacity": {
+          "1": true,
+          "2": true
+        },
+        "trade_allowed_exact": true
+      },
+      "D03_DOWNSIDE_FEASIBLE_MEAN": {
+        "max_abs_score_difference": 0.0,
+        "native_rank_exact": true,
+        "selected_keys_exact_by_capacity": {
+          "1": true,
+          "2": true
+        },
+        "trade_allowed_exact": true
+      },
+      "D04_NORMALISED_CONFORMAL_LCB": {
+        "max_abs_score_difference": 0.0,
+        "native_rank_exact": true,
+        "selected_keys_exact_by_capacity": {
+          "1": true,
+          "2": true
+        },
+        "trade_allowed_exact": true
+      },
+      "D05_FOREST_TREE_LCB": {
+        "max_abs_score_difference": 0.0,
+        "native_rank_exact": true,
+        "selected_keys_exact_by_capacity": {
+          "1": true,
+          "2": true
+        },
+        "trade_allowed_exact": true
+      },
+      "D06_EVT_RESIDUAL_ES": {
+        "max_abs_score_difference": 0.0,
+        "native_rank_exact": true,
+        "selected_keys_exact_by_capacity": {
+          "1": true,
+          "2": true
+        },
+        "trade_allowed_exact": true
+      },
+      "D07_REGIME_ABSTAIN": {
+        "max_abs_score_difference": 0.0,
+        "native_rank_exact": true,
+        "selected_keys_exact_by_capacity": {
+          "1": true,
+          "2": true
+        },
+        "trade_allowed_exact": true
+      },
+      "D08_SLOTWISE_CASH_STOP": {
+        "max_abs_score_difference": 0.0,
+        "native_rank_exact": true,
+        "selected_keys_exact_by_capacity": {
+          "1": true,
+          "2": true
+        },
+        "trade_allowed_exact": true
+      }
+    },
+    "target_day_outcome_mutation_exact": true
+  },
+  "metrics": {
+    "C00_DAILY_RANK_RIDGE_K1": {
+      "capacity": 1,
+      "cash_days": 4,
+      "code_concentration": {
+        "largest_positive_net20_pnl_share": 0.21188865221220154,
+        "largest_weight_share": 0.16793893129770993,
+        "top10_positive_pnl_codes_to_cash_net20_pct": -0.18245690983835164,
+        "top10_weight_share": 0.44656488549618323,
+        "unique_codes": 114
+      },
+      "executed_slot_fraction": 0.9849624060150376,
+      "executed_slots": 262,
+      "expected_shortfall05_net40_pct": -4.020780911199786,
+      "gross_mean_pct": 0.40188686725685446,
+      "hit_rate_executed": 0.5610687022900763,
+      "losing_days_removed_net20_pct": {
+        "10": 0.3830234529645368,
+        "20": 0.49188035909756783,
+        "5": 0.3191545581563176
+      },
+      "monthly_net40_pct": {
+        "2024-07": 0.9206659689561169,
+        "2024-08": 0.1260099025195498,
+        "2024-09": 0.23090338114314185,
+        "2024-10": -0.1137879630705765,
+        "2024-11": -0.12360375409104969,
+        "2024-12": -0.0786607861542701,
+        "2025-01": -0.5210889899949313,
+        "2025-02": 0.17744987925742636,
+        "2025-03": -0.2654617871281858,
+        "2025-04": -1.160652123317386,
+        "2025-05": 0.6766252604324767,
+        "2025-06": 0.20245775494368287,
+        "2025-07": 0.002117055013808983
+      },
+      "months": 13,
+      "net40_profit_factor": 1.0130004248167104,
+      "net_mean_pct": {
+        "20": 0.20489438605384694,
+        "40": 0.007901904850839409,
+        "60": -0.189090576352168
+      },
+      "p05_net40_pct": -2.4988302202261443,
+      "positive_months_net40": 7,
+      "scheduled_days": 266,
+      "scheduled_slots": 266,
+      "temporal_slices_net40_pct": {
+        "confirmation_a": -0.16469163588667754,
+        "confirmation_b": -0.07789287282017196,
+        "discovery": 0.2950558133822872
+      },
+      "traded_days": 262,
+      "winning_days_removed_net20_pct": {
+        "10": -0.00568067234709866,
+        "20": -0.1369823344583257,
+        "5": 0.07738017187983373
+      },
+      "worst_day_net40_pct": -8.515942028985512
+    },
+    "C00_DAILY_RANK_RIDGE_K2": {
+      "capacity": 2,
+      "cash_days": 0,
+      "code_concentration": {
+        "largest_positive_net20_pnl_share": 0.12364865032345967,
+        "largest_weight_share": 0.11281070745697896,
+        "top10_positive_pnl_codes_to_cash_net20_pct": -0.03319948267819026,
+        "top10_weight_share": 0.3365200764818356,
+        "unique_codes": 205
+      },
+      "executed_slot_fraction": 0.9830827067669173,
+      "executed_slots": 523,
+      "expected_shortfall05_net40_pct": -2.620677857225369,
+      "gross_mean_pct": 0.4519377221036978,
+      "hit_rate_executed": 0.5640535372848948,
+      "losing_days_removed_net20_pct": {
+        "10": 0.3701922380029686,
+        "20": 0.450071033646273,
+        "5": 0.32392481407747453
+      },
+      "monthly_net40_pct": {
+        "2024-07": 0.04756914798793615,
+        "2024-08": 0.2529461262578,
+        "2024-09": 0.16151249899785586,
+        "2024-10": 0.04175370443037614,
+        "2024-11": -0.07303894464190072,
+        "2024-12": 0.2966390960785038,
+        "2025-01": -0.19141894604568757,
+        "2025-02": 0.2593627702629655,
+        "2025-03": -0.13960412138355466,
+        "2025-04": -0.4030660722729868,
+        "2025-05": 0.33158543240107097,
+        "2025-06": 0.28285454222289164,
+        "2025-07": -0.08389413227120529
+      },
+      "months": 13,
+      "net40_profit_factor": 1.1335796817130046,
+      "net_mean_pct": {
+        "20": 0.25532118075031435,
+        "40": 0.05870463939693091,
+        "60": -0.1379119019564525
+      },
+      "p05_net40_pct": -1.8009184309813824,
+      "positive_months_net40": 8,
+      "scheduled_days": 266,
+      "scheduled_slots": 532,
+      "temporal_slices_net40_pct": {
+        "confirmation_a": 0.030695199867395825,
+        "confirmation_b": 0.026923757226225014,
+        "discovery": 0.12316320101876108
+      },
+      "traded_days": 266,
+      "winning_days_removed_net20_pct": {
+        "10": 0.07967918757838616,
+        "20": -0.005432501079541643,
+        "5": 0.1420835298246852
+      },
+      "worst_day_net40_pct": -4.831007751937988
+    },
+    "D01_CODE_EB_RESIDUAL_K1": {
+      "capacity": 1,
+      "cash_days": 1,
+      "code_concentration": {
+        "largest_positive_net20_pnl_share": 0.14216999679869968,
+        "largest_weight_share": 0.2830188679245283,
+        "top10_positive_pnl_codes_to_cash_net20_pct": -0.29241017359571525,
+        "top10_weight_share": 0.5433962264150943,
+        "unique_codes": 100
+      },
+      "executed_slot_fraction": 0.9962406015037594,
+      "executed_slots": 265,
+      "expected_shortfall05_net40_pct": -7.1259433166194786,
+      "gross_mean_pct": 0.3392420388124574,
+      "hit_rate_executed": 0.5132075471698113,
+      "losing_days_removed_net20_pct": {
+        "10": 0.4447733353767767,
+        "20": 0.6480050127589232,
+        "5": 0.3096484995299668
+      },
+      "monthly_net40_pct": {
+        "2024-07": 0.6227263499277302,
+        "2024-08": -0.6881785901949018,
+        "2024-09": 0.384653330396855,
+        "2024-10": 0.14877756682264007,
+        "2024-11": -0.3162007596968549,
+        "2024-12": 0.2928868510995813,
+        "2025-01": -0.4130724902591444,
+        "2025-02": -0.25519531129391804,
+        "2025-03": -0.2989324406043766,
+        "2025-04": -0.588122313600958,
+        "2025-05": 0.4610530037381572,
+        "2025-06": -0.4185528352069711,
+        "2025-07": 0.22371292606860257
+      },
+      "months": 13,
+      "net40_profit_factor": 0.9455324580502343,
+      "net_mean_pct": {
+        "20": 0.13999391851170548,
+        "40": -0.05925420178904646,
+        "60": -0.25850232208979834
+      },
+      "p05_net40_pct": -4.854831077149836,
+      "positive_months_net40": 6,
+      "scheduled_days": 266,
+      "scheduled_slots": 266,
+      "temporal_slices_net40_pct": {
+        "confirmation_a": -0.1897340107259969,
+        "confirmation_b": -0.0833027818654062,
+        "discovery": 0.11702082204708875
+      },
+      "traded_days": 265,
+      "winning_days_removed_net20_pct": {
+        "10": -0.27230056130903646,
+        "20": -0.4810484457004988,
+        "5": -0.1463069588509151
+      },
+      "worst_day_net40_pct": -10.049122807017541
+    },
+    "D01_CODE_EB_RESIDUAL_K2": {
+      "capacity": 2,
+      "cash_days": 0,
+      "code_concentration": {
+        "largest_positive_net20_pnl_share": 0.0952207968987711,
+        "largest_weight_share": 0.19507575757575757,
+        "top10_positive_pnl_codes_to_cash_net20_pct": -0.350087853090806,
+        "top10_weight_share": 0.4772727272727273,
+        "unique_codes": 161
+      },
+      "executed_slot_fraction": 0.9924812030075187,
+      "executed_slots": 528,
+      "expected_shortfall05_net40_pct": -5.192357060363947,
+      "gross_mean_pct": 0.07698338004025107,
+      "hit_rate_executed": 0.4678030303030303,
+      "losing_days_removed_net20_pct": {
+        "10": 0.09098671449388215,
+        "20": 0.22776074694263365,
+        "5": 0.0076464466626038965
+      },
+      "monthly_net40_pct": {
+        "2024-07": -0.407758737147504,
+        "2024-08": -0.7443509355257382,
+        "2024-09": -0.4996332196685887,
+        "2024-10": -0.09221770426153056,
+        "2024-11": -0.3972813028267308,
+        "2024-12": 0.1367884210824043,
+        "2025-01": -0.21599293983118706,
+        "2025-02": -0.3036940385497508,
+        "2025-03": -0.20691587469303352,
+        "2025-04": -0.27554392403754197,
+        "2025-05": -0.08750910712060349,
+        "2025-06": -0.6659797148136707,
+        "2025-07": -0.3952097528141071
+      },
+      "months": 13,
+      "net40_profit_factor": 0.653707147188591,
+      "net_mean_pct": {
+        "20": -0.12151286056125268,
+        "40": -0.3200091011627564,
+        "60": -0.5185053417642601
+      },
+      "p05_net40_pct": -3.5530871433092743,
+      "positive_months_net40": 1,
+      "scheduled_days": 266,
+      "scheduled_slots": 532,
+      "temporal_slices_net40_pct": {
+        "confirmation_a": -0.19165046181992718,
+        "confirmation_b": -0.3597237276214035,
+        "discovery": -0.4300462206040767
+      },
+      "traded_days": 266,
+      "winning_days_removed_net20_pct": {
+        "10": -0.3758560361129235,
+        "20": -0.513951390893772,
+        "5": -0.28990191335545656
+      },
+      "worst_day_net40_pct": -10.64919809954078
+    },
+    "D02_SURVIVAL_INTEGRAL_K1": {
+      "capacity": 1,
+      "cash_days": 2,
+      "code_concentration": {
+        "largest_positive_net20_pnl_share": 0.054744272965172286,
+        "largest_weight_share": 0.04924242424242424,
+        "top10_positive_pnl_codes_to_cash_net20_pct": -0.6685451429507232,
+        "top10_weight_share": 0.2196969696969697,
+        "unique_codes": 181
+      },
+      "executed_slot_fraction": 0.9924812030075187,
+      "executed_slots": 264,
+      "expected_shortfall05_net40_pct": -7.723102036186197,
+      "gross_mean_pct": -0.21187142409059934,
+      "hit_rate_executed": 0.4734848484848485,
+      "losing_days_removed_net20_pct": {
+        "10": -0.10565852592382036,
+        "20": 0.09972754597079198,
+        "5": -0.24325606682938863
+      },
+      "monthly_net40_pct": {
+        "2024-07": -0.8242005396950244,
+        "2024-08": -0.8386461977508213,
+        "2024-09": -1.2394396084954598,
+        "2024-10": -0.2573155491612731,
+        "2024-11": -0.4274514628601903,
+        "2024-12": -0.3549020505902356,
+        "2025-01": -0.6398609241351303,
+        "2025-02": -0.44574288948409546,
+        "2025-03": -0.12226759573557429,
+        "2025-04": -1.3781000928539064,
+        "2025-05": 0.023795293935984035,
+        "2025-06": -0.5533921829561115,
+        "2025-07": -0.8313652919180808
+      },
+      "months": 13,
+      "net40_profit_factor": 0.5159350583682216,
+      "net_mean_pct": {
+        "20": -0.41036766469210306,
+        "40": -0.6088639052936069,
+        "60": -0.8073601458951105
+      },
+      "p05_net40_pct": -5.576598593906934,
+      "positive_months_net40": 1,
+      "scheduled_days": 266,
+      "scheduled_slots": 266,
+      "temporal_slices_net40_pct": {
+        "confirmation_a": -0.3941638143223616,
+        "confirmation_b": -0.694946051612958,
+        "discovery": -0.7732651984407086
+      },
+      "traded_days": 264,
+      "winning_days_removed_net20_pct": {
+        "10": -0.6824466497353125,
+        "20": -0.84775889362835,
+        "5": -0.5730296961325254
+      },
+      "worst_day_net40_pct": -11.27719298245614
+    },
+    "D02_SURVIVAL_INTEGRAL_K2": {
+      "capacity": 2,
+      "cash_days": 0,
+      "code_concentration": {
+        "largest_positive_net20_pnl_share": 0.04021104710233214,
+        "largest_weight_share": 0.0625,
+        "top10_positive_pnl_codes_to_cash_net20_pct": -0.5731702895058192,
+        "top10_weight_share": 0.17992424242424243,
+        "unique_codes": 339
+      },
+      "executed_slot_fraction": 0.9924812030075187,
+      "executed_slots": 528,
+      "expected_shortfall05_net40_pct": -5.74425897201362,
+      "gross_mean_pct": -0.21711268703902362,
+      "hit_rate_executed": 0.4621212121212121,
+      "losing_days_removed_net20_pct": {
+        "10": -0.2014596971083929,
+        "20": -0.04389390400647469,
+        "5": -0.3001110970945272
+      },
+      "monthly_net40_pct": {
+        "2024-07": -0.9765673044857963,
+        "2024-08": -0.9745035889424821,
+        "2024-09": -1.2469220560707777,
+        "2024-10": -0.3885539681006875,
+        "2024-11": -0.3207265973739017,
+        "2024-12": -0.00818901045892246,
+        "2025-01": -0.7446807153670079,
+        "2025-02": -0.4767795703944693,
+        "2025-03": -0.31536684496248435,
+        "2025-04": -1.0278575445438984,
+        "2025-05": -0.20488856786584903,
+        "2025-06": -0.7578676543862091,
+        "2025-07": -0.5427458119114923
+      },
+      "months": 13,
+      "net40_profit_factor": 0.4030294374874775,
+      "net_mean_pct": {
+        "20": -0.41560892764052754,
+        "40": -0.6141051682420311,
+        "60": -0.8126014088435349
+      },
+      "p05_net40_pct": -4.538282418225213,
+      "positive_months_net40": 0,
+      "scheduled_days": 266,
+      "scheduled_slots": 532,
+      "temporal_slices_net40_pct": {
+        "confirmation_a": -0.36351840740243563,
+        "confirmation_b": -0.6373620047250246,
+        "discovery": -0.883199552738566
+      },
+      "traded_days": 266,
+      "winning_days_removed_net20_pct": {
+        "10": -0.6126972787961897,
+        "20": -0.7349882673145302,
+        "5": -0.5304987926691562
+      },
+      "worst_day_net40_pct": -7.1121647509578505
+    },
+    "D03_DOWNSIDE_FEASIBLE_MEAN_K1": {
+      "capacity": 1,
+      "cash_days": 1,
+      "code_concentration": {
+        "largest_positive_net20_pnl_share": 0.13069248778564374,
+        "largest_weight_share": 0.04905660377358491,
+        "top10_positive_pnl_codes_to_cash_net20_pct": -0.8042135324024827,
+        "top10_weight_share": 0.15849056603773584,
+        "unique_codes": 219
+      },
+      "executed_slot_fraction": 0.9962406015037594,
+      "executed_slots": 265,
+      "expected_shortfall05_net40_pct": -8.271334483657116,
+      "gross_mean_pct": -0.24979435116397933,
+      "hit_rate_executed": 0.41509433962264153,
+      "losing_days_removed_net20_pct": {
+        "10": -0.11825824002113117,
+        "20": 0.09365507218617367,
+        "5": -0.26051875183175105
+      },
+      "monthly_net40_pct": {
+        "2024-07": -0.8864830497428031,
+        "2024-08": -1.1714290060005195,
+        "2024-09": -1.1188544938634302,
+        "2024-10": -1.4101458238353874,
+        "2024-11": -0.6579063884755939,
+        "2024-12": -0.42998927535423836,
+        "2025-01": -1.5012893072257771,
+        "2025-02": 0.026270815646365513,
+        "2025-03": 0.03915760801539685,
+        "2025-04": -1.246088030026303,
+        "2025-05": 0.3283716425144476,
+        "2025-06": -0.440286943952467,
+        "2025-07": 0.10189074859459463
+      },
+      "months": 13,
+      "net40_profit_factor": 0.5340723754257206,
+      "net_mean_pct": {
+        "20": -0.4490424714647312,
+        "40": -0.6482905917654833,
+        "60": -0.8475387120662351
+      },
+      "p05_net40_pct": -5.655172539180395,
+      "positive_months_net40": 4,
+      "scheduled_days": 266,
+      "scheduled_slots": 266,
+      "temporal_slices_net40_pct": {
+        "confirmation_a": -0.5046568627275319,
+        "confirmation_b": -0.3167243468355253,
+        "discovery": -1.147429520573051
+      },
+      "traded_days": 265,
+      "winning_days_removed_net20_pct": {
+        "10": -0.8101761449719909,
+        "20": -1.0000689764231712,
+        "5": -0.6820489827855203
+      },
+      "worst_day_net40_pct": -14.178705636743215
+    },
+    "D03_DOWNSIDE_FEASIBLE_MEAN_K2": {
+      "capacity": 2,
+      "cash_days": 0,
+      "code_concentration": {
+        "largest_positive_net20_pnl_share": 0.06629879067254907,
+        "largest_weight_share": 0.04158790170132325,
+        "top10_positive_pnl_codes_to_cash_net20_pct": -0.48175729953877483,
+        "top10_weight_share": 0.12287334593572778,
+        "unique_codes": 407
+      },
+      "executed_slot_fraction": 0.9943609022556391,
+      "executed_slots": 529,
+      "expected_shortfall05_net40_pct": -5.855113833989834,
+      "gross_mean_pct": -0.07461824272449188,
+      "hit_rate_executed": 0.43478260869565216,
+      "losing_days_removed_net20_pct": {
+        "10": -0.040856207514632883,
+        "20": 0.11141802887934267,
+        "5": -0.1388206109679151
+      },
+      "monthly_net40_pct": {
+        "2024-07": -0.8312376831545477,
+        "2024-08": -1.179576769800995,
+        "2024-09": -1.2878740939591775,
+        "2024-10": -0.22401272617852952,
+        "2024-11": -0.3725781341256747,
+        "2024-12": -0.2655366179771443,
+        "2025-01": -1.1575782369762273,
+        "2025-02": 0.09700555170577305,
+        "2025-03": 0.2566996098879165,
+        "2025-04": -0.6150694840572473,
+        "2025-05": -0.09082429772131353,
+        "2025-06": -0.30815424244307205,
+        "2025-07": -0.17483242560405926
+      },
+      "months": 13,
+      "net40_profit_factor": 0.5350502147902629,
+      "net_mean_pct": {
+        "20": -0.2734904231756197,
+        "40": -0.4723626036267475,
+        "60": -0.6712347840778753
+      },
+      "p05_net40_pct": -4.232632924566328,
+      "positive_months_net40": 2,
+      "scheduled_days": 266,
+      "scheduled_slots": 532,
+      "temporal_slices_net40_pct": {
+        "confirmation_a": -0.2871604697359143,
+        "confirmation_b": -0.2982202092169319,
+        "discovery": -0.8625741542425355
+      },
+      "traded_days": 266,
+      "winning_days_removed_net20_pct": {
+        "10": -0.5134603303442424,
+        "20": -0.6611036153513355,
+        "5": -0.4266728775729617
+      },
+      "worst_day_net40_pct": -11.347028687033346
+    },
+    "D04_NORMALISED_CONFORMAL_LCB_K1": {
+      "capacity": 1,
+      "cash_days": 265,
+      "code_concentration": {
+        "largest_positive_net20_pnl_share": 1.0,
+        "largest_weight_share": 1.0,
+        "top10_positive_pnl_codes_to_cash_net20_pct": 0.0,
+        "top10_weight_share": 1.0,
+        "unique_codes": 1
+      },
+      "executed_slot_fraction": 0.0037593984962406013,
+      "executed_slots": 1,
+      "expected_shortfall05_net40_pct": 0.0,
+      "gross_mean_pct": 0.007974481658692195,
+      "hit_rate_executed": 1.0,
+      "losing_days_removed_net20_pct": {
+        "10": 0.007504734848484859,
+        "20": 0.007809805370780991,
+        "5": 0.007360965981655647
+      },
+      "monthly_net40_pct": {
+        "2024-07": 0.0,
+        "2024-08": 0.0,
+        "2024-09": 0.0,
+        "2024-10": 0.07823691460055109,
+        "2024-11": 0.0,
+        "2024-12": 0.0,
+        "2025-01": 0.0,
+        "2025-02": 0.0,
+        "2025-03": 0.0,
+        "2025-04": 0.0,
+        "2025-05": 0.0,
+        "2025-06": 0.0,
+        "2025-07": 0.0
+      },
+      "months": 13,
+      "net40_profit_factor": null,
+      "net_mean_pct": {
+        "20": 0.007222601959444075,
+        "40": 0.006470722260195954,
+        "60": 0.005718842560947833
+      },
+      "p05_net40_pct": 0.0,
+      "positive_months_net40": 1,
+      "scheduled_days": 266,
+      "scheduled_slots": 266,
+      "temporal_slices_net40_pct": {
+        "confirmation_a": 0.0,
+        "confirmation_b": 0.0,
+        "discovery": 0.02049062049062052
+      },
+      "traded_days": 1,
+      "winning_days_removed_net20_pct": {
+        "10": 0.0,
+        "20": 0.0,
+        "5": 0.0
+      },
+      "worst_day_net40_pct": 0.0
+    },
+    "D04_NORMALISED_CONFORMAL_LCB_K2": {
+      "capacity": 2,
+      "cash_days": 265,
+      "code_concentration": {
+        "largest_positive_net20_pnl_share": 1.0,
+        "largest_weight_share": 0.5,
+        "top10_positive_pnl_codes_to_cash_net20_pct": 0.0,
+        "top10_weight_share": 1.0,
+        "unique_codes": 2
+      },
+      "executed_slot_fraction": 0.0037593984962406013,
+      "executed_slots": 2,
+      "expected_shortfall05_net40_pct": 0.0,
+      "gross_mean_pct": 0.004065757924087949,
+      "hit_rate_executed": 1.0,
+      "losing_days_removed_net20_pct": {
+        "10": 0.0034433265929976345,
+        "20": 0.0035832992187292455,
+        "5": 0.0033773624820206682
+      },
+      "monthly_net40_pct": {
+        "2024-07": 0.0,
+        "2024-08": 0.0,
+        "2024-09": 0.0,
+        "2024-10": 0.030976891263972472,
+        "2024-11": 0.0,
+        "2024-12": 0.0,
+        "2025-01": 0.0,
+        "2025-02": 0.0,
+        "2025-03": 0.0,
+        "2025-04": 0.0,
+        "2025-05": 0.0,
+        "2025-06": 0.0,
+        "2025-07": 0.0
+      },
+      "months": 13,
+      "net40_profit_factor": null,
+      "net_mean_pct": {
+        "20": 0.0033138782248398287,
+        "40": 0.002561998525591708,
+        "60": 0.001810118826343588
+      },
+      "p05_net40_pct": 0.0,
+      "positive_months_net40": 1,
+      "scheduled_days": 266,
+      "scheduled_slots": 532,
+      "temporal_slices_net40_pct": {
+        "confirmation_a": 0.0,
+        "confirmation_b": 0.0,
+        "discovery": 0.00811299533104041
+      },
+      "traded_days": 1,
+      "winning_days_removed_net20_pct": {
+        "10": 0.0,
+        "20": 0.0,
+        "5": 0.0
+      },
+      "worst_day_net40_pct": 0.0
+    },
+    "D05_FOREST_TREE_LCB_K1": {
+      "capacity": 1,
+      "cash_days": 186,
+      "code_concentration": {
+        "largest_positive_net20_pnl_share": 0.1282605663690378,
+        "largest_weight_share": 0.0625,
+        "top10_positive_pnl_codes_to_cash_net20_pct": -0.20224832720544456,
+        "top10_weight_share": 0.2125,
+        "unique_codes": 73
+      },
+      "executed_slot_fraction": 0.3007518796992481,
+      "executed_slots": 80,
+      "expected_shortfall05_net40_pct": -3.6659506866594973,
+      "gross_mean_pct": 0.0945780081476105,
+      "hit_rate_executed": 0.4625,
+      "losing_days_removed_net20_pct": {
+        "10": 0.1855172714855034,
+        "20": 0.28737961184999267,
+        "5": 0.11977454084892225
+      },
+      "monthly_net40_pct": {
+        "2024-07": 0.0,
+        "2024-08": 0.0,
+        "2024-09": 0.21824012239122656,
+        "2024-10": -0.11260384291237267,
+        "2024-11": 0.012618320784131897,
+        "2024-12": 0.0,
+        "2025-01": -0.24481243831691377,
+        "2025-02": -0.5733591885903263,
+        "2025-03": 0.0,
+        "2025-04": -0.34491373480273135,
+        "2025-05": 0.6602528903453323,
+        "2025-06": -0.35440849544056585,
+        "2025-07": 0.3494871236850219
+      },
+      "months": 13,
+      "net40_profit_factor": 0.9240802930930446,
+      "net_mean_pct": {
+        "20": 0.03442763220776087,
+        "40": -0.025722743732088747,
+        "60": -0.08587311967193836
+      },
+      "p05_net40_pct": -2.7184310260835116,
+      "positive_months_net40": 4,
+      "scheduled_days": 266,
+      "scheduled_slots": 266,
+      "temporal_slices_net40_pct": {
+        "confirmation_a": -0.1501993398669857,
+        "confirmation_b": 0.07390485348652245,
+        "discovery": 0.019872354540013154
+      },
+      "traded_days": 80,
+      "winning_days_removed_net20_pct": {
+        "10": -0.21014865248690723,
+        "20": -0.30020188148355686,
+        "5": -0.13342978082352497
+      },
+      "worst_day_net40_pct": -4.907042253521132
+    },
+    "D05_FOREST_TREE_LCB_K2": {
+      "capacity": 2,
+      "cash_days": 186,
+      "code_concentration": {
+        "largest_positive_net20_pnl_share": 0.09267662450904031,
+        "largest_weight_share": 0.040983606557377046,
+        "top10_positive_pnl_codes_to_cash_net20_pct": -0.14346750458231142,
+        "top10_weight_share": 0.18032786885245902,
+        "unique_codes": 110
+      },
+      "executed_slot_fraction": 0.22932330827067668,
+      "executed_slots": 122,
+      "expected_shortfall05_net40_pct": -2.5908330773673014,
+      "gross_mean_pct": 0.034885994456598964,
+      "hit_rate_executed": 0.4426229508196721,
+      "losing_days_removed_net20_pct": {
+        "10": 0.09642158100091622,
+        "20": 0.15484237902731054,
+        "5": 0.0556418649533626
+      },
+      "monthly_net40_pct": {
+        "2024-07": 0.0,
+        "2024-08": 0.0,
+        "2024-09": 0.006522307901506483,
+        "2024-10": -0.04562682203593789,
+        "2024-11": 0.006309160392065949,
+        "2024-12": 0.0,
+        "2025-01": -0.11225435729034805,
+        "2025-02": -0.389151498851293,
+        "2025-03": 0.0,
+        "2025-04": -0.12081098472275563,
+        "2025-05": 0.3705863776287557,
+        "2025-06": -0.577063844203713,
+        "2025-07": 0.09157096249984678
+      },
+      "months": 13,
+      "net40_profit_factor": 0.7473141473400625,
+      "net_mean_pct": {
+        "20": -0.010978667197536393,
+        "40": -0.056843328851671725,
+        "60": -0.10270799050580705
+      },
+      "p05_net40_pct": -1.6303360976642323,
+      "positive_months_net40": 4,
+      "scheduled_days": 266,
+      "scheduled_slots": 532,
+      "temporal_slices_net40_pct": {
+        "confirmation_a": -0.09195282204080173,
+        "confirmation_b": -0.062250984284334496,
+        "discovery": -0.010474598031690605
+      },
+      "traded_days": 80,
+      "winning_days_removed_net20_pct": {
+        "10": -0.1583946907053641,
+        "20": -0.2015029494938411,
+        "5": -0.10714976405143668
+      },
+      "worst_day_net40_pct": -4.105134029986373
+    },
+    "D06_EVT_RESIDUAL_ES_K1": {
+      "capacity": 1,
+      "cash_days": 236,
+      "code_concentration": {
+        "largest_positive_net20_pnl_share": 0.3340183870261874,
+        "largest_weight_share": 0.13333333333333333,
+        "top10_positive_pnl_codes_to_cash_net20_pct": -0.2494308638482756,
+        "top10_weight_share": 0.5333333333333333,
+        "unique_codes": 24
+      },
+      "executed_slot_fraction": 0.11278195488721804,
+      "executed_slots": 30,
+      "expected_shortfall05_net40_pct": -5.166514522476386,
+      "gross_mean_pct": -0.20344024399345423,
+      "hit_rate_executed": 0.23333333333333334,
+      "losing_days_removed_net20_pct": {
+        "10": 0.0012671816444810788,
+        "20": 0.05669815895772207,
+        "5": -0.06906900085959537
+      },
+      "monthly_net40_pct": {
+        "2024-07": 0.0,
+        "2024-08": -0.01904761904761905,
+        "2024-09": -1.8339354530199135,
+        "2024-10": -0.01674101091965593,
+        "2024-11": 0.0,
+        "2024-12": -0.19544169011652462,
+        "2025-01": 0.0,
+        "2025-02": 0.0,
+        "2025-03": -0.24033898305084733,
+        "2025-04": -1.028141614342098,
+        "2025-05": 0.0,
+        "2025-06": 0.0,
+        "2025-07": 0.0
+      },
+      "months": 13,
+      "net40_profit_factor": 0.16587527159163865,
+      "net_mean_pct": {
+        "20": -0.22599663497089784,
+        "40": -0.24855302594834144,
+        "60": -0.27110941692578505
+      },
+      "p05_net40_pct": -2.128032018943684,
+      "positive_months_net40": 0,
+      "scheduled_days": 266,
+      "scheduled_slots": 266,
+      "temporal_slices_net40_pct": {
+        "confirmation_a": -0.09092913421902003,
+        "confirmation_b": -0.25703540358552457,
+        "discovery": -0.4239651886620332
+      },
+      "traded_days": 30,
+      "winning_days_removed_net20_pct": {
+        "10": -0.29165176564788453,
+        "20": -0.3035075284790994,
+        "5": -0.28130134276990887
+      },
+      "worst_day_net40_pct": -12.296551724137927
+    },
+    "D06_EVT_RESIDUAL_ES_K2": {
+      "capacity": 2,
+      "cash_days": 236,
+      "code_concentration": {
+        "largest_positive_net20_pnl_share": 0.21423713301459804,
+        "largest_weight_share": 0.08695652173913043,
+        "top10_positive_pnl_codes_to_cash_net20_pct": -0.20606395412281206,
+        "top10_weight_share": 0.34782608695652173,
+        "unique_codes": 40
+      },
+      "executed_slot_fraction": 0.08646616541353383,
+      "executed_slots": 46,
+      "expected_shortfall05_net40_pct": -3.6540185426335343,
+      "gross_mean_pct": -0.14977975104775737,
+      "hit_rate_executed": 0.2608695652173913,
+      "losing_days_removed_net20_pct": {
+        "10": -0.0023973551604723007,
+        "20": 0.03436927379939016,
+        "5": -0.049414785339932585
+      },
+      "monthly_net40_pct": {
+        "2024-07": 0.0,
+        "2024-08": 0.057968734637695446,
+        "2024-09": -1.8328206083502547,
+        "2024-10": -0.008370505459827964,
+        "2024-11": 0.0,
+        "2024-12": -0.09772084505826231,
+        "2025-01": 0.0,
+        "2025-02": 0.0,
+        "2025-03": -0.12016949152542367,
+        "2025-04": -0.514070807171049,
+        "2025-05": 0.0,
+        "2025-06": 0.0,
+        "2025-07": 0.0
+      },
+      "months": 13,
+      "net40_profit_factor": 0.12858830368730492,
+      "net_mean_pct": {
+        "20": -0.16707298413046415,
+        "40": -0.18436621721317095,
+        "60": -0.20165945029587765
+      },
+      "p05_net40_pct": -1.2739901849754638,
+      "positive_months_net40": 1,
+      "scheduled_days": 266,
+      "scheduled_slots": 532,
+      "temporal_slices_net40_pct": {
+        "confirmation_a": -0.045464567109510017,
+        "confirmation_b": -0.12851770179276228,
+        "discovery": -0.4022666577545173
+      },
+      "traded_days": 30,
+      "winning_days_removed_net20_pct": {
+        "10": -0.2070166216146619,
+        "20": -0.2154319314363961,
+        "5": -0.19846322471799982
+      },
+      "worst_day_net40_pct": -11.911756603866396
+    },
+    "D07_REGIME_ABSTAIN_K1": {
+      "capacity": 1,
+      "cash_days": 266,
+      "code_concentration": {
+        "largest_positive_net20_pnl_share": null,
+        "largest_weight_share": null,
+        "top10_positive_pnl_codes_to_cash_net20_pct": 0.0,
+        "top10_weight_share": null,
+        "unique_codes": 0
+      },
+      "executed_slot_fraction": 0.0,
+      "executed_slots": 0,
+      "expected_shortfall05_net40_pct": 0.0,
+      "gross_mean_pct": 0.0,
+      "hit_rate_executed": null,
+      "losing_days_removed_net20_pct": {
+        "10": 0.0,
+        "20": 0.0,
+        "5": 0.0
+      },
+      "monthly_net40_pct": {
+        "2024-07": 0.0,
+        "2024-08": 0.0,
+        "2024-09": 0.0,
+        "2024-10": 0.0,
+        "2024-11": 0.0,
+        "2024-12": 0.0,
+        "2025-01": 0.0,
+        "2025-02": 0.0,
+        "2025-03": 0.0,
+        "2025-04": 0.0,
+        "2025-05": 0.0,
+        "2025-06": 0.0,
+        "2025-07": 0.0
+      },
+      "months": 13,
+      "net40_profit_factor": null,
+      "net_mean_pct": {
+        "20": 0.0,
+        "40": 0.0,
+        "60": 0.0
+      },
+      "p05_net40_pct": 0.0,
+      "positive_months_net40": 0,
+      "scheduled_days": 266,
+      "scheduled_slots": 266,
+      "temporal_slices_net40_pct": {
+        "confirmation_a": 0.0,
+        "confirmation_b": 0.0,
+        "discovery": 0.0
+      },
+      "traded_days": 0,
+      "winning_days_removed_net20_pct": {
+        "10": 0.0,
+        "20": 0.0,
+        "5": 0.0
+      },
+      "worst_day_net40_pct": 0.0
+    },
+    "D07_REGIME_ABSTAIN_K2": {
+      "capacity": 2,
+      "cash_days": 266,
+      "code_concentration": {
+        "largest_positive_net20_pnl_share": null,
+        "largest_weight_share": null,
+        "top10_positive_pnl_codes_to_cash_net20_pct": 0.0,
+        "top10_weight_share": null,
+        "unique_codes": 0
+      },
+      "executed_slot_fraction": 0.0,
+      "executed_slots": 0,
+      "expected_shortfall05_net40_pct": 0.0,
+      "gross_mean_pct": 0.0,
+      "hit_rate_executed": null,
+      "losing_days_removed_net20_pct": {
+        "10": 0.0,
+        "20": 0.0,
+        "5": 0.0
+      },
+      "monthly_net40_pct": {
+        "2024-07": 0.0,
+        "2024-08": 0.0,
+        "2024-09": 0.0,
+        "2024-10": 0.0,
+        "2024-11": 0.0,
+        "2024-12": 0.0,
+        "2025-01": 0.0,
+        "2025-02": 0.0,
+        "2025-03": 0.0,
+        "2025-04": 0.0,
+        "2025-05": 0.0,
+        "2025-06": 0.0,
+        "2025-07": 0.0
+      },
+      "months": 13,
+      "net40_profit_factor": null,
+      "net_mean_pct": {
+        "20": 0.0,
+        "40": 0.0,
+        "60": 0.0
+      },
+      "p05_net40_pct": 0.0,
+      "positive_months_net40": 0,
+      "scheduled_days": 266,
+      "scheduled_slots": 532,
+      "temporal_slices_net40_pct": {
+        "confirmation_a": 0.0,
+        "confirmation_b": 0.0,
+        "discovery": 0.0
+      },
+      "traded_days": 0,
+      "winning_days_removed_net20_pct": {
+        "10": 0.0,
+        "20": 0.0,
+        "5": 0.0
+      },
+      "worst_day_net40_pct": 0.0
+    },
+    "D08_SLOTWISE_CASH_STOP_K1": {
+      "capacity": 1,
+      "cash_days": 139,
+      "code_concentration": {
+        "largest_positive_net20_pnl_share": 0.19399713534666205,
+        "largest_weight_share": 0.2440944881889764,
+        "top10_positive_pnl_codes_to_cash_net20_pct": -0.06224801901115964,
+        "top10_weight_share": 0.4881889763779528,
+        "unique_codes": 67
+      },
+      "executed_slot_fraction": 0.4774436090225564,
+      "executed_slots": 127,
+      "expected_shortfall05_net40_pct": -2.516285205398614,
+      "gross_mean_pct": 0.30939742419042376,
+      "hit_rate_executed": 0.5669291338582677,
+      "losing_days_removed_net20_pct": {
+        "10": 0.3239509939684999,
+        "20": 0.39268705175586127,
+        "5": 0.27690060288162566
+      },
+      "monthly_net40_pct": {
+        "2024-07": 0.9206659689561169,
+        "2024-08": 0.1260099025195498,
+        "2024-09": 0.23090338114314185,
+        "2024-10": -0.1620190193018117,
+        "2024-11": -0.19671341313501944,
+        "2024-12": 0.09333916092444819,
+        "2025-01": -0.086066740346904,
+        "2025-02": 0.002144249512670023,
+        "2025-03": 0.00032258708852714313,
+        "2025-04": 0.0,
+        "2025-05": 0.3596395923194524,
+        "2025-06": 0.05589306736266233,
+        "2025-07": 0.13517860015919772
+      },
+      "months": 13,
+      "net40_profit_factor": 1.4352996149353412,
+      "net_mean_pct": {
+        "20": 0.21390870238591247,
+        "40": 0.11841998058140119,
+        "60": 0.02293125877688991
+      },
+      "p05_net40_pct": -1.6182474259579718,
+      "positive_months_net40": 9,
+      "scheduled_days": 266,
+      "scheduled_slots": 266,
+      "temporal_slices_net40_pct": {
+        "confirmation_a": -0.036371078743668864,
+        "confirmation_b": 0.13500566029175365,
+        "discovery": 0.28242387008363035
+      },
+      "traded_days": 127,
+      "winning_days_removed_net20_pct": {
+        "10": 0.013384135529730494,
+        "20": -0.1030935813807974,
+        "5": 0.08656717626423768
+      },
+      "worst_day_net40_pct": -4.222495606326892
+    },
+    "D08_SLOTWISE_CASH_STOP_K2": {
+      "capacity": 2,
+      "cash_days": 99,
+      "code_concentration": {
+        "largest_positive_net20_pnl_share": 0.14361006872402846,
+        "largest_weight_share": 0.17073170731707318,
+        "top10_positive_pnl_codes_to_cash_net20_pct": -0.006956554300174295,
+        "top10_weight_share": 0.3902439024390244,
+        "unique_codes": 104
+      },
+      "executed_slot_fraction": 0.38533834586466165,
+      "executed_slots": 205,
+      "expected_shortfall05_net40_pct": -1.3610327576556025,
+      "gross_mean_pct": 0.22240799032518774,
+      "hit_rate_executed": 0.5658536585365853,
+      "losing_days_removed_net20_pct": {
+        "10": 0.2058420942899036,
+        "20": 0.24442228263040797,
+        "5": 0.18233652009253262
+      },
+      "monthly_net40_pct": {
+        "2024-07": 0.4603329844780584,
+        "2024-08": 0.0630049512597749,
+        "2024-09": 0.20208947160882867,
+        "2024-10": -0.08100950965090585,
+        "2024-11": -0.1095937741638856,
+        "2024-12": 0.046669580462224095,
+        "2025-01": -0.043033370173452,
+        "2025-02": 0.1717099553905873,
+        "2025-03": 0.00016129354426357156,
+        "2025-04": 0.0,
+        "2025-05": 0.16915825041448015,
+        "2025-06": 0.027946533681331164,
+        "2025-07": -0.017363359698510907
+      },
+      "months": 13,
+      "net40_profit_factor": 1.3882825639711445,
+      "net_mean_pct": {
+        "20": 0.14534032115225543,
+        "40": 0.06827265197932307,
+        "60": -0.00879501719360922
+      },
+      "p05_net40_pct": -0.9067448761693377,
+      "positive_months_net40": 8,
+      "scheduled_days": 266,
+      "scheduled_slots": 532,
+      "temporal_slices_net40_pct": {
+        "confirmation_a": 0.010862823888257633,
+        "confirmation_b": 0.042714860740837114,
+        "discovery": 0.16080857599071868
+      },
+      "traded_days": 167,
+      "winning_days_removed_net20_pct": {
+        "10": 0.03831198796917078,
+        "20": -0.022309789543310483,
+        "5": 0.08078546743286528
+      },
+      "worst_day_net40_pct": -2.593650044556694
+    }
+  },
+  "multiplicity": {
+    "block_length_sessions": 10,
+    "critical_max_t": 2.446402586188832,
+    "family_size": 16,
+    "familywise_one_sided_level": 0.95,
+    "hypotheses": {
+      "D01_CODE_EB_RESIDUAL_K1": {
+        "familywise_adjusted_p_approx": 0.9824,
+        "familywise_max_t_one_sided95_lower_pct": -0.5554723276374063,
+        "hac5_standard_error_pct": 0.19960583092672893,
+        "net40_uplift_vs_matched_control_pct": -0.06715610663988583,
+        "ordinary_one_sided95_lower_pct": -0.373050846297366
+      },
+      "D01_CODE_EB_RESIDUAL_K2": {
+        "familywise_adjusted_p_approx": 1.0,
+        "familywise_max_t_one_sided95_lower_pct": -0.7632021388430204,
+        "hac5_standard_error_pct": 0.157164810262204,
+        "net40_uplift_vs_matched_control_pct": -0.3787137405596873,
+        "ordinary_one_sided95_lower_pct": -0.6162076128003998
+      },
+      "D02_SURVIVAL_INTEGRAL_K1": {
+        "familywise_adjusted_p_approx": 1.0,
+        "familywise_max_t_one_sided95_lower_pct": -1.154216285244637,
+        "hac5_standard_error_pct": 0.2196901189257924,
+        "net40_uplift_vs_matched_control_pct": -0.6167658101444463,
+        "ordinary_one_sided95_lower_pct": -0.9999551335746886
+      },
+      "D02_SURVIVAL_INTEGRAL_K2": {
+        "familywise_adjusted_p_approx": 1.0,
+        "familywise_max_t_one_sided95_lower_pct": -0.9989096086290894,
+        "hac5_standard_error_pct": 0.13329768486639276,
+        "net40_uplift_vs_matched_control_pct": -0.6728098076389621,
+        "ordinary_one_sided95_lower_pct": -0.8868614489169718
+      },
+      "D03_DOWNSIDE_FEASIBLE_MEAN_K1": {
+        "familywise_adjusted_p_approx": 1.0,
+        "familywise_max_t_one_sided95_lower_pct": -1.2353151602987855,
+        "hac5_standard_error_pct": 0.23672418716032284,
+        "net40_uplift_vs_matched_control_pct": -0.6561924966163226,
+        "ordinary_one_sided95_lower_pct": -1.0379128354462508
+      },
+      "D03_DOWNSIDE_FEASIBLE_MEAN_K2": {
+        "familywise_adjusted_p_approx": 1.0,
+        "familywise_max_t_one_sided95_lower_pct": -0.9143404613080763,
+        "hac5_standard_error_pct": 0.1566680890742052,
+        "net40_uplift_vs_matched_control_pct": -0.5310672430236784,
+        "ordinary_one_sided95_lower_pct": -0.7827825937124909
+      },
+      "D04_NORMALISED_CONFORMAL_LCB_K1": {
+        "familywise_adjusted_p_approx": 0.952,
+        "familywise_max_t_one_sided95_lower_pct": -0.31860558340545725,
+        "hac5_standard_error_pct": 0.12964930735661503,
+        "net40_uplift_vs_matched_control_pct": -0.0014311825906434456,
+        "ordinary_one_sided95_lower_pct": -0.21621694287976814
+      },
+      "D04_NORMALISED_CONFORMAL_LCB_K2": {
+        "familywise_adjusted_p_approx": 0.9932,
+        "familywise_max_t_one_sided95_lower_pct": -0.26091557910772606,
+        "hac5_standard_error_pct": 0.08370369594621616,
+        "net40_uplift_vs_matched_control_pct": -0.0561426408713392,
+        "ordinary_one_sided95_lower_pct": -0.18274058301842824
+      },
+      "D05_FOREST_TREE_LCB_K1": {
+        "familywise_adjusted_p_approx": 0.9758,
+        "familywise_max_t_one_sided95_lower_pct": -0.38969681469865486,
+        "hac5_standard_error_pct": 0.14554929271491635,
+        "net40_uplift_vs_matched_control_pct": -0.033624648582928185,
+        "ordinary_one_sided95_lower_pct": -0.2790191727292542
+      },
+      "D05_FOREST_TREE_LCB_K2": {
+        "familywise_adjusted_p_approx": 0.9986,
+        "familywise_max_t_one_sided95_lower_pct": -0.36240753543928417,
+        "hac5_standard_error_pct": 0.10090717226360346,
+        "net40_uplift_vs_matched_control_pct": -0.11554796824860267,
+        "ordinary_one_sided95_lower_pct": -0.2758952105430876
+      },
+      "D06_EVT_RESIDUAL_ES_K1": {
+        "familywise_adjusted_p_approx": 0.9998,
+        "familywise_max_t_one_sided95_lower_pct": -0.6128046388245691,
+        "hac5_standard_error_pct": 0.14566274170782884,
+        "net40_uplift_vs_matched_control_pct": -0.2564549307991808,
+        "ordinary_one_sided95_lower_pct": -0.5103033301836638
+      },
+      "D06_EVT_RESIDUAL_ES_K2": {
+        "familywise_adjusted_p_approx": 1.0,
+        "familywise_max_t_one_sided95_lower_pct": -0.5087857767615793,
+        "hac5_standard_error_pct": 0.1086145516897224,
+        "net40_uplift_vs_matched_control_pct": -0.2430708566101018,
+        "ordinary_one_sided95_lower_pct": -0.4364304272826274
+      },
+      "D07_REGIME_ABSTAIN_K1": {
+        "familywise_adjusted_p_approx": 0.9596,
+        "familywise_max_t_one_sided95_lower_pct": -0.32344620557958226,
+        "hac5_standard_error_pct": 0.12898298199574693,
+        "net40_uplift_vs_matched_control_pct": -0.007901904850839409,
+        "ordinary_one_sided95_lower_pct": -0.22148205416754868
+      },
+      "D07_REGIME_ABSTAIN_K2": {
+        "familywise_adjusted_p_approx": 0.9938,
+        "familywise_max_t_one_sided95_lower_pct": -0.2641462013415627,
+        "hac5_standard_error_pct": 0.08397700489054921,
+        "net40_uplift_vs_matched_control_pct": -0.05870463939693091,
+        "ordinary_one_sided95_lower_pct": -0.1859145188877634
+      },
+      "D08_SLOTWISE_CASH_STOP_K1": {
+        "familywise_adjusted_p_approx": 0.5486,
+        "familywise_max_t_one_sided95_lower_pct": -0.1341156385851137,
+        "hac5_standard_error_pct": 0.0999973249279392,
+        "net40_uplift_vs_matched_control_pct": 0.11051807573056174,
+        "ordinary_one_sided95_lower_pct": -0.04605630984627638
+      },
+      "D08_SLOTWISE_CASH_STOP_K2": {
+        "familywise_adjusted_p_approx": 0.926,
+        "familywise_max_t_one_sided95_lower_pct": -0.16478657089354262,
+        "hac5_standard_error_pct": 0.07126978382881613,
+        "net40_uplift_vs_matched_control_pct": 0.009568012582392175,
+        "ordinary_one_sided95_lower_pct": -0.10071971989413354
+      }
+    },
+    "method": "studentised circular moving-block familywise max-t",
+    "repetitions": 5000,
+    "seed": 20260723
+  },
+  "production_model_changed": false,
+  "protocol_id": "model_v11_distributional_zero_base_20260723",
+  "retrospective_gates": {
+    "D01_CODE_EB_RESIDUAL_K1": {
+      "checks_before_independent_pnl_audit": {
+        "all_three_temporal_slices_net40_positive": false,
+        "best_20_days_removed_net20_positive": false,
+        "executed_slot_fraction_at_least_0_3": true,
+        "expected_shortfall05_net40_not_worse_than_control": false,
+        "familywise_95_lower_net40_uplift_positive": false,
+        "largest_code_weight_share_at_most_0_05": false,
+        "largest_positive_code_pnl_share_at_most_0_25": true,
+        "net40_greater_than_capacity_matched_control": false,
+        "net40_mean_positive": false,
+        "net60_mean_positive": false,
+        "positive_months_net40_at_least_10": false,
+        "target_mutation_exact": true,
+        "top10_code_weight_share_at_most_0_25": false,
+        "top_10_positive_pnl_codes_to_cash_net20_positive": false,
+        "traded_days_at_least_150": true,
+        "unique_codes_at_least_100": true
+      },
+      "independent_pnl_audit_exact": true,
+      "passes_all_retrospective_gates": false,
+      "passes_before_independent_pnl_audit": false
+    },
+    "D01_CODE_EB_RESIDUAL_K2": {
+      "checks_before_independent_pnl_audit": {
+        "all_three_temporal_slices_net40_positive": false,
+        "best_20_days_removed_net20_positive": false,
+        "executed_slot_fraction_at_least_0_3": true,
+        "expected_shortfall05_net40_not_worse_than_control": false,
+        "familywise_95_lower_net40_uplift_positive": false,
+        "largest_code_weight_share_at_most_0_05": false,
+        "largest_positive_code_pnl_share_at_most_0_25": true,
+        "net40_greater_than_capacity_matched_control": false,
+        "net40_mean_positive": false,
+        "net60_mean_positive": false,
+        "positive_months_net40_at_least_10": false,
+        "target_mutation_exact": true,
+        "top10_code_weight_share_at_most_0_25": false,
+        "top_10_positive_pnl_codes_to_cash_net20_positive": false,
+        "traded_days_at_least_150": true,
+        "unique_codes_at_least_100": true
+      },
+      "independent_pnl_audit_exact": true,
+      "passes_all_retrospective_gates": false,
+      "passes_before_independent_pnl_audit": false
+    },
+    "D02_SURVIVAL_INTEGRAL_K1": {
+      "checks_before_independent_pnl_audit": {
+        "all_three_temporal_slices_net40_positive": false,
+        "best_20_days_removed_net20_positive": false,
+        "executed_slot_fraction_at_least_0_3": true,
+        "expected_shortfall05_net40_not_worse_than_control": false,
+        "familywise_95_lower_net40_uplift_positive": false,
+        "largest_code_weight_share_at_most_0_05": true,
+        "largest_positive_code_pnl_share_at_most_0_25": true,
+        "net40_greater_than_capacity_matched_control": false,
+        "net40_mean_positive": false,
+        "net60_mean_positive": false,
+        "positive_months_net40_at_least_10": false,
+        "target_mutation_exact": true,
+        "top10_code_weight_share_at_most_0_25": true,
+        "top_10_positive_pnl_codes_to_cash_net20_positive": false,
+        "traded_days_at_least_150": true,
+        "unique_codes_at_least_100": true
+      },
+      "independent_pnl_audit_exact": true,
+      "passes_all_retrospective_gates": false,
+      "passes_before_independent_pnl_audit": false
+    },
+    "D02_SURVIVAL_INTEGRAL_K2": {
+      "checks_before_independent_pnl_audit": {
+        "all_three_temporal_slices_net40_positive": false,
+        "best_20_days_removed_net20_positive": false,
+        "executed_slot_fraction_at_least_0_3": true,
+        "expected_shortfall05_net40_not_worse_than_control": false,
+        "familywise_95_lower_net40_uplift_positive": false,
+        "largest_code_weight_share_at_most_0_05": false,
+        "largest_positive_code_pnl_share_at_most_0_25": true,
+        "net40_greater_than_capacity_matched_control": false,
+        "net40_mean_positive": false,
+        "net60_mean_positive": false,
+        "positive_months_net40_at_least_10": false,
+        "target_mutation_exact": true,
+        "top10_code_weight_share_at_most_0_25": true,
+        "top_10_positive_pnl_codes_to_cash_net20_positive": false,
+        "traded_days_at_least_150": true,
+        "unique_codes_at_least_100": true
+      },
+      "independent_pnl_audit_exact": true,
+      "passes_all_retrospective_gates": false,
+      "passes_before_independent_pnl_audit": false
+    },
+    "D03_DOWNSIDE_FEASIBLE_MEAN_K1": {
+      "checks_before_independent_pnl_audit": {
+        "all_three_temporal_slices_net40_positive": false,
+        "best_20_days_removed_net20_positive": false,
+        "executed_slot_fraction_at_least_0_3": true,
+        "expected_shortfall05_net40_not_worse_than_control": false,
+        "familywise_95_lower_net40_uplift_positive": false,
+        "largest_code_weight_share_at_most_0_05": true,
+        "largest_positive_code_pnl_share_at_most_0_25": true,
+        "net40_greater_than_capacity_matched_control": false,
+        "net40_mean_positive": false,
+        "net60_mean_positive": false,
+        "positive_months_net40_at_least_10": false,
+        "target_mutation_exact": true,
+        "top10_code_weight_share_at_most_0_25": true,
+        "top_10_positive_pnl_codes_to_cash_net20_positive": false,
+        "traded_days_at_least_150": true,
+        "unique_codes_at_least_100": true
+      },
+      "independent_pnl_audit_exact": true,
+      "passes_all_retrospective_gates": false,
+      "passes_before_independent_pnl_audit": false
+    },
+    "D03_DOWNSIDE_FEASIBLE_MEAN_K2": {
+      "checks_before_independent_pnl_audit": {
+        "all_three_temporal_slices_net40_positive": false,
+        "best_20_days_removed_net20_positive": false,
+        "executed_slot_fraction_at_least_0_3": true,
+        "expected_shortfall05_net40_not_worse_than_control": false,
+        "familywise_95_lower_net40_uplift_positive": false,
+        "largest_code_weight_share_at_most_0_05": true,
+        "largest_positive_code_pnl_share_at_most_0_25": true,
+        "net40_greater_than_capacity_matched_control": false,
+        "net40_mean_positive": false,
+        "net60_mean_positive": false,
+        "positive_months_net40_at_least_10": false,
+        "target_mutation_exact": true,
+        "top10_code_weight_share_at_most_0_25": true,
+        "top_10_positive_pnl_codes_to_cash_net20_positive": false,
+        "traded_days_at_least_150": true,
+        "unique_codes_at_least_100": true
+      },
+      "independent_pnl_audit_exact": true,
+      "passes_all_retrospective_gates": false,
+      "passes_before_independent_pnl_audit": false
+    },
+    "D04_NORMALISED_CONFORMAL_LCB_K1": {
+      "checks_before_independent_pnl_audit": {
+        "all_three_temporal_slices_net40_positive": false,
+        "best_20_days_removed_net20_positive": false,
+        "executed_slot_fraction_at_least_0_3": false,
+        "expected_shortfall05_net40_not_worse_than_control": true,
+        "familywise_95_lower_net40_uplift_positive": false,
+        "largest_code_weight_share_at_most_0_05": false,
+        "largest_positive_code_pnl_share_at_most_0_25": false,
+        "net40_greater_than_capacity_matched_control": false,
+        "net40_mean_positive": true,
+        "net60_mean_positive": true,
+        "positive_months_net40_at_least_10": false,
+        "target_mutation_exact": true,
+        "top10_code_weight_share_at_most_0_25": false,
+        "top_10_positive_pnl_codes_to_cash_net20_positive": false,
+        "traded_days_at_least_150": false,
+        "unique_codes_at_least_100": false
+      },
+      "independent_pnl_audit_exact": true,
+      "passes_all_retrospective_gates": false,
+      "passes_before_independent_pnl_audit": false
+    },
+    "D04_NORMALISED_CONFORMAL_LCB_K2": {
+      "checks_before_independent_pnl_audit": {
+        "all_three_temporal_slices_net40_positive": false,
+        "best_20_days_removed_net20_positive": false,
+        "executed_slot_fraction_at_least_0_3": false,
+        "expected_shortfall05_net40_not_worse_than_control": true,
+        "familywise_95_lower_net40_uplift_positive": false,
+        "largest_code_weight_share_at_most_0_05": false,
+        "largest_positive_code_pnl_share_at_most_0_25": false,
+        "net40_greater_than_capacity_matched_control": false,
+        "net40_mean_positive": true,
+        "net60_mean_positive": true,
+        "positive_months_net40_at_least_10": false,
+        "target_mutation_exact": true,
+        "top10_code_weight_share_at_most_0_25": false,
+        "top_10_positive_pnl_codes_to_cash_net20_positive": false,
+        "traded_days_at_least_150": false,
+        "unique_codes_at_least_100": false
+      },
+      "independent_pnl_audit_exact": true,
+      "passes_all_retrospective_gates": false,
+      "passes_before_independent_pnl_audit": false
+    },
+    "D05_FOREST_TREE_LCB_K1": {
+      "checks_before_independent_pnl_audit": {
+        "all_three_temporal_slices_net40_positive": false,
+        "best_20_days_removed_net20_positive": false,
+        "executed_slot_fraction_at_least_0_3": true,
+        "expected_shortfall05_net40_not_worse_than_control": true,
+        "familywise_95_lower_net40_uplift_positive": false,
+        "largest_code_weight_share_at_most_0_05": false,
+        "largest_positive_code_pnl_share_at_most_0_25": true,
+        "net40_greater_than_capacity_matched_control": false,
+        "net40_mean_positive": false,
+        "net60_mean_positive": false,
+        "positive_months_net40_at_least_10": false,
+        "target_mutation_exact": true,
+        "top10_code_weight_share_at_most_0_25": true,
+        "top_10_positive_pnl_codes_to_cash_net20_positive": false,
+        "traded_days_at_least_150": false,
+        "unique_codes_at_least_100": false
+      },
+      "independent_pnl_audit_exact": true,
+      "passes_all_retrospective_gates": false,
+      "passes_before_independent_pnl_audit": false
+    },
+    "D05_FOREST_TREE_LCB_K2": {
+      "checks_before_independent_pnl_audit": {
+        "all_three_temporal_slices_net40_positive": false,
+        "best_20_days_removed_net20_positive": false,
+        "executed_slot_fraction_at_least_0_3": false,
+        "expected_shortfall05_net40_not_worse_than_control": true,
+        "familywise_95_lower_net40_uplift_positive": false,
+        "largest_code_weight_share_at_most_0_05": true,
+        "largest_positive_code_pnl_share_at_most_0_25": true,
+        "net40_greater_than_capacity_matched_control": false,
+        "net40_mean_positive": false,
+        "net60_mean_positive": false,
+        "positive_months_net40_at_least_10": false,
+        "target_mutation_exact": true,
+        "top10_code_weight_share_at_most_0_25": true,
+        "top_10_positive_pnl_codes_to_cash_net20_positive": false,
+        "traded_days_at_least_150": false,
+        "unique_codes_at_least_100": true
+      },
+      "independent_pnl_audit_exact": true,
+      "passes_all_retrospective_gates": false,
+      "passes_before_independent_pnl_audit": false
+    },
+    "D06_EVT_RESIDUAL_ES_K1": {
+      "checks_before_independent_pnl_audit": {
+        "all_three_temporal_slices_net40_positive": false,
+        "best_20_days_removed_net20_positive": false,
+        "executed_slot_fraction_at_least_0_3": false,
+        "expected_shortfall05_net40_not_worse_than_control": false,
+        "familywise_95_lower_net40_uplift_positive": false,
+        "largest_code_weight_share_at_most_0_05": false,
+        "largest_positive_code_pnl_share_at_most_0_25": false,
+        "net40_greater_than_capacity_matched_control": false,
+        "net40_mean_positive": false,
+        "net60_mean_positive": false,
+        "positive_months_net40_at_least_10": false,
+        "target_mutation_exact": true,
+        "top10_code_weight_share_at_most_0_25": false,
+        "top_10_positive_pnl_codes_to_cash_net20_positive": false,
+        "traded_days_at_least_150": false,
+        "unique_codes_at_least_100": false
+      },
+      "independent_pnl_audit_exact": true,
+      "passes_all_retrospective_gates": false,
+      "passes_before_independent_pnl_audit": false
+    },
+    "D06_EVT_RESIDUAL_ES_K2": {
+      "checks_before_independent_pnl_audit": {
+        "all_three_temporal_slices_net40_positive": false,
+        "best_20_days_removed_net20_positive": false,
+        "executed_slot_fraction_at_least_0_3": false,
+        "expected_shortfall05_net40_not_worse_than_control": false,
+        "familywise_95_lower_net40_uplift_positive": false,
+        "largest_code_weight_share_at_most_0_05": false,
+        "largest_positive_code_pnl_share_at_most_0_25": true,
+        "net40_greater_than_capacity_matched_control": false,
+        "net40_mean_positive": false,
+        "net60_mean_positive": false,
+        "positive_months_net40_at_least_10": false,
+        "target_mutation_exact": true,
+        "top10_code_weight_share_at_most_0_25": false,
+        "top_10_positive_pnl_codes_to_cash_net20_positive": false,
+        "traded_days_at_least_150": false,
+        "unique_codes_at_least_100": false
+      },
+      "independent_pnl_audit_exact": true,
+      "passes_all_retrospective_gates": false,
+      "passes_before_independent_pnl_audit": false
+    },
+    "D07_REGIME_ABSTAIN_K1": {
+      "checks_before_independent_pnl_audit": {
+        "all_three_temporal_slices_net40_positive": false,
+        "best_20_days_removed_net20_positive": false,
+        "executed_slot_fraction_at_least_0_3": false,
+        "expected_shortfall05_net40_not_worse_than_control": true,
+        "familywise_95_lower_net40_uplift_positive": false,
+        "largest_code_weight_share_at_most_0_05": false,
+        "largest_positive_code_pnl_share_at_most_0_25": false,
+        "net40_greater_than_capacity_matched_control": false,
+        "net40_mean_positive": false,
+        "net60_mean_positive": false,
+        "positive_months_net40_at_least_10": false,
+        "target_mutation_exact": true,
+        "top10_code_weight_share_at_most_0_25": false,
+        "top_10_positive_pnl_codes_to_cash_net20_positive": false,
+        "traded_days_at_least_150": false,
+        "unique_codes_at_least_100": false
+      },
+      "independent_pnl_audit_exact": true,
+      "passes_all_retrospective_gates": false,
+      "passes_before_independent_pnl_audit": false
+    },
+    "D07_REGIME_ABSTAIN_K2": {
+      "checks_before_independent_pnl_audit": {
+        "all_three_temporal_slices_net40_positive": false,
+        "best_20_days_removed_net20_positive": false,
+        "executed_slot_fraction_at_least_0_3": false,
+        "expected_shortfall05_net40_not_worse_than_control": true,
+        "familywise_95_lower_net40_uplift_positive": false,
+        "largest_code_weight_share_at_most_0_05": false,
+        "largest_positive_code_pnl_share_at_most_0_25": false,
+        "net40_greater_than_capacity_matched_control": false,
+        "net40_mean_positive": false,
+        "net60_mean_positive": false,
+        "positive_months_net40_at_least_10": false,
+        "target_mutation_exact": true,
+        "top10_code_weight_share_at_most_0_25": false,
+        "top_10_positive_pnl_codes_to_cash_net20_positive": false,
+        "traded_days_at_least_150": false,
+        "unique_codes_at_least_100": false
+      },
+      "independent_pnl_audit_exact": true,
+      "passes_all_retrospective_gates": false,
+      "passes_before_independent_pnl_audit": false
+    },
+    "D08_SLOTWISE_CASH_STOP_K1": {
+      "checks_before_independent_pnl_audit": {
+        "all_three_temporal_slices_net40_positive": false,
+        "best_20_days_removed_net20_positive": false,
+        "executed_slot_fraction_at_least_0_3": true,
+        "expected_shortfall05_net40_not_worse_than_control": true,
+        "familywise_95_lower_net40_uplift_positive": false,
+        "largest_code_weight_share_at_most_0_05": false,
+        "largest_positive_code_pnl_share_at_most_0_25": true,
+        "net40_greater_than_capacity_matched_control": true,
+        "net40_mean_positive": true,
+        "net60_mean_positive": true,
+        "positive_months_net40_at_least_10": false,
+        "target_mutation_exact": true,
+        "top10_code_weight_share_at_most_0_25": false,
+        "top_10_positive_pnl_codes_to_cash_net20_positive": false,
+        "traded_days_at_least_150": false,
+        "unique_codes_at_least_100": false
+      },
+      "independent_pnl_audit_exact": true,
+      "passes_all_retrospective_gates": false,
+      "passes_before_independent_pnl_audit": false
+    },
+    "D08_SLOTWISE_CASH_STOP_K2": {
+      "checks_before_independent_pnl_audit": {
+        "all_three_temporal_slices_net40_positive": true,
+        "best_20_days_removed_net20_positive": false,
+        "executed_slot_fraction_at_least_0_3": true,
+        "expected_shortfall05_net40_not_worse_than_control": true,
+        "familywise_95_lower_net40_uplift_positive": false,
+        "largest_code_weight_share_at_most_0_05": false,
+        "largest_positive_code_pnl_share_at_most_0_25": true,
+        "net40_greater_than_capacity_matched_control": true,
+        "net40_mean_positive": true,
+        "net60_mean_positive": false,
+        "positive_months_net40_at_least_10": false,
+        "target_mutation_exact": true,
+        "top10_code_weight_share_at_most_0_25": false,
+        "top_10_positive_pnl_codes_to_cash_net20_positive": false,
+        "traded_days_at_least_150": true,
+        "unique_codes_at_least_100": true
+      },
+      "independent_pnl_audit_exact": true,
+      "passes_all_retrospective_gates": false,
+      "passes_before_independent_pnl_audit": false
+    }
+  },
+  "runtime_seconds": 193.01893973350525,
+  "schema_version": 1
+}

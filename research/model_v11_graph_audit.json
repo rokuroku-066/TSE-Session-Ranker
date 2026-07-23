@@ -1,0 +1,430 @@
+{
+  "schema_version": 1,
+  "protocol_id": "v11_cross_stock_graph_propagation_20260723",
+  "protocol_sha256": "2f2382716ba9f7b151988470334b4da93bee5f68e30f7264beedcf16bf790244",
+  "runner_sha256": "0e1f0fab9aae3ee1696d5a9ae83fd678848679d4280ab33fdf74175d5f41695e",
+  "result_sha256": "61042d0ac4e8f599eb4e7b58c1ed2860410314cd67e6a5dd75c6633bfdd8ef95",
+  "picks_sha256": "adb0b48fa8340b9143fd8046a47c5f0b3e91a0546761978a6f32414380d4d760",
+  "repro_result_sha256": "db5fd02ef41c5155998dbe298301b88ce1c589d2dec10afad2059a9d98cbae2d",
+  "repro_picks_sha256": "adb0b48fa8340b9143fd8046a47c5f0b3e91a0546761978a6f32414380d4d760",
+  "integrity": {
+    "checks": {
+      "protocol_sidecar_matches": true,
+      "runner_hash_matches_result": true,
+      "strictly_prior_all_folds": true,
+      "price_source_violations_zero": true,
+      "target_mutation_passes": true,
+      "z17_target_not_reimplemented": true,
+      "external_sources_not_proxied": true,
+      "all_four_communities_occupied_each_fold": true
+    },
+    "passes": true
+  },
+  "pnl_reproduction": {
+    "passes": true,
+    "failure_count": 0,
+    "failures": []
+  },
+  "known_control_reproduction": {
+    "v10_c00_top2_passes": true,
+    "v10_c00_failures": [],
+    "z17_reference_checks": {
+      "protocol_id_matches": true,
+      "top1_net40_matches": true,
+      "top2_net40_matches": true,
+      "z17_not_paired_in_familywise": true
+    },
+    "passes": true
+  },
+  "deterministic_reproduction": {
+    "picks_byte_identical": true,
+    "metrics_identical": true,
+    "folds_identical": true,
+    "metrics_and_folds_identical": true,
+    "metric_failures": [],
+    "fold_failures": []
+  },
+  "multiplicity": {
+    "seed": 20260723,
+    "replicates": 10000,
+    "block_length_sessions_within_month": 10,
+    "stronger_comparator": "C00_daily_rank_ridge",
+    "simultaneous_90pct_critical_value": 0.3016742749333936,
+    "best_candidate_by_uplift": "G10_graph_disagreement_cash",
+    "best_observed_uplift_pct": -0.18442894003832547,
+    "familywise_reality_check_p_value": 0.998000199980002,
+    "candidates": {
+      "G01_positive_oc_corr_message": {
+        "delta_vs_stronger_comparator_net40_mean_pct": -0.2451690684574756,
+        "simultaneous_90pct_lower_bound_pct": -0.5468433433908693,
+        "familywise_adjusted_p_value": 0.9994000599940006
+      },
+      "G02_signed_oc_corr_message": {
+        "delta_vs_stronger_comparator_net40_mean_pct": -0.2399058004202787,
+        "simultaneous_90pct_lower_bound_pct": -0.5415800753536724,
+        "familywise_adjusted_p_value": 0.9994000599940006
+      },
+      "G03_directed_lead_lag_message": {
+        "delta_vs_stronger_comparator_net40_mean_pct": -0.4763772290285374,
+        "simultaneous_90pct_lower_bound_pct": -0.778051503961931,
+        "familywise_adjusted_p_value": 1.0
+      },
+      "G04_overnight_corr_message": {
+        "delta_vs_stronger_comparator_net40_mean_pct": -0.40721660919337027,
+        "simultaneous_90pct_lower_bound_pct": -0.7088908841267638,
+        "familywise_adjusted_p_value": 1.0
+      },
+      "G05_cojump_neighbor_pressure": {
+        "delta_vs_stronger_comparator_net40_mean_pct": -0.36004619958515044,
+        "simultaneous_90pct_lower_bound_pct": -0.6617204745185441,
+        "familywise_adjusted_p_value": 1.0
+      },
+      "G06_tdnet_event_neighbor_spillover": {
+        "delta_vs_stronger_comparator_net40_mean_pct": -0.44411428433297495,
+        "simultaneous_90pct_lower_bound_pct": -0.7457885592663686,
+        "familywise_adjusted_p_value": 1.0
+      },
+      "G07_neighbor_conditioned_empirical_uplift": {
+        "delta_vs_stronger_comparator_net40_mean_pct": -0.3129061626810344,
+        "simultaneous_90pct_lower_bound_pct": -0.6145804376144279,
+        "familywise_adjusted_p_value": 1.0
+      },
+      "G08_dynamic_community_archetype": {
+        "delta_vs_stronger_comparator_net40_mean_pct": -0.25256224763712726,
+        "simultaneous_90pct_lower_bound_pct": -0.5542365225705208,
+        "familywise_adjusted_p_value": 0.9996000399960004
+      },
+      "G09_two_hop_oc_diffusion": {
+        "delta_vs_stronger_comparator_net40_mean_pct": -0.4345644834395111,
+        "simultaneous_90pct_lower_bound_pct": -0.7362387583729046,
+        "familywise_adjusted_p_value": 1.0
+      },
+      "G10_graph_disagreement_cash": {
+        "delta_vs_stronger_comparator_net40_mean_pct": -0.18442894003832547,
+        "simultaneous_90pct_lower_bound_pct": -0.48610321497171904,
+        "familywise_adjusted_p_value": 0.998000199980002
+      }
+    }
+  },
+  "candidate_gates": {
+    "G01_positive_oc_corr_message": {
+      "checks": {
+        "top1_net40_positive": false,
+        "top2_net40_positive": false,
+        "top1_uplift_vs_C00_positive": false,
+        "top1_uplift_vs_C01_positive": false,
+        "familywise_lower_bound_positive": false,
+        "familywise_p_at_most_0_10": false,
+        "best20_removed_net20_positive": false,
+        "top10_codes_cash_net20_positive": false,
+        "all_three_slices_net40_positive": false,
+        "at_least_nine_of_thirteen_months_net40_positive": false,
+        "at_least_80pct_days_filled": true,
+        "top10_selection_share_below_0_50": true,
+        "all_integrity_audits_pass": true
+      },
+      "failed_checks": [
+        "top1_net40_positive",
+        "top2_net40_positive",
+        "top1_uplift_vs_C00_positive",
+        "top1_uplift_vs_C01_positive",
+        "familywise_lower_bound_positive",
+        "familywise_p_at_most_0_10",
+        "best20_removed_net20_positive",
+        "top10_codes_cash_net20_positive",
+        "all_three_slices_net40_positive",
+        "at_least_nine_of_thirteen_months_net40_positive"
+      ],
+      "passes_all": false
+    },
+    "G02_signed_oc_corr_message": {
+      "checks": {
+        "top1_net40_positive": false,
+        "top2_net40_positive": false,
+        "top1_uplift_vs_C00_positive": false,
+        "top1_uplift_vs_C01_positive": false,
+        "familywise_lower_bound_positive": false,
+        "familywise_p_at_most_0_10": false,
+        "best20_removed_net20_positive": false,
+        "top10_codes_cash_net20_positive": false,
+        "all_three_slices_net40_positive": false,
+        "at_least_nine_of_thirteen_months_net40_positive": false,
+        "at_least_80pct_days_filled": true,
+        "top10_selection_share_below_0_50": true,
+        "all_integrity_audits_pass": true
+      },
+      "failed_checks": [
+        "top1_net40_positive",
+        "top2_net40_positive",
+        "top1_uplift_vs_C00_positive",
+        "top1_uplift_vs_C01_positive",
+        "familywise_lower_bound_positive",
+        "familywise_p_at_most_0_10",
+        "best20_removed_net20_positive",
+        "top10_codes_cash_net20_positive",
+        "all_three_slices_net40_positive",
+        "at_least_nine_of_thirteen_months_net40_positive"
+      ],
+      "passes_all": false
+    },
+    "G03_directed_lead_lag_message": {
+      "checks": {
+        "top1_net40_positive": false,
+        "top2_net40_positive": false,
+        "top1_uplift_vs_C00_positive": false,
+        "top1_uplift_vs_C01_positive": false,
+        "familywise_lower_bound_positive": false,
+        "familywise_p_at_most_0_10": false,
+        "best20_removed_net20_positive": false,
+        "top10_codes_cash_net20_positive": false,
+        "all_three_slices_net40_positive": false,
+        "at_least_nine_of_thirteen_months_net40_positive": false,
+        "at_least_80pct_days_filled": true,
+        "top10_selection_share_below_0_50": true,
+        "all_integrity_audits_pass": true
+      },
+      "failed_checks": [
+        "top1_net40_positive",
+        "top2_net40_positive",
+        "top1_uplift_vs_C00_positive",
+        "top1_uplift_vs_C01_positive",
+        "familywise_lower_bound_positive",
+        "familywise_p_at_most_0_10",
+        "best20_removed_net20_positive",
+        "top10_codes_cash_net20_positive",
+        "all_three_slices_net40_positive",
+        "at_least_nine_of_thirteen_months_net40_positive"
+      ],
+      "passes_all": false
+    },
+    "G04_overnight_corr_message": {
+      "checks": {
+        "top1_net40_positive": false,
+        "top2_net40_positive": false,
+        "top1_uplift_vs_C00_positive": false,
+        "top1_uplift_vs_C01_positive": false,
+        "familywise_lower_bound_positive": false,
+        "familywise_p_at_most_0_10": false,
+        "best20_removed_net20_positive": false,
+        "top10_codes_cash_net20_positive": false,
+        "all_three_slices_net40_positive": false,
+        "at_least_nine_of_thirteen_months_net40_positive": false,
+        "at_least_80pct_days_filled": true,
+        "top10_selection_share_below_0_50": true,
+        "all_integrity_audits_pass": true
+      },
+      "failed_checks": [
+        "top1_net40_positive",
+        "top2_net40_positive",
+        "top1_uplift_vs_C00_positive",
+        "top1_uplift_vs_C01_positive",
+        "familywise_lower_bound_positive",
+        "familywise_p_at_most_0_10",
+        "best20_removed_net20_positive",
+        "top10_codes_cash_net20_positive",
+        "all_three_slices_net40_positive",
+        "at_least_nine_of_thirteen_months_net40_positive"
+      ],
+      "passes_all": false
+    },
+    "G05_cojump_neighbor_pressure": {
+      "checks": {
+        "top1_net40_positive": false,
+        "top2_net40_positive": false,
+        "top1_uplift_vs_C00_positive": false,
+        "top1_uplift_vs_C01_positive": false,
+        "familywise_lower_bound_positive": false,
+        "familywise_p_at_most_0_10": false,
+        "best20_removed_net20_positive": false,
+        "top10_codes_cash_net20_positive": false,
+        "all_three_slices_net40_positive": false,
+        "at_least_nine_of_thirteen_months_net40_positive": false,
+        "at_least_80pct_days_filled": true,
+        "top10_selection_share_below_0_50": true,
+        "all_integrity_audits_pass": true
+      },
+      "failed_checks": [
+        "top1_net40_positive",
+        "top2_net40_positive",
+        "top1_uplift_vs_C00_positive",
+        "top1_uplift_vs_C01_positive",
+        "familywise_lower_bound_positive",
+        "familywise_p_at_most_0_10",
+        "best20_removed_net20_positive",
+        "top10_codes_cash_net20_positive",
+        "all_three_slices_net40_positive",
+        "at_least_nine_of_thirteen_months_net40_positive"
+      ],
+      "passes_all": false
+    },
+    "G06_tdnet_event_neighbor_spillover": {
+      "checks": {
+        "top1_net40_positive": false,
+        "top2_net40_positive": false,
+        "top1_uplift_vs_C00_positive": false,
+        "top1_uplift_vs_C01_positive": false,
+        "familywise_lower_bound_positive": false,
+        "familywise_p_at_most_0_10": false,
+        "best20_removed_net20_positive": false,
+        "top10_codes_cash_net20_positive": false,
+        "all_three_slices_net40_positive": false,
+        "at_least_nine_of_thirteen_months_net40_positive": false,
+        "at_least_80pct_days_filled": false,
+        "top10_selection_share_below_0_50": true,
+        "all_integrity_audits_pass": true
+      },
+      "failed_checks": [
+        "top1_net40_positive",
+        "top2_net40_positive",
+        "top1_uplift_vs_C00_positive",
+        "top1_uplift_vs_C01_positive",
+        "familywise_lower_bound_positive",
+        "familywise_p_at_most_0_10",
+        "best20_removed_net20_positive",
+        "top10_codes_cash_net20_positive",
+        "all_three_slices_net40_positive",
+        "at_least_nine_of_thirteen_months_net40_positive",
+        "at_least_80pct_days_filled"
+      ],
+      "passes_all": false
+    },
+    "G07_neighbor_conditioned_empirical_uplift": {
+      "checks": {
+        "top1_net40_positive": false,
+        "top2_net40_positive": false,
+        "top1_uplift_vs_C00_positive": false,
+        "top1_uplift_vs_C01_positive": false,
+        "familywise_lower_bound_positive": false,
+        "familywise_p_at_most_0_10": false,
+        "best20_removed_net20_positive": false,
+        "top10_codes_cash_net20_positive": false,
+        "all_three_slices_net40_positive": false,
+        "at_least_nine_of_thirteen_months_net40_positive": false,
+        "at_least_80pct_days_filled": true,
+        "top10_selection_share_below_0_50": false,
+        "all_integrity_audits_pass": true
+      },
+      "failed_checks": [
+        "top1_net40_positive",
+        "top2_net40_positive",
+        "top1_uplift_vs_C00_positive",
+        "top1_uplift_vs_C01_positive",
+        "familywise_lower_bound_positive",
+        "familywise_p_at_most_0_10",
+        "best20_removed_net20_positive",
+        "top10_codes_cash_net20_positive",
+        "all_three_slices_net40_positive",
+        "at_least_nine_of_thirteen_months_net40_positive",
+        "top10_selection_share_below_0_50"
+      ],
+      "passes_all": false
+    },
+    "G08_dynamic_community_archetype": {
+      "checks": {
+        "top1_net40_positive": false,
+        "top2_net40_positive": false,
+        "top1_uplift_vs_C00_positive": false,
+        "top1_uplift_vs_C01_positive": false,
+        "familywise_lower_bound_positive": false,
+        "familywise_p_at_most_0_10": false,
+        "best20_removed_net20_positive": false,
+        "top10_codes_cash_net20_positive": false,
+        "all_three_slices_net40_positive": false,
+        "at_least_nine_of_thirteen_months_net40_positive": false,
+        "at_least_80pct_days_filled": true,
+        "top10_selection_share_below_0_50": false,
+        "all_integrity_audits_pass": true
+      },
+      "failed_checks": [
+        "top1_net40_positive",
+        "top2_net40_positive",
+        "top1_uplift_vs_C00_positive",
+        "top1_uplift_vs_C01_positive",
+        "familywise_lower_bound_positive",
+        "familywise_p_at_most_0_10",
+        "best20_removed_net20_positive",
+        "top10_codes_cash_net20_positive",
+        "all_three_slices_net40_positive",
+        "at_least_nine_of_thirteen_months_net40_positive",
+        "top10_selection_share_below_0_50"
+      ],
+      "passes_all": false
+    },
+    "G09_two_hop_oc_diffusion": {
+      "checks": {
+        "top1_net40_positive": false,
+        "top2_net40_positive": false,
+        "top1_uplift_vs_C00_positive": false,
+        "top1_uplift_vs_C01_positive": false,
+        "familywise_lower_bound_positive": false,
+        "familywise_p_at_most_0_10": false,
+        "best20_removed_net20_positive": false,
+        "top10_codes_cash_net20_positive": false,
+        "all_three_slices_net40_positive": false,
+        "at_least_nine_of_thirteen_months_net40_positive": false,
+        "at_least_80pct_days_filled": true,
+        "top10_selection_share_below_0_50": true,
+        "all_integrity_audits_pass": true
+      },
+      "failed_checks": [
+        "top1_net40_positive",
+        "top2_net40_positive",
+        "top1_uplift_vs_C00_positive",
+        "top1_uplift_vs_C01_positive",
+        "familywise_lower_bound_positive",
+        "familywise_p_at_most_0_10",
+        "best20_removed_net20_positive",
+        "top10_codes_cash_net20_positive",
+        "all_three_slices_net40_positive",
+        "at_least_nine_of_thirteen_months_net40_positive"
+      ],
+      "passes_all": false
+    },
+    "G10_graph_disagreement_cash": {
+      "checks": {
+        "top1_net40_positive": false,
+        "top2_net40_positive": false,
+        "top1_uplift_vs_C00_positive": false,
+        "top1_uplift_vs_C01_positive": false,
+        "familywise_lower_bound_positive": false,
+        "familywise_p_at_most_0_10": false,
+        "best20_removed_net20_positive": false,
+        "top10_codes_cash_net20_positive": false,
+        "all_three_slices_net40_positive": false,
+        "at_least_nine_of_thirteen_months_net40_positive": false,
+        "at_least_80pct_days_filled": true,
+        "top10_selection_share_below_0_50": true,
+        "all_integrity_audits_pass": true
+      },
+      "failed_checks": [
+        "top1_net40_positive",
+        "top2_net40_positive",
+        "top1_uplift_vs_C00_positive",
+        "top1_uplift_vs_C01_positive",
+        "familywise_lower_bound_positive",
+        "familywise_p_at_most_0_10",
+        "best20_removed_net20_positive",
+        "top10_codes_cash_net20_positive",
+        "all_three_slices_net40_positive",
+        "at_least_nine_of_thirteen_months_net40_positive"
+      ],
+      "passes_all": false
+    }
+  },
+  "decision": {
+    "stronger_comparator": "C00_daily_rank_ridge",
+    "best_point_estimate_candidate": "G10_graph_disagreement_cash",
+    "passing_candidate_ids": [],
+    "selected_forward_shadow_candidate": null,
+    "retrospective_decision": "reject_family",
+    "production_checks": {
+      "retrospective_gate_has_winner": false,
+      "new_120_session_prospective_gate_passed": false,
+      "prospective_one_sided_95pct_lower_bound_positive": false,
+      "human_production_approval_recorded": false
+    },
+    "production_gate_passes": false,
+    "production_model_changed": false,
+    "orders_allowed": false
+  }
+}
