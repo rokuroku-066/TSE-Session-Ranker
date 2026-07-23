@@ -1,0 +1,1013 @@
+{
+  "schema_version": 1,
+  "artifact_id": "model_v09_protocol_ledger_20260723",
+  "authority": {
+    "retrospective_only": true,
+    "untouched_confirmation_available": false,
+    "production_promotion_allowed": false
+  },
+  "namespace_policy": {
+    "format": "<workstream>.<source-local-id>",
+    "workstreams": [
+      "error_meta",
+      "target_portfolio",
+      "breadth_falsification"
+    ],
+    "collision_example": {
+      "error_meta_h20": "error_meta.H20_breadth_rank2_one",
+      "target_portfolio_h20": "target_portfolio.H20_L4_rank3_only"
+    }
+  },
+  "counts": {
+    "error_meta": 20,
+    "target_portfolio": 33,
+    "breadth_falsification": 4,
+    "total": 57
+  },
+  "entries": [
+    {
+      "canonical_id": "error_meta.H01_agreement_gate",
+      "namespace": "error_meta",
+      "local_id": "H01_agreement_gate",
+      "protocol_id": "v09_selected_error_hypotheses_20260723",
+      "protocol_sha256": "12ac33ace5e681be4cd4db4f934a6e38d520be5cceba3a963af688025847c6ba",
+      "registration_stage": "frozen_before_confirmation_read",
+      "authority": "retrospective selection-conditional diagnostic; no production promotion",
+      "retrospective": true,
+      "posthoc": false,
+      "production_promotion_allowed": false,
+      "definition": "Display only securities present in both L4 and L6 top-two sets; leave unused slots in cash.",
+      "mechanism": "Independent specification agreement should identify less model-sensitive rankings.",
+      "pit": true
+    },
+    {
+      "canonical_id": "error_meta.H02_rank_splice",
+      "namespace": "error_meta",
+      "local_id": "H02_rank_splice",
+      "protocol_id": "v09_selected_error_hypotheses_20260723",
+      "protocol_sha256": "12ac33ace5e681be4cd4db4f934a6e38d520be5cceba3a963af688025847c6ba",
+      "registration_stage": "frozen_before_confirmation_read",
+      "authority": "retrospective selection-conditional diagnostic; no production promotion",
+      "retrospective": true,
+      "posthoc": false,
+      "production_promotion_allowed": false,
+      "definition": "Prefer L4 rank 2 and L6 rank 1, deduplicate, then fill to two from common order.",
+      "mechanism": "Discovery showed different rank-local performance for the two specifications.",
+      "pit": true
+    },
+    {
+      "canonical_id": "error_meta.H03_breadth_switch",
+      "namespace": "error_meta",
+      "local_id": "H03_breadth_switch",
+      "protocol_id": "v09_selected_error_hypotheses_20260723",
+      "protocol_sha256": "12ac33ace5e681be4cd4db4f934a6e38d520be5cceba3a963af688025847c6ba",
+      "registration_stage": "frozen_before_confirmation_read",
+      "authority": "retrospective selection-conditional diagnostic; no production promotion",
+      "retrospective": true,
+      "posthoc": false,
+      "production_promotion_allowed": false,
+      "definition": "Use L4 top two when prior-session market breadth is below 0.5; otherwise use L6 top two.",
+      "mechanism": "L4 may be better at idiosyncratic rebound selection after a weak-breadth session.",
+      "pit": true
+    },
+    {
+      "canonical_id": "error_meta.H04_trailing20_model_switch",
+      "namespace": "error_meta",
+      "local_id": "H04_trailing20_model_switch",
+      "protocol_id": "v09_selected_error_hypotheses_20260723",
+      "protocol_sha256": "12ac33ace5e681be4cd4db4f934a6e38d520be5cceba3a963af688025847c6ba",
+      "registration_stage": "frozen_before_confirmation_read",
+      "authority": "retrospective selection-conditional diagnostic; no production promotion",
+      "retrospective": true,
+      "posthoc": false,
+      "production_promotion_allowed": false,
+      "definition": "Use the model with the larger trailing 20-session daily net20, minimum 10 sessions; default L4 before enough history.",
+      "mechanism": "Model usefulness may drift and can be selected using only realised prior performance.",
+      "pit": true
+    },
+    {
+      "canonical_id": "error_meta.H05_positive_momentum20_priority",
+      "namespace": "error_meta",
+      "local_id": "H05_positive_momentum20_priority",
+      "protocol_id": "v09_selected_error_hypotheses_20260723",
+      "protocol_sha256": "12ac33ace5e681be4cd4db4f934a6e38d520be5cceba3a963af688025847c6ba",
+      "registration_stage": "frozen_before_confirmation_read",
+      "authority": "retrospective selection-conditional diagnostic; no production promotion",
+      "retrospective": true,
+      "posthoc": false,
+      "production_promotion_allowed": false,
+      "definition": "Within the L4/L6 union, prefer close momentum over the prior 20 sessions above zero, then common order; fill two.",
+      "mechanism": "A positive medium-term trend may distinguish persistent demand from one-day rebound noise.",
+      "pit": true
+    },
+    {
+      "canonical_id": "error_meta.H06_positive_prior_oc_priority",
+      "namespace": "error_meta",
+      "local_id": "H06_positive_prior_oc_priority",
+      "protocol_id": "v09_selected_error_hypotheses_20260723",
+      "protocol_sha256": "12ac33ace5e681be4cd4db4f934a6e38d520be5cceba3a963af688025847c6ba",
+      "registration_stage": "frozen_before_confirmation_read",
+      "authority": "retrospective selection-conditional diagnostic; no production promotion",
+      "retrospective": true,
+      "posthoc": false,
+      "production_promotion_allowed": false,
+      "definition": "Within the union, prefer prior-session open-to-close return above zero, then common order; fill two.",
+      "mechanism": "Immediate intraday continuation may identify persistent buying.",
+      "pit": true
+    },
+    {
+      "canonical_id": "error_meta.H07_positive_ocmean5_priority",
+      "namespace": "error_meta",
+      "local_id": "H07_positive_ocmean5_priority",
+      "protocol_id": "v09_selected_error_hypotheses_20260723",
+      "protocol_sha256": "12ac33ace5e681be4cd4db4f934a6e38d520be5cceba3a963af688025847c6ba",
+      "registration_stage": "frozen_before_confirmation_read",
+      "authority": "retrospective selection-conditional diagnostic; no production promotion",
+      "retrospective": true,
+      "posthoc": false,
+      "production_promotion_allowed": false,
+      "definition": "Within the union, prefer strictly-prior five-session mean open-to-close return above zero, then common order; fill two.",
+      "mechanism": "A short sequence of positive sessions may be more reliable than a single-day sign.",
+      "pit": true
+    },
+    {
+      "canonical_id": "error_meta.H08_nonrepeat_priority",
+      "namespace": "error_meta",
+      "local_id": "H08_nonrepeat_priority",
+      "protocol_id": "v09_selected_error_hypotheses_20260723",
+      "protocol_sha256": "12ac33ace5e681be4cd4db4f934a6e38d520be5cceba3a963af688025847c6ba",
+      "registration_stage": "frozen_before_confirmation_read",
+      "authority": "retrospective selection-conditional diagnostic; no production promotion",
+      "retrospective": true,
+      "posthoc": false,
+      "production_promotion_allowed": false,
+      "definition": "Within the union, prefer codes absent from both models' prior-session top-two sets, then common order; fill two.",
+      "mechanism": "Repeated display may amplify stale predictions and single-code concentration.",
+      "pit": true
+    },
+    {
+      "canonical_id": "error_meta.H09_sub500_priority",
+      "namespace": "error_meta",
+      "local_id": "H09_sub500_priority",
+      "protocol_id": "v09_selected_error_hypotheses_20260723",
+      "protocol_sha256": "12ac33ace5e681be4cd4db4f934a6e38d520be5cceba3a963af688025847c6ba",
+      "registration_stage": "frozen_before_confirmation_read",
+      "authority": "retrospective selection-conditional diagnostic; no production promotion",
+      "retrospective": true,
+      "posthoc": false,
+      "production_promotion_allowed": false,
+      "definition": "Within the union, prefer securities with strictly-prior close below 500 yen, then common order; fill two.",
+      "mechanism": "The discovery winner concentration in low nominal-price names could represent retail demand or merely an outlier; this is an explicit falsification test.",
+      "pit": true
+    },
+    {
+      "canonical_id": "error_meta.H10_positive_market_trend_gate",
+      "namespace": "error_meta",
+      "local_id": "H10_positive_market_trend_gate",
+      "protocol_id": "v09_selected_error_hypotheses_20260723",
+      "protocol_sha256": "12ac33ace5e681be4cd4db4f934a6e38d520be5cceba3a963af688025847c6ba",
+      "registration_stage": "frozen_before_confirmation_read",
+      "authority": "retrospective selection-conditional diagnostic; no production promotion",
+      "retrospective": true,
+      "posthoc": false,
+      "production_promotion_allowed": false,
+      "definition": "Display L4 top-two only when the strictly-prior five-session mean market close-to-close return is nonnegative; otherwise hold cash.",
+      "mechanism": "The signal may need a supportive short market trend.",
+      "pit": true
+    },
+    {
+      "canonical_id": "error_meta.H11_month_end_gate",
+      "namespace": "error_meta",
+      "local_id": "H11_month_end_gate",
+      "protocol_id": "v09_selected_error_hypotheses_20260723",
+      "protocol_sha256": "12ac33ace5e681be4cd4db4f934a6e38d520be5cceba3a963af688025847c6ba",
+      "registration_stage": "frozen_before_confirmation_read",
+      "authority": "retrospective selection-conditional diagnostic; no production promotion",
+      "retrospective": true,
+      "posthoc": false,
+      "production_promotion_allowed": false,
+      "definition": "Display L4 top-two only in the final five calendar days of a month; otherwise hold cash.",
+      "mechanism": "Month-end institutional flows may reinforce selected names; sparse and explicitly considered a falsification test.",
+      "pit": true
+    },
+    {
+      "canonical_id": "error_meta.H12_margin_switch",
+      "namespace": "error_meta",
+      "local_id": "H12_margin_switch",
+      "protocol_id": "v09_selected_error_hypotheses_20260723",
+      "protocol_sha256": "12ac33ace5e681be4cd4db4f934a6e38d520be5cceba3a963af688025847c6ba",
+      "registration_stage": "frozen_before_confirmation_read",
+      "authority": "retrospective selection-conditional diagnostic; no production promotion",
+      "retrospective": true,
+      "posthoc": false,
+      "production_promotion_allowed": false,
+      "definition": "Use L4 when its rank1-minus-rank2 score margin is no greater than its strictly-prior rolling-60-session median; otherwise use L6. Use L4 if the reference is unavailable.",
+      "mechanism": "A large score gap may represent unstable extrapolation rather than confidence.",
+      "pit": true
+    },
+    {
+      "canonical_id": "error_meta.H13_dispersion_switch",
+      "namespace": "error_meta",
+      "local_id": "H13_dispersion_switch",
+      "protocol_id": "v09_selected_error_hypotheses_20260723",
+      "protocol_sha256": "12ac33ace5e681be4cd4db4f934a6e38d520be5cceba3a963af688025847c6ba",
+      "registration_stage": "frozen_before_confirmation_read",
+      "authority": "retrospective selection-conditional diagnostic; no production promotion",
+      "retrospective": true,
+      "posthoc": false,
+      "production_promotion_allowed": false,
+      "definition": "Use L6 when prior-session cross-sectional open-to-close dispersion is no greater than its strictly-prior rolling-60-session median; otherwise use L4. Use L4 if unavailable.",
+      "mechanism": "The liquidity-proxy extension may behave differently in calm and dispersed regimes.",
+      "pit": true
+    },
+    {
+      "canonical_id": "error_meta.H14_prior_code_alpha_priority",
+      "namespace": "error_meta",
+      "local_id": "H14_prior_code_alpha_priority",
+      "protocol_id": "v09_selected_error_hypotheses_20260723",
+      "protocol_sha256": "12ac33ace5e681be4cd4db4f934a6e38d520be5cceba3a963af688025847c6ba",
+      "registration_stage": "frozen_before_confirmation_read",
+      "authority": "retrospective selection-conditional diagnostic; no production promotion",
+      "retrospective": true,
+      "posthoc": false,
+      "production_promotion_allowed": false,
+      "definition": "Within the union, prefer codes whose prior union-selected shrinkage alpha sum(return)/(observations+5) is positive, then common order; fill two.",
+      "mechanism": "Persistent stock-specific intraday behavior may be omitted from the global model.",
+      "pit": true
+    },
+    {
+      "canonical_id": "error_meta.H15_moderate_volatility_priority",
+      "namespace": "error_meta",
+      "local_id": "H15_moderate_volatility_priority",
+      "protocol_id": "v09_selected_error_hypotheses_20260723",
+      "protocol_sha256": "12ac33ace5e681be4cd4db4f934a6e38d520be5cceba3a963af688025847c6ba",
+      "registration_stage": "frozen_before_confirmation_read",
+      "authority": "retrospective selection-conditional diagnostic; no production promotion",
+      "retrospective": true,
+      "posthoc": false,
+      "production_promotion_allowed": false,
+      "definition": "Within each session's union, prefer securities whose strictly-prior 20-session open-to-close volatility is no greater than the union median, then common order; fill two.",
+      "mechanism": "Lower realised volatility may reduce large selected errors without imposing a hindsight-tuned absolute threshold.",
+      "pit": true
+    },
+    {
+      "canonical_id": "error_meta.H16_low_recent_selection_frequency",
+      "namespace": "error_meta",
+      "local_id": "H16_low_recent_selection_frequency",
+      "protocol_id": "v09_selected_error_hypotheses_20260723",
+      "protocol_sha256": "12ac33ace5e681be4cd4db4f934a6e38d520be5cceba3a963af688025847c6ba",
+      "registration_stage": "frozen_before_confirmation_read",
+      "authority": "retrospective selection-conditional diagnostic; no production promotion",
+      "retrospective": true,
+      "posthoc": false,
+      "production_promotion_allowed": false,
+      "definition": "Within the union, sort ascending by the number of score sessions in which the code appeared in either model during the strictly-prior 20 score sessions, then common order; fill two.",
+      "mechanism": "A continuous ranking tendency can make apparent performance and errors depend on a small number of stale names.",
+      "pit": true
+    },
+    {
+      "canonical_id": "error_meta.H17_extreme_score_switch",
+      "namespace": "error_meta",
+      "local_id": "H17_extreme_score_switch",
+      "protocol_id": "v09_selected_error_hypotheses_20260723",
+      "protocol_sha256": "12ac33ace5e681be4cd4db4f934a6e38d520be5cceba3a963af688025847c6ba",
+      "registration_stage": "frozen_before_confirmation_read",
+      "authority": "retrospective selection-conditional diagnostic; no production promotion",
+      "retrospective": true,
+      "posthoc": false,
+      "production_promotion_allowed": false,
+      "definition": "Use L6 top two when the L4 rank-one score exceeds the strictly-prior rolling-60-session 90th percentile of L4 rank-one scores; otherwise use L4. Require 20 references and default L4.",
+      "mechanism": "An extreme score may be extrapolation outside the usual monthly ranking scale rather than genuine confidence.",
+      "pit": true
+    },
+    {
+      "canonical_id": "error_meta.H18_l4_rank2_only",
+      "namespace": "error_meta",
+      "local_id": "H18_l4_rank2_only",
+      "protocol_id": "v09_selected_error_hypotheses_20260723",
+      "protocol_sha256": "12ac33ace5e681be4cd4db4f934a6e38d520be5cceba3a963af688025847c6ba",
+      "registration_stage": "frozen_before_confirmation_read",
+      "authority": "retrospective selection-conditional diagnostic; no production promotion",
+      "retrospective": true,
+      "posthoc": false,
+      "production_promotion_allowed": false,
+      "definition": "Display only L4 rank two and leave the second slot in cash.",
+      "mechanism": "Discovery and the canonical full-period result both suggest L4 rank two is broader and stronger while rank one is more concentrated.",
+      "pit": true
+    },
+    {
+      "canonical_id": "error_meta.H19_rank1_frequency_cap",
+      "namespace": "error_meta",
+      "local_id": "H19_rank1_frequency_cap",
+      "protocol_id": "v09_selected_error_hypotheses_20260723",
+      "protocol_sha256": "12ac33ace5e681be4cd4db4f934a6e38d520be5cceba3a963af688025847c6ba",
+      "registration_stage": "frozen_before_confirmation_read",
+      "authority": "retrospective selection-conditional diagnostic; no production promotion",
+      "retrospective": true,
+      "posthoc": false,
+      "production_promotion_allowed": false,
+      "definition": "Always display L4 rank two; also display L4 rank one only when its code appeared in at most two of the strictly-prior 20 L4 score sessions.",
+      "mechanism": "This directly tests whether the weaker rank-one sleeve can be retained only when it is not a recurrent concentrated name.",
+      "pit": true
+    },
+    {
+      "canonical_id": "error_meta.H20_breadth_rank2_one",
+      "namespace": "error_meta",
+      "local_id": "H20_breadth_rank2_one",
+      "protocol_id": "v09_h20_posthoc_rank2_breadth_20260723",
+      "protocol_sha256": "389fdfb034649df16a094b268e22513623392820303ab272b4bf68d19093ddf5",
+      "registration_stage": "frozen_before_h20_calculation",
+      "authority": "posthoc integration after observing H03 breadth-switch and H18 L4-rank2 results; descriptive only and not an untouched confirmation",
+      "retrospective": true,
+      "posthoc": true,
+      "production_promotion_allowed": false,
+      "definition": "If strictly-prior market open-to-close breadth is below 0.5, select L4 rank 2; otherwise select L6 rank 2.",
+      "pit": true
+    },
+    {
+      "canonical_id": "target_portfolio.H01_exact_centered_L4",
+      "namespace": "target_portfolio",
+      "local_id": "H01_exact_centered_L4",
+      "round": 1,
+      "protocol_id": "v09_target_preprocess_portfolio_zero_base_20260723",
+      "protocol_sha256": "d63f7efc0359abfedf4a235a1e9aba3ddcdd97119e2897950d634a44e39e3a4e",
+      "registration_stage": "registered_before_new_metrics",
+      "authority": "retrospective_hypothesis_screen_only_no_production_promotion",
+      "retrospective": true,
+      "posthoc": false,
+      "production_promotion_allowed": false,
+      "definition": {
+        "type": "target",
+        "features": "L4",
+        "formula": "2 * (average_rank - 1) / (n - 1) - 1 within training date"
+      },
+      "claim": "removing the finite-cross-section positive offset improves coefficient stability"
+    },
+    {
+      "canonical_id": "target_portfolio.H02_exact_centered_L6",
+      "namespace": "target_portfolio",
+      "local_id": "H02_exact_centered_L6",
+      "round": 1,
+      "protocol_id": "v09_target_preprocess_portfolio_zero_base_20260723",
+      "protocol_sha256": "d63f7efc0359abfedf4a235a1e9aba3ddcdd97119e2897950d634a44e39e3a4e",
+      "registration_stage": "registered_before_new_metrics",
+      "authority": "retrospective_hypothesis_screen_only_no_production_promotion",
+      "retrospective": true,
+      "posthoc": false,
+      "production_promotion_allowed": false,
+      "definition": {
+        "type": "target",
+        "features": "L6",
+        "formula": "same exact-centered rank as H01"
+      },
+      "claim": "exact centering improves the lower-concentration role too"
+    },
+    {
+      "canonical_id": "target_portfolio.H03_winsor_rank_L4",
+      "namespace": "target_portfolio",
+      "local_id": "H03_winsor_rank_L4",
+      "round": 1,
+      "protocol_id": "v09_target_preprocess_portfolio_zero_base_20260723",
+      "protocol_sha256": "d63f7efc0359abfedf4a235a1e9aba3ddcdd97119e2897950d634a44e39e3a4e",
+      "registration_stage": "registered_before_new_metrics",
+      "authority": "retrospective_hypothesis_screen_only_no_production_promotion",
+      "retrospective": true,
+      "posthoc": false,
+      "production_promotion_allowed": false,
+      "definition": {
+        "type": "target",
+        "features": "L4",
+        "formula": "clip return to within-date 5th/95th percentiles, then exact-centered average rank"
+      },
+      "claim": "collapsing extreme outcomes reduces tail-driven coefficients"
+    },
+    {
+      "canonical_id": "target_portfolio.H04_risk_adjusted_rank_L4",
+      "namespace": "target_portfolio",
+      "local_id": "H04_risk_adjusted_rank_L4",
+      "round": 1,
+      "protocol_id": "v09_target_preprocess_portfolio_zero_base_20260723",
+      "protocol_sha256": "d63f7efc0359abfedf4a235a1e9aba3ddcdd97119e2897950d634a44e39e3a4e",
+      "registration_stage": "registered_before_new_metrics",
+      "authority": "retrospective_hypothesis_screen_only_no_production_promotion",
+      "retrospective": true,
+      "posthoc": false,
+      "production_promotion_allowed": false,
+      "definition": {
+        "type": "target",
+        "features": "L4",
+        "formula": "exact-centered daily rank of return / clip(prior oc_std_20, 0.25, 10)"
+      },
+      "claim": "rewarding return per unit of known idiosyncratic variability improves net selection"
+    },
+    {
+      "canonical_id": "target_portfolio.H05_magnitude_rank_L4",
+      "namespace": "target_portfolio",
+      "local_id": "H05_magnitude_rank_L4",
+      "round": 1,
+      "protocol_id": "v09_target_preprocess_portfolio_zero_base_20260723",
+      "protocol_sha256": "d63f7efc0359abfedf4a235a1e9aba3ddcdd97119e2897950d634a44e39e3a4e",
+      "registration_stage": "registered_before_new_metrics",
+      "authority": "retrospective_hypothesis_screen_only_no_production_promotion",
+      "retrospective": true,
+      "posthoc": false,
+      "production_promotion_allowed": false,
+      "definition": {
+        "type": "target",
+        "features": "L4",
+        "formula": "exact-centered rank multiplied by clip(abs(return)/within-date median abs return, 0.5, 2)"
+      },
+      "claim": "retaining bounded economic magnitude improves profit rather than only ordering"
+    },
+    {
+      "canonical_id": "target_portfolio.H06_date_weighted_preprocess_L4",
+      "namespace": "target_portfolio",
+      "local_id": "H06_date_weighted_preprocess_L4",
+      "round": 1,
+      "protocol_id": "v09_target_preprocess_portfolio_zero_base_20260723",
+      "protocol_sha256": "d63f7efc0359abfedf4a235a1e9aba3ddcdd97119e2897950d634a44e39e3a4e",
+      "registration_stage": "registered_before_new_metrics",
+      "authority": "retrospective_hypothesis_screen_only_no_production_promotion",
+      "retrospective": true,
+      "posthoc": false,
+      "production_promotion_allowed": false,
+      "definition": {
+        "type": "preprocessing",
+        "features": "L4",
+        "target": "v0.8 percentile rank",
+        "formula": "date-equal weighted feature medians, means and variances; missing indicators retained"
+      },
+      "claim": "preventing larger daily universes from dominating imputation and scaling improves temporal stability"
+    },
+    {
+      "canonical_id": "target_portfolio.H07_date_weighted_preprocess_L6",
+      "namespace": "target_portfolio",
+      "local_id": "H07_date_weighted_preprocess_L6",
+      "round": 1,
+      "protocol_id": "v09_target_preprocess_portfolio_zero_base_20260723",
+      "protocol_sha256": "d63f7efc0359abfedf4a235a1e9aba3ddcdd97119e2897950d634a44e39e3a4e",
+      "registration_stage": "registered_before_new_metrics",
+      "authority": "retrospective_hypothesis_screen_only_no_production_promotion",
+      "retrospective": true,
+      "posthoc": false,
+      "production_promotion_allowed": false,
+      "definition": {
+        "type": "preprocessing",
+        "features": "L6",
+        "target": "v0.8 percentile rank",
+        "formula": "same weighted preprocessing as H06"
+      },
+      "claim": "date-equal preprocessing improves L6 robustness"
+    },
+    {
+      "canonical_id": "target_portfolio.H08_alpha_ensemble_L4",
+      "namespace": "target_portfolio",
+      "local_id": "H08_alpha_ensemble_L4",
+      "round": 1,
+      "protocol_id": "v09_target_preprocess_portfolio_zero_base_20260723",
+      "protocol_sha256": "d63f7efc0359abfedf4a235a1e9aba3ddcdd97119e2897950d634a44e39e3a4e",
+      "registration_stage": "registered_before_new_metrics",
+      "authority": "retrospective_hypothesis_screen_only_no_production_promotion",
+      "retrospective": true,
+      "posthoc": false,
+      "production_promotion_allowed": false,
+      "definition": {
+        "type": "coefficient_stabilization",
+        "features": "L4",
+        "target": "v0.8 percentile rank",
+        "formula": "mean within-score-date score percentile from Ridge alpha 1, 10 and 100"
+      },
+      "claim": "averaging shrinkage levels reduces coefficient instability"
+    },
+    {
+      "canonical_id": "target_portfolio.H09_L4_L6_rank_ensemble",
+      "namespace": "target_portfolio",
+      "local_id": "H09_L4_L6_rank_ensemble",
+      "round": 1,
+      "protocol_id": "v09_target_preprocess_portfolio_zero_base_20260723",
+      "protocol_sha256": "d63f7efc0359abfedf4a235a1e9aba3ddcdd97119e2897950d634a44e39e3a4e",
+      "registration_stage": "registered_before_new_metrics",
+      "authority": "retrospective_hypothesis_screen_only_no_production_promotion",
+      "retrospective": true,
+      "posthoc": false,
+      "production_promotion_allowed": false,
+      "definition": {
+        "type": "model_ensemble",
+        "target": "v0.8 percentile rank",
+        "formula": "mean within-score-date score percentile from L4 alpha1 and L6 alpha1"
+      },
+      "claim": "agreement between the mean and robustness roles improves rank quality"
+    },
+    {
+      "canonical_id": "target_portfolio.H10_L4_rank1_only",
+      "namespace": "target_portfolio",
+      "local_id": "H10_L4_rank1_only",
+      "round": 1,
+      "protocol_id": "v09_target_preprocess_portfolio_zero_base_20260723",
+      "protocol_sha256": "d63f7efc0359abfedf4a235a1e9aba3ddcdd97119e2897950d634a44e39e3a4e",
+      "registration_stage": "registered_before_new_metrics",
+      "authority": "retrospective_hypothesis_screen_only_no_production_promotion",
+      "retrospective": true,
+      "posthoc": false,
+      "production_promotion_allowed": false,
+      "definition": {
+        "type": "portfolio",
+        "source": "v0.8 L4 picks",
+        "formula": "100% in rank 1"
+      },
+      "claim": "the second name dilutes the strongest signal"
+    },
+    {
+      "canonical_id": "target_portfolio.H11_L4_rank75_25",
+      "namespace": "target_portfolio",
+      "local_id": "H11_L4_rank75_25",
+      "round": 1,
+      "protocol_id": "v09_target_preprocess_portfolio_zero_base_20260723",
+      "protocol_sha256": "d63f7efc0359abfedf4a235a1e9aba3ddcdd97119e2897950d634a44e39e3a4e",
+      "registration_stage": "registered_before_new_metrics",
+      "authority": "retrospective_hypothesis_screen_only_no_production_promotion",
+      "retrospective": true,
+      "posthoc": false,
+      "production_promotion_allowed": false,
+      "definition": {
+        "type": "portfolio",
+        "source": "v0.8 L4 picks",
+        "formula": "75% rank 1, 25% rank 2"
+      },
+      "claim": "partial diversification improves tail risk without fully diluting rank 1"
+    },
+    {
+      "canonical_id": "target_portfolio.H12_L6_rank1_only",
+      "namespace": "target_portfolio",
+      "local_id": "H12_L6_rank1_only",
+      "round": 1,
+      "protocol_id": "v09_target_preprocess_portfolio_zero_base_20260723",
+      "protocol_sha256": "d63f7efc0359abfedf4a235a1e9aba3ddcdd97119e2897950d634a44e39e3a4e",
+      "registration_stage": "registered_before_new_metrics",
+      "authority": "retrospective_hypothesis_screen_only_no_production_promotion",
+      "retrospective": true,
+      "posthoc": false,
+      "production_promotion_allowed": false,
+      "definition": {
+        "type": "portfolio",
+        "source": "v0.8 L6 picks",
+        "formula": "100% in rank 1"
+      },
+      "claim": "L6 rank 1 captures most of its lower-concentration signal"
+    },
+    {
+      "canonical_id": "target_portfolio.H13_L6_rank75_25",
+      "namespace": "target_portfolio",
+      "local_id": "H13_L6_rank75_25",
+      "round": 1,
+      "protocol_id": "v09_target_preprocess_portfolio_zero_base_20260723",
+      "protocol_sha256": "d63f7efc0359abfedf4a235a1e9aba3ddcdd97119e2897950d634a44e39e3a4e",
+      "registration_stage": "registered_before_new_metrics",
+      "authority": "retrospective_hypothesis_screen_only_no_production_promotion",
+      "retrospective": true,
+      "posthoc": false,
+      "production_promotion_allowed": false,
+      "definition": {
+        "type": "portfolio",
+        "source": "v0.8 L6 picks",
+        "formula": "75% rank 1, 25% rank 2"
+      },
+      "claim": "partial diversification is superior to equal sleeves"
+    },
+    {
+      "canonical_id": "target_portfolio.H14_L4_margin_q75",
+      "namespace": "target_portfolio",
+      "local_id": "H14_L4_margin_q75",
+      "round": 1,
+      "protocol_id": "v09_target_preprocess_portfolio_zero_base_20260723",
+      "protocol_sha256": "d63f7efc0359abfedf4a235a1e9aba3ddcdd97119e2897950d634a44e39e3a4e",
+      "registration_stage": "registered_before_new_metrics",
+      "authority": "retrospective_hypothesis_screen_only_no_production_promotion",
+      "retrospective": true,
+      "posthoc": false,
+      "production_promotion_allowed": false,
+      "definition": {
+        "type": "portfolio",
+        "source": "v0.8 L4 picks",
+        "formula": "if relative top1-top2 score margin exceeds the expanding prior-date 75th percentile, allocate 100% rank1; otherwise 50/50"
+      },
+      "claim": "large model-score separation is useful conviction information"
+    },
+    {
+      "canonical_id": "target_portfolio.H15_L4_L6_consensus_fallback",
+      "namespace": "target_portfolio",
+      "local_id": "H15_L4_L6_consensus_fallback",
+      "round": 1,
+      "protocol_id": "v09_target_preprocess_portfolio_zero_base_20260723",
+      "protocol_sha256": "d63f7efc0359abfedf4a235a1e9aba3ddcdd97119e2897950d634a44e39e3a4e",
+      "registration_stage": "registered_before_new_metrics",
+      "authority": "retrospective_hypothesis_screen_only_no_production_promotion",
+      "retrospective": true,
+      "posthoc": false,
+      "production_promotion_allowed": false,
+      "definition": {
+        "type": "portfolio",
+        "source": "v0.8 L4 and L6 picks",
+        "formula": "hold their top2 intersection equally; if empty hold L4 rank1"
+      },
+      "claim": "cross-model consensus filters unstable selections while preserving one or two daily candidates"
+    },
+    {
+      "canonical_id": "target_portfolio.H16_L4_L6_top1_blend",
+      "namespace": "target_portfolio",
+      "local_id": "H16_L4_L6_top1_blend",
+      "round": 1,
+      "protocol_id": "v09_target_preprocess_portfolio_zero_base_20260723",
+      "protocol_sha256": "d63f7efc0359abfedf4a235a1e9aba3ddcdd97119e2897950d634a44e39e3a4e",
+      "registration_stage": "registered_before_new_metrics",
+      "authority": "retrospective_hypothesis_screen_only_no_production_promotion",
+      "retrospective": true,
+      "posthoc": false,
+      "production_promotion_allowed": false,
+      "definition": {
+        "type": "portfolio",
+        "source": "v0.8 L4 and L6 picks",
+        "formula": "50% in each model's top1, collapsing duplicate code to 100%"
+      },
+      "claim": "diversifying model specification is better than diversifying rank within one model"
+    },
+    {
+      "canonical_id": "target_portfolio.H17_L4_rank2_only",
+      "namespace": "target_portfolio",
+      "local_id": "H17_L4_rank2_only",
+      "round": 2,
+      "protocol_id": "v09_target_portfolio_round2_rank_curvature_20260723",
+      "protocol_sha256": "b176abf050e7fb6cb52b77c24e29a200e039cc9fd04f20c36b1c73c80a2c8763",
+      "registration_stage": "registered_before_round2_metrics",
+      "authority": "post_hoc_retrospective_diagnostic_only",
+      "retrospective": true,
+      "posthoc": true,
+      "production_promotion_allowed": false,
+      "definition": {
+        "formula": "100% in L4 score rank2"
+      },
+      "claim": "the very highest score is an unstable extrapolation while the runner-up is closer to the robust optimum"
+    },
+    {
+      "canonical_id": "target_portfolio.H18_L4_rank25_75",
+      "namespace": "target_portfolio",
+      "local_id": "H18_L4_rank25_75",
+      "round": 2,
+      "protocol_id": "v09_target_portfolio_round2_rank_curvature_20260723",
+      "protocol_sha256": "b176abf050e7fb6cb52b77c24e29a200e039cc9fd04f20c36b1c73c80a2c8763",
+      "registration_stage": "registered_before_round2_metrics",
+      "authority": "post_hoc_retrospective_diagnostic_only",
+      "retrospective": true,
+      "posthoc": true,
+      "production_promotion_allowed": false,
+      "definition": {
+        "formula": "25% L4 rank1 and 75% L4 rank2"
+      },
+      "claim": "rank2 emphasis preserves some diversification"
+    },
+    {
+      "canonical_id": "target_portfolio.H19_L4_rank2_rank3_equal",
+      "namespace": "target_portfolio",
+      "local_id": "H19_L4_rank2_rank3_equal",
+      "round": 2,
+      "protocol_id": "v09_target_portfolio_round2_rank_curvature_20260723",
+      "protocol_sha256": "b176abf050e7fb6cb52b77c24e29a200e039cc9fd04f20c36b1c73c80a2c8763",
+      "registration_stage": "registered_before_round2_metrics",
+      "authority": "post_hoc_retrospective_diagnostic_only",
+      "retrospective": true,
+      "posthoc": true,
+      "production_promotion_allowed": false,
+      "definition": {
+        "formula": "50% each in L4 score ranks2 and 3"
+      },
+      "claim": "dropping the extreme score rather than privileging one fixed rank is the mechanism"
+    },
+    {
+      "canonical_id": "target_portfolio.H20_L4_rank3_only",
+      "namespace": "target_portfolio",
+      "local_id": "H20_L4_rank3_only",
+      "round": 2,
+      "protocol_id": "v09_target_portfolio_round2_rank_curvature_20260723",
+      "protocol_sha256": "b176abf050e7fb6cb52b77c24e29a200e039cc9fd04f20c36b1c73c80a2c8763",
+      "registration_stage": "registered_before_round2_metrics",
+      "authority": "post_hoc_retrospective_diagnostic_only",
+      "retrospective": true,
+      "posthoc": true,
+      "production_promotion_allowed": false,
+      "definition": {
+        "formula": "100% in L4 score rank3"
+      },
+      "claim": "rank2 performance is part of a broader plateau below the maximum score"
+    },
+    {
+      "canonical_id": "target_portfolio.H21_L4_rank2_rank3_75_25",
+      "namespace": "target_portfolio",
+      "local_id": "H21_L4_rank2_rank3_75_25",
+      "round": 2,
+      "protocol_id": "v09_target_portfolio_round2_rank_curvature_20260723",
+      "protocol_sha256": "b176abf050e7fb6cb52b77c24e29a200e039cc9fd04f20c36b1c73c80a2c8763",
+      "registration_stage": "registered_before_round2_metrics",
+      "authority": "post_hoc_retrospective_diagnostic_only",
+      "retrospective": true,
+      "posthoc": true,
+      "production_promotion_allowed": false,
+      "definition": {
+        "formula": "75% L4 rank2 and 25% L4 rank3"
+      },
+      "claim": "rank2 remains primary but rank3 reduces single-name tail dependence"
+    },
+    {
+      "canonical_id": "target_portfolio.H22_repeat3of20_fallback_rank2",
+      "namespace": "target_portfolio",
+      "local_id": "H22_repeat3of20_fallback_rank2",
+      "round": 3,
+      "protocol_id": "v09_target_portfolio_round3_prior_selection_frequency_20260723",
+      "protocol_sha256": "c3ce5612878fe5b10d741fbc30783bc4a40cae54bc7cb01cdd3b810800299e40",
+      "registration_stage": "registered_before_round3_metrics",
+      "authority": "post_hoc_retrospective_diagnostic_only",
+      "retrospective": true,
+      "posthoc": true,
+      "production_promotion_allowed": false,
+      "definition": {
+        "formula": "choose rank2 when today's rank1 code appeared as rank1 at least 3 times in the prior 20 score sessions; otherwise choose rank1"
+      },
+      "claim": null
+    },
+    {
+      "canonical_id": "target_portfolio.H23_prior_day_repeat_fallback_rank2",
+      "namespace": "target_portfolio",
+      "local_id": "H23_prior_day_repeat_fallback_rank2",
+      "round": 3,
+      "protocol_id": "v09_target_portfolio_round3_prior_selection_frequency_20260723",
+      "protocol_sha256": "c3ce5612878fe5b10d741fbc30783bc4a40cae54bc7cb01cdd3b810800299e40",
+      "registration_stage": "registered_before_round3_metrics",
+      "authority": "post_hoc_retrospective_diagnostic_only",
+      "retrospective": true,
+      "posthoc": true,
+      "production_promotion_allowed": false,
+      "definition": {
+        "formula": "choose rank2 when today's rank1 code was also rank1 on the immediately preceding score session; otherwise choose rank1"
+      },
+      "claim": null
+    },
+    {
+      "canonical_id": "target_portfolio.H24_repeat3of20_tilt_rank2",
+      "namespace": "target_portfolio",
+      "local_id": "H24_repeat3of20_tilt_rank2",
+      "round": 3,
+      "protocol_id": "v09_target_portfolio_round3_prior_selection_frequency_20260723",
+      "protocol_sha256": "c3ce5612878fe5b10d741fbc30783bc4a40cae54bc7cb01cdd3b810800299e40",
+      "registration_stage": "registered_before_round3_metrics",
+      "authority": "post_hoc_retrospective_diagnostic_only",
+      "retrospective": true,
+      "posthoc": true,
+      "production_promotion_allowed": false,
+      "definition": {
+        "formula": "when rank1 meets the 3-of-prior-20 repeat condition allocate 25/75 to ranks1/2, otherwise 50/50"
+      },
+      "claim": null
+    },
+    {
+      "canonical_id": "target_portfolio.H25_novelty20_single",
+      "namespace": "target_portfolio",
+      "local_id": "H25_novelty20_single",
+      "round": 3,
+      "protocol_id": "v09_target_portfolio_round3_prior_selection_frequency_20260723",
+      "protocol_sha256": "c3ce5612878fe5b10d741fbc30783bc4a40cae54bc7cb01cdd3b810800299e40",
+      "registration_stage": "registered_before_round3_metrics",
+      "authority": "post_hoc_retrospective_diagnostic_only",
+      "retrospective": true,
+      "posthoc": true,
+      "production_promotion_allowed": false,
+      "definition": {
+        "formula": "among today's top2 choose the code with fewer appearances anywhere in top2 during the prior 20 score sessions; ties choose rank1"
+      },
+      "claim": null
+    },
+    {
+      "canonical_id": "target_portfolio.H26_novelty60_single",
+      "namespace": "target_portfolio",
+      "local_id": "H26_novelty60_single",
+      "round": 3,
+      "protocol_id": "v09_target_portfolio_round3_prior_selection_frequency_20260723",
+      "protocol_sha256": "c3ce5612878fe5b10d741fbc30783bc4a40cae54bc7cb01cdd3b810800299e40",
+      "registration_stage": "registered_before_round3_metrics",
+      "authority": "post_hoc_retrospective_diagnostic_only",
+      "retrospective": true,
+      "posthoc": true,
+      "production_promotion_allowed": false,
+      "definition": {
+        "formula": "among today's top2 choose the code with fewer appearances anywhere in top2 during the prior 60 score sessions; ties choose rank1"
+      },
+      "claim": null
+    },
+    {
+      "canonical_id": "target_portfolio.H27_winsor_L4_rank2",
+      "namespace": "target_portfolio",
+      "local_id": "H27_winsor_L4_rank2",
+      "round": 4,
+      "protocol_id": "v09_target_portfolio_round4_rank2_specification_robustness_20260723",
+      "protocol_sha256": "075dc2d33c2e5bd58dd0e2d06a04ce54cb4357dad5c28dfa26d5b70a4a1142a8",
+      "registration_stage": "registered_before_round4_metrics",
+      "authority": "post_hoc_retrospective_robustness_diagnostic_only",
+      "retrospective": true,
+      "posthoc": true,
+      "production_promotion_allowed": false,
+      "definition": {
+        "source": "H03 winsor-rank L4",
+        "portfolio": "rank2 only"
+      },
+      "claim": null
+    },
+    {
+      "canonical_id": "target_portfolio.H28_alpha_ensemble_L4_rank2",
+      "namespace": "target_portfolio",
+      "local_id": "H28_alpha_ensemble_L4_rank2",
+      "round": 4,
+      "protocol_id": "v09_target_portfolio_round4_rank2_specification_robustness_20260723",
+      "protocol_sha256": "075dc2d33c2e5bd58dd0e2d06a04ce54cb4357dad5c28dfa26d5b70a4a1142a8",
+      "registration_stage": "registered_before_round4_metrics",
+      "authority": "post_hoc_retrospective_robustness_diagnostic_only",
+      "retrospective": true,
+      "posthoc": true,
+      "production_promotion_allowed": false,
+      "definition": {
+        "source": "H08 alpha1/10/100 rank ensemble",
+        "portfolio": "rank2 only"
+      },
+      "claim": null
+    },
+    {
+      "canonical_id": "target_portfolio.H29_L4_L6_ensemble_rank2",
+      "namespace": "target_portfolio",
+      "local_id": "H29_L4_L6_ensemble_rank2",
+      "round": 4,
+      "protocol_id": "v09_target_portfolio_round4_rank2_specification_robustness_20260723",
+      "protocol_sha256": "075dc2d33c2e5bd58dd0e2d06a04ce54cb4357dad5c28dfa26d5b70a4a1142a8",
+      "registration_stage": "registered_before_round4_metrics",
+      "authority": "post_hoc_retrospective_robustness_diagnostic_only",
+      "retrospective": true,
+      "posthoc": true,
+      "production_promotion_allowed": false,
+      "definition": {
+        "source": "H09 L4/L6 rank ensemble",
+        "portfolio": "rank2 only"
+      },
+      "claim": null
+    },
+    {
+      "canonical_id": "target_portfolio.H30_L6_alpha1_rank2",
+      "namespace": "target_portfolio",
+      "local_id": "H30_L6_alpha1_rank2",
+      "round": 4,
+      "protocol_id": "v09_target_portfolio_round4_rank2_specification_robustness_20260723",
+      "protocol_sha256": "075dc2d33c2e5bd58dd0e2d06a04ce54cb4357dad5c28dfa26d5b70a4a1142a8",
+      "registration_stage": "registered_before_round4_metrics",
+      "authority": "post_hoc_retrospective_robustness_diagnostic_only",
+      "retrospective": true,
+      "posthoc": true,
+      "production_promotion_allowed": false,
+      "definition": {
+        "source": "K2 L6 alpha1",
+        "portfolio": "rank2 only"
+      },
+      "claim": null
+    },
+    {
+      "canonical_id": "target_portfolio.H31_L4_alpha10_rank2",
+      "namespace": "target_portfolio",
+      "local_id": "H31_L4_alpha10_rank2",
+      "round": 4,
+      "protocol_id": "v09_target_portfolio_round4_rank2_specification_robustness_20260723",
+      "protocol_sha256": "075dc2d33c2e5bd58dd0e2d06a04ce54cb4357dad5c28dfa26d5b70a4a1142a8",
+      "registration_stage": "registered_before_round4_metrics",
+      "authority": "post_hoc_retrospective_robustness_diagnostic_only",
+      "retrospective": true,
+      "posthoc": true,
+      "production_promotion_allowed": false,
+      "definition": {
+        "source": "K3 L4 alpha10",
+        "portfolio": "rank2 only"
+      },
+      "claim": null
+    },
+    {
+      "canonical_id": "target_portfolio.H32_L4_alpha100_rank2",
+      "namespace": "target_portfolio",
+      "local_id": "H32_L4_alpha100_rank2",
+      "round": 4,
+      "protocol_id": "v09_target_portfolio_round4_rank2_specification_robustness_20260723",
+      "protocol_sha256": "075dc2d33c2e5bd58dd0e2d06a04ce54cb4357dad5c28dfa26d5b70a4a1142a8",
+      "registration_stage": "registered_before_round4_metrics",
+      "authority": "post_hoc_retrospective_robustness_diagnostic_only",
+      "retrospective": true,
+      "posthoc": true,
+      "production_promotion_allowed": false,
+      "definition": {
+        "source": "K4 L4 alpha100",
+        "portfolio": "rank2 only"
+      },
+      "claim": null
+    },
+    {
+      "canonical_id": "target_portfolio.H33_L4_rolling120_rank2",
+      "namespace": "target_portfolio",
+      "local_id": "H33_L4_rolling120_rank2",
+      "round": 4,
+      "protocol_id": "v09_target_portfolio_round4_rank2_specification_robustness_20260723",
+      "protocol_sha256": "075dc2d33c2e5bd58dd0e2d06a04ce54cb4357dad5c28dfa26d5b70a4a1142a8",
+      "registration_stage": "registered_before_round4_metrics",
+      "authority": "post_hoc_retrospective_robustness_diagnostic_only",
+      "retrospective": true,
+      "posthoc": true,
+      "production_promotion_allowed": false,
+      "definition": {
+        "source": "K7 L4 alpha1 rolling120 sessions",
+        "portfolio": "rank2 only"
+      },
+      "claim": null
+    },
+    {
+      "canonical_id": "breadth_falsification.F1_canonical_breadth_primary",
+      "namespace": "breadth_falsification",
+      "local_id": "F1",
+      "protocol_id": "v09_breadth_semantics_falsification_20260723",
+      "protocol_sha256": "987eb190a9cf19f5cb9843a076b7cfca9a583e2a308662efd85eea7d695a7cc5",
+      "registration_stage": "frozen_before_any_canonical-or-valid-OC-breadth_performance_metric",
+      "authority": "Posthoc falsification of H20 after its custom breadth result was already observed. No result from this protocol is untouched confirmation or promotion evidence.",
+      "retrospective": true,
+      "posthoc": true,
+      "production_promotion_allowed": false,
+      "definition": {
+        "description": "Replace only H20 custom breadth by canonical prior_market_breadth.",
+        "breadth": "canonical",
+        "threshold": 0.5
+      }
+    },
+    {
+      "canonical_id": "breadth_falsification.F1b_traded_row_denominator_control",
+      "namespace": "breadth_falsification",
+      "local_id": "F1b",
+      "protocol_id": "v09_breadth_semantics_falsification_20260723",
+      "protocol_sha256": "987eb190a9cf19f5cb9843a076b7cfca9a583e2a308662efd85eea7d695a7cc5",
+      "registration_stage": "frozen_before_any_canonical-or-valid-OC-breadth_performance_metric",
+      "authority": "Posthoc falsification of H20 after its custom breadth result was already observed. No result from this protocol is untouched confirmation or promotion evidence.",
+      "retrospective": true,
+      "posthoc": true,
+      "production_promotion_allowed": false,
+      "definition": {
+        "description": "Keep H20 open-to-close direction but restrict the denominator to valid/traded panel rows, isolating denominator semantics from the canonical close-to-close horizon change.",
+        "breadth": "valid_oc",
+        "threshold": 0.5
+      }
+    },
+    {
+      "canonical_id": "breadth_falsification.F2_state_semantics_audit",
+      "namespace": "breadth_falsification",
+      "local_id": "F2",
+      "protocol_id": "v09_breadth_semantics_falsification_20260723",
+      "protocol_sha256": "987eb190a9cf19f5cb9843a076b7cfca9a583e2a308662efd85eea7d695a7cc5",
+      "registration_stage": "frozen_before_any_canonical-or-valid-OC-breadth_performance_metric",
+      "authority": "Posthoc falsification of H20 after its custom breadth result was already observed. No result from this protocol is untouched confirmation or promotion evidence.",
+      "retrospective": true,
+      "posthoc": true,
+      "production_promotion_allowed": false,
+      "definition": {
+        "description": "Descriptive, non-optimizing audit of custom versus canonical daily state.",
+        "fixed_outputs": [
+          "constant-within-date and no-lookahead checks",
+          "datewise Pearson and Spearman association",
+          "level difference summary",
+          "threshold-0.5 state confusion table",
+          "number and percentage of sessions whose L4/L6 selection switches",
+          "return delta on switched versus unswitched sessions"
+        ]
+      }
+    },
+    {
+      "canonical_id": "breadth_falsification.F3_fixed_threshold_sensitivity",
+      "namespace": "breadth_falsification",
+      "local_id": "F3",
+      "protocol_id": "v09_breadth_semantics_falsification_20260723",
+      "protocol_sha256": "987eb190a9cf19f5cb9843a076b7cfca9a583e2a308662efd85eea7d695a7cc5",
+      "registration_stage": "frozen_before_any_canonical-or-valid-OC-breadth_performance_metric",
+      "authority": "Posthoc falsification of H20 after its custom breadth result was already observed. No result from this protocol is untouched confirmation or promotion evidence.",
+      "retrospective": true,
+      "posthoc": true,
+      "production_promotion_allowed": false,
+      "definition": {
+        "description": "Exact-threshold sensitivity only; multiplicity/posthoc diagnostic.",
+        "breadths": [
+          "custom",
+          "canonical"
+        ],
+        "thresholds": [
+          0.45,
+          0.5,
+          0.55
+        ],
+        "optimization_allowed": false
+      }
+    }
+  ]
+}

@@ -2086,3 +2086,210 @@ aggregate audit SHA-256: 0b7674a4681d44e1e4cbd315b17b04bbddf43421fd56459eb8c3b2a
 ```
 
 </details>
+
+---
+
+## Entry 014 — 研究プロトコルv0.9：個別誤差、順位深度、市場breadthの反証ループ
+
+| 項目 | 内容 |
+|---|---|
+| 検証日 | 2026-07-23 |
+| 親Entry | Entry 011～013 |
+| 目的 | 現行L4/L6の実行結果を個別に分析し、寄り前に確定する規則へ変換して、始値→終値のコスト後損益を再検証する |
+| 入力期間 | 2024-07-01～2025-07-31、266営業日 |
+| frozen panel | 1,524,104行、4,124銘柄、SHA-256 `6b86f994a1d15d1da8ed40469d44fc409adadc6cd5b3df3c08aef6717bcdf0eb` |
+| 今回の台帳 | 個別誤差/meta 20件、target・portfolio 33件、breadth反証4件、計57件 |
+| 主コスト | 往復20bp。40bp必須stress、60bp追加stress |
+| 暫定首位 | 前営業日の有効な始値→終値breadthでL4/L6のrank 2を切り替える1銘柄shadow |
+| 採用判断 | production変更なし。全結果は既知期間のretrospective / posthoc診断 |
+| 機械可読成果物 | `research/model_v09_protocol_ledger.json`、`research/model_v09_result.json`、`research/model_v09_manifest.json` |
+
+> **一行結論:** 目的変数・正則化・ensembleより、L4/L6の2位と前営業日の始値→終値breadthの組合せが高かった。ただし2位優位は3位へ連続せず、利益の大半を少数の上昇日に依存し、breadthによるL4 rank 2への増分も未証明なので、仕様を固定した前向きshadowへ移す。
+
+<details>
+<summary><strong>57仮説、反証結果、暫定仕様、停止判断</strong></summary>
+
+### 権限と検証順序
+
+上流のv0.8ですでに266日のoutcomeを参照している。したがって、以下の`discovery`、`confirmation A/B`はsub-analysis内の時系列規律を表すだけで、未閲覧holdoutではない。
+
+```text
+discovery:       2024-07-01～2024-10-31、84日
+confirmation A:  2024-11-01～2025-03-31、98日
+confirmation B:  2025-04-01～2025-07-31、84日
+```
+
+検証は次の順で行った。
+
+1. discoveryの個別誤差からH01～H19を固定し、A/Bへ変更なしで適用。
+2. breadth switchとrank 2を見た後、統合規則を個別誤差系H20として別protocolへ固定。
+3. target、前処理、配分のH01～H16を実行。
+4. rank 1の弱さを見た後、rank 2/3と配分のH17～H21を固定。
+5. 選択頻度の影響H22～H26、rank 2の仕様感度H27～H33を順次固定。
+6. 最後にbreadthの分母とreturn horizonをF1/F1b/F2/F3で反証。
+
+後の段階ほどadaptive / posthocである。名前が重なる二つのH20は、機械可読台帳では次のようにnamespaceを分離した。
+
+```text
+error_meta.H20_breadth_rank2_one
+target_portfolio.H20_L4_rank3_only
+```
+
+### 現行対照と主要結果
+
+すべてscheduled-dayの平均リターン。1銘柄規則は表示銘柄へstrategy sleeveの100%、2銘柄規則は明記した比率を配分する。1銘柄の結果を「2枠の片方50%、残り現金」と読み替えない。
+
+| 規則 | 銘柄/日 | 配分 | net20 | net40 | net60 | best 20日除外net20 | 正の月 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| v0.8 L4 rank 1+2 | 2 | 50/50 | +0.283192% | +0.086575% | -0.110041% | +0.013510% | 11/13 |
+| v0.8 L6 rank 1+2 | 2 | 50/50 | +0.259376% | +0.068023% | -0.123331% | +0.017913% | 12/13 |
+| L4 rank 1 | 1 | 100% | +0.141095% | -0.055897% | -0.252890% | -0.195468% | 10/13 |
+| **L4 rank 2** | 1 | 100% | **+0.425289%** | **+0.229048%** | **+0.032808%** | +0.006616% | 11/13 |
+| L4 rank 3 | 1 | 100% | -0.128573% | -0.325565% | -0.522558% | -0.383063% | 4/13 |
+| L4 rank 1+2 | 2 | 25/75 | +0.354240% | +0.157812% | -0.038617% | **+0.025392%** | **13/13** |
+| H03 OC breadth switch | 2 | 50/50 | +0.343128% | +0.147263% | -0.048602% | +0.062756% | 12/13 |
+| posthoc H20・raw OC breadth rank 2 | 1 | 100% | +0.482449% | +0.285457% | +0.088464% | +0.050425% | 11/13 |
+| **H20分母修正版・valid OC breadth rank 2** | 1 | 100% | **+0.487187%** | **+0.290195%** | **+0.093202%** | — | 11/13 |
+| canonical CC breadth rank 2 | 1 | 100% | +0.310433% | +0.113441% | -0.083552% | — | 9/13 |
+
+H20分母修正版の未使用ではない`confirmation A+B`では、net20 `+0.474899%`、net40 `+0.277097%`、net60 `+0.079295%`、約定銘柄の勝率60.56%、8/9か月プラスだった。best 20日除外後は`+0.012029%`、上位利益10コードを現金化すると`+0.025963%`まで薄くなる。
+
+### target・前処理を変えても改善しなかった
+
+H01～H09で次を検証した。
+
+```text
+厳密ゼロ中心の同日順位target
+日次5/95% winsor後の順位
+事前20日volでrisk-adjustした順位
+boundedな実現値幅を混ぜた順位
+日付等重みのimputer/scaler
+alpha 1/10/100のrank ensemble
+L4/L6のmodel-rank ensemble
+```
+
+厳密ゼロ中心と日付等重みpreprocessは、L4/L6とも532/532枠が既存仕様と完全一致した。winsor版L4の改善は`+0.000903pt/日`だけ。risk-adjust版はnet20 `+0.148613%`、実現値幅版は`-0.169830%`、alpha ensembleは`+0.190351%`へ悪化した。
+
+したがって、有限銘柄数による小さなtarget offsetや前処理の行重みは現在の律速ではない。実現値幅を強めれば損益が上がるという仮説も棄却した。
+
+### rank 2は滑らかなscore overshootではない
+
+全額配分のnet20は、
+
+```text
+rank 1  +0.141095%
+rank 2  +0.425289%
+rank 3  -0.128573%
+```
+
+となった。rank 2とrank 3がともにrank 1を上回るなら「最大score付近だけが過熱」という説明が可能だったが、rank 3で直ちに損失へ反転した。よってrank 2は広い中位plateauではなく、同じ履歴に固有の局所的な順位反転として扱う。
+
+rank 2は3つの等日数期間すべてでプラスだった一方、best 20日が累積net20利益の98.56%を占めた。20日除外後はnet20 `+0.006616%`、net40 `-0.189319%`、net60 `-0.385254%`。全H01～H33を一つのadaptive familyとして扱ったL4 top2比upliftの片側80%下限は`-0.071372pt`だった。
+
+一方、rank 1/2を25/75にする規則は13/13か月プラスで、best 20日除外後もnet20 `+0.025392%`。平均はrank 2単独より低いが、分散shadowとして残す。
+
+### 選択頻度ではrank 2を説明できない
+
+直前20回で3回以上選ばれたrank 1をrank 2へ置換、前日連続選定の置換、20/60日novelty、rank 1/2の頻度tiltをH22～H26で検証した。単一銘柄のnet20は`+0.122761%`～`+0.244592%`で、rank 2単独を再現しなかった。
+
+さらにwinsor target、alpha ensemble、L4/L6 ensemble、L6、alpha 10/100、rolling 120学習窓のrank 2をH27～H33で検証した。
+
+```text
+自身のtop2対照を上回る:       5/7
+net40がプラス:                6/7
+best 20日除外後net20がプラス: 0/7
+3条件すべて合格:              0/7
+```
+
+rank 2の方向は複数仕様へ部分的に移ったが、tail-day依存は解消しなかった。
+
+### breadthの意味を分解した
+
+元H20のbreadthは、raw日足に存在した全行について`open_to_close > 0`の比率を計算していた。これにはflat行が非上昇として含まれ、2024年7月にはraw分母が一時的に約3,700から約3,100へ減る日もあった。
+
+そこで結果を見る前に次の三定義を固定した。
+
+| 定義 | return horizon | 分母 |
+|---|---|---|
+| raw OC | 始値→終値 | rawに存在する全行 |
+| **valid OC** | 始値→終値 | `traded & outcome_observed & source_complete` |
+| canonical CC | 前日終値→当日終値 | `traded & outcome_observed & source_complete` |
+
+ルールはすべて同じ。
+
+```text
+前営業日のbreadth < 0.50  → L4 rank 2
+前営業日のbreadth >= 0.50 → L6 rank 2
+```
+
+raw OCとvalid OCの相関は0.9994、状態が変わったのは5/266日で、`confirmation A+B`のnet20は`+0.4680%`から`+0.4749%`へほぼ不変だった。無効・非取引行を除く修正は、成績を見て選ぶ改善ではなく定義のhardeningとして採用する。
+
+canonical CCとの相関は0.7055で、状態は63/266日、実際の選択銘柄は33/266日変わった。`confirmation A+B`のnet20は`+0.296389%`、net60は`-0.099216%`へ悪化した。したがって効いている可能性があるのは「市場breadth一般」ではなく、前営業日の**始値→終値の買い持続幅**である。
+
+`.45/.50/.55`の感度は反証用途だけに固定した。raw OCは三つとも`confirmation A+B`のnet60がプラスだったが、同じ履歴の点推定で閾値を選び直さず`.50`を維持する。
+
+### 独立監査で見つかった制約
+
+- H03/H20の保存損益はpicksから誤差0で再計算でき、breadth sourceは全266日で対象日の直前営業日だった。
+- locked picksと別系統raw日足を照合すると901行は最大誤差`1.78e-15`、131行はraw側にdate×code自体がなくprovenanceを照合できなかった。誤ラベルとは断定しないが、入力系統を一本化する。
+- 個別銘柄のrolling特徴は直前営業日一致84.96%、最大28暦日staleだった。これは20営業日ではなくlast-20-observed-rowsになる場合がある。
+- 保存された`max_t_*`はstudentized max-tではなく、未標準化のmax-mean統計量だった。再計算値は正しいが名称を訂正する。studentized感度の片側90%下限はH03 `-0.024531pt`、posthoc H20のL4 top2比で`-0.048538pt`。
+- H20の適切な増分対照はL4 top2ではなくL4 rank 2。raw OC H20の増分は`+0.042881pt/日`、通常5日block bootstrapの片側90%下限は`-0.033398pt`で、breadth追加価値は未証明。
+
+### 暫定shadow仕様
+
+点推定首位を、閾値を再調整せず次のIDで固定する。
+
+```text
+v09_valid_oc_breadth_rank2
+
+prior_market_oc_breadth =
+    前営業日の有効・取引銘柄について
+    mean(open_to_close_return > 0)
+
+if prior_market_oc_breadth < 0.50:
+    L4のscore順位2位を1銘柄
+else:
+    L6のscore順位2位を1銘柄
+
+表示銘柄へstrategy sleeveの100%
+候補数は毎日1件
+```
+
+並走する対照は三つ。
+
+```text
+C0: L4 rank 1+2、50/50
+C1: L4 rank 2、100%
+C2: L4 rank 1+2、25/75
+```
+
+この仕様は「最も高かったretrospective shadow」であり、実発注承認ではない。正確な出来高、売買代金、単元、spread、08:58板、PTS、先物snapshotが履歴にないため、0.49%/日の点推定を約定可能収益として扱わない。
+
+### 前向き昇格条件と停止判断
+
+2026-07-23以降を新しいforward counterとし、途中で特徴、rank、breadth閾値を変えない。変更した場合は別IDでゼロから数える。
+
+```text
+最低120 source-complete営業日、4か月
+候補生成遵守率98%以上
+実spread・slippage込み40bp stress後がプラス
+非重複20日blockの4/5以上がプラス
+best 20日除外後と上位利益10コード除外後がプラス
+L4 rank 2に対するpaired差の調整済み下限が0以上
+```
+
+同じ266日へ新しいtarget、interaction、閾値を追加しても、真の改善と選択バイアスを区別できない。今回の57件で、既存日足だけを使う同一panel探索を停止する。次の改善余地は、08:58:59以前の先物、板、PTS、実流動性と、TDnet PDF本文の定量値を前向きに保存し、outcomeを見る前にprotocolへ固定することに限定する。
+
+```bash
+PYTHONPATH=src:. python research/audit_model_v09.py --root research
+pytest -q tests/test_model_v09_artifacts.py tests/test_research_regimes.py
+```
+
+```text
+protocol ledger SHA-256: 177f077e2ecb9130c4e95fe77f3614afe1ba8e79f985171089ccc8755f25c26d
+result SHA-256:          faad02135eaf2a3fd3b7d0250919bbfd8abe5e11385fd67d0bf4c752be00c80d
+manifest chain:          483511ed362a62516b632a4f78bab6a06809f7913a51baade8435311a1b49a81
+```
+
+</details>

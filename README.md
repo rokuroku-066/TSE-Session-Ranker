@@ -5,7 +5,7 @@
 現行CLI/APIの既定モデルは0.3.0互換の`session_v3_tdnet_clear`です。正則化ロジスティック回帰に、価格履歴12特徴と寄り前までのTDnet適時開示6特徴を入力し、1位を`CORE`、2位を`RESERVE`として表示します。
 
 > [!WARNING]
-> **自動発注には使用できません。** v0.8の同日順位Ridgeは既知期間でプラスでしたが、全結果を見た後のretrospective探索であり、追加特徴の多重比較調整後の優位性は未証明です。毎日top2のshadow表示は維持しますが、productionモデルは変更していません。CLIの既存`CORE` / `ORDER_ELIGIBLE`も研究上の発注承認を意味しません。
+> **自動発注には使用できません。** v0.9の暫定首位は既知期間を繰り返し分析したposthoc仕様で、正確な出来高・spread・slippageを含まず、利益の多くを少数の上昇日に依存します。毎日1件のshadow候補として固定しますが、productionモデルは変更していません。CLIの既存`CORE` / `ORDER_ELIGIBLE`も研究上の発注承認を意味しません。
 
 ## 最新の研究判断
 
@@ -24,8 +24,26 @@
 | v0.8 L4平均役 | G0 + `flat_oc_rate_20`、同日順位Ridge | 固定shadow候補 | net20 `+0.283192%/日`、net40 `+0.086575%/日` |
 | v0.8 L6頑健役 | G0 + 売買不能・横ばいproxy 4列、同日順位Ridge | 固定shadow候補 | net20 `+0.259376%/日`、net40 `+0.068023%/日` |
 | v0.8 TDnet | fresh/follow-up・時刻・bundle等12群 | 追加採用0群 | source-complete `187/266日`、全群不合格 |
+| v0.9 L4 rank 2 | L4のscore順位2位へ100% | 1銘柄shadow対照 | net20 `+0.425289%/日`、net40 `+0.229048%/日` |
+| v0.9 25/75 | L4 rank 1/2へ25%/75% | 分散shadow対照 | net20 `+0.354240%/日`、13/13か月プラス |
+| **v0.9 valid-OC breadth** | 前営業日の始値→終値breadthでL4/L6 rank 2を切替 | **暫定首位・1銘柄shadow** | net20 `+0.487187%/日`、net60 `+0.093202%/日` |
 
-v0.8ではゼロベースで、価格・市場状態12群、売買可能性13群、TDnet 12群、非線形変換6群の計43特徴仮説と5つのユニバース仮説をすべてwalk-forward評価しました。単純な上昇確率より、各日の始値→終値リターン順位を目的変数にしたRidgeが良好でした。ただしL4のG0比改善は`+0.027871pt/日`に対してmax-statistic調整後の片側80%下限が`-0.094078pt`で、特徴追加の優位性は証明できていません。同じ結果を再利用する探索はここで停止し、2026-07-23以降の未使用セッションへ仕様を固定します。v0.6候補は[feature candidate inventory](research/model_v06_feature_candidates.md)、v0.8の全候補定義は[feature protocol](research/model_v08_feature_protocol.json)・[target protocol](research/model_v08_target_protocol.json)・[TDnet protocol](research/model_v08_tdnet_protocol.json)、全経緯は追記専用の[VALIDATION.md](VALIDATION.md)にあります。3系統のhash chainと全候補の収録は[aggregate audit](research/audit_model_v08_zero_base.py)で機械検証できます。
+v0.8では価格・市場状態、売買可能性、TDnet、非線形変換の計43特徴仮説と5ユニバース仮説を評価した。v0.9では有力仕様の誤差から、個別誤差/meta 20件、target・portfolio 33件、breadth反証4件の計57件を追加検証した。目的変数、risk adjustment、ensembleは改善せず、rank 2だけが局所的に高かったがrank 3は負だった。前営業日の有効な取引銘柄における始値→終値上昇比率でL4/L6のrank 2を切り替える仕様が点推定首位になった一方、L4 rank 2への増分の90%下限は負である。同じ266日の再利用を止め、2026-07-23以降へ仕様を固定する。全経緯は追記専用の[VALIDATION.md](VALIDATION.md)、v0.9の57件は[protocol ledger](research/model_v09_protocol_ledger.json)、結果と改ざん検知は[result](research/model_v09_result.json)・[audit](research/audit_model_v09.py)に保存する。
+
+### v0.9暫定shadow仕様
+
+```text
+prior_market_oc_breadth =
+    前営業日の traded & outcome_observed & source_complete 銘柄について
+    mean(open_to_close_return > 0)
+
+prior_market_oc_breadth < 0.50:
+    L4のscore順位2位を1銘柄
+otherwise:
+    L6のscore順位2位を1銘柄
+```
+
+表示銘柄へstrategy sleeveの100%を配分する評価で、2024-07～2025-07のnet20は`+0.487187%/日`だった。ただし既知期間のposthoc結果であり、best 20日または上位利益10コードを除くと余裕は小さい。並走対照として、L4 rank 1/2の50/50、L4 rank 2単独、L4 rank 1/2の25/75を同時保存する。breadth閾値・rank・配分はforward中に変更しない。
 
 ### v0.8固定shadow仕様
 
@@ -49,6 +67,7 @@ L4・L6とも60bpコストではマイナスで、L4は単一銘柄が総損益�
 - v0.6では特徴候補を先に7群へ固定し、共通モデルのgroup ablationで追加寄与を分離。次期間まで残った追加群は0
 - v0.7では表示top2を固定し、モデル間合意・スコア形状・downsideと、事前日足tailを発注gateとして分離。未合格枠はrank 3で置換せず現金
 - v0.8ではモデル固定を外して17 target/model案を比較し、日内の市場共通変動を落とす同日順位Ridgeを固定shadowへ採用。追加特徴のproduction採用は0群
+- v0.9では57件を追加反証し、`prior_market_oc_breadth`でL4/L6のrank 2を切り替える1銘柄規則を前向きshadowへ固定。production採用は0
 - 学習ラベルは`close > open`または損益・同日順位。研究仕様の採否は勝率ではなくコスト後損益で決定し、v0.5の主指標はtop2等金額
 - 対象日OHLCを特徴量へ入れず、価格特徴はすべて1セッション以上shift
 - 適時開示は各文書を「公開時刻以前で最初に到来する08:58:59 JSTの取引日」へ割当

@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "artifact_id": "model_v09_hash_chain_manifest_20260723",
+  "algorithm": "sha256",
+  "chain_domain": "model-v09-canonical-json-chain-v1",
+  "chain_seed_sha256": "e2ed171689d828da67bc1806affb805c78a5bf46436528288588fc15358c2a81",
+  "artifacts": [
+    {
+      "sequence": 1,
+      "path": "model_v09_protocol_ledger.json",
+      "sha256": "177f077e2ecb9130c4e95fe77f3614afe1ba8e79f985171089ccc8755f25c26d",
+      "previous_chain_sha256": "e2ed171689d828da67bc1806affb805c78a5bf46436528288588fc15358c2a81",
+      "chain_sha256": "fc75f9164c3a160cf89db83ccffb0535a22c684443f11f77211958146bfef6a6"
+    },
+    {
+      "sequence": 2,
+      "path": "model_v09_result.json",
+      "sha256": "faad02135eaf2a3fd3b7d0250919bbfd8abe5e11385fd67d0bf4c752be00c80d",
+      "previous_chain_sha256": "fc75f9164c3a160cf89db83ccffb0535a22c684443f11f77211958146bfef6a6",
+      "chain_sha256": "483511ed362a62516b632a4f78bab6a06809f7913a51baade8435311a1b49a81"
+    }
+  ],
+  "final_chain_sha256": "483511ed362a62516b632a4f78bab6a06809f7913a51baade8435311a1b49a81"
+}

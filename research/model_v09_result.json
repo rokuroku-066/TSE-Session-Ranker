@@ -1,0 +1,3793 @@
+{
+  "schema_version": 1,
+  "artifact_id": "model_v09_integrated_research_result_20260723",
+  "protocol_ledger_sha256": "177f077e2ecb9130c4e95fe77f3614afe1ba8e79f985171089ccc8755f25c26d",
+  "authority": {
+    "retrospective_only": true,
+    "untouched_confirmation_available": false,
+    "production_promotion_allowed": false,
+    "production_model_changed": false,
+    "statement": "All results are retrospective diagnostics. Sequential and posthoc hypotheses remain labelled as such; no production promotion is authorized."
+  },
+  "frozen_input": {
+    "canonical_panel_sha256": "6b86f994a1d15d1da8ed40469d44fc409adadc6cd5b3df3c08aef6717bcdf0eb",
+    "score_period": [
+      "2024-07-01",
+      "2025-07-31"
+    ],
+    "training_start": "2024-01-04"
+  },
+  "source_artifacts": {
+    "error_meta": {
+      "protocol": {
+        "artifact": "protocol.json",
+        "protocol_id": "v09_selected_error_hypotheses_20260723",
+        "sha256": "12ac33ace5e681be4cd4db4f934a6e38d520be5cceba3a963af688025847c6ba"
+      },
+      "result": {
+        "artifact": "result.json",
+        "sha256": "75f6ad01f73fd977e4870d20f26b0ea9c32fb6eab5bbd9d9ecbceda8779cbf41"
+      },
+      "h20_protocol": {
+        "artifact": "protocol_h20_posthoc.json",
+        "protocol_id": "v09_h20_posthoc_rank2_breadth_20260723",
+        "sha256": "389fdfb034649df16a094b268e22513623392820303ab272b4bf68d19093ddf5"
+      },
+      "robustness_result": {
+        "artifact": "robustness_result.json",
+        "sha256": "20c756d71380065e1245f62c0704a44b06002694364263324317fe551174fd8a"
+      }
+    },
+    "target_portfolio": {
+      "protocols": [
+        {
+          "artifact": "protocol.json",
+          "protocol_id": "v09_target_preprocess_portfolio_zero_base_20260723",
+          "sha256": "d63f7efc0359abfedf4a235a1e9aba3ddcdd97119e2897950d634a44e39e3a4e"
+        },
+        {
+          "artifact": "protocol_round2.json",
+          "protocol_id": "v09_target_portfolio_round2_rank_curvature_20260723",
+          "sha256": "b176abf050e7fb6cb52b77c24e29a200e039cc9fd04f20c36b1c73c80a2c8763"
+        },
+        {
+          "artifact": "protocol_round3.json",
+          "protocol_id": "v09_target_portfolio_round3_prior_selection_frequency_20260723",
+          "sha256": "c3ce5612878fe5b10d741fbc30783bc4a40cae54bc7cb01cdd3b810800299e40"
+        },
+        {
+          "artifact": "protocol_round4.json",
+          "protocol_id": "v09_target_portfolio_round4_rank2_specification_robustness_20260723",
+          "sha256": "075dc2d33c2e5bd58dd0e2d06a04ce54cb4357dad5c28dfa26d5b70a4a1142a8"
+        }
+      ],
+      "results": [
+        {
+          "artifact": "target_result.json",
+          "sha256": "89fe4ce1ebf6e14dae6d7f9ea2964ed772214b7c69f46142e47708935e08002e"
+        },
+        {
+          "artifact": "portfolio_result.json",
+          "sha256": "e90cff127790ee76d3eda589c2607104a4ff19b67c1902e45bc8448568b5c5f8"
+        },
+        {
+          "artifact": "round2_result.json",
+          "sha256": "42b0cd0d9df1e9bec0216489ed07b3203495629faac53516e602851a3bb3be71"
+        },
+        {
+          "artifact": "round3_result.json",
+          "sha256": "5cca6e93085d966c0a2793d8cbedb0a88a49173b5ab015f7c234ccc9ecc60bca"
+        },
+        {
+          "artifact": "round4_result.json",
+          "sha256": "57083d1b4a0bf97236cf937b4e81957291b81de8e5a62a4dbe4900102e8ef2ec"
+        }
+      ],
+      "global_max_t": {
+        "artifact": "global_max_t_33.json",
+        "sha256": "f9c3524d70b3bb8074711d0446a02459e6a0295c5d21850c5f3cf3d6b7c548ce"
+      }
+    },
+    "breadth_falsification": {
+      "protocol": {
+        "artifact": "protocol.json",
+        "protocol_id": "v09_breadth_semantics_falsification_20260723",
+        "sha256": "987eb190a9cf19f5cb9843a076b7cfca9a583e2a308662efd85eea7d695a7cc5"
+      },
+      "result": {
+        "artifact": "breadth_compact_input.json",
+        "sha256": "de76aa827df4cf5655b0a444d239c8ce8c8803f988c3c7ecab8570a8e49dce82"
+      }
+    }
+  },
+  "namespaces": {
+    "error_meta": {
+      "authority": "retrospective selection-conditional diagnostic; no production promotion",
+      "production_promotion_allowed": false,
+      "registered_family_size": 19,
+      "posthoc_family_size": 1,
+      "hypotheses": {
+        "error_meta.H01_agreement_gate": {
+          "local_id": "H01_agreement_gate",
+          "confirmation_combined": {
+            "days": 182,
+            "displayed": 217,
+            "executed": 213,
+            "average_candidates": 1.1923076923076923,
+            "zero_candidate_days": 19,
+            "one_candidate_days": 109,
+            "two_candidate_days": 54,
+            "gross_mean_pct": 0.20392986917897496,
+            "net20_mean_pct": 0.08689690214600787,
+            "net40_mean_pct": -0.03013606488695913,
+            "hit_rate_executed": 0.5821596244131455,
+            "top5_removed_net20_pct": 0.020631580355941297,
+            "largest_day_share_positive_net20": 0.051864854442564494,
+            "largest_code_share_total_net20_slot": 0.6382780470041741
+          },
+          "overall": {
+            "days": 266,
+            "displayed": 357,
+            "executed": 350,
+            "average_candidates": 1.3421052631578947,
+            "zero_candidate_days": 23,
+            "one_candidate_days": 129,
+            "two_candidate_days": 114,
+            "gross_mean_pct": 0.30181922497491204,
+            "net20_mean_pct": 0.170240277606491,
+            "net40_mean_pct": 0.03866133023806997,
+            "hit_rate_executed": 0.5771428571428572,
+            "top5_removed_net20_pct": 0.08464089136278086,
+            "largest_day_share_positive_net20": 0.04915196144987682,
+            "largest_code_share_total_net20_slot": 0.33629774258673517
+          },
+          "confirmation_deltas_vs_l4": {
+            "confirmation_a": -0.10541838055009728,
+            "confirmation_b": -0.22772070039860035,
+            "confirmation_combined": -0.16186560509556025
+          },
+          "preliminary_checks": {
+            "confirmation_a_uplift_positive": false,
+            "confirmation_b_uplift_positive": false,
+            "confirmation_combined_net40_positive": false,
+            "confirmation_top5_removed_net20_positive": true,
+            "confirmation_average_candidates_at_least_one": true
+          },
+          "all_preliminary_checks": false,
+          "registered_family_block_bootstrap": {
+            "point_delta": -0.1618656050955602,
+            "ordinary_one_sided_80_lower": -0.21695619206138303,
+            "ordinary_one_sided_90_lower": -0.24965953079913028,
+            "max_t_one_sided_80_lower": -0.27648533219644367,
+            "max_t_one_sided_90_lower": -0.2999802811547191
+          }
+        },
+        "error_meta.H02_rank_splice": {
+          "local_id": "H02_rank_splice",
+          "confirmation_combined": {
+            "days": 182,
+            "displayed": 364,
+            "executed": 353,
+            "average_candidates": 2.0,
+            "zero_candidate_days": 0,
+            "one_candidate_days": 0,
+            "two_candidate_days": 182,
+            "gross_mean_pct": 0.45463153832908143,
+            "net20_mean_pct": 0.26067549437303744,
+            "net40_mean_pct": 0.06671945041699351,
+            "hit_rate_executed": 0.5779036827195467,
+            "top5_removed_net20_pct": 0.13555246421962666,
+            "largest_day_share_positive_net20": 0.08165371649814482,
+            "largest_code_share_total_net20_slot": 0.20201172584055788
+          },
+          "overall": {
+            "days": 266,
+            "displayed": 532,
+            "executed": 514,
+            "average_candidates": 2.0,
+            "zero_candidate_days": 0,
+            "one_candidate_days": 0,
+            "two_candidate_days": 266,
+            "gross_mean_pct": 0.4851307676986359,
+            "net20_mean_pct": 0.29189768499186897,
+            "net40_mean_pct": 0.0986646022851021,
+            "hit_rate_executed": 0.566147859922179,
+            "top5_removed_net20_pct": 0.17799296208355037,
+            "largest_day_share_positive_net20": 0.04998595421568458,
+            "largest_code_share_total_net20_slot": 0.17769244373850795
+          },
+          "confirmation_deltas_vs_l4": {
+            "confirmation_a": 0.01203031445453176,
+            "confirmation_b": 0.01177610525456313,
+            "confirmation_combined": 0.011912987131469321
+          },
+          "preliminary_checks": {
+            "confirmation_a_uplift_positive": true,
+            "confirmation_b_uplift_positive": true,
+            "confirmation_combined_net40_positive": true,
+            "confirmation_top5_removed_net20_positive": true,
+            "confirmation_average_candidates_at_least_one": true
+          },
+          "all_preliminary_checks": true,
+          "registered_family_block_bootstrap": {
+            "point_delta": 0.01191298713146933,
+            "ordinary_one_sided_80_lower": -0.03130220109725053,
+            "ordinary_one_sided_90_lower": -0.05113127750640547,
+            "max_t_one_sided_80_lower": -0.10270673996941414,
+            "max_t_one_sided_90_lower": -0.1262016889276896
+          }
+        },
+        "error_meta.H03_breadth_switch": {
+          "local_id": "H03_breadth_switch",
+          "confirmation_combined": {
+            "days": 182,
+            "displayed": 364,
+            "executed": 357,
+            "average_candidates": 2.0,
+            "zero_candidate_days": 0,
+            "one_candidate_days": 0,
+            "two_candidate_days": 182,
+            "gross_mean_pct": 0.5051896234170896,
+            "net20_mean_pct": 0.30903577726324344,
+            "net40_mean_pct": 0.11288193110939737,
+            "hit_rate_executed": 0.5854341736694678,
+            "top5_removed_net20_pct": 0.1826139262833528,
+            "largest_day_share_positive_net20": 0.07293504063732802,
+            "largest_code_share_total_net20_slot": 0.1956914679450099
+          },
+          "overall": {
+            "days": 266,
+            "displayed": 532,
+            "executed": 521,
+            "average_candidates": 2.0,
+            "zero_candidate_days": 0,
+            "one_candidate_days": 0,
+            "two_candidate_days": 266,
+            "gross_mean_pct": 0.5389922708868766,
+            "net20_mean_pct": 0.3431276092327412,
+            "net40_mean_pct": 0.1472629475786059,
+            "hit_rate_executed": 0.5758157389635317,
+            "top5_removed_net20_pct": 0.23077343540689285,
+            "largest_day_share_positive_net20": 0.045870868152390755,
+            "largest_code_share_total_net20_slot": 0.2006443936115206
+          },
+          "confirmation_deltas_vs_l4": {
+            "confirmation_a": 0.08564984711485488,
+            "confirmation_b": 0.030667263412965995,
+            "confirmation_combined": 0.06027327002167532
+          },
+          "preliminary_checks": {
+            "confirmation_a_uplift_positive": true,
+            "confirmation_b_uplift_positive": true,
+            "confirmation_combined_net40_positive": true,
+            "confirmation_top5_removed_net20_positive": true,
+            "confirmation_average_candidates_at_least_one": true
+          },
+          "all_preliminary_checks": true,
+          "registered_family_block_bootstrap": {
+            "point_delta": 0.060273270021675374,
+            "ordinary_one_sided_80_lower": 0.023787652804092223,
+            "ordinary_one_sided_90_lower": 0.007534597371163641,
+            "max_t_one_sided_80_lower": -0.0543464570792081,
+            "max_t_one_sided_90_lower": -0.07784140603748355
+          }
+        },
+        "error_meta.H04_trailing20_model_switch": {
+          "local_id": "H04_trailing20_model_switch",
+          "confirmation_combined": {
+            "days": 182,
+            "displayed": 364,
+            "executed": 353,
+            "average_candidates": 2.0,
+            "zero_candidate_days": 0,
+            "one_candidate_days": 0,
+            "two_candidate_days": 182,
+            "gross_mean_pct": 0.4791685651340668,
+            "net20_mean_pct": 0.2852125211780228,
+            "net40_mean_pct": 0.09125647722197894,
+            "hit_rate_executed": 0.5722379603399433,
+            "top5_removed_net20_pct": 0.15842845404306846,
+            "largest_day_share_positive_net20": 0.07521295317963037,
+            "largest_code_share_total_net20_slot": 0.193479244511521
+          },
+          "overall": {
+            "days": 266,
+            "displayed": 532,
+            "executed": 517,
+            "average_candidates": 2.0,
+            "zero_candidate_days": 0,
+            "one_candidate_days": 0,
+            "two_candidate_days": 266,
+            "gross_mean_pct": 0.49897449526641663,
+            "net20_mean_pct": 0.30461359301077745,
+            "net40_mean_pct": 0.11025269075513844,
+            "hit_rate_executed": 0.5647969052224371,
+            "top5_removed_net20_pct": 0.1915216027822095,
+            "largest_day_share_positive_net20": 0.047945454075012155,
+            "largest_code_share_total_net20_slot": 0.21054668177405947
+          },
+          "confirmation_deltas_vs_l4": {
+            "confirmation_a": 0.022767916629776425,
+            "confirmation_b": 0.05241246079424611,
+            "confirmation_combined": 0.036450013936454695
+          },
+          "preliminary_checks": {
+            "confirmation_a_uplift_positive": true,
+            "confirmation_b_uplift_positive": true,
+            "confirmation_combined_net40_positive": true,
+            "confirmation_top5_removed_net20_positive": true,
+            "confirmation_average_candidates_at_least_one": true
+          },
+          "all_preliminary_checks": true,
+          "registered_family_block_bootstrap": {
+            "point_delta": 0.03645001393645475,
+            "ordinary_one_sided_80_lower": -0.010444311542603701,
+            "ordinary_one_sided_90_lower": -0.030453393950672,
+            "max_t_one_sided_80_lower": -0.07816971316442872,
+            "max_t_one_sided_90_lower": -0.10166466212270417
+          }
+        },
+        "error_meta.H05_positive_momentum20_priority": {
+          "local_id": "H05_positive_momentum20_priority",
+          "confirmation_combined": {
+            "days": 182,
+            "displayed": 364,
+            "executed": 356,
+            "average_candidates": 2.0,
+            "zero_candidate_days": 0,
+            "one_candidate_days": 0,
+            "two_candidate_days": 182,
+            "gross_mean_pct": 0.35028139053351276,
+            "net20_mean_pct": 0.1546769949291172,
+            "net40_mean_pct": -0.0409274006752784,
+            "hit_rate_executed": 0.5533707865168539,
+            "top5_removed_net20_pct": 0.06584489784116983,
+            "largest_day_share_positive_net20": 0.07499156320330351,
+            "largest_code_share_total_net20_slot": 0.3518743122918676
+          },
+          "overall": {
+            "days": 266,
+            "displayed": 532,
+            "executed": 519,
+            "average_candidates": 2.0,
+            "zero_candidate_days": 0,
+            "one_candidate_days": 0,
+            "two_candidate_days": 266,
+            "gross_mean_pct": 0.418219225054758,
+            "net20_mean_pct": 0.2231064430998708,
+            "net40_mean_pct": 0.02799366114498361,
+            "hit_rate_executed": 0.5510597302504817,
+            "top5_removed_net20_pct": 0.12249882553010921,
+            "largest_day_share_positive_net20": 0.041633625658522605,
+            "largest_code_share_total_net20_slot": 0.2953251363736681
+          },
+          "confirmation_deltas_vs_l4": {
+            "confirmation_a": -0.12637823630450196,
+            "confirmation_b": -0.05641066765505803,
+            "confirmation_combined": -0.09408551231245091
+          },
+          "preliminary_checks": {
+            "confirmation_a_uplift_positive": false,
+            "confirmation_b_uplift_positive": false,
+            "confirmation_combined_net40_positive": false,
+            "confirmation_top5_removed_net20_positive": true,
+            "confirmation_average_candidates_at_least_one": true
+          },
+          "all_preliminary_checks": false,
+          "registered_family_block_bootstrap": {
+            "point_delta": -0.09408551231245094,
+            "ordinary_one_sided_80_lower": -0.1392763859447722,
+            "ordinary_one_sided_90_lower": -0.16758831151192927,
+            "max_t_one_sided_80_lower": -0.2087052394133344,
+            "max_t_one_sided_90_lower": -0.23220018837160986
+          }
+        },
+        "error_meta.H06_positive_prior_oc_priority": {
+          "local_id": "H06_positive_prior_oc_priority",
+          "confirmation_combined": {
+            "days": 182,
+            "displayed": 364,
+            "executed": 358,
+            "average_candidates": 2.0,
+            "zero_candidate_days": 0,
+            "one_candidate_days": 0,
+            "two_candidate_days": 182,
+            "gross_mean_pct": 0.46322370209428604,
+            "net20_mean_pct": 0.2665204053909894,
+            "net40_mean_pct": 0.06981710868769268,
+            "hit_rate_executed": 0.5949720670391061,
+            "top5_removed_net20_pct": 0.15998113183330295,
+            "largest_day_share_positive_net20": 0.08255624517598668,
+            "largest_code_share_total_net20_slot": 0.23798398911373883
+          },
+          "overall": {
+            "days": 266,
+            "displayed": 532,
+            "executed": 519,
+            "average_candidates": 2.0,
+            "zero_candidate_days": 0,
+            "one_candidate_days": 0,
+            "two_candidate_days": 266,
+            "gross_mean_pct": 0.5251143740164537,
+            "net20_mean_pct": 0.33000159206156654,
+            "net40_mean_pct": 0.13488881010667936,
+            "hit_rate_executed": 0.5857418111753372,
+            "top5_removed_net20_pct": 0.22361844303867073,
+            "largest_day_share_positive_net20": 0.049275455566294916,
+            "largest_code_share_total_net20_slot": 0.18915626858288564
+          },
+          "confirmation_deltas_vs_l4": {
+            "confirmation_a": 0.04268588711122426,
+            "confirmation_b": -0.011324755639348955,
+            "confirmation_combined": 0.017757898149421303
+          },
+          "preliminary_checks": {
+            "confirmation_a_uplift_positive": true,
+            "confirmation_b_uplift_positive": false,
+            "confirmation_combined_net40_positive": true,
+            "confirmation_top5_removed_net20_positive": true,
+            "confirmation_average_candidates_at_least_one": true
+          },
+          "all_preliminary_checks": false,
+          "registered_family_block_bootstrap": {
+            "point_delta": 0.017757898149421233,
+            "ordinary_one_sided_80_lower": -0.028550957983398444,
+            "ordinary_one_sided_90_lower": -0.05488545551936464,
+            "max_t_one_sided_80_lower": -0.09686182895146224,
+            "max_t_one_sided_90_lower": -0.12035677790973769
+          }
+        },
+        "error_meta.H07_positive_ocmean5_priority": {
+          "local_id": "H07_positive_ocmean5_priority",
+          "confirmation_combined": {
+            "days": 182,
+            "displayed": 364,
+            "executed": 356,
+            "average_candidates": 2.0,
+            "zero_candidate_days": 0,
+            "one_candidate_days": 0,
+            "two_candidate_days": 182,
+            "gross_mean_pct": 0.48334932255094937,
+            "net20_mean_pct": 0.2877449269465537,
+            "net40_mean_pct": 0.09214053134215809,
+            "hit_rate_executed": 0.5898876404494382,
+            "top5_removed_net20_pct": 0.16003369281210822,
+            "largest_day_share_positive_net20": 0.08105963944492263,
+            "largest_code_share_total_net20_slot": 0.24928921347715233
+          },
+          "overall": {
+            "days": 266,
+            "displayed": 532,
+            "executed": 517,
+            "average_candidates": 2.0,
+            "zero_candidate_days": 0,
+            "one_candidate_days": 0,
+            "two_candidate_days": 266,
+            "gross_mean_pct": 0.515078081603903,
+            "net20_mean_pct": 0.32071717934826394,
+            "net40_mean_pct": 0.12635627709262484,
+            "hit_rate_executed": 0.5802707930367504,
+            "top5_removed_net20_pct": 0.20793368694225323,
+            "largest_day_share_positive_net20": 0.04975642548126496,
+            "largest_code_share_total_net20_slot": 0.21553046585118465
+          },
+          "confirmation_deltas_vs_l4": {
+            "confirmation_a": 0.023448101457225617,
+            "confirmation_b": 0.057105790994038896,
+            "confirmation_combined": 0.03898241970498556
+          },
+          "preliminary_checks": {
+            "confirmation_a_uplift_positive": true,
+            "confirmation_b_uplift_positive": true,
+            "confirmation_combined_net40_positive": true,
+            "confirmation_top5_removed_net20_positive": true,
+            "confirmation_average_candidates_at_least_one": true
+          },
+          "all_preliminary_checks": true,
+          "registered_family_block_bootstrap": {
+            "point_delta": 0.038982419704985574,
+            "ordinary_one_sided_80_lower": 0.010367870943547904,
+            "ordinary_one_sided_90_lower": -0.00665912474889917,
+            "max_t_one_sided_80_lower": -0.0756373073958979,
+            "max_t_one_sided_90_lower": -0.09913225635417335
+          }
+        },
+        "error_meta.H08_nonrepeat_priority": {
+          "local_id": "H08_nonrepeat_priority",
+          "confirmation_combined": {
+            "days": 182,
+            "displayed": 364,
+            "executed": 356,
+            "average_candidates": 2.0,
+            "zero_candidate_days": 0,
+            "one_candidate_days": 0,
+            "two_candidate_days": 182,
+            "gross_mean_pct": 0.42577534226513947,
+            "net20_mean_pct": 0.2301709466607439,
+            "net40_mean_pct": 0.0345665510563483,
+            "hit_rate_executed": 0.5617977528089888,
+            "top5_removed_net20_pct": 0.10171090851828096,
+            "largest_day_share_positive_net20": 0.08135551314571166,
+            "largest_code_share_total_net20_slot": 0.211996144396083
+          },
+          "overall": {
+            "days": 266,
+            "displayed": 532,
+            "executed": 518,
+            "average_candidates": 2.0,
+            "zero_candidate_days": 0,
+            "one_candidate_days": 0,
+            "two_candidate_days": 266,
+            "gross_mean_pct": 0.44876664654857235,
+            "net20_mean_pct": 0.2540298044433092,
+            "net40_mean_pct": 0.05929296233804607,
+            "hit_rate_executed": 0.5540540540540541,
+            "top5_removed_net20_pct": 0.139968776119579,
+            "largest_day_share_positive_net20": 0.049741877413404086,
+            "largest_code_share_total_net20_slot": 0.24608008916058718
+          },
+          "confirmation_deltas_vs_l4": {
+            "confirmation_a": -0.0658570094132486,
+            "confirmation_b": 0.03655146305700424,
+            "confirmation_combined": -0.01859156058082423
+          },
+          "preliminary_checks": {
+            "confirmation_a_uplift_positive": false,
+            "confirmation_b_uplift_positive": true,
+            "confirmation_combined_net40_positive": true,
+            "confirmation_top5_removed_net20_positive": true,
+            "confirmation_average_candidates_at_least_one": true
+          },
+          "all_preliminary_checks": false,
+          "registered_family_block_bootstrap": {
+            "point_delta": -0.01859156058082424,
+            "ordinary_one_sided_80_lower": -0.05058105965711402,
+            "ordinary_one_sided_90_lower": -0.07098052915715337,
+            "max_t_one_sided_80_lower": -0.1332112876817077,
+            "max_t_one_sided_90_lower": -0.15670623663998315
+          }
+        },
+        "error_meta.H09_sub500_priority": {
+          "local_id": "H09_sub500_priority",
+          "confirmation_combined": {
+            "days": 182,
+            "displayed": 364,
+            "executed": 359,
+            "average_candidates": 2.0,
+            "zero_candidate_days": 0,
+            "one_candidate_days": 0,
+            "two_candidate_days": 182,
+            "gross_mean_pct": 0.43312538441574183,
+            "net20_mean_pct": 0.23587263716299453,
+            "net40_mean_pct": 0.03861988991024735,
+            "hit_rate_executed": 0.5821727019498607,
+            "top5_removed_net20_pct": 0.11243405816654586,
+            "largest_day_share_positive_net20": 0.08382335098892887,
+            "largest_code_share_total_net20_slot": 0.2669277319107409
+          },
+          "overall": {
+            "days": 266,
+            "displayed": 532,
+            "executed": 523,
+            "average_candidates": 2.0,
+            "zero_candidate_days": 0,
+            "one_candidate_days": 0,
+            "two_candidate_days": 266,
+            "gross_mean_pct": 0.46784075967871747,
+            "net20_mean_pct": 0.271224218325334,
+            "net40_mean_pct": 0.0746076769719506,
+            "hit_rate_executed": 0.5697896749521989,
+            "top5_removed_net20_pct": 0.16070127748707572,
+            "largest_day_share_positive_net20": 0.05005080002363836,
+            "largest_code_share_total_net20_slot": 0.25608826055920264
+          },
+          "confirmation_deltas_vs_l4": {
+            "confirmation_a": -0.02393833014592231,
+            "confirmation_b": 0.0,
+            "confirmation_combined": -0.01288987007857359
+          },
+          "preliminary_checks": {
+            "confirmation_a_uplift_positive": false,
+            "confirmation_b_uplift_positive": false,
+            "confirmation_combined_net40_positive": true,
+            "confirmation_top5_removed_net20_positive": true,
+            "confirmation_average_candidates_at_least_one": true
+          },
+          "all_preliminary_checks": false,
+          "registered_family_block_bootstrap": {
+            "point_delta": -0.012889870078573562,
+            "ordinary_one_sided_80_lower": -0.025779740157147124,
+            "ordinary_one_sided_90_lower": -0.025779740157147124,
+            "max_t_one_sided_80_lower": -0.12750959717945703,
+            "max_t_one_sided_90_lower": -0.15100454613773248
+          }
+        },
+        "error_meta.H10_positive_market_trend_gate": {
+          "local_id": "H10_positive_market_trend_gate",
+          "confirmation_combined": {
+            "days": 182,
+            "displayed": 260,
+            "executed": 255,
+            "average_candidates": 1.4285714285714286,
+            "zero_candidate_days": 52,
+            "one_candidate_days": 0,
+            "two_candidate_days": 130,
+            "gross_mean_pct": 0.392797589665618,
+            "net20_mean_pct": 0.25268769955572795,
+            "net40_mean_pct": 0.11257780944583784,
+            "hit_rate_executed": 0.6196078431372549,
+            "top5_removed_net20_pct": 0.15600519187563602,
+            "largest_day_share_positive_net20": 0.11394594059031524,
+            "largest_code_share_total_net20_slot": 0.2030618879109364
+          },
+          "overall": {
+            "days": 266,
+            "displayed": 338,
+            "executed": 331,
+            "average_candidates": 1.2706766917293233,
+            "zero_candidate_days": 97,
+            "one_candidate_days": 0,
+            "two_candidate_days": 169,
+            "gross_mean_pct": 0.35287881125397835,
+            "net20_mean_pct": 0.22844272102841442,
+            "net40_mean_pct": 0.10400663080285055,
+            "hit_rate_executed": 0.6132930513595166,
+            "top5_removed_net20_pct": 0.14500347056761154,
+            "largest_day_share_positive_net20": 0.08148189302929254,
+            "largest_code_share_total_net20_slot": 0.24288435060529337
+          },
+          "confirmation_deltas_vs_l4": {
+            "confirmation_a": -0.019939041933825563,
+            "confirmation_b": 0.03176679893680945,
+            "confirmation_combined": 0.003925192314159831
+          },
+          "preliminary_checks": {
+            "confirmation_a_uplift_positive": false,
+            "confirmation_b_uplift_positive": true,
+            "confirmation_combined_net40_positive": true,
+            "confirmation_top5_removed_net20_positive": true,
+            "confirmation_average_candidates_at_least_one": true
+          },
+          "all_preliminary_checks": false,
+          "registered_family_block_bootstrap": {
+            "point_delta": 0.003925192314159803,
+            "ordinary_one_sided_80_lower": -0.041849066482195524,
+            "ordinary_one_sided_90_lower": -0.06499097000364408,
+            "max_t_one_sided_80_lower": -0.11069453478672367,
+            "max_t_one_sided_90_lower": -0.13418948374499912
+          }
+        },
+        "error_meta.H11_month_end_gate": {
+          "local_id": "H11_month_end_gate",
+          "confirmation_combined": {
+            "days": 182,
+            "displayed": 62,
+            "executed": 62,
+            "average_candidates": 0.34065934065934067,
+            "zero_candidate_days": 151,
+            "one_candidate_days": 0,
+            "two_candidate_days": 31,
+            "gross_mean_pct": 0.08674461287853369,
+            "net20_mean_pct": 0.05267867881259961,
+            "net40_mean_pct": 0.018612744746665553,
+            "hit_rate_executed": 0.6129032258064516,
+            "top5_removed_net20_pct": 0.009746130489368579,
+            "largest_day_share_positive_net20": 0.1615420897626374,
+            "largest_code_share_total_net20_slot": 0.5908631794456236
+          },
+          "overall": {
+            "days": 266,
+            "displayed": 90,
+            "executed": 89,
+            "average_candidates": 0.3383458646616541,
+            "zero_candidate_days": 221,
+            "one_candidate_days": 0,
+            "two_candidate_days": 45,
+            "gross_mean_pct": 0.11768760211086805,
+            "net20_mean_pct": 0.08422895549432668,
+            "net40_mean_pct": 0.05077030887778534,
+            "hit_rate_executed": 0.6292134831460674,
+            "top5_removed_net20_pct": 0.02641359411118098,
+            "largest_day_share_positive_net20": 0.1578264764028293,
+            "largest_code_share_total_net20_slot": 0.25284253597136835
+          },
+          "confirmation_deltas_vs_l4": {
+            "confirmation_a": -0.181444423854961,
+            "confirmation_b": -0.21316313376531054,
+            "confirmation_combined": -0.19608382842896852
+          },
+          "preliminary_checks": {
+            "confirmation_a_uplift_positive": false,
+            "confirmation_b_uplift_positive": false,
+            "confirmation_combined_net40_positive": true,
+            "confirmation_top5_removed_net20_positive": true,
+            "confirmation_average_candidates_at_least_one": false
+          },
+          "all_preliminary_checks": false,
+          "registered_family_block_bootstrap": {
+            "point_delta": -0.19608382842896852,
+            "ordinary_one_sided_80_lower": -0.28037513255105695,
+            "ordinary_one_sided_90_lower": -0.322223928816777,
+            "max_t_one_sided_80_lower": -0.31070355552985196,
+            "max_t_one_sided_90_lower": -0.33419850448812743
+          }
+        },
+        "error_meta.H12_margin_switch": {
+          "local_id": "H12_margin_switch",
+          "confirmation_combined": {
+            "days": 182,
+            "displayed": 364,
+            "executed": 351,
+            "average_candidates": 2.0,
+            "zero_candidate_days": 0,
+            "one_candidate_days": 0,
+            "two_candidate_days": 182,
+            "gross_mean_pct": 0.4767253322372696,
+            "net20_mean_pct": 0.2838681893801268,
+            "net40_mean_pct": 0.0910110465229839,
+            "hit_rate_executed": 0.5868945868945868,
+            "top5_removed_net20_pct": 0.18513764608659722,
+            "largest_day_share_positive_net20": 0.06069062668719873,
+            "largest_code_share_total_net20_slot": 0.21319559276742775
+          },
+          "overall": {
+            "days": 266,
+            "displayed": 532,
+            "executed": 513,
+            "average_candidates": 2.0,
+            "zero_candidate_days": 0,
+            "one_candidate_days": 0,
+            "two_candidate_days": 266,
+            "gross_mean_pct": 0.52341207569389,
+            "net20_mean_pct": 0.3305549328367471,
+            "net40_mean_pct": 0.1376977899796043,
+            "hit_rate_executed": 0.5789473684210527,
+            "top5_removed_net20_pct": 0.23200571545351575,
+            "largest_day_share_positive_net20": 0.03702483403237724,
+            "largest_code_share_total_net20_slot": 0.19383028777517336
+          },
+          "confirmation_deltas_vs_l4": {
+            "confirmation_a": 0.04333663447665351,
+            "confirmation_b": 0.025502904410781235,
+            "confirmation_combined": 0.03510568213855869
+          },
+          "preliminary_checks": {
+            "confirmation_a_uplift_positive": true,
+            "confirmation_b_uplift_positive": true,
+            "confirmation_combined_net40_positive": true,
+            "confirmation_top5_removed_net20_positive": true,
+            "confirmation_average_candidates_at_least_one": true
+          },
+          "all_preliminary_checks": true,
+          "registered_family_block_bootstrap": {
+            "point_delta": 0.03510568213855862,
+            "ordinary_one_sided_80_lower": -0.0319254886957214,
+            "ordinary_one_sided_90_lower": -0.06537743356743747,
+            "max_t_one_sided_80_lower": -0.07951404496232485,
+            "max_t_one_sided_90_lower": -0.1030089939206003
+          }
+        },
+        "error_meta.H13_dispersion_switch": {
+          "local_id": "H13_dispersion_switch",
+          "confirmation_combined": {
+            "days": 182,
+            "displayed": 364,
+            "executed": 353,
+            "average_candidates": 2.0,
+            "zero_candidate_days": 0,
+            "one_candidate_days": 0,
+            "two_candidate_days": 182,
+            "gross_mean_pct": 0.42754406928648564,
+            "net20_mean_pct": 0.23358802533044168,
+            "net40_mean_pct": 0.03963198137439774,
+            "hit_rate_executed": 0.5864022662889519,
+            "top5_removed_net20_pct": 0.14062432423092394,
+            "largest_day_share_positive_net20": 0.0636772161601924,
+            "largest_code_share_total_net20_slot": 0.21277978301159417
+          },
+          "overall": {
+            "days": 266,
+            "displayed": 532,
+            "executed": 518,
+            "average_candidates": 2.0,
+            "zero_candidate_days": 0,
+            "one_candidate_days": 0,
+            "two_candidate_days": 266,
+            "gross_mean_pct": 0.46854059979311613,
+            "net20_mean_pct": 0.2738037576878529,
+            "net40_mean_pct": 0.07906691558258978,
+            "hit_rate_executed": 0.5733590733590733,
+            "top5_removed_net20_pct": 0.17416735304123276,
+            "largest_day_share_positive_net20": 0.03803455869538653,
+            "largest_code_share_total_net20_slot": 0.2205447461169114
+          },
+          "confirmation_deltas_vs_l4": {
+            "confirmation_a": -0.07094263278057689,
+            "confirmation_b": 0.049888360769899054,
+            "confirmation_combined": -0.015174481911126442
+          },
+          "preliminary_checks": {
+            "confirmation_a_uplift_positive": false,
+            "confirmation_b_uplift_positive": true,
+            "confirmation_combined_net40_positive": true,
+            "confirmation_top5_removed_net20_positive": true,
+            "confirmation_average_candidates_at_least_one": true
+          },
+          "all_preliminary_checks": false,
+          "registered_family_block_bootstrap": {
+            "point_delta": -0.015174481911126426,
+            "ordinary_one_sided_80_lower": -0.0600073664039513,
+            "ordinary_one_sided_90_lower": -0.08913599239261387,
+            "max_t_one_sided_80_lower": -0.1297942090120099,
+            "max_t_one_sided_90_lower": -0.15328915797028533
+          }
+        },
+        "error_meta.H14_prior_code_alpha_priority": {
+          "local_id": "H14_prior_code_alpha_priority",
+          "confirmation_combined": {
+            "days": 182,
+            "displayed": 364,
+            "executed": 354,
+            "average_candidates": 2.0,
+            "zero_candidate_days": 0,
+            "one_candidate_days": 0,
+            "two_candidate_days": 182,
+            "gross_mean_pct": 0.46744281684010486,
+            "net20_mean_pct": 0.27293732233461043,
+            "net40_mean_pct": 0.07843182782911597,
+            "hit_rate_executed": 0.5932203389830508,
+            "top5_removed_net20_pct": 0.1455696610779514,
+            "largest_day_share_positive_net20": 0.07844495906980889,
+            "largest_code_share_total_net20_slot": 0.23067914464455555
+          },
+          "overall": {
+            "days": 266,
+            "displayed": 532,
+            "executed": 518,
+            "average_candidates": 2.0,
+            "zero_candidate_days": 0,
+            "one_candidate_days": 0,
+            "two_candidate_days": 266,
+            "gross_mean_pct": 0.5054078397375107,
+            "net20_mean_pct": 0.3106709976322474,
+            "net40_mean_pct": 0.1159341555269843,
+            "hit_rate_executed": 0.581081081081081,
+            "top5_removed_net20_pct": 0.1976950496378073,
+            "largest_day_share_positive_net20": 0.04863652318969706,
+            "largest_code_share_total_net20_slot": 0.22357200646931127
+          },
+          "confirmation_deltas_vs_l4": {
+            "confirmation_a": -0.003286247530860209,
+            "confirmation_b": 0.05621272148759532,
+            "confirmation_combined": 0.024174815093042312
+          },
+          "preliminary_checks": {
+            "confirmation_a_uplift_positive": false,
+            "confirmation_b_uplift_positive": true,
+            "confirmation_combined_net40_positive": true,
+            "confirmation_top5_removed_net20_positive": true,
+            "confirmation_average_candidates_at_least_one": true
+          },
+          "all_preliminary_checks": false,
+          "registered_family_block_bootstrap": {
+            "point_delta": 0.024174815093042326,
+            "ordinary_one_sided_80_lower": -0.004049792222336679,
+            "ordinary_one_sided_90_lower": -0.020670138987865082,
+            "max_t_one_sided_80_lower": -0.09044491200784115,
+            "max_t_one_sided_90_lower": -0.1139398609661166
+          }
+        },
+        "error_meta.H15_moderate_volatility_priority": {
+          "local_id": "H15_moderate_volatility_priority",
+          "confirmation_combined": {
+            "days": 182,
+            "displayed": 364,
+            "executed": 354,
+            "average_candidates": 2.0,
+            "zero_candidate_days": 0,
+            "one_candidate_days": 0,
+            "two_candidate_days": 182,
+            "gross_mean_pct": 0.4284723613305816,
+            "net20_mean_pct": 0.23396686682508705,
+            "net40_mean_pct": 0.03946137231959254,
+            "hit_rate_executed": 0.576271186440678,
+            "top5_removed_net20_pct": 0.11790509042201605,
+            "largest_day_share_positive_net20": 0.08952691372136214,
+            "largest_code_share_total_net20_slot": 0.22507249516661712
+          },
+          "overall": {
+            "days": 266,
+            "displayed": 532,
+            "executed": 518,
+            "average_candidates": 2.0,
+            "zero_candidate_days": 0,
+            "one_candidate_days": 0,
+            "two_candidate_days": 266,
+            "gross_mean_pct": 0.4651723749487721,
+            "net20_mean_pct": 0.27043553284350896,
+            "net40_mean_pct": 0.07569869073824581,
+            "hit_rate_executed": 0.5656370656370656,
+            "top5_removed_net20_pct": 0.14209758381435444,
+            "largest_day_share_positive_net20": 0.07105092348267106,
+            "largest_code_share_total_net20_slot": 0.15420509163761262
+          },
+          "confirmation_deltas_vs_l4": {
+            "confirmation_a": 0.012564117594357577,
+            "confirmation_b": -0.046715358095792886,
+            "confirmation_combined": -0.01479564041648107
+          },
+          "preliminary_checks": {
+            "confirmation_a_uplift_positive": true,
+            "confirmation_b_uplift_positive": false,
+            "confirmation_combined_net40_positive": true,
+            "confirmation_top5_removed_net20_positive": true,
+            "confirmation_average_candidates_at_least_one": true
+          },
+          "all_preliminary_checks": false,
+          "registered_family_block_bootstrap": {
+            "point_delta": -0.0147956404164811,
+            "ordinary_one_sided_80_lower": -0.06714521762979472,
+            "ordinary_one_sided_90_lower": -0.09182039944596859,
+            "max_t_one_sided_80_lower": -0.12941536751736457,
+            "max_t_one_sided_90_lower": -0.15291031647564002
+          }
+        },
+        "error_meta.H16_low_recent_selection_frequency": {
+          "local_id": "H16_low_recent_selection_frequency",
+          "confirmation_combined": {
+            "days": 182,
+            "displayed": 364,
+            "executed": 351,
+            "average_candidates": 2.0,
+            "zero_candidate_days": 0,
+            "one_candidate_days": 0,
+            "two_candidate_days": 182,
+            "gross_mean_pct": 0.38617684872519215,
+            "net20_mean_pct": 0.1933197058680493,
+            "net40_mean_pct": 0.0004625630109064419,
+            "hit_rate_executed": 0.5612535612535613,
+            "top5_removed_net20_pct": 0.08272585416394125,
+            "largest_day_share_positive_net20": 0.08899018823360252,
+            "largest_code_share_total_net20_slot": 0.23663213290626356
+          },
+          "overall": {
+            "days": 266,
+            "displayed": 532,
+            "executed": 513,
+            "average_candidates": 2.0,
+            "zero_candidate_days": 0,
+            "one_candidate_days": 0,
+            "two_candidate_days": 266,
+            "gross_mean_pct": 0.4153645089549806,
+            "net20_mean_pct": 0.22250736609783778,
+            "net40_mean_pct": 0.02965022324069495,
+            "hit_rate_executed": 0.5497076023391813,
+            "top5_removed_net20_pct": 0.11670450038972746,
+            "largest_day_share_positive_net20": 0.05332617102725086,
+            "largest_code_share_total_net20_slot": 0.2480654393367971
+          },
+          "confirmation_deltas_vs_l4": {
+            "confirmation_a": -0.05203020556001753,
+            "confirmation_b": -0.05942416315593688,
+            "confirmation_combined": -0.05544280137351881
+          },
+          "preliminary_checks": {
+            "confirmation_a_uplift_positive": false,
+            "confirmation_b_uplift_positive": false,
+            "confirmation_combined_net40_positive": true,
+            "confirmation_top5_removed_net20_positive": true,
+            "confirmation_average_candidates_at_least_one": true
+          },
+          "all_preliminary_checks": false,
+          "registered_family_block_bootstrap": {
+            "point_delta": -0.05544280137351882,
+            "ordinary_one_sided_80_lower": -0.11077489848855475,
+            "ordinary_one_sided_90_lower": -0.1406297240084298,
+            "max_t_one_sided_80_lower": -0.17006252847440229,
+            "max_t_one_sided_90_lower": -0.19355747743267773
+          }
+        },
+        "error_meta.H17_extreme_score_switch": {
+          "local_id": "H17_extreme_score_switch",
+          "confirmation_combined": {
+            "days": 182,
+            "displayed": 364,
+            "executed": 358,
+            "average_candidates": 2.0,
+            "zero_candidate_days": 0,
+            "one_candidate_days": 0,
+            "two_candidate_days": 182,
+            "gross_mean_pct": 0.427394863234224,
+            "net20_mean_pct": 0.23069156653092732,
+            "net40_mean_pct": 0.033988269827630625,
+            "hit_rate_executed": 0.5949720670391061,
+            "top5_removed_net20_pct": 0.14010902640085535,
+            "largest_day_share_positive_net20": 0.06528906872316907,
+            "largest_code_share_total_net20_slot": 0.2729226256707677
+          },
+          "overall": {
+            "days": 266,
+            "displayed": 532,
+            "executed": 522,
+            "average_candidates": 2.0,
+            "zero_candidate_days": 0,
+            "one_candidate_days": 0,
+            "two_candidate_days": 266,
+            "gross_mean_pct": 0.46706825557819787,
+            "net20_mean_pct": 0.27082765407443854,
+            "net40_mean_pct": 0.07458705257067916,
+            "hit_rate_executed": 0.578544061302682,
+            "top5_removed_net20_pct": 0.17113423594863417,
+            "largest_day_share_positive_net20": 0.038267327661457885,
+            "largest_code_share_total_net20_slot": 0.25646324238873136
+          },
+          "confirmation_deltas_vs_l4": {
+            "confirmation_a": -0.0453060521031515,
+            "confirmation_b": 0.01370335591395494,
+            "confirmation_combined": -0.018070940710640804
+          },
+          "preliminary_checks": {
+            "confirmation_a_uplift_positive": false,
+            "confirmation_b_uplift_positive": true,
+            "confirmation_combined_net40_positive": true,
+            "confirmation_top5_removed_net20_positive": true,
+            "confirmation_average_candidates_at_least_one": true
+          },
+          "all_preliminary_checks": false,
+          "registered_family_block_bootstrap": {
+            "point_delta": -0.018070940710640835,
+            "ordinary_one_sided_80_lower": -0.05855113140127669,
+            "ordinary_one_sided_90_lower": -0.07869659871462106,
+            "max_t_one_sided_80_lower": -0.1326906678115243,
+            "max_t_one_sided_90_lower": -0.15618561676979975
+          }
+        },
+        "error_meta.H18_l4_rank2_only": {
+          "local_id": "H18_l4_rank2_only",
+          "confirmation_combined": {
+            "days": 182,
+            "displayed": 182,
+            "executed": 179,
+            "average_candidates": 1.0,
+            "zero_candidate_days": 0,
+            "one_candidate_days": 182,
+            "two_candidate_days": 0,
+            "gross_mean_pct": 0.3108984470850346,
+            "net20_mean_pct": 0.21254679873338622,
+            "net40_mean_pct": 0.11419515038173796,
+            "hit_rate_executed": 0.6033519553072626,
+            "top5_removed_net20_pct": 0.10211673521706463,
+            "largest_day_share_positive_net20": 0.12174562760697358,
+            "largest_code_share_total_net20_slot": 0.2349263632675512
+          },
+          "overall": {
+            "days": 266,
+            "displayed": 266,
+            "executed": 261,
+            "average_candidates": 1.0,
+            "zero_candidate_days": 0,
+            "one_candidate_days": 266,
+            "two_candidate_days": 0,
+            "gross_mean_pct": 0.31076469108306,
+            "net20_mean_pct": 0.21264439033118024,
+            "net40_mean_pct": 0.11452408957930056,
+            "hit_rate_executed": 0.5977011494252874,
+            "top5_removed_net20_pct": 0.10760699096571906,
+            "largest_day_share_positive_net20": 0.07740790356248639,
+            "largest_code_share_total_net20_slot": 0.1606653206190751
+          },
+          "confirmation_deltas_vs_l4": {
+            "confirmation_a": -0.047874926239563326,
+            "confirmation_b": -0.022613287821570238,
+            "confirmation_combined": -0.0362157085081819
+          },
+          "preliminary_checks": {
+            "confirmation_a_uplift_positive": false,
+            "confirmation_b_uplift_positive": false,
+            "confirmation_combined_net40_positive": true,
+            "confirmation_top5_removed_net20_positive": true,
+            "confirmation_average_candidates_at_least_one": true
+          },
+          "all_preliminary_checks": false,
+          "registered_family_block_bootstrap": {
+            "point_delta": -0.036215708508181864,
+            "ordinary_one_sided_80_lower": -0.08887018145305065,
+            "ordinary_one_sided_90_lower": -0.11280292591296755,
+            "max_t_one_sided_80_lower": -0.15083543560906534,
+            "max_t_one_sided_90_lower": -0.1743303845673408
+          }
+        },
+        "error_meta.H19_rank1_frequency_cap": {
+          "local_id": "H19_rank1_frequency_cap",
+          "confirmation_combined": {
+            "days": 182,
+            "displayed": 292,
+            "executed": 287,
+            "average_candidates": 1.6043956043956045,
+            "zero_candidate_days": 0,
+            "one_candidate_days": 72,
+            "two_candidate_days": 110,
+            "gross_mean_pct": 0.35312003721056695,
+            "net20_mean_pct": 0.19542772951825926,
+            "net40_mean_pct": 0.03773542182595162,
+            "hit_rate_executed": 0.5574912891986062,
+            "top5_removed_net20_pct": 0.07238327589460314,
+            "largest_day_share_positive_net20": 0.0991994221021531,
+            "largest_code_share_total_net20_slot": 0.24343021993525812
+          },
+          "overall": {
+            "days": 266,
+            "displayed": 438,
+            "executed": 429,
+            "average_candidates": 1.6466165413533835,
+            "zero_candidate_days": 0,
+            "one_candidate_days": 94,
+            "two_candidate_days": 172,
+            "gross_mean_pct": 0.3958999226467849,
+            "net20_mean_pct": 0.23462172715806315,
+            "net40_mean_pct": 0.07334353166934139,
+            "hit_rate_executed": 0.5547785547785548,
+            "top5_removed_net20_pct": 0.11961976367821567,
+            "largest_day_share_positive_net20": 0.05761910234836236,
+            "largest_code_share_total_net20_slot": 0.13873377435114131
+          },
+          "confirmation_deltas_vs_l4": {
+            "confirmation_a": -0.020356422778360778,
+            "confirmation_b": -0.09180952515908156,
+            "confirmation_combined": -0.05333477772330886
+          },
+          "preliminary_checks": {
+            "confirmation_a_uplift_positive": false,
+            "confirmation_b_uplift_positive": false,
+            "confirmation_combined_net40_positive": true,
+            "confirmation_top5_removed_net20_positive": true,
+            "confirmation_average_candidates_at_least_one": true
+          },
+          "all_preliminary_checks": false,
+          "registered_family_block_bootstrap": {
+            "point_delta": -0.05333477772330887,
+            "ordinary_one_sided_80_lower": -0.07278812807647708,
+            "ordinary_one_sided_90_lower": -0.08394255660369704,
+            "max_t_one_sided_80_lower": -0.16795450482419233,
+            "max_t_one_sided_90_lower": -0.1914494537824678
+          }
+        },
+        "error_meta.H20_breadth_rank2_one": {
+          "local_id": "H20_breadth_rank2_one",
+          "authority": "posthoc integration after observing H03 breadth-switch and H18 L4-rank2 results; descriptive only and not an untouched confirmation",
+          "production_promotion_allowed": false,
+          "confirmation_combined": {
+            "days": 182,
+            "average_candidates": 1.0,
+            "zero_candidate_days": 0,
+            "net20": 0.46797479490184896,
+            "net40": 0.2701725970996513,
+            "net60": 0.07237039929745342,
+            "top5_winning_days_removed_net20": 0.23497411409991398,
+            "top20_winning_days_removed_net20": 0.004731343224898721,
+            "positive_months": 8,
+            "months": 9
+          },
+          "overall": {
+            "days": 266,
+            "average_candidates": 1.0,
+            "zero_candidate_days": 0,
+            "net20": 0.48244916767298796,
+            "net40": 0.2854566864699805,
+            "net60": 0.08846420526697298,
+            "top5_winning_days_removed_net20": 0.27346939551315047,
+            "top20_winning_days_removed_net20": 0.05042503526788393,
+            "positive_months": 11,
+            "months": 13
+          },
+          "confirmation_quality": {
+            "hit_rate_executed": 0.6,
+            "unique_codes": 102,
+            "largest_code_share_total_net20": 0.21339972577398017,
+            "largest_code": {
+              "code": "4073",
+              "name": "ジィ・シィ企画",
+              "selections": 5,
+              "net20_sum": 18.175556108016437
+            }
+          },
+          "full_investment_family_block_bootstrap": {
+            "point_delta": 0.21921228766028092,
+            "ordinary_one_sided_80_lower": 0.13694096138265502,
+            "ordinary_one_sided_90_lower": 0.09063485781860911,
+            "max_t_one_sided_80_lower": 0.06534780629117157,
+            "max_t_one_sided_90_lower": 0.030878257079615112
+          },
+          "orthogonal_rank2_comparison": {
+            "net20": {
+              "H20": 0.46797479490184896,
+              "L4_rank2": 0.42509359746677244,
+              "L6_rank2": 0.2925110178973326
+            },
+            "paired_block_bootstrap": {
+              "H20_minus_L4_rank2": {
+                "point_delta": 0.04288119743507652,
+                "ordinary_one_sided_80_lower": -0.005777434766598265,
+                "ordinary_one_sided_90_lower": -0.033398006535421076,
+                "max_t_one_sided_80_lower": -0.09441299889870045,
+                "max_t_one_sided_90_lower": -0.15299206241823327
+              },
+              "H20_minus_L6_rank2": {
+                "point_delta": 0.1754637770045164,
+                "ordinary_one_sided_80_lower": 0.06396374208017909,
+                "ordinary_one_sided_90_lower": 0.012137116550277507,
+                "max_t_one_sided_80_lower": 0.038169580670739445,
+                "max_t_one_sided_90_lower": -0.020409482848793375
+              }
+            }
+          }
+        }
+      }
+    },
+    "target_portfolio": {
+      "authority": "retrospective screen with outcome-informed sequential rounds; no production promotion",
+      "production_promotion_allowed": false,
+      "family_size": 33,
+      "baselines": {
+        "target_portfolio.C00_L4_v08": {
+          "sessions": 266,
+          "candidate_count_min": 2,
+          "candidate_count_max": 2,
+          "candidate_count_mean": 2.0,
+          "cost": {
+            "20": {
+              "net_mean_pct": 0.28319198192908746,
+              "net_median_pct": 0.180467729351211,
+              "positive_day_rate": 0.5676691729323309
+            },
+            "40": {
+              "net_mean_pct": 0.08657544057570407,
+              "net_median_pct": -0.0141245585046271,
+              "positive_day_rate": 0.5
+            },
+            "60": {
+              "net_mean_pct": -0.11004110077767944,
+              "net_median_pct": -0.19431266022955587,
+              "positive_day_rate": 0.40225563909774437
+            }
+          },
+          "best_days_removed_net20": {
+            "5": 0.16968961600929944,
+            "10": 0.10032821033919342,
+            "20": 0.013510098521216481
+          },
+          "positive_months": 11,
+          "months": 13,
+          "positive_periods": 3,
+          "unique_codes": 205,
+          "largest_code_share_positive_net20_contribution": 0.11764792662994172
+        },
+        "target_portfolio.C01_L6_v08": {
+          "sessions": 266,
+          "candidate_count_min": 2,
+          "candidate_count_max": 2,
+          "candidate_count_mean": 2.0,
+          "cost": {
+            "20": {
+              "net_mean_pct": 0.2593760660947221,
+              "net_median_pct": 0.1961122135497347,
+              "positive_day_rate": 0.5864661654135338
+            },
+            "40": {
+              "net_mean_pct": 0.06802268263607546,
+              "net_median_pct": 0.005687339770444111,
+              "positive_day_rate": 0.5037593984962406
+            },
+            "60": {
+              "net_mean_pct": -0.12333070082257115,
+              "net_median_pct": -0.1721445358952517,
+              "positive_day_rate": 0.41729323308270677
+            }
+          },
+          "best_days_removed_net20": {
+            "5": 0.16937309265445574,
+            "10": 0.10906455074458371,
+            "20": 0.017912690513375497
+          },
+          "positive_months": 12,
+          "months": 13,
+          "positive_periods": 3,
+          "unique_codes": 191,
+          "largest_code_share_positive_net20_contribution": 0.10573892279893359
+        }
+      },
+      "global_max_t": {
+        "family_size": 33,
+        "samples": 5000,
+        "circular_block_length": 5,
+        "confidence": 0.8,
+        "critical_pct": 0.21346890370488542,
+        "interpretation": "Conservative max-statistic diagnostic over all sequential retrospective H01-H33. Adaptively generated later rounds and absence of a sealed holdout forbid a superiority claim even if a bound were positive."
+      },
+      "hypotheses": {
+        "target_portfolio.H01_exact_centered_L4": {
+          "sessions": 266,
+          "candidate_count_min": 2,
+          "candidate_count_max": 2,
+          "candidate_count_mean": 2.0,
+          "cost": {
+            "20": {
+              "net_mean_pct": 0.28319198192908746,
+              "net_median_pct": 0.180467729351211,
+              "positive_day_rate": 0.5676691729323309
+            },
+            "40": {
+              "net_mean_pct": 0.08657544057570407,
+              "net_median_pct": -0.0141245585046271,
+              "positive_day_rate": 0.5
+            },
+            "60": {
+              "net_mean_pct": -0.11004110077767944,
+              "net_median_pct": -0.19431266022955587,
+              "positive_day_rate": 0.40225563909774437
+            }
+          },
+          "best_days_removed_net20": {
+            "5": 0.16968961600929944,
+            "10": 0.10032821033919342,
+            "20": 0.013510098521216481
+          },
+          "positive_months": 11,
+          "months": 13,
+          "positive_periods": 3,
+          "unique_codes": 205,
+          "largest_code_share_positive_net20_contribution": 0.11764792662994172,
+          "local_id": "H01_exact_centered_L4",
+          "round": 1,
+          "authority": "retrospective_only",
+          "production_promotion_allowed": false,
+          "global_max_t": {
+            "uplift_vs_L4_pct": 0.0,
+            "adjusted_one_sided_80pct_lower_pct": -0.21346890370488542
+          }
+        },
+        "target_portfolio.H02_exact_centered_L6": {
+          "sessions": 266,
+          "candidate_count_min": 2,
+          "candidate_count_max": 2,
+          "candidate_count_mean": 2.0,
+          "cost": {
+            "20": {
+              "net_mean_pct": 0.2593760660947221,
+              "net_median_pct": 0.1961122135497347,
+              "positive_day_rate": 0.5864661654135338
+            },
+            "40": {
+              "net_mean_pct": 0.06802268263607546,
+              "net_median_pct": 0.005687339770444111,
+              "positive_day_rate": 0.5037593984962406
+            },
+            "60": {
+              "net_mean_pct": -0.12333070082257115,
+              "net_median_pct": -0.1721445358952517,
+              "positive_day_rate": 0.41729323308270677
+            }
+          },
+          "best_days_removed_net20": {
+            "5": 0.16937309265445574,
+            "10": 0.10906455074458371,
+            "20": 0.017912690513375497
+          },
+          "positive_months": 12,
+          "months": 13,
+          "positive_periods": 3,
+          "unique_codes": 191,
+          "largest_code_share_positive_net20_contribution": 0.10573892279893359,
+          "local_id": "H02_exact_centered_L6",
+          "round": 1,
+          "authority": "retrospective_only",
+          "production_promotion_allowed": false,
+          "global_max_t": {
+            "uplift_vs_L4_pct": -0.023815915834365466,
+            "adjusted_one_sided_80pct_lower_pct": -0.23728481953925087
+          }
+        },
+        "target_portfolio.H03_winsor_rank_L4": {
+          "sessions": 266,
+          "candidate_count_min": 2,
+          "candidate_count_max": 2,
+          "candidate_count_mean": 2.0,
+          "cost": {
+            "20": {
+              "net_mean_pct": 0.2840946594505916,
+              "net_median_pct": 0.180467729351211,
+              "positive_day_rate": 0.5676691729323309
+            },
+            "40": {
+              "net_mean_pct": 0.0874781180972082,
+              "net_median_pct": -0.0141245585046271,
+              "positive_day_rate": 0.5
+            },
+            "60": {
+              "net_mean_pct": -0.10913842325617529,
+              "net_median_pct": -0.19431266022955587,
+              "positive_day_rate": 0.39849624060150374
+            }
+          },
+          "best_days_removed_net20": {
+            "5": 0.1706095862036293,
+            "10": 0.10126614870138131,
+            "20": 0.014284649936755189
+          },
+          "positive_months": 11,
+          "months": 13,
+          "positive_periods": 3,
+          "unique_codes": 206,
+          "largest_code_share_positive_net20_contribution": 0.11743112950928564,
+          "local_id": "H03_winsor_rank_L4",
+          "round": 1,
+          "authority": "retrospective_only",
+          "production_promotion_allowed": false,
+          "global_max_t": {
+            "uplift_vs_L4_pct": 0.0009026775215041401,
+            "adjusted_one_sided_80pct_lower_pct": -0.21256622618338128
+          }
+        },
+        "target_portfolio.H04_risk_adjusted_rank_L4": {
+          "sessions": 266,
+          "candidate_count_min": 2,
+          "candidate_count_max": 2,
+          "candidate_count_mean": 2.0,
+          "cost": {
+            "20": {
+              "net_mean_pct": 0.14861254169625998,
+              "net_median_pct": 0.10849192707653182,
+              "positive_day_rate": 0.5338345864661654
+            },
+            "40": {
+              "net_mean_pct": -0.048003999657123396,
+              "net_median_pct": -0.09150807292346819,
+              "positive_day_rate": 0.45864661654135336
+            },
+            "60": {
+              "net_mean_pct": -0.2446205410105069,
+              "net_median_pct": -0.29150807292346814,
+              "positive_day_rate": 0.39849624060150374
+            }
+          },
+          "best_days_removed_net20": {
+            "5": 0.047021118885647355,
+            "10": -0.029567354746978122,
+            "20": -0.14190343071590464
+          },
+          "positive_months": 9,
+          "months": 13,
+          "positive_periods": 3,
+          "unique_codes": 203,
+          "largest_code_share_positive_net20_contribution": 0.1109738717691535,
+          "local_id": "H04_risk_adjusted_rank_L4",
+          "round": 1,
+          "authority": "retrospective_only",
+          "production_promotion_allowed": false,
+          "global_max_t": {
+            "uplift_vs_L4_pct": -0.13457944023282745,
+            "adjusted_one_sided_80pct_lower_pct": -0.3480483439377129
+          }
+        },
+        "target_portfolio.H05_magnitude_rank_L4": {
+          "sessions": 266,
+          "candidate_count_min": 2,
+          "candidate_count_max": 2,
+          "candidate_count_mean": 2.0,
+          "cost": {
+            "20": {
+              "net_mean_pct": -0.16983031187805295,
+              "net_median_pct": -0.10659748159148313,
+              "positive_day_rate": 0.462406015037594
+            },
+            "40": {
+              "net_mean_pct": -0.3675746727803086,
+              "net_median_pct": -0.3010346696665136,
+              "positive_day_rate": 0.38345864661654133
+            },
+            "60": {
+              "net_mean_pct": -0.5653190336825643,
+              "net_median_pct": -0.4922924946719526,
+              "positive_day_rate": 0.30451127819548873
+            }
+          },
+          "best_days_removed_net20": {
+            "5": -0.2605720153283222,
+            "10": -0.33192771240502683,
+            "20": -0.4491296437288704
+          },
+          "positive_months": 4,
+          "months": 13,
+          "positive_periods": 0,
+          "unique_codes": 262,
+          "largest_code_share_positive_net20_contribution": 0.0995261863155572,
+          "local_id": "H05_magnitude_rank_L4",
+          "round": 1,
+          "authority": "retrospective_only",
+          "production_promotion_allowed": false,
+          "global_max_t": {
+            "uplift_vs_L4_pct": -0.4530222938071402,
+            "adjusted_one_sided_80pct_lower_pct": -0.6664911975120256
+          }
+        },
+        "target_portfolio.H06_date_weighted_preprocess_L4": {
+          "sessions": 266,
+          "candidate_count_min": 2,
+          "candidate_count_max": 2,
+          "candidate_count_mean": 2.0,
+          "cost": {
+            "20": {
+              "net_mean_pct": 0.28319198192908746,
+              "net_median_pct": 0.180467729351211,
+              "positive_day_rate": 0.5676691729323309
+            },
+            "40": {
+              "net_mean_pct": 0.08657544057570407,
+              "net_median_pct": -0.0141245585046271,
+              "positive_day_rate": 0.5
+            },
+            "60": {
+              "net_mean_pct": -0.11004110077767944,
+              "net_median_pct": -0.19431266022955587,
+              "positive_day_rate": 0.40225563909774437
+            }
+          },
+          "best_days_removed_net20": {
+            "5": 0.16968961600929944,
+            "10": 0.10032821033919342,
+            "20": 0.013510098521216481
+          },
+          "positive_months": 11,
+          "months": 13,
+          "positive_periods": 3,
+          "unique_codes": 205,
+          "largest_code_share_positive_net20_contribution": 0.11764792662994172,
+          "local_id": "H06_date_weighted_preprocess_L4",
+          "round": 1,
+          "authority": "retrospective_only",
+          "production_promotion_allowed": false,
+          "global_max_t": {
+            "uplift_vs_L4_pct": 0.0,
+            "adjusted_one_sided_80pct_lower_pct": -0.21346890370488542
+          }
+        },
+        "target_portfolio.H07_date_weighted_preprocess_L6": {
+          "sessions": 266,
+          "candidate_count_min": 2,
+          "candidate_count_max": 2,
+          "candidate_count_mean": 2.0,
+          "cost": {
+            "20": {
+              "net_mean_pct": 0.2593760660947221,
+              "net_median_pct": 0.1961122135497347,
+              "positive_day_rate": 0.5864661654135338
+            },
+            "40": {
+              "net_mean_pct": 0.06802268263607546,
+              "net_median_pct": 0.005687339770444111,
+              "positive_day_rate": 0.5037593984962406
+            },
+            "60": {
+              "net_mean_pct": -0.12333070082257115,
+              "net_median_pct": -0.1721445358952517,
+              "positive_day_rate": 0.41729323308270677
+            }
+          },
+          "best_days_removed_net20": {
+            "5": 0.16937309265445574,
+            "10": 0.10906455074458371,
+            "20": 0.017912690513375497
+          },
+          "positive_months": 12,
+          "months": 13,
+          "positive_periods": 3,
+          "unique_codes": 191,
+          "largest_code_share_positive_net20_contribution": 0.10573892279893359,
+          "local_id": "H07_date_weighted_preprocess_L6",
+          "round": 1,
+          "authority": "retrospective_only",
+          "production_promotion_allowed": false,
+          "global_max_t": {
+            "uplift_vs_L4_pct": -0.023815915834365466,
+            "adjusted_one_sided_80pct_lower_pct": -0.23728481953925087
+          }
+        },
+        "target_portfolio.H08_alpha_ensemble_L4": {
+          "sessions": 266,
+          "candidate_count_min": 2,
+          "candidate_count_max": 2,
+          "candidate_count_mean": 2.0,
+          "cost": {
+            "20": {
+              "net_mean_pct": 0.19035110238060118,
+              "net_median_pct": 0.13941927293991427,
+              "positive_day_rate": 0.556390977443609
+            },
+            "40": {
+              "net_mean_pct": -0.006265438972782263,
+              "net_median_pct": -0.06058072706008574,
+              "positive_day_rate": 0.4774436090225564
+            },
+            "60": {
+              "net_mean_pct": -0.20288198032616578,
+              "net_median_pct": -0.2605807270600857,
+              "positive_day_rate": 0.38721804511278196
+            }
+          },
+          "best_days_removed_net20": {
+            "5": 0.0749521542002795,
+            "10": 0.023365022152537024,
+            "20": -0.05107468178517757
+          },
+          "positive_months": 10,
+          "months": 13,
+          "positive_periods": 3,
+          "unique_codes": 192,
+          "largest_code_share_positive_net20_contribution": 0.1452753481008225,
+          "local_id": "H08_alpha_ensemble_L4",
+          "round": 1,
+          "authority": "retrospective_only",
+          "production_promotion_allowed": false,
+          "global_max_t": {
+            "uplift_vs_L4_pct": -0.09284087954848629,
+            "adjusted_one_sided_80pct_lower_pct": -0.3063097832533717
+          }
+        },
+        "target_portfolio.H09_L4_L6_rank_ensemble": {
+          "sessions": 266,
+          "candidate_count_min": 2,
+          "candidate_count_max": 2,
+          "candidate_count_mean": 2.0,
+          "cost": {
+            "20": {
+              "net_mean_pct": 0.2596100249118453,
+              "net_median_pct": 0.15714545737601798,
+              "positive_day_rate": 0.556390977443609
+            },
+            "40": {
+              "net_mean_pct": 0.0626175437088378,
+              "net_median_pct": -0.03533968493328296,
+              "positive_day_rate": 0.49624060150375937
+            },
+            "60": {
+              "net_mean_pct": -0.13437493749416973,
+              "net_median_pct": -0.21953227064878902,
+              "positive_day_rate": 0.39849624060150374
+            }
+          },
+          "best_days_removed_net20": {
+            "5": 0.14565589736337445,
+            "10": 0.07516460939273756,
+            "20": -0.008812076220747856
+          },
+          "positive_months": 12,
+          "months": 13,
+          "positive_periods": 3,
+          "unique_codes": 204,
+          "largest_code_share_positive_net20_contribution": 0.12445312109887784,
+          "local_id": "H09_L4_L6_rank_ensemble",
+          "round": 1,
+          "authority": "retrospective_only",
+          "production_promotion_allowed": false,
+          "global_max_t": {
+            "uplift_vs_L4_pct": -0.023581957017242198,
+            "adjusted_one_sided_80pct_lower_pct": -0.2370508607221276
+          }
+        },
+        "target_portfolio.H10_L4_rank1_only": {
+          "sessions": 266,
+          "candidate_count_min": 1,
+          "candidate_count_max": 1,
+          "candidate_count_mean": 1.0,
+          "cost": {
+            "20": {
+              "net_mean_pct": 0.14109518319581454,
+              "net_median_pct": -0.02102872496961826,
+              "positive_day_rate": 0.48120300751879697
+            },
+            "40": {
+              "net_mean_pct": -0.055897298007193015,
+              "net_median_pct": -0.22102872496961828,
+              "positive_day_rate": 0.39473684210526316
+            },
+            "60": {
+              "net_mean_pct": -0.25288977921020045,
+              "net_median_pct": -0.4210287249696182,
+              "positive_day_rate": 0.34962406015037595
+            }
+          },
+          "best_days_removed_net20": {
+            "5": 0.018566436443725753,
+            "10": -0.06564311355344318,
+            "20": -0.19546826153611838
+          },
+          "positive_months": 10,
+          "months": 13,
+          "positive_periods": 3,
+          "unique_codes": 114,
+          "largest_code_share_positive_net20_contribution": 0.23368001227773605,
+          "local_id": "H10_L4_rank1_only",
+          "round": 1,
+          "authority": "retrospective_only",
+          "production_promotion_allowed": false,
+          "global_max_t": {
+            "uplift_vs_L4_pct": -0.142096798733273,
+            "adjusted_one_sided_80pct_lower_pct": -0.35556570243815844
+          }
+        },
+        "target_portfolio.H11_L4_rank75_25": {
+          "sessions": 266,
+          "candidate_count_min": 2,
+          "candidate_count_max": 2,
+          "candidate_count_mean": 2.0,
+          "cost": {
+            "20": {
+              "net_mean_pct": 0.212143582562451,
+              "net_median_pct": 0.08789876869492333,
+              "positive_day_rate": 0.5375939849624061
+            },
+            "40": {
+              "net_mean_pct": 0.015339071284255535,
+              "net_median_pct": -0.11210123130507671,
+              "positive_day_rate": 0.44360902255639095
+            },
+            "60": {
+              "net_mean_pct": -0.18146543999393994,
+              "net_median_pct": -0.3073295797847301,
+              "positive_day_rate": 0.37593984962406013
+            }
+          },
+          "best_days_removed_net20": {
+            "5": 0.11502452620720154,
+            "10": 0.04625881456984194,
+            "20": -0.05644966894539543
+          },
+          "positive_months": 11,
+          "months": 13,
+          "positive_periods": 3,
+          "unique_codes": 205,
+          "largest_code_share_positive_net20_contribution": 0.17626394331439132,
+          "local_id": "H11_L4_rank75_25",
+          "round": 1,
+          "authority": "retrospective_only",
+          "production_promotion_allowed": false,
+          "global_max_t": {
+            "uplift_vs_L4_pct": -0.07104839936663648,
+            "adjusted_one_sided_80pct_lower_pct": -0.2845173030715219
+          }
+        },
+        "target_portfolio.H12_L6_rank1_only": {
+          "sessions": 266,
+          "candidate_count_min": 1,
+          "candidate_count_max": 1,
+          "candidate_count_mean": 1.0,
+          "cost": {
+            "20": {
+              "net_mean_pct": 0.24648785519904562,
+              "net_median_pct": 0.0,
+              "positive_day_rate": 0.4849624060150376
+            },
+            "40": {
+              "net_mean_pct": 0.05701417098851927,
+              "net_median_pct": -0.11325796505652322,
+              "positive_day_rate": 0.42857142857142855
+            },
+            "60": {
+              "net_mean_pct": -0.13245951322200697,
+              "net_median_pct": -0.31325796505652315,
+              "positive_day_rate": 0.37593984962406013
+            }
+          },
+          "best_days_removed_net20": {
+            "5": 0.12846491874611982,
+            "10": 0.04432737616674933,
+            "20": -0.0902542516364901
+          },
+          "positive_months": 10,
+          "months": 13,
+          "positive_periods": 3,
+          "unique_codes": 108,
+          "largest_code_share_positive_net20_contribution": 0.19108965424606747,
+          "local_id": "H12_L6_rank1_only",
+          "round": 1,
+          "authority": "retrospective_only",
+          "production_promotion_allowed": false,
+          "global_max_t": {
+            "uplift_vs_L4_pct": -0.036704126730041836,
+            "adjusted_one_sided_80pct_lower_pct": -0.2501730304349272
+          }
+        },
+        "target_portfolio.H13_L6_rank75_25": {
+          "sessions": 266,
+          "candidate_count_min": 2,
+          "candidate_count_max": 2,
+          "candidate_count_mean": 2.0,
+          "cost": {
+            "20": {
+              "net_mean_pct": 0.2529319606468839,
+              "net_median_pct": 0.1759422110552718,
+              "positive_day_rate": 0.5827067669172933
+            },
+            "40": {
+              "net_mean_pct": 0.06251842681229736,
+              "net_median_pct": -0.01680976831681913,
+              "positive_day_rate": 0.4924812030075188
+            },
+            "60": {
+              "net_mean_pct": -0.12789510702228904,
+              "net_median_pct": -0.18214189716067253,
+              "positive_day_rate": 0.41353383458646614
+            }
+          },
+          "best_days_removed_net20": {
+            "5": 0.16050092208233935,
+            "10": 0.10098550092375627,
+            "20": 0.0009310801185007451
+          },
+          "positive_months": 10,
+          "months": 13,
+          "positive_periods": 3,
+          "unique_codes": 191,
+          "largest_code_share_positive_net20_contribution": 0.14919527215712416,
+          "local_id": "H13_L6_rank75_25",
+          "round": 1,
+          "authority": "retrospective_only",
+          "production_promotion_allowed": false,
+          "global_max_t": {
+            "uplift_vs_L4_pct": -0.03026002128220368,
+            "adjusted_one_sided_80pct_lower_pct": -0.2437289249870891
+          }
+        },
+        "target_portfolio.H14_L4_margin_q75": {
+          "sessions": 266,
+          "candidate_count_min": 1,
+          "candidate_count_max": 2,
+          "candidate_count_mean": 1.7518796992481203,
+          "cost": {
+            "20": {
+              "net_mean_pct": 0.26580717092739015,
+              "net_median_pct": 0.17169824909651923,
+              "positive_day_rate": 0.5714285714285714
+            },
+            "40": {
+              "net_mean_pct": 0.06956656942363072,
+              "net_median_pct": -0.003921568627451716,
+              "positive_day_rate": 0.4924812030075188
+            },
+            "60": {
+              "net_mean_pct": -0.12667403208012865,
+              "net_median_pct": -0.19431266022955587,
+              "positive_day_rate": 0.39097744360902253
+            }
+          },
+          "best_days_removed_net20": {
+            "5": 0.1659837312418114,
+            "10": 0.09404506035672928,
+            "20": -0.008367685018517531
+          },
+          "positive_months": 12,
+          "months": 13,
+          "positive_periods": 3,
+          "unique_codes": 186,
+          "largest_code_share_positive_net20_contribution": 0.16352518642551148,
+          "local_id": "H14_L4_margin_q75",
+          "round": 1,
+          "authority": "retrospective_only",
+          "production_promotion_allowed": false,
+          "global_max_t": {
+            "uplift_vs_L4_pct": -0.01738481100169736,
+            "adjusted_one_sided_80pct_lower_pct": -0.23085371470658278
+          }
+        },
+        "target_portfolio.H15_L4_L6_consensus_fallback": {
+          "sessions": 266,
+          "candidate_count_min": 1,
+          "candidate_count_max": 2,
+          "candidate_count_mean": 1.4285714285714286,
+          "cost": {
+            "20": {
+              "net_mean_pct": 0.2750232669389942,
+              "net_median_pct": 0.13697191779020476,
+              "positive_day_rate": 0.556390977443609
+            },
+            "40": {
+              "net_mean_pct": 0.07953454513448296,
+              "net_median_pct": 0.0,
+              "positive_day_rate": 0.4849624060150376
+            },
+            "60": {
+              "net_mean_pct": -0.11595417667002832,
+              "net_median_pct": -0.18785723903159357,
+              "positive_day_rate": 0.40601503759398494
+            }
+          },
+          "best_days_removed_net20": {
+            "5": 0.18406469657308613,
+            "10": 0.10534446575449205,
+            "20": 0.0008222693002141188
+          },
+          "positive_months": 11,
+          "months": 13,
+          "positive_periods": 3,
+          "unique_codes": 151,
+          "largest_code_share_positive_net20_contribution": 0.17020234935475959,
+          "local_id": "H15_L4_L6_consensus_fallback",
+          "round": 1,
+          "authority": "retrospective_only",
+          "production_promotion_allowed": false,
+          "global_max_t": {
+            "uplift_vs_L4_pct": -0.008168714990093263,
+            "adjusted_one_sided_80pct_lower_pct": -0.22163761869497867
+          }
+        },
+        "target_portfolio.H16_L4_L6_top1_blend": {
+          "sessions": 266,
+          "candidate_count_min": 1,
+          "candidate_count_max": 2,
+          "candidate_count_mean": 1.4022556390977443,
+          "cost": {
+            "20": {
+              "net_mean_pct": 0.1937915191974301,
+              "net_median_pct": 0.04540792288761383,
+              "positive_day_rate": 0.5263157894736842
+            },
+            "40": {
+              "net_mean_pct": 0.0005584364906631393,
+              "net_median_pct": -0.1200976976851561,
+              "positive_day_rate": 0.4473684210526316
+            },
+            "60": {
+              "net_mean_pct": -0.19267464621610375,
+              "net_median_pct": -0.3035871156661758,
+              "positive_day_rate": 0.39097744360902253
+            }
+          },
+          "best_days_removed_net20": {
+            "5": 0.07938100961849308,
+            "10": 0.0048906378476727165,
+            "20": -0.11372010923032727
+          },
+          "positive_months": 10,
+          "months": 13,
+          "positive_periods": 3,
+          "unique_codes": 149,
+          "largest_code_share_positive_net20_contribution": 0.2160635843417258,
+          "local_id": "H16_L4_L6_top1_blend",
+          "round": 1,
+          "authority": "retrospective_only",
+          "production_promotion_allowed": false,
+          "global_max_t": {
+            "uplift_vs_L4_pct": -0.08940046273165744,
+            "adjusted_one_sided_80pct_lower_pct": -0.30286936643654283
+          }
+        },
+        "target_portfolio.H17_L4_rank2_only": {
+          "sessions": 266,
+          "candidate_count_min": 1,
+          "candidate_count_max": 1,
+          "candidate_count_mean": 1.0,
+          "cost": {
+            "20": {
+              "net_mean_pct": 0.4252887806623605,
+              "net_median_pct": 0.08302024173584288,
+              "positive_day_rate": 0.5263157894736842
+            },
+            "40": {
+              "net_mean_pct": 0.22904817915860112,
+              "net_median_pct": -0.10357239741727278,
+              "positive_day_rate": 0.44360902255639095
+            },
+            "60": {
+              "net_mean_pct": 0.032807577654841664,
+              "net_median_pct": -0.3035723974172727,
+              "positive_day_rate": 0.37969924812030076
+            }
+          },
+          "best_days_removed_net20": {
+            "5": 0.21521398193143812,
+            "10": 0.1242717795850395,
+            "20": 0.0066157683056097105
+          },
+          "positive_months": 11,
+          "months": 13,
+          "positive_periods": 3,
+          "unique_codes": 152,
+          "largest_code_share_positive_net20_contribution": 0.09445757483340034,
+          "local_id": "H17_L4_rank2_only",
+          "round": 2,
+          "authority": "post_hoc_retrospective_diagnostic_only",
+          "production_promotion_allowed": false,
+          "global_max_t": {
+            "uplift_vs_L4_pct": 0.142096798733273,
+            "adjusted_one_sided_80pct_lower_pct": -0.07137210497161242
+          }
+        },
+        "target_portfolio.H18_L4_rank25_75": {
+          "sessions": 266,
+          "candidate_count_min": 2,
+          "candidate_count_max": 2,
+          "candidate_count_mean": 2.0,
+          "cost": {
+            "20": {
+              "net_mean_pct": 0.354240381295724,
+              "net_median_pct": 0.12820190075215634,
+              "positive_day_rate": 0.5601503759398496
+            },
+            "40": {
+              "net_mean_pct": 0.15781180986715257,
+              "net_median_pct": -0.056101802301552706,
+              "positive_day_rate": 0.4699248120300752
+            },
+            "60": {
+              "net_mean_pct": -0.03861676156141886,
+              "net_median_pct": -0.24226248187195865,
+              "positive_day_rate": 0.40225563909774437
+            }
+          },
+          "best_days_removed_net20": {
+            "5": 0.1967680884153902,
+            "10": 0.12541499784673232,
+            "20": 0.02539184220069444
+          },
+          "positive_months": 13,
+          "months": 13,
+          "positive_periods": 3,
+          "unique_codes": 205,
+          "largest_code_share_positive_net20_contribution": 0.07823607719879891,
+          "local_id": "H18_L4_rank25_75",
+          "round": 2,
+          "authority": "post_hoc_retrospective_diagnostic_only",
+          "production_promotion_allowed": false,
+          "global_max_t": {
+            "uplift_vs_L4_pct": 0.0710483993666365,
+            "adjusted_one_sided_80pct_lower_pct": -0.14242050433824893
+          }
+        },
+        "target_portfolio.H19_L4_rank2_rank3_equal": {
+          "sessions": 266,
+          "candidate_count_min": 2,
+          "candidate_count_max": 2,
+          "candidate_count_mean": 2.0,
+          "cost": {
+            "20": {
+              "net_mean_pct": 0.1483581098562332,
+              "net_median_pct": 0.03240593085472887,
+              "positive_day_rate": 0.5375939849624061
+            },
+            "40": {
+              "net_mean_pct": -0.04825843149715023,
+              "net_median_pct": -0.15807950426570644,
+              "positive_day_rate": 0.41729323308270677
+            },
+            "60": {
+              "net_mean_pct": -0.24487497285053372,
+              "net_median_pct": -0.3580795042657065,
+              "positive_day_rate": 0.31203007518796994
+            }
+          },
+          "best_days_removed_net20": {
+            "5": 0.027020845867842643,
+            "10": -0.022583013903462484,
+            "20": -0.10585718951981715
+          },
+          "positive_months": 10,
+          "months": 13,
+          "positive_periods": 3,
+          "unique_codes": 248,
+          "largest_code_share_positive_net20_contribution": 0.06291058289574789,
+          "local_id": "H19_L4_rank2_rank3_equal",
+          "round": 2,
+          "authority": "post_hoc_retrospective_diagnostic_only",
+          "production_promotion_allowed": false,
+          "global_max_t": {
+            "uplift_vs_L4_pct": -0.1348338720728542,
+            "adjusted_one_sided_80pct_lower_pct": -0.3483027757777396
+          }
+        },
+        "target_portfolio.H20_L4_rank3_only": {
+          "sessions": 266,
+          "candidate_count_min": 1,
+          "candidate_count_max": 1,
+          "candidate_count_mean": 1.0,
+          "cost": {
+            "20": {
+              "net_mean_pct": -0.12857256094989403,
+              "net_median_pct": -0.2,
+              "positive_day_rate": 0.42857142857142855
+            },
+            "40": {
+              "net_mean_pct": -0.32556504215290155,
+              "net_median_pct": -0.4,
+              "positive_day_rate": 0.3684210526315789
+            },
+            "60": {
+              "net_mean_pct": -0.522557523355909,
+              "net_median_pct": -0.6,
+              "positive_day_rate": 0.3007518796992481
+            }
+          },
+          "best_days_removed_net20": {
+            "5": -0.2235323245065847,
+            "10": -0.29014602375988335,
+            "20": -0.38306312502196094
+          },
+          "positive_months": 4,
+          "months": 13,
+          "positive_periods": 1,
+          "unique_codes": 169,
+          "largest_code_share_positive_net20_contribution": 0.07291928029033608,
+          "local_id": "H20_L4_rank3_only",
+          "round": 2,
+          "authority": "post_hoc_retrospective_diagnostic_only",
+          "production_promotion_allowed": false,
+          "global_max_t": {
+            "uplift_vs_L4_pct": -0.4117645428789814,
+            "adjusted_one_sided_80pct_lower_pct": -0.6252334465838668
+          }
+        },
+        "target_portfolio.H21_L4_rank2_rank3_75_25": {
+          "sessions": 266,
+          "candidate_count_min": 2,
+          "candidate_count_max": 2,
+          "candidate_count_mean": 2.0,
+          "cost": {
+            "20": {
+              "net_mean_pct": 0.2868234452592968,
+              "net_median_pct": 0.01812678159700839,
+              "positive_day_rate": 0.518796992481203
+            },
+            "40": {
+              "net_mean_pct": 0.09039487383072542,
+              "net_median_pct": -0.15671489815963618,
+              "positive_day_rate": 0.40977443609022557
+            },
+            "60": {
+              "net_mean_pct": -0.106033697597846,
+              "net_median_pct": -0.33985333330508133,
+              "positive_day_rate": 0.34962406015037595
+            }
+          },
+          "best_days_removed_net20": {
+            "5": 0.12800825226714233,
+            "10": 0.05725679708495768,
+            "20": -0.041187687447176456
+          },
+          "positive_months": 10,
+          "months": 13,
+          "positive_periods": 3,
+          "unique_codes": 248,
+          "largest_code_share_positive_net20_contribution": 0.08232834450697032,
+          "local_id": "H21_L4_rank2_rank3_75_25",
+          "round": 2,
+          "authority": "post_hoc_retrospective_diagnostic_only",
+          "production_promotion_allowed": false,
+          "global_max_t": {
+            "uplift_vs_L4_pct": 0.003631463330209359,
+            "adjusted_one_sided_80pct_lower_pct": -0.20983744037467605
+          }
+        },
+        "target_portfolio.H22_repeat3of20_fallback_rank2": {
+          "sessions": 266,
+          "candidate_count_min": 1,
+          "candidate_count_max": 1,
+          "candidate_count_mean": 1.0,
+          "cost": {
+            "20": {
+              "net_mean_pct": 0.15125607237889113,
+              "net_median_pct": -0.028029810137819453,
+              "positive_day_rate": 0.46616541353383456
+            },
+            "40": {
+              "net_mean_pct": -0.04423264942562017,
+              "net_median_pct": -0.22802981013781948,
+              "positive_day_rate": 0.40225563909774437
+            },
+            "60": {
+              "net_mean_pct": -0.2397213712301314,
+              "net_median_pct": -0.4280298101378194,
+              "positive_day_rate": 0.35714285714285715
+            }
+          },
+          "best_days_removed_net20": {
+            "5": -0.006605451295958309,
+            "10": -0.08726734347383475,
+            "20": -0.21230390636915972
+          },
+          "positive_months": 11,
+          "months": 13,
+          "positive_periods": 3,
+          "unique_codes": 146,
+          "largest_code_share_positive_net20_contribution": 0.10372794651574728,
+          "local_id": "H22_repeat3of20_fallback_rank2",
+          "round": 3,
+          "authority": "retrospective_only",
+          "production_promotion_allowed": false,
+          "global_max_t": {
+            "uplift_vs_L4_pct": -0.13193590955019632,
+            "adjusted_one_sided_80pct_lower_pct": -0.34540481325508177
+          }
+        },
+        "target_portfolio.H23_prior_day_repeat_fallback_rank2": {
+          "sessions": 266,
+          "candidate_count_min": 1,
+          "candidate_count_max": 1,
+          "candidate_count_mean": 1.0,
+          "cost": {
+            "20": {
+              "net_mean_pct": 0.24459200954963964,
+              "net_median_pct": 0.0,
+              "positive_day_rate": 0.4849624060150376
+            },
+            "40": {
+              "net_mean_pct": 0.04910328774512838,
+              "net_median_pct": -0.189021084538454,
+              "positive_day_rate": 0.4323308270676692
+            },
+            "60": {
+              "net_mean_pct": -0.14638543405938292,
+              "net_median_pct": -0.38902108453845397,
+              "positive_day_rate": 0.38345864661654133
+            }
+          },
+          "best_days_removed_net20": {
+            "5": 0.0771706309105055,
+            "10": -0.009551613151879072,
+            "20": -0.14062021239983036
+          },
+          "positive_months": 10,
+          "months": 13,
+          "positive_periods": 3,
+          "unique_codes": 144,
+          "largest_code_share_positive_net20_contribution": 0.15998199263738572,
+          "local_id": "H23_prior_day_repeat_fallback_rank2",
+          "round": 3,
+          "authority": "retrospective_only",
+          "production_promotion_allowed": false,
+          "global_max_t": {
+            "uplift_vs_L4_pct": -0.03859997237944788,
+            "adjusted_one_sided_80pct_lower_pct": -0.2520688760843333
+          }
+        },
+        "target_portfolio.H24_repeat3of20_tilt_rank2": {
+          "sessions": 266,
+          "candidate_count_min": 2,
+          "candidate_count_max": 2,
+          "candidate_count_mean": 2.0,
+          "cost": {
+            "20": {
+              "net_mean_pct": 0.2857322042248566,
+              "net_median_pct": 0.17828052795919327,
+              "positive_day_rate": 0.5601503759398496
+            },
+            "40": {
+              "net_mean_pct": 0.08949160272109727,
+              "net_median_pct": -0.02171947204080673,
+              "positive_day_rate": 0.49624060150375937
+            },
+            "60": {
+              "net_mean_pct": -0.10674899878266216,
+              "net_median_pct": -0.20763873568863614,
+              "positive_day_rate": 0.40225563909774437
+            }
+          },
+          "best_days_removed_net20": {
+            "5": 0.1558318941820487,
+            "10": 0.09068337032874198,
+            "20": 0.0008965750266144155
+          },
+          "positive_months": 11,
+          "months": 13,
+          "positive_periods": 3,
+          "unique_codes": 205,
+          "largest_code_share_positive_net20_contribution": 0.08254846994582392,
+          "local_id": "H24_repeat3of20_tilt_rank2",
+          "round": 3,
+          "authority": "retrospective_only",
+          "production_promotion_allowed": false,
+          "global_max_t": {
+            "uplift_vs_L4_pct": 0.0025402222957691457,
+            "adjusted_one_sided_80pct_lower_pct": -0.21092868140911628
+          }
+        },
+        "target_portfolio.H25_novelty20_single": {
+          "sessions": 266,
+          "candidate_count_min": 1,
+          "candidate_count_max": 1,
+          "candidate_count_mean": 1.0,
+          "cost": {
+            "20": {
+              "net_mean_pct": 0.12276083660238339,
+              "net_median_pct": -0.08072714726485841,
+              "positive_day_rate": 0.44360902255639095
+            },
+            "40": {
+              "net_mean_pct": -0.07197600550287973,
+              "net_median_pct": -0.2807271472648584,
+              "positive_day_rate": 0.38721804511278196
+            },
+            "60": {
+              "net_mean_pct": -0.2667128476081429,
+              "net_median_pct": -0.4807271472648584,
+              "positive_day_rate": 0.34962406015037595
+            }
+          },
+          "best_days_removed_net20": {
+            "5": -0.03564657281531095,
+            "10": -0.1155089977169648,
+            "20": -0.24395916354228148
+          },
+          "positive_months": 8,
+          "months": 13,
+          "positive_periods": 3,
+          "unique_codes": 170,
+          "largest_code_share_positive_net20_contribution": 0.10401058785705256,
+          "local_id": "H25_novelty20_single",
+          "round": 3,
+          "authority": "retrospective_only",
+          "production_promotion_allowed": false,
+          "global_max_t": {
+            "uplift_vs_L4_pct": -0.16043114532670405,
+            "adjusted_one_sided_80pct_lower_pct": -0.37390004903158947
+          }
+        },
+        "target_portfolio.H26_novelty60_single": {
+          "sessions": 266,
+          "candidate_count_min": 1,
+          "candidate_count_max": 1,
+          "candidate_count_mean": 1.0,
+          "cost": {
+            "20": {
+              "net_mean_pct": 0.1319852762873936,
+              "net_median_pct": -0.06326887969897431,
+              "positive_day_rate": 0.4473684210526316
+            },
+            "40": {
+              "net_mean_pct": -0.06275156581786955,
+              "net_median_pct": -0.2632688796989743,
+              "positive_day_rate": 0.38721804511278196
+            },
+            "60": {
+              "net_mean_pct": -0.2574884079231327,
+              "net_median_pct": -0.46326887969897423,
+              "positive_day_rate": 0.3458646616541353
+            }
+          },
+          "best_days_removed_net20": {
+            "5": -0.042662835990924235,
+            "10": -0.12266229728272678,
+            "20": -0.251403247643237
+          },
+          "positive_months": 9,
+          "months": 13,
+          "positive_periods": 3,
+          "unique_codes": 175,
+          "largest_code_share_positive_net20_contribution": 0.09624153399510137,
+          "local_id": "H26_novelty60_single",
+          "round": 3,
+          "authority": "retrospective_only",
+          "production_promotion_allowed": false,
+          "global_max_t": {
+            "uplift_vs_L4_pct": -0.15120670564169394,
+            "adjusted_one_sided_80pct_lower_pct": -0.3646756093465794
+          }
+        },
+        "target_portfolio.H27_winsor_L4_rank2": {
+          "sessions": 266,
+          "candidate_count_min": 1,
+          "candidate_count_max": 1,
+          "candidate_count_mean": 1.0,
+          "cost": {
+            "20": {
+              "net_mean_pct": 0.41888437957336283,
+              "net_median_pct": 0.061949779717551834,
+              "positive_day_rate": 0.5263157894736842
+            },
+            "40": {
+              "net_mean_pct": 0.22264377806960348,
+              "net_median_pct": -0.10906490285941228,
+              "positive_day_rate": 0.43609022556390975
+            },
+            "60": {
+              "net_mean_pct": 0.02640317656584404,
+              "net_median_pct": -0.30906490285941224,
+              "positive_day_rate": 0.37218045112781956
+            }
+          },
+          "best_days_removed_net20": {
+            "5": 0.208686891166406,
+            "10": 0.1176172065785029,
+            "20": -0.00030931579875358915
+          },
+          "positive_months": 11,
+          "months": 13,
+          "positive_periods": 3,
+          "unique_codes": 153,
+          "largest_code_share_positive_net20_contribution": 0.09549259844219862,
+          "own_equal_top2_reference": {
+            "net20": 0.2840946594505916,
+            "net40": 0.0874781180972082,
+            "top20_removed": 0.014284649936755205
+          },
+          "uplift_vs_own_equal_top2_net20": 0.13478972012277124,
+          "robustness_checks": {
+            "beats_own_equal_top2": true,
+            "net40_positive": true,
+            "top20_removed_positive": false
+          },
+          "local_id": "H27_winsor_L4_rank2",
+          "round": 4,
+          "authority": "post_hoc_retrospective_robustness_diagnostic_only",
+          "production_promotion_allowed": false,
+          "global_max_t": {
+            "uplift_vs_L4_pct": 0.13569239764427535,
+            "adjusted_one_sided_80pct_lower_pct": -0.07777650606061007
+          }
+        },
+        "target_portfolio.H28_alpha_ensemble_L4_rank2": {
+          "sessions": 266,
+          "candidate_count_min": 1,
+          "candidate_count_max": 1,
+          "candidate_count_mean": 1.0,
+          "cost": {
+            "20": {
+              "net_mean_pct": 0.1456380965029485,
+              "net_median_pct": -0.009090909090914062,
+              "positive_day_rate": 0.4849624060150376
+            },
+            "40": {
+              "net_mean_pct": -0.051354384700059,
+              "net_median_pct": -0.20889050828931632,
+              "positive_day_rate": 0.38721804511278196
+            },
+            "60": {
+              "net_mean_pct": -0.24834686590306648,
+              "net_median_pct": -0.4088905082893163,
+              "positive_day_rate": 0.34210526315789475
+            }
+          },
+          "best_days_removed_net20": {
+            "5": 0.0024837361397136055,
+            "10": -0.05648831374168281,
+            "20": -0.1588186938465827
+          },
+          "positive_months": 9,
+          "months": 13,
+          "positive_periods": 3,
+          "unique_codes": 143,
+          "largest_code_share_positive_net20_contribution": 0.13564248208432925,
+          "own_equal_top2_reference": {
+            "net20": 0.19035110238060118,
+            "net40": -0.006265438972782259,
+            "top20_removed": -0.051074681785177566
+          },
+          "uplift_vs_own_equal_top2_net20": -0.04471300587765267,
+          "robustness_checks": {
+            "beats_own_equal_top2": false,
+            "net40_positive": false,
+            "top20_removed_positive": false
+          },
+          "local_id": "H28_alpha_ensemble_L4_rank2",
+          "round": 4,
+          "authority": "post_hoc_retrospective_robustness_diagnostic_only",
+          "production_promotion_allowed": false,
+          "global_max_t": {
+            "uplift_vs_L4_pct": -0.13755388542613897,
+            "adjusted_one_sided_80pct_lower_pct": -0.35102278913102436
+          }
+        },
+        "target_portfolio.H29_L4_L6_ensemble_rank2": {
+          "sessions": 266,
+          "candidate_count_min": 1,
+          "candidate_count_max": 1,
+          "candidate_count_mean": 1.0,
+          "cost": {
+            "20": {
+              "net_mean_pct": 0.30048061945324755,
+              "net_median_pct": -0.015492502255287519,
+              "positive_day_rate": 0.48120300751879697
+            },
+            "40": {
+              "net_mean_pct": 0.1034881382502401,
+              "net_median_pct": -0.21549250225528754,
+              "positive_day_rate": 0.38721804511278196
+            },
+            "60": {
+              "net_mean_pct": -0.09350434295276741,
+              "net_median_pct": -0.41549250225528744,
+              "positive_day_rate": 0.3308270676691729
+            }
+          },
+          "best_days_removed_net20": {
+            "5": 0.09240086403537957,
+            "10": 0.009688967229020191,
+            "20": -0.10442796710155797
+          },
+          "positive_months": 10,
+          "months": 13,
+          "positive_periods": 3,
+          "unique_codes": 157,
+          "largest_code_share_positive_net20_contribution": 0.10546794527803699,
+          "own_equal_top2_reference": {
+            "net20": 0.2596100249118453,
+            "net40": 0.06261754370883783,
+            "top20_removed": -0.008812076220747856
+          },
+          "uplift_vs_own_equal_top2_net20": 0.04087059454140224,
+          "robustness_checks": {
+            "beats_own_equal_top2": true,
+            "net40_positive": true,
+            "top20_removed_positive": false
+          },
+          "local_id": "H29_L4_L6_ensemble_rank2",
+          "round": 4,
+          "authority": "post_hoc_retrospective_robustness_diagnostic_only",
+          "production_promotion_allowed": false,
+          "global_max_t": {
+            "uplift_vs_L4_pct": 0.017288637524160065,
+            "adjusted_one_sided_80pct_lower_pct": -0.19618026618072534
+          }
+        },
+        "target_portfolio.H30_L6_alpha1_rank2": {
+          "sessions": 266,
+          "candidate_count_min": 1,
+          "candidate_count_max": 1,
+          "candidate_count_mean": 1.0,
+          "cost": {
+            "20": {
+              "net_mean_pct": 0.2722642769903985,
+              "net_median_pct": 0.0,
+              "positive_day_rate": 0.4849624060150376
+            },
+            "40": {
+              "net_mean_pct": 0.07903119428363166,
+              "net_median_pct": -0.16503940829641872,
+              "positive_day_rate": 0.41353383458646614
+            },
+            "60": {
+              "net_mean_pct": -0.11420188842313526,
+              "net_median_pct": -0.3650394082964187,
+              "positive_day_rate": 0.3458646616541353
+            }
+          },
+          "best_days_removed_net20": {
+            "5": 0.12435976055805979,
+            "10": 0.030823804989474637,
+            "20": -0.0916137240228732
+          },
+          "positive_months": 10,
+          "months": 13,
+          "positive_periods": 3,
+          "unique_codes": 135,
+          "largest_code_share_positive_net20_contribution": 0.08030689802272893,
+          "own_equal_top2_reference": {
+            "net20": 0.259376066094722,
+            "net40": 0.06802268263607546,
+            "top20_removed": 0.01791269051337549
+          },
+          "uplift_vs_own_equal_top2_net20": 0.012888210895676488,
+          "robustness_checks": {
+            "beats_own_equal_top2": true,
+            "net40_positive": true,
+            "top20_removed_positive": false
+          },
+          "local_id": "H30_L6_alpha1_rank2",
+          "round": 4,
+          "authority": "post_hoc_retrospective_robustness_diagnostic_only",
+          "production_promotion_allowed": false,
+          "global_max_t": {
+            "uplift_vs_L4_pct": -0.01092770493868894,
+            "adjusted_one_sided_80pct_lower_pct": -0.22439660864357436
+          }
+        },
+        "target_portfolio.H31_L4_alpha10_rank2": {
+          "sessions": 266,
+          "candidate_count_min": 1,
+          "candidate_count_max": 1,
+          "candidate_count_mean": 1.0,
+          "cost": {
+            "20": {
+              "net_mean_pct": 0.29316920711042876,
+              "net_median_pct": 0.00020040080159774987,
+              "positive_day_rate": 0.5
+            },
+            "40": {
+              "net_mean_pct": 0.09467296650892504,
+              "net_median_pct": -0.19363738938524802,
+              "positive_day_rate": 0.39849624060150374
+            },
+            "60": {
+              "net_mean_pct": -0.10382327409257872,
+              "net_median_pct": -0.39363738938524795,
+              "positive_day_rate": 0.3533834586466165
+            }
+          },
+          "best_days_removed_net20": {
+            "5": 0.11923748908582672,
+            "10": 0.05402548729168527,
+            "20": -0.05901981279564912
+          },
+          "positive_months": 9,
+          "months": 13,
+          "positive_periods": 3,
+          "unique_codes": 145,
+          "largest_code_share_positive_net20_contribution": 0.09748217473672731,
+          "own_equal_top2_reference": {
+            "net20": 0.20853802241195013,
+            "net40": 0.011169601359318592,
+            "top20_removed": -0.03425271034446117
+          },
+          "uplift_vs_own_equal_top2_net20": 0.08463118469847863,
+          "robustness_checks": {
+            "beats_own_equal_top2": true,
+            "net40_positive": true,
+            "top20_removed_positive": false
+          },
+          "local_id": "H31_L4_alpha10_rank2",
+          "round": 4,
+          "authority": "post_hoc_retrospective_robustness_diagnostic_only",
+          "production_promotion_allowed": false,
+          "global_max_t": {
+            "uplift_vs_L4_pct": 0.009977225181341256,
+            "adjusted_one_sided_80pct_lower_pct": -0.20349167852354416
+          }
+        },
+        "target_portfolio.H32_L4_alpha100_rank2": {
+          "sessions": 266,
+          "candidate_count_min": 1,
+          "candidate_count_max": 1,
+          "candidate_count_mean": 1.0,
+          "cost": {
+            "20": {
+              "net_mean_pct": 0.253783868632513,
+              "net_median_pct": 0.0,
+              "positive_day_rate": 0.48120300751879697
+            },
+            "40": {
+              "net_mean_pct": 0.05829514682800172,
+              "net_median_pct": -0.19796660530838586,
+              "positive_day_rate": 0.40225563909774437
+            },
+            "60": {
+              "net_mean_pct": -0.13719357497650955,
+              "net_median_pct": -0.3979666053083858,
+              "positive_day_rate": 0.35714285714285715
+            }
+          },
+          "best_days_removed_net20": {
+            "5": 0.09048219523262695,
+            "10": 0.013257541424197269,
+            "20": -0.10335755113895119
+          },
+          "positive_months": 10,
+          "months": 13,
+          "positive_periods": 3,
+          "unique_codes": 130,
+          "largest_code_share_positive_net20_contribution": 0.12511119025136994,
+          "own_equal_top2_reference": {
+            "net20": 0.1357410358807489,
+            "net40": -0.058995806224514225,
+            "top20_removed": -0.11841700332613977
+          },
+          "uplift_vs_own_equal_top2_net20": 0.11804283275176411,
+          "robustness_checks": {
+            "beats_own_equal_top2": true,
+            "net40_positive": true,
+            "top20_removed_positive": false
+          },
+          "local_id": "H32_L4_alpha100_rank2",
+          "round": 4,
+          "authority": "post_hoc_retrospective_robustness_diagnostic_only",
+          "production_promotion_allowed": false,
+          "global_max_t": {
+            "uplift_vs_L4_pct": -0.02940811329657452,
+            "adjusted_one_sided_80pct_lower_pct": -0.24287701700145994
+          }
+        },
+        "target_portfolio.H33_L4_rolling120_rank2": {
+          "sessions": 266,
+          "candidate_count_min": 1,
+          "candidate_count_max": 1,
+          "candidate_count_mean": 1.0,
+          "cost": {
+            "20": {
+              "net_mean_pct": 0.20180927794158166,
+              "net_median_pct": -0.04649895473657337,
+              "positive_day_rate": 0.46616541353383456
+            },
+            "40": {
+              "net_mean_pct": 0.004816796738574169,
+              "net_median_pct": -0.24649895473657335,
+              "positive_day_rate": 0.3684210526315789
+            },
+            "60": {
+              "net_mean_pct": -0.19217568446443334,
+              "net_median_pct": -0.4464989547365733,
+              "positive_day_rate": 0.30451127819548873
+            }
+          },
+          "best_days_removed_net20": {
+            "5": 0.0031174055910519324,
+            "10": -0.0680862713466926,
+            "20": -0.18155869844525058
+          },
+          "positive_months": 10,
+          "months": 13,
+          "positive_periods": 2,
+          "unique_codes": 146,
+          "largest_code_share_positive_net20_contribution": 0.11056174464775817,
+          "own_equal_top2_reference": {
+            "net20": 0.23785592810146297,
+            "net40": 0.04161532659770364,
+            "top20_removed": -0.029207557870395737
+          },
+          "uplift_vs_own_equal_top2_net20": -0.036046650159881316,
+          "robustness_checks": {
+            "beats_own_equal_top2": false,
+            "net40_positive": true,
+            "top20_removed_positive": false
+          },
+          "local_id": "H33_L4_rolling120_rank2",
+          "round": 4,
+          "authority": "post_hoc_retrospective_robustness_diagnostic_only",
+          "production_promotion_allowed": false,
+          "global_max_t": {
+            "uplift_vs_L4_pct": -0.08138270398750581,
+            "adjusted_one_sided_80pct_lower_pct": -0.2948516076923912
+          }
+        }
+      }
+    },
+    "breadth_falsification": {
+      "status": "complete",
+      "authority": "Posthoc falsification of H20 after its custom breadth result was already observed. No result from this protocol is untouched confirmation or promotion evidence.",
+      "production_promotion_allowed": false,
+      "protocol_id": "v09_breadth_semantics_falsification_20260723",
+      "protocol_sha256": "987eb190a9cf19f5cb9843a076b7cfca9a583e2a308662efd85eea7d695a7cc5",
+      "primary_falsification": "F1 canonical threshold 0.5 and F1b valid-OC threshold 0.5 versus original custom H20 threshold 0.5.",
+      "hypotheses": {
+        "breadth_falsification.F1_canonical_breadth_primary": {
+          "local_id": "F1",
+          "status": "complete",
+          "result": {
+            "definition": {
+              "description": "Replace only H20 custom breadth by canonical prior_market_breadth.",
+              "breadth": "canonical",
+              "threshold": 0.5
+            },
+            "custom_h20_reference": {
+              "discovery": {
+                "days": 84,
+                "displayed": 84,
+                "executed": 82,
+                "gross_mean_pct": 0.7090484039152175,
+                "net20_mean_pct": 0.5138103086771224,
+                "net40_mean_pct": 0.3185722134390272,
+                "net60_mean_pct": 0.12333411820093194,
+                "hit_rate_executed": 0.5853658536585366,
+                "positive_months": 3,
+                "months": 4,
+                "top20_winning_days_removed_net20_pct": -0.43318407155623057
+              },
+              "confirmation_a": {
+                "days": 98,
+                "displayed": 98,
+                "executed": 98,
+                "gross_mean_pct": 0.6749321032866841,
+                "net20_mean_pct": 0.4749321032866841,
+                "net40_mean_pct": 0.27493210328668416,
+                "net60_mean_pct": 0.07493210328668413,
+                "hit_rate_executed": 0.6428571428571429,
+                "positive_months": 5,
+                "months": 5,
+                "top20_winning_days_removed_net20_pct": -0.1661564625474033
+              },
+              "confirmation_b": {
+                "days": 84,
+                "displayed": 84,
+                "executed": 82,
+                "gross_mean_pct": 0.6550960303576366,
+                "net20_mean_pct": 0.45985793511954126,
+                "net40_mean_pct": 0.26461983988144616,
+                "net60_mean_pct": 0.06938174464335092,
+                "hit_rate_executed": 0.5487804878048781,
+                "positive_months": 3,
+                "months": 4,
+                "top20_winning_days_removed_net20_pct": -0.2959000362912717
+              },
+              "confirmation_combined": {
+                "days": 182,
+                "displayed": 182,
+                "executed": 180,
+                "gross_mean_pct": 0.6657769927040468,
+                "net20_mean_pct": 0.46797479490184896,
+                "net40_mean_pct": 0.2701725970996513,
+                "net60_mean_pct": 0.07237039929745342,
+                "hit_rate_executed": 0.6,
+                "positive_months": 8,
+                "months": 9,
+                "top20_winning_days_removed_net20_pct": 0.004731343224898721
+              },
+              "overall": {
+                "days": 266,
+                "displayed": 266,
+                "executed": 262,
+                "gross_mean_pct": 0.6794416488759955,
+                "net20_mean_pct": 0.48244916767298796,
+                "net40_mean_pct": 0.2854566864699805,
+                "net60_mean_pct": 0.08846420526697298,
+                "hit_rate_executed": 0.5954198473282443,
+                "positive_months": 11,
+                "months": 13,
+                "top20_winning_days_removed_net20_pct": 0.05042503526788393
+              }
+            },
+            "canonical_cc_breadth_threshold_0_5": {
+              "discovery": {
+                "days": 84,
+                "displayed": 84,
+                "executed": 82,
+                "gross_mean_pct": 0.5361006811375172,
+                "net20_mean_pct": 0.3408625858994221,
+                "net40_mean_pct": 0.14562449066132674,
+                "net60_mean_pct": -0.049613604576768514,
+                "hit_rate_executed": 0.5609756097560976,
+                "positive_months": 2,
+                "months": 4,
+                "top20_winning_days_removed_net20_pct": -0.6447401543959267
+              },
+              "confirmation_a": {
+                "days": 98,
+                "displayed": 98,
+                "executed": 98,
+                "gross_mean_pct": 0.4623062270362534,
+                "net20_mean_pct": 0.26230622703625334,
+                "net40_mean_pct": 0.06230622703625336,
+                "net60_mean_pct": -0.13769377296374663,
+                "hit_rate_executed": 0.6224489795918368,
+                "positive_months": 4,
+                "months": 5,
+                "top20_winning_days_removed_net20_pct": -0.18758603201896193
+              },
+              "confirmation_b": {
+                "days": 84,
+                "displayed": 84,
+                "executed": 82,
+                "gross_mean_pct": 0.5313898528465549,
+                "net20_mean_pct": 0.3361517576084598,
+                "net40_mean_pct": 0.14091366237036448,
+                "net60_mean_pct": -0.054324432867730726,
+                "hit_rate_executed": 0.5609756097560976,
+                "positive_months": 3,
+                "months": 4,
+                "top20_winning_days_removed_net20_pct": -0.299298791211473
+              },
+              "confirmation_combined": {
+                "days": 182,
+                "displayed": 182,
+                "executed": 180,
+                "gross_mean_pct": 0.49419097741023876,
+                "net20_mean_pct": 0.29638877960804094,
+                "net40_mean_pct": 0.09858658180584313,
+                "net60_mean_pct": -0.09921561599635464,
+                "hit_rate_executed": 0.5944444444444444,
+                "positive_months": 7,
+                "months": 9,
+                "top20_winning_days_removed_net20_pct": -0.01989941985510302
+              },
+              "overall": {
+                "days": 266,
+                "displayed": 266,
+                "executed": 262,
+                "gross_mean_pct": 0.5074256206925372,
+                "net20_mean_pct": 0.31043313948952966,
+                "net40_mean_pct": 0.11344065828652218,
+                "net60_mean_pct": -0.08355182291648534,
+                "hit_rate_executed": 0.583969465648855,
+                "positive_months": 9,
+                "months": 13,
+                "top20_winning_days_removed_net20_pct": -0.031517826994115705
+              }
+            },
+            "canonical_minus_custom_paired_deltas": {
+              "discovery": {
+                "net20_mean_delta_pct": -0.1729477227777004,
+                "net40_mean_delta_pct": -0.1729477227777004,
+                "net60_mean_delta_pct": -0.1729477227777004
+              },
+              "confirmation_a": {
+                "net20_mean_delta_pct": -0.2126258762504308,
+                "net40_mean_delta_pct": -0.2126258762504308,
+                "net60_mean_delta_pct": -0.2126258762504308
+              },
+              "confirmation_b": {
+                "net20_mean_delta_pct": -0.12370617751108166,
+                "net40_mean_delta_pct": -0.12370617751108162,
+                "net60_mean_delta_pct": -0.12370617751108162
+              },
+              "confirmation_combined": {
+                "net20_mean_delta_pct": -0.17158601529380815,
+                "net40_mean_delta_pct": -0.1715860152938081,
+                "net60_mean_delta_pct": -0.17158601529380807
+              },
+              "overall": {
+                "net20_mean_delta_pct": -0.17201602818345835,
+                "net40_mean_delta_pct": -0.17201602818345832,
+                "net60_mean_delta_pct": -0.17201602818345832
+              }
+            },
+            "confirmation_custom_top10_profit_codes_cash": {
+              "top_n": 10,
+              "codes": [
+                {
+                  "code": "4073",
+                  "name": "ジィ・シィ企画",
+                  "net20_contribution_sum": 18.175556108016437
+                },
+                {
+                  "code": "3991",
+                  "name": "ウォンテッドリー",
+                  "net20_contribution_sum": 13.620163999579393
+                },
+                {
+                  "code": "7255",
+                  "name": "桜井製作所",
+                  "net20_contribution_sum": 10.341273348159309
+                },
+                {
+                  "code": "7345",
+                  "name": "アイ・パートナーズフィナンシャル",
+                  "net20_contribution_sum": 8.01673156840165
+                },
+                {
+                  "code": "7058",
+                  "name": "共栄セキュリティーサービス",
+                  "net20_contribution_sum": 6.277883523106276
+                },
+                {
+                  "code": "6193",
+                  "name": "バーチャレクス・ホールディングス",
+                  "net20_contribution_sum": 5.910510557964222
+                },
+                {
+                  "code": "9241",
+                  "name": "フューチャーリンクネットワーク",
+                  "net20_contribution_sum": 5.682280833190777
+                },
+                {
+                  "code": "7815",
+                  "name": "東京ボード⼯業",
+                  "net20_contribution_sum": 4.264888611756713
+                },
+                {
+                  "code": "9685",
+                  "name": "ＫＹＣＯＭホールディングス",
+                  "net20_contribution_sum": 3.875210804140683
+                },
+                {
+                  "code": "7043",
+                  "name": "アルー",
+                  "net20_contribution_sum": 3.7057554928751526
+                }
+              ],
+              "net20_with_those_selections_as_cash_pct": 0.029127240796406113
+            },
+            "confirmation_canonical_top10_profit_codes_cash": {
+              "top_n": 10,
+              "codes": [
+                {
+                  "code": "7345",
+                  "name": "アイ・パートナーズフィナンシャル",
+                  "net20_contribution_sum": 11.995471924375325
+                },
+                {
+                  "code": "6193",
+                  "name": "バーチャレクス・ホールディングス",
+                  "net20_contribution_sum": 8.14696731617115
+                },
+                {
+                  "code": "7255",
+                  "name": "桜井製作所",
+                  "net20_contribution_sum": 6.809734150201653
+                },
+                {
+                  "code": "9241",
+                  "name": "フューチャーリンクネットワーク",
+                  "net20_contribution_sum": 5.682280833190777
+                },
+                {
+                  "code": "9685",
+                  "name": "ＫＹＣＯＭホールディングス",
+                  "net20_contribution_sum": 3.875210804140683
+                },
+                {
+                  "code": "6492",
+                  "name": "岡野バルブ製造",
+                  "net20_contribution_sum": 3.5500000000000087
+                },
+                {
+                  "code": "9691",
+                  "name": "両毛システムズ",
+                  "net20_contribution_sum": 3.4738367539356445
+                },
+                {
+                  "code": "7058",
+                  "name": "共栄セキュリティーサービス",
+                  "net20_contribution_sum": 3.2623217922606917
+                },
+                {
+                  "code": "3991",
+                  "name": "ウォンテッドリー",
+                  "net20_contribution_sum": 2.8739673390970166
+                },
+                {
+                  "code": "6346",
+                  "name": "キクカワエンタープライズ",
+                  "net20_contribution_sum": 2.5272727272727336
+                }
+              ],
+              "net20_with_those_selections_as_cash_pct": 0.009591726637460211
+            }
+          }
+        },
+        "breadth_falsification.F1b_traded_row_denominator_control": {
+          "local_id": "F1b",
+          "status": "complete",
+          "result": {
+            "definition": {
+              "description": "Keep H20 open-to-close direction but restrict the denominator to valid/traded panel rows, isolating denominator semantics from the canonical close-to-close horizon change.",
+              "breadth": "valid_oc",
+              "threshold": 0.5
+            },
+            "valid_oc_breadth_threshold_0_5": {
+              "discovery": {
+                "days": 84,
+                "displayed": 84,
+                "executed": 82,
+                "gross_mean_pct": 0.7090484039152175,
+                "net20_mean_pct": 0.5138103086771224,
+                "net40_mean_pct": 0.3185722134390272,
+                "net60_mean_pct": 0.12333411820093194,
+                "hit_rate_executed": 0.5853658536585366,
+                "positive_months": 3,
+                "months": 4,
+                "top20_winning_days_removed_net20_pct": -0.43318407155623057
+              },
+              "confirmation_a": {
+                "days": 98,
+                "displayed": 98,
+                "executed": 98,
+                "gross_mean_pct": 0.6965577017751367,
+                "net20_mean_pct": 0.49655770177513664,
+                "net40_mean_pct": 0.2965577017751367,
+                "net60_mean_pct": 0.09655770177513667,
+                "hit_rate_executed": 0.6428571428571429,
+                "positive_months": 5,
+                "months": 5,
+                "top20_winning_days_removed_net20_pct": -0.14989370730830684
+              },
+              "confirmation_b": {
+                "days": 84,
+                "displayed": 84,
+                "executed": 82,
+                "gross_mean_pct": 0.6448693707656131,
+                "net20_mean_pct": 0.4496312755275178,
+                "net40_mean_pct": 0.2543931802894226,
+                "net60_mean_pct": 0.05915508505132738,
+                "hit_rate_executed": 0.5609756097560976,
+                "positive_months": 3,
+                "months": 4,
+                "top20_winning_days_removed_net20_pct": -0.3087198574970734
+              },
+              "confirmation_combined": {
+                "days": 182,
+                "displayed": 182,
+                "executed": 180,
+                "gross_mean_pct": 0.6727015490015105,
+                "net20_mean_pct": 0.4748993511993126,
+                "net40_mean_pct": 0.2770971533971148,
+                "net60_mean_pct": 0.07929495559491698,
+                "hit_rate_executed": 0.6055555555555555,
+                "positive_months": 8,
+                "months": 9,
+                "top20_winning_days_removed_net20_pct": 0.01202876776592851
+              },
+              "overall": {
+                "days": 266,
+                "displayed": 266,
+                "executed": 262,
+                "gross_mean_pct": 0.6841795031847864,
+                "net20_mean_pct": 0.4871870219817789,
+                "net40_mean_pct": 0.2901945407787714,
+                "net60_mean_pct": 0.09320205957576382,
+                "hit_rate_executed": 0.5992366412213741,
+                "positive_months": 11,
+                "months": 13,
+                "top20_winning_days_removed_net20_pct": 0.05554808098389356
+              }
+            },
+            "valid_oc_minus_custom_paired_deltas": {
+              "discovery": {
+                "net20_mean_delta_pct": 0.0,
+                "net40_mean_delta_pct": 0.0,
+                "net60_mean_delta_pct": 0.0
+              },
+              "confirmation_a": {
+                "net20_mean_delta_pct": 0.021625598488452503,
+                "net40_mean_delta_pct": 0.021625598488452507,
+                "net60_mean_delta_pct": 0.021625598488452507
+              },
+              "confirmation_b": {
+                "net20_mean_delta_pct": -0.010226659592023544,
+                "net40_mean_delta_pct": -0.010226659592023544,
+                "net60_mean_delta_pct": -0.010226659592023544
+              },
+              "confirmation_combined": {
+                "net20_mean_delta_pct": 0.006924556297463558,
+                "net40_mean_delta_pct": 0.00692455629746356,
+                "net60_mean_delta_pct": 0.00692455629746356
+              },
+              "overall": {
+                "net20_mean_delta_pct": 0.004737854308790855,
+                "net40_mean_delta_pct": 0.004737854308790857,
+                "net60_mean_delta_pct": 0.004737854308790857
+              }
+            },
+            "confirmation_valid_oc_top10_profit_codes_cash": {
+              "top_n": 10,
+              "codes": [
+                {
+                  "code": "4073",
+                  "name": "ジィ・シィ企画",
+                  "net20_contribution_sum": 18.175556108016437
+                },
+                {
+                  "code": "3991",
+                  "name": "ウォンテッドリー",
+                  "net20_contribution_sum": 13.620163999579393
+                },
+                {
+                  "code": "7255",
+                  "name": "桜井製作所",
+                  "net20_contribution_sum": 12.492087091378124
+                },
+                {
+                  "code": "7345",
+                  "name": "アイ・パートナーズフィナンシャル",
+                  "net20_contribution_sum": 8.01673156840165
+                },
+                {
+                  "code": "7058",
+                  "name": "共栄セキュリティーサービス",
+                  "net20_contribution_sum": 6.277883523106276
+                },
+                {
+                  "code": "6193",
+                  "name": "バーチャレクス・ホールディングス",
+                  "net20_contribution_sum": 5.910510557964222
+                },
+                {
+                  "code": "9241",
+                  "name": "フューチャーリンクネットワーク",
+                  "net20_contribution_sum": 5.682280833190777
+                },
+                {
+                  "code": "7815",
+                  "name": "東京ボード⼯業",
+                  "net20_contribution_sum": 4.264888611756713
+                },
+                {
+                  "code": "7043",
+                  "name": "アルー",
+                  "net20_contribution_sum": 3.7057554928751526
+                },
+                {
+                  "code": "6492",
+                  "name": "岡野バルブ製造",
+                  "net20_contribution_sum": 3.5500000000000087
+                }
+              ],
+              "net20_with_those_selections_as_cash_pct": 0.026021011714319444
+            },
+            "relation_to_custom": {
+              "pearson": 0.9994183695425948,
+              "spearman": 0.9995600619101281,
+              "valid_oc_minus_custom_summary": {
+                "count": 266.0,
+                "mean": -0.004599708728439877,
+                "std": 0.0063377068019262045,
+                "min": -0.04974397261768393,
+                "10%": -0.009913800308066989,
+                "25%": -0.006885833938241645,
+                "50%": -0.00468699047357285,
+                "75%": -0.002150198510129611,
+                "90%": 0.00016563337518735524,
+                "max": 0.037752943175828446
+              },
+              "threshold_0_5_state_confusion": {
+                "L4": {
+                  "L4": 173,
+                  "L6": 0
+                },
+                "L6": {
+                  "L4": 5,
+                  "L6": 88
+                }
+              },
+              "state_switch_sessions": 5,
+              "state_switch_rate": 0.018796992481203006,
+              "security_switch_sessions": 5,
+              "security_switch_rate": 0.018796992481203006
+            }
+          }
+        },
+        "breadth_falsification.F2_state_semantics_audit": {
+          "local_id": "F2",
+          "status": "complete",
+          "result": {
+            "definition": {
+              "description": "Descriptive, non-optimizing audit of custom versus canonical daily state.",
+              "fixed_outputs": [
+                "constant-within-date and no-lookahead checks",
+                "datewise Pearson and Spearman association",
+                "level difference summary",
+                "threshold-0.5 state confusion table",
+                "number and percentage of sessions whose L4/L6 selection switches",
+                "return delta on switched versus unswitched sessions"
+              ]
+            },
+            "canonical_cc_relation_to_custom": {
+              "sessions": 266,
+              "pearson": 0.7055210760156941,
+              "spearman": 0.7069910306824938,
+              "custom_summary": {
+                "count": 266.0,
+                "mean": 0.4422740657554424,
+                "std": 0.15085632119781603,
+                "min": 0.036601307189542485,
+                "10%": 0.26109347879846817,
+                "25%": 0.34256144965829566,
+                "50%": 0.43295433574869074,
+                "75%": 0.539215540942521,
+                "90%": 0.626268693132539,
+                "max": 0.8806638566912539
+              },
+              "canonical_summary": {
+                "count": 266.0,
+                "mean": 0.4730687217044651,
+                "std": 0.17644132829213163,
+                "min": 0.008387942798435688,
+                "10%": 0.23109153658151627,
+                "25%": 0.36360663920640945,
+                "50%": 0.4769976884126663,
+                "75%": 0.5969632267951965,
+                "90%": 0.6818776726722717,
+                "max": 0.9771653413772583
+              },
+              "canonical_minus_custom_summary": {
+                "count": 266.0,
+                "mean": 0.03079465594902268,
+                "std": 0.12779301328555615,
+                "min": -0.4930632057290606,
+                "10%": -0.10278128215714238,
+                "25%": -0.01827393423309994,
+                "50%": 0.03812945809845958,
+                "75%": 0.09499771396227472,
+                "90%": 0.15829270498660652,
+                "max": 0.6699882213444633
+              },
+              "threshold_0_5_state_confusion": {
+                "L4": {
+                  "L4": 128,
+                  "L6": 45
+                },
+                "L6": {
+                  "L4": 18,
+                  "L6": 75
+                }
+              },
+              "state_switch_sessions": 63,
+              "state_switch_rate": 0.23684210526315788,
+              "security_switch_sessions": 33,
+              "security_switch_rate": 0.12406015037593984,
+              "switched_state_sessions": {
+                "sessions": 63,
+                "canonical_minus_custom_net20_mean_pct": -0.7262898967746019,
+                "custom_net20_mean_pct": 0.7857203640636523,
+                "canonical_net20_mean_pct": 0.0594304672890506
+              },
+              "unswitched_state_sessions": {
+                "sessions": 203,
+                "canonical_minus_custom_net20_mean_pct": 0.0,
+                "custom_net20_mean_pct": 0.3883305205172646,
+                "canonical_net20_mean_pct": 0.3883305205172646
+              }
+            },
+            "valid_oc_relation_to_custom": {
+              "pearson": 0.9994183695425948,
+              "spearman": 0.9995600619101281,
+              "valid_oc_minus_custom_summary": {
+                "count": 266.0,
+                "mean": -0.004599708728439877,
+                "std": 0.0063377068019262045,
+                "min": -0.04974397261768393,
+                "10%": -0.009913800308066989,
+                "25%": -0.006885833938241645,
+                "50%": -0.00468699047357285,
+                "75%": -0.002150198510129611,
+                "90%": 0.00016563337518735524,
+                "max": 0.037752943175828446
+              },
+              "threshold_0_5_state_confusion": {
+                "L4": {
+                  "L4": 173,
+                  "L6": 0
+                },
+                "L6": {
+                  "L4": 5,
+                  "L6": 88
+                }
+              },
+              "state_switch_sessions": 5,
+              "state_switch_rate": 0.018796992481203006,
+              "security_switch_sessions": 5,
+              "security_switch_rate": 0.018796992481203006
+            }
+          }
+        },
+        "breadth_falsification.F3_fixed_threshold_sensitivity": {
+          "local_id": "F3",
+          "status": "complete",
+          "result": {
+            "definition": {
+              "description": "Exact-threshold sensitivity only; multiplicity/posthoc diagnostic.",
+              "breadths": [
+                "custom",
+                "canonical"
+              ],
+              "thresholds": [
+                0.45,
+                0.5,
+                0.55
+              ],
+              "optimization_allowed": false
+            },
+            "threshold_sensitivity_posthoc_only": {
+              "custom": {
+                "0.45": {
+                  "discovery": {
+                    "days": 84,
+                    "displayed": 84,
+                    "executed": 82,
+                    "gross_mean_pct": 0.6814843845049358,
+                    "net20_mean_pct": 0.4862462892668406,
+                    "net40_mean_pct": 0.2910081940287453,
+                    "net60_mean_pct": 0.09577009879065009,
+                    "hit_rate_executed": 0.573170731707317,
+                    "positive_months": 3,
+                    "months": 4,
+                    "top20_winning_days_removed_net20_pct": -0.4487321379073614
+                  },
+                  "confirmation_a": {
+                    "days": 98,
+                    "displayed": 98,
+                    "executed": 97,
+                    "gross_mean_pct": 0.6526781417168219,
+                    "net20_mean_pct": 0.4547189580433524,
+                    "net40_mean_pct": 0.256759774369883,
+                    "net60_mean_pct": 0.05880059069641358,
+                    "hit_rate_executed": 0.6494845360824743,
+                    "positive_months": 5,
+                    "months": 5,
+                    "top20_winning_days_removed_net20_pct": -0.17959628072832726
+                  },
+                  "confirmation_b": {
+                    "days": 84,
+                    "displayed": 84,
+                    "executed": 82,
+                    "gross_mean_pct": 0.7089552962645661,
+                    "net20_mean_pct": 0.5137172010264709,
+                    "net40_mean_pct": 0.3184791057883758,
+                    "net60_mean_pct": 0.12324101055028047,
+                    "hit_rate_executed": 0.5609756097560976,
+                    "positive_months": 3,
+                    "months": 4,
+                    "top20_winning_days_removed_net20_pct": -0.2695362315255568
+                  },
+                  "confirmation_combined": {
+                    "days": 182,
+                    "displayed": 182,
+                    "executed": 179,
+                    "gross_mean_pct": 0.6786522130465501,
+                    "net20_mean_pct": 0.48194891634325315,
+                    "net40_mean_pct": 0.2852456196399566,
+                    "net60_mean_pct": 0.08854232293665987,
+                    "hit_rate_executed": 0.6089385474860335,
+                    "positive_months": 8,
+                    "months": 9,
+                    "top20_winning_days_removed_net20_pct": 0.0024599795637936677
+                  },
+                  "overall": {
+                    "days": 266,
+                    "displayed": 266,
+                    "executed": 261,
+                    "gross_mean_pct": 0.6795465829807771,
+                    "net20_mean_pct": 0.4833059814770176,
+                    "net40_mean_pct": 0.28706537997325826,
+                    "net60_mean_pct": 0.09082477846949889,
+                    "hit_rate_executed": 0.5977011494252874,
+                    "positive_months": 11,
+                    "months": 13,
+                    "top20_winning_days_removed_net20_pct": 0.03951715500949901
+                  }
+                },
+                "0.50": {
+                  "discovery": {
+                    "days": 84,
+                    "displayed": 84,
+                    "executed": 82,
+                    "gross_mean_pct": 0.7090484039152175,
+                    "net20_mean_pct": 0.5138103086771224,
+                    "net40_mean_pct": 0.3185722134390272,
+                    "net60_mean_pct": 0.12333411820093194,
+                    "hit_rate_executed": 0.5853658536585366,
+                    "positive_months": 3,
+                    "months": 4,
+                    "top20_winning_days_removed_net20_pct": -0.43318407155623057
+                  },
+                  "confirmation_a": {
+                    "days": 98,
+                    "displayed": 98,
+                    "executed": 98,
+                    "gross_mean_pct": 0.6749321032866841,
+                    "net20_mean_pct": 0.4749321032866841,
+                    "net40_mean_pct": 0.27493210328668416,
+                    "net60_mean_pct": 0.07493210328668413,
+                    "hit_rate_executed": 0.6428571428571429,
+                    "positive_months": 5,
+                    "months": 5,
+                    "top20_winning_days_removed_net20_pct": -0.1661564625474033
+                  },
+                  "confirmation_b": {
+                    "days": 84,
+                    "displayed": 84,
+                    "executed": 82,
+                    "gross_mean_pct": 0.6550960303576366,
+                    "net20_mean_pct": 0.45985793511954126,
+                    "net40_mean_pct": 0.26461983988144616,
+                    "net60_mean_pct": 0.06938174464335092,
+                    "hit_rate_executed": 0.5487804878048781,
+                    "positive_months": 3,
+                    "months": 4,
+                    "top20_winning_days_removed_net20_pct": -0.2959000362912717
+                  },
+                  "confirmation_combined": {
+                    "days": 182,
+                    "displayed": 182,
+                    "executed": 180,
+                    "gross_mean_pct": 0.6657769927040468,
+                    "net20_mean_pct": 0.46797479490184896,
+                    "net40_mean_pct": 0.2701725970996513,
+                    "net60_mean_pct": 0.07237039929745342,
+                    "hit_rate_executed": 0.6,
+                    "positive_months": 8,
+                    "months": 9,
+                    "top20_winning_days_removed_net20_pct": 0.004731343224898721
+                  },
+                  "overall": {
+                    "days": 266,
+                    "displayed": 266,
+                    "executed": 262,
+                    "gross_mean_pct": 0.6794416488759955,
+                    "net20_mean_pct": 0.48244916767298796,
+                    "net40_mean_pct": 0.2854566864699805,
+                    "net60_mean_pct": 0.08846420526697298,
+                    "hit_rate_executed": 0.5954198473282443,
+                    "positive_months": 11,
+                    "months": 13,
+                    "top20_winning_days_removed_net20_pct": 0.05042503526788393
+                  }
+                },
+                "0.55": {
+                  "discovery": {
+                    "days": 84,
+                    "displayed": 84,
+                    "executed": 82,
+                    "gross_mean_pct": 0.7090484039152175,
+                    "net20_mean_pct": 0.5138103086771224,
+                    "net40_mean_pct": 0.3185722134390272,
+                    "net60_mean_pct": 0.12333411820093194,
+                    "hit_rate_executed": 0.5853658536585366,
+                    "positive_months": 3,
+                    "months": 4,
+                    "top20_winning_days_removed_net20_pct": -0.43318407155623057
+                  },
+                  "confirmation_a": {
+                    "days": 98,
+                    "displayed": 98,
+                    "executed": 97,
+                    "gross_mean_pct": 0.6137421775186036,
+                    "net20_mean_pct": 0.4157829938451341,
+                    "net40_mean_pct": 0.21782381017166483,
+                    "net60_mean_pct": 0.01986462649819531,
+                    "hit_rate_executed": 0.6185567010309279,
+                    "positive_months": 5,
+                    "months": 5,
+                    "top20_winning_days_removed_net20_pct": -0.21633568345720436
+                  },
+                  "confirmation_b": {
+                    "days": 84,
+                    "displayed": 84,
+                    "executed": 82,
+                    "gross_mean_pct": 0.6847675449779227,
+                    "net20_mean_pct": 0.4895294497398274,
+                    "net40_mean_pct": 0.2942913545017322,
+                    "net60_mean_pct": 0.09905325926363703,
+                    "hit_rate_executed": 0.5609756097560976,
+                    "positive_months": 3,
+                    "months": 4,
+                    "top20_winning_days_removed_net20_pct": -0.3021584001461972
+                  },
+                  "confirmation_combined": {
+                    "days": 182,
+                    "displayed": 182,
+                    "executed": 179,
+                    "gross_mean_pct": 0.6465231163459817,
+                    "net20_mean_pct": 0.4498198196426849,
+                    "net40_mean_pct": 0.25311652293938824,
+                    "net60_mean_pct": 0.05641322623609151,
+                    "hit_rate_executed": 0.5921787709497207,
+                    "positive_months": 8,
+                    "months": 9,
+                    "top20_winning_days_removed_net20_pct": -0.019747362972860793
+                  },
+                  "overall": {
+                    "days": 266,
+                    "displayed": 266,
+                    "executed": 261,
+                    "gross_mean_pct": 0.6662679439994246,
+                    "net20_mean_pct": 0.4700273424956652,
+                    "net40_mean_pct": 0.2737867409919058,
+                    "net60_mean_pct": 0.07754613948814641,
+                    "hit_rate_executed": 0.5900383141762452,
+                    "positive_months": 11,
+                    "months": 13,
+                    "top20_winning_days_removed_net20_pct": 0.03718857054878028
+                  }
+                }
+              },
+              "canonical": {
+                "0.45": {
+                  "discovery": {
+                    "days": 84,
+                    "displayed": 84,
+                    "executed": 82,
+                    "gross_mean_pct": 0.599885340485254,
+                    "net20_mean_pct": 0.404647245247159,
+                    "net40_mean_pct": 0.20940915000906365,
+                    "net60_mean_pct": 0.014171054770968456,
+                    "hit_rate_executed": 0.5609756097560976,
+                    "positive_months": 3,
+                    "months": 4,
+                    "top20_winning_days_removed_net20_pct": -0.5873712153984083
+                  },
+                  "confirmation_a": {
+                    "days": 98,
+                    "displayed": 98,
+                    "executed": 98,
+                    "gross_mean_pct": 0.49259787646694003,
+                    "net20_mean_pct": 0.2925978764669399,
+                    "net40_mean_pct": 0.09259787646693998,
+                    "net60_mean_pct": -0.10740212353305995,
+                    "hit_rate_executed": 0.6530612244897959,
+                    "positive_months": 5,
+                    "months": 5,
+                    "top20_winning_days_removed_net20_pct": -0.16945591046167963
+                  },
+                  "confirmation_b": {
+                    "days": 84,
+                    "displayed": 84,
+                    "executed": 82,
+                    "gross_mean_pct": 0.5723313421507059,
+                    "net20_mean_pct": 0.3770932469126106,
+                    "net40_mean_pct": 0.1818551516745154,
+                    "net60_mean_pct": -0.013382943563579771,
+                    "hit_rate_executed": 0.573170731707317,
+                    "positive_months": 3,
+                    "months": 4,
+                    "top20_winning_days_removed_net20_pct": -0.22721151540776222
+                  },
+                  "confirmation_combined": {
+                    "days": 182,
+                    "displayed": 182,
+                    "executed": 180,
+                    "gross_mean_pct": 0.529397937551755,
+                    "net20_mean_pct": 0.3315957397495572,
+                    "net40_mean_pct": 0.13379354194735946,
+                    "net60_mean_pct": -0.06400865585483831,
+                    "hit_rate_executed": 0.6166666666666667,
+                    "positive_months": 8,
+                    "months": 9,
+                    "top20_winning_days_removed_net20_pct": 0.022211598013972825
+                  },
+                  "overall": {
+                    "days": 266,
+                    "displayed": 266,
+                    "executed": 262,
+                    "gross_mean_pct": 0.5516571174254916,
+                    "net20_mean_pct": 0.3546646362224841,
+                    "net40_mean_pct": 0.15767215501947657,
+                    "net60_mean_pct": -0.03932032618353093,
+                    "hit_rate_executed": 0.5992366412213741,
+                    "positive_months": 11,
+                    "months": 13,
+                    "top20_winning_days_removed_net20_pct": 0.016915129914982372
+                  }
+                },
+                "0.50": {
+                  "discovery": {
+                    "days": 84,
+                    "displayed": 84,
+                    "executed": 82,
+                    "gross_mean_pct": 0.5361006811375172,
+                    "net20_mean_pct": 0.3408625858994221,
+                    "net40_mean_pct": 0.14562449066132674,
+                    "net60_mean_pct": -0.049613604576768514,
+                    "hit_rate_executed": 0.5609756097560976,
+                    "positive_months": 2,
+                    "months": 4,
+                    "top20_winning_days_removed_net20_pct": -0.6447401543959267
+                  },
+                  "confirmation_a": {
+                    "days": 98,
+                    "displayed": 98,
+                    "executed": 98,
+                    "gross_mean_pct": 0.4623062270362534,
+                    "net20_mean_pct": 0.26230622703625334,
+                    "net40_mean_pct": 0.06230622703625336,
+                    "net60_mean_pct": -0.13769377296374663,
+                    "hit_rate_executed": 0.6224489795918368,
+                    "positive_months": 4,
+                    "months": 5,
+                    "top20_winning_days_removed_net20_pct": -0.18758603201896193
+                  },
+                  "confirmation_b": {
+                    "days": 84,
+                    "displayed": 84,
+                    "executed": 82,
+                    "gross_mean_pct": 0.5313898528465549,
+                    "net20_mean_pct": 0.3361517576084598,
+                    "net40_mean_pct": 0.14091366237036448,
+                    "net60_mean_pct": -0.054324432867730726,
+                    "hit_rate_executed": 0.5609756097560976,
+                    "positive_months": 3,
+                    "months": 4,
+                    "top20_winning_days_removed_net20_pct": -0.299298791211473
+                  },
+                  "confirmation_combined": {
+                    "days": 182,
+                    "displayed": 182,
+                    "executed": 180,
+                    "gross_mean_pct": 0.49419097741023876,
+                    "net20_mean_pct": 0.29638877960804094,
+                    "net40_mean_pct": 0.09858658180584313,
+                    "net60_mean_pct": -0.09921561599635464,
+                    "hit_rate_executed": 0.5944444444444444,
+                    "positive_months": 7,
+                    "months": 9,
+                    "top20_winning_days_removed_net20_pct": -0.01989941985510302
+                  },
+                  "overall": {
+                    "days": 266,
+                    "displayed": 266,
+                    "executed": 262,
+                    "gross_mean_pct": 0.5074256206925372,
+                    "net20_mean_pct": 0.31043313948952966,
+                    "net40_mean_pct": 0.11344065828652218,
+                    "net60_mean_pct": -0.08355182291648534,
+                    "hit_rate_executed": 0.583969465648855,
+                    "positive_months": 9,
+                    "months": 13,
+                    "top20_winning_days_removed_net20_pct": -0.031517826994115705
+                  }
+                },
+                "0.55": {
+                  "discovery": {
+                    "days": 84,
+                    "displayed": 84,
+                    "executed": 82,
+                    "gross_mean_pct": 0.5214223315994825,
+                    "net20_mean_pct": 0.3261842363613873,
+                    "net40_mean_pct": 0.130946141123292,
+                    "net60_mean_pct": -0.06429195411480323,
+                    "hit_rate_executed": 0.5609756097560976,
+                    "positive_months": 2,
+                    "months": 4,
+                    "top20_winning_days_removed_net20_pct": -0.6640054881645974
+                  },
+                  "confirmation_a": {
+                    "days": 98,
+                    "displayed": 98,
+                    "executed": 98,
+                    "gross_mean_pct": 0.6080586387235383,
+                    "net20_mean_pct": 0.4080586387235381,
+                    "net40_mean_pct": 0.20805863872353816,
+                    "net60_mean_pct": 0.008058638723538078,
+                    "hit_rate_executed": 0.6326530612244898,
+                    "positive_months": 4,
+                    "months": 5,
+                    "top20_winning_days_removed_net20_pct": -0.18182408316758072
+                  },
+                  "confirmation_b": {
+                    "days": 84,
+                    "displayed": 84,
+                    "executed": 82,
+                    "gross_mean_pct": 0.5282473960937898,
+                    "net20_mean_pct": 0.33300930085569447,
+                    "net40_mean_pct": 0.1377712056175992,
+                    "net60_mean_pct": -0.05746688962049597,
+                    "hit_rate_executed": 0.5365853658536586,
+                    "positive_months": 3,
+                    "months": 4,
+                    "top20_winning_days_removed_net20_pct": -0.2947435605951373
+                  },
+                  "confirmation_combined": {
+                    "days": 182,
+                    "displayed": 182,
+                    "executed": 180,
+                    "gross_mean_pct": 0.5712226805867312,
+                    "net20_mean_pct": 0.3734204827845333,
+                    "net40_mean_pct": 0.17561828498233553,
+                    "net60_mean_pct": -0.022183912819862244,
+                    "hit_rate_executed": 0.5888888888888889,
+                    "positive_months": 7,
+                    "months": 9,
+                    "top20_winning_days_removed_net20_pct": -0.018754570205871828
+                  },
+                  "overall": {
+                    "days": 266,
+                    "displayed": 266,
+                    "executed": 262,
+                    "gross_mean_pct": 0.5554962545907579,
+                    "net20_mean_pct": 0.3585037733877504,
+                    "net40_mean_pct": 0.1615112921847429,
+                    "net60_mean_pct": -0.03548118901826467,
+                    "hit_rate_executed": 0.5801526717557252,
+                    "positive_months": 9,
+                    "months": 13,
+                    "top20_winning_days_removed_net20_pct": -0.035776020969804576
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "result_contract": {
+        "required_top_level": [
+          "protocol_id",
+          "protocol_sha256",
+          "production_promotion_allowed",
+          "results"
+        ],
+        "required_results": [
+          "F1",
+          "F1b",
+          "F2",
+          "F3"
+        ],
+        "note": "Re-run this generator with --breadth-result after the frozen protocol's compact result JSON is available."
+      }
+    }
+  },
+  "integrated_decision": {
+    "production_promotion_allowed": false,
+    "production_model_changed": false,
+    "breadth_falsification_complete": true,
+    "retrospective_leads_only": [
+      "error_meta.H20_breadth_rank2_one",
+      "target_portfolio.H17_L4_rank2_only"
+    ],
+    "winner_selection_status": "retrospective_comparison_complete_no_promotion",
+    "breadth_falsification_outcome": "valid_oc_preserves_h20_direction_but_canonical_cc_materially_degrades_and_refutes_semantic_portability"
+  }
+}
