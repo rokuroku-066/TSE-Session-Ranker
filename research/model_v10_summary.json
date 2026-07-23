@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "summary_id": "model_v10_zero_base_literature_synthesis_20260723",
+  "authority": {
+    "analysis_type": "retrospective_research_synthesis",
+    "production_promotion_allowed": false,
+    "untouched_holdout_claim": false
+  },
+  "objective": {
+    "decision_time": "08:58:59 Asia/Tokyo",
+    "daily_candidates": [1, 2],
+    "target": "same-session open-to-close return",
+    "primary_goal": "maximize cost-adjusted mean return rather than hit rate",
+    "cost_bps": [20, 40, 60]
+  },
+  "frozen_panel": {
+    "path": "/tmp/model_v07_corrected_panel.pkl",
+    "sha256": "6b86f994a1d15d1da8ed40469d44fc409adadc6cd5b3df3c08aef6717bcdf0eb",
+    "rows": 1524104,
+    "codes": 4124,
+    "sessions": 386,
+    "score_sessions": 266,
+    "score_start": "2024-07-01",
+    "score_end": "2025-07-31"
+  },
+  "research_coverage": {
+    "literature_primary_sources": 19,
+    "literature_hypotheses": 12,
+    "new_model_architectures": 13,
+    "policy_universe_round1_hypotheses": 16,
+    "tdnet_text_hypotheses": 10,
+    "external_context_hypotheses": 8,
+    "online_expert_hypotheses": 3,
+    "market_residual_hypotheses": 1,
+    "peer_residual_hypotheses": 1
+  },
+  "corrected_track_decisions": {
+    "literature_H01_H09": "no production feature; H09 wave definition infeasible",
+    "model_architectures": "reject all 13 new candidates",
+    "policy_round1": "H12 descriptive only; familywise uplift gate failed",
+    "policy_round2": "withdraw retain_for_forward_shadow because the locked 4-of-5 criterion was executed as 4-of-4",
+    "policy_round3": "reject H12 as a robust replacement",
+    "root_gen1": "partial 6-of-18 screen; no admissible selection",
+    "external_context": "exploratory point estimates only; registered robustness outputs incomplete",
+    "online_ensemble": "reject O01 through O03",
+    "market_residual": "reject R01",
+    "peer_residual": "reject Z17 top1 and top2",
+    "tdnet_text": "T02 is the strongest point estimate and remains an exploratory forward-only hypothesis"
+  },
+  "peer_residual_result": {
+    "sessions": 266,
+    "top1": {
+      "net20_mean_pct": -0.29641661951425213,
+      "net40_mean_pct": -0.4964166195142521,
+      "net60_mean_pct": -0.6964166195142522,
+      "best20_days_removed_net20_pct": -0.5826219539844364,
+      "top10_profit_codes_cash_net20_pct": -0.4643606396295093,
+      "positive_net40_months": 0,
+      "months": 13
+    },
+    "top2": {
+      "net20_mean_pct": -0.29951381092318324,
+      "net40_mean_pct": -0.49913787107355917,
+      "net60_mean_pct": -0.698761931223935,
+      "best20_days_removed_net20_pct": -0.5053897233951691,
+      "top10_profit_codes_cash_net20_pct": -0.41162268950134495,
+      "positive_net40_months": 0,
+      "months": 13
+    },
+    "integrity": {
+      "point_in_time_all_13_folds_passed": true,
+      "target_day_outcome_mutation_all_13_folds_exact": true,
+      "independent_pnl_all_paths_within_1e_12": true
+    }
+  },
+  "provisional_shadow": {
+    "candidate_id": "v10_t02_char_value_event_top1",
+    "status": "frozen_exploratory_forward_only",
+    "production_model_changed": false,
+    "source_complete_sessions": 88,
+    "scored_months": 5,
+    "daily_candidates": 1,
+    "no_event_policy": "cash",
+    "representation": {
+      "type": "TfidfVectorizer",
+      "analyzer": "char",
+      "ngram_range": [2, 5],
+      "min_df": 3,
+      "max_features": 30000,
+      "sublinear_tf": true,
+      "norm": "l2"
+    },
+    "model": {
+      "type": "Ridge",
+      "alpha": 20.0,
+      "target": "training 1st/99th percentile clipped and then clipped to [-10,+10] percentage points"
+    },
+    "retrospective_metrics": {
+      "net20_mean_pct": 0.719059,
+      "net40_mean_pct": 0.519059,
+      "net60_mean_pct": 0.319059,
+      "win_rate_net40": 0.4772727272727273,
+      "positive_months": 3,
+      "months": 5,
+      "best20_days_removed_net20_pct": -0.57209,
+      "top10_profit_codes_cash_net20_pct": -0.10848,
+      "paired_delta_vs_l4_90pct_interval": [-0.0213, 1.0142],
+      "familywise_reality_check_p_value": 0.2103
+    }
+  },
+  "forward_gate": {
+    "minimum_source_complete_sessions": 120,
+    "minimum_calendar_months": 4,
+    "positive_net40_in_both_halves": true,
+    "paired_one_sided90_lower_vs_l4_at_least_zero": true,
+    "best20_removed_net20_positive": true,
+    "top10_profit_codes_cash_net20_positive": true,
+    "minimum_candidate_and_pit_compliance": 0.98,
+    "requires_real_0858_execution_inputs": true
+  },
+  "production_model_changed": false,
+  "same_panel_tuning_stopped": true,
+  "next_information": [
+    "exact 08:58 OSE futures",
+    "TSE opening-auction order book and indicative price",
+    "PTS price and activity",
+    "turnover, volume, trading unit, tick, and realized slippage",
+    "TDnet PDF numerical surprise and management context"
+  ]
+}

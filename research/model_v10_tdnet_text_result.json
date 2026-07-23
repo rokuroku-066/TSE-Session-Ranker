@@ -1,0 +1,2090 @@
+{
+  "schema_version": 1,
+  "protocol_id": "v10_tdnet_text_zero_base_20260723",
+  "authority": "exploratory_only_no_production_promotion",
+  "protocol_sha256": "700b0262f805c37659453af72651897d116e8bd1f6329a602989b90b212c5b3a",
+  "runner_sha256": "f49203ef23a6ff15bb609178c6c3aa278b3d052e6383503703a45ec1b3e67744",
+  "integrity": {
+    "panel_sha256": "6b86f994a1d15d1da8ed40469d44fc409adadc6cd5b3df3c08aef6717bcdf0eb",
+    "panel_manifest_sha256": "25e08c564ef6400b7a29168db9fd7e8220bd0e2386c7a3c7e71b05c2ff950b02",
+    "cache_checks": [
+      {
+        "path": "/workspace/scratch/8678b1d14f37/tdnet_date_cache_2024",
+        "html_files": 110,
+        "aggregate_sha256": "795852d3f64f8767191805e339dbd7c16972c9a249996ea6847fbbe023bea0f3"
+      },
+      {
+        "path": "/workspace/scratch/8678b1d14f37/tdnet_date_cache",
+        "html_files": 108,
+        "aggregate_sha256": "012a11b23d09a5931726146cb37cb715f58e8c6e020d67700fa199c912628d38"
+      }
+    ],
+    "strictly_prior_training_all_folds": true,
+    "future_publication_violations": 0,
+    "source_missing_never_encoded_no_event": true,
+    "score_sessions_exactly_once": true
+  },
+  "coverage": {
+    "pages": 218,
+    "disclosures": 50719,
+    "empty_pages": 61,
+    "first_page": "2024-04-02",
+    "last_page": "2025-07-31",
+    "mapped_disclosures": 50024,
+    "excluded_intraday_prior_session": 9755,
+    "excluded_target_source_missing": 4413,
+    "qualifying_disclosures": 35856,
+    "future_publication_violations": 0,
+    "panel_sessions": 386,
+    "strict_complete_sessions_all_panel": 134,
+    "strict_complete_score_sessions": 88,
+    "score_months": [
+      "2024-07",
+      "2025-04",
+      "2025-05",
+      "2025-06",
+      "2025-07"
+    ],
+    "source_missing_score_sessions": 178,
+    "source_missing_examples": {
+      "2024-08-01": [
+        "2024-08-01"
+      ],
+      "2024-08-02": [
+        "2024-08-01",
+        "2024-08-02"
+      ],
+      "2024-08-05": [
+        "2024-08-02",
+        "2024-08-03",
+        "2024-08-04",
+        "2024-08-05"
+      ],
+      "2024-08-06": [
+        "2024-08-05",
+        "2024-08-06"
+      ],
+      "2024-08-07": [
+        "2024-08-06",
+        "2024-08-07"
+      ],
+      "2024-08-08": [
+        "2024-08-07",
+        "2024-08-08"
+      ],
+      "2024-08-09": [
+        "2024-08-08",
+        "2024-08-09"
+      ],
+      "2024-08-13": [
+        "2024-08-09",
+        "2024-08-10",
+        "2024-08-11",
+        "2024-08-12",
+        "2024-08-13"
+      ],
+      "2024-08-14": [
+        "2024-08-13",
+        "2024-08-14"
+      ],
+      "2024-08-15": [
+        "2024-08-14",
+        "2024-08-15"
+      ],
+      "2024-08-16": [
+        "2024-08-15",
+        "2024-08-16"
+      ],
+      "2024-08-19": [
+        "2024-08-16",
+        "2024-08-17",
+        "2024-08-18",
+        "2024-08-19"
+      ],
+      "2024-08-20": [
+        "2024-08-19",
+        "2024-08-20"
+      ],
+      "2024-08-21": [
+        "2024-08-20",
+        "2024-08-21"
+      ],
+      "2024-08-22": [
+        "2024-08-21",
+        "2024-08-22"
+      ],
+      "2024-08-23": [
+        "2024-08-22",
+        "2024-08-23"
+      ],
+      "2024-08-26": [
+        "2024-08-23",
+        "2024-08-24",
+        "2024-08-25",
+        "2024-08-26"
+      ],
+      "2024-08-27": [
+        "2024-08-26",
+        "2024-08-27"
+      ],
+      "2024-08-28": [
+        "2024-08-27",
+        "2024-08-28"
+      ],
+      "2024-08-29": [
+        "2024-08-28",
+        "2024-08-29"
+      ]
+    },
+    "qualifying_bundles": 23275,
+    "qualifying_score_bundles": 14770,
+    "score_days_with_event_bundle": 88,
+    "historical_cache_observation_metadata_available": false
+  },
+  "folds": [
+    {
+      "period": "2024-07",
+      "score_sessions": 22,
+      "score_session_first": "2024-07-01",
+      "score_session_last": "2024-07-31",
+      "panel_train_rows": 201708,
+      "panel_train_end": "2024-06-28",
+      "panel_score_rows": 70947,
+      "event_train_bundles": 6752,
+      "event_train_end": "2024-06-28",
+      "event_score_bundles": 2630,
+      "tfidf_features": 24947,
+      "strictly_prior_training": true,
+      "value_target_clip": [
+        -7.849713608532491,
+        7.674024377752728
+      ]
+    },
+    {
+      "period": "2025-04",
+      "score_sessions": 15,
+      "score_session_first": "2025-04-01",
+      "score_session_last": "2025-04-30",
+      "panel_train_rows": 810434,
+      "panel_train_end": "2025-03-31",
+      "panel_score_rows": 39186,
+      "event_train_bundles": 9536,
+      "event_train_end": "2024-07-31",
+      "event_score_bundles": 1143,
+      "tfidf_features": 30000,
+      "strictly_prior_training": true,
+      "value_target_clip": [
+        -7.82408925643402,
+        7.549387208951805
+      ]
+    },
+    {
+      "period": "2025-05",
+      "score_sessions": 15,
+      "score_session_first": "2025-05-01",
+      "score_session_last": "2025-05-30",
+      "panel_train_rows": 882045,
+      "panel_train_end": "2025-04-30",
+      "panel_score_rows": 47411,
+      "event_train_bundles": 11023,
+      "event_train_end": "2025-04-30",
+      "event_score_bundles": 2688,
+      "tfidf_features": 30000,
+      "strictly_prior_training": true,
+      "value_target_clip": [
+        -7.82677693020603,
+        7.722249890487231
+      ]
+    },
+    {
+      "period": "2025-06",
+      "score_sessions": 19,
+      "score_session_first": "2025-06-02",
+      "score_session_last": "2025-06-30",
+      "panel_train_rows": 949687,
+      "panel_train_end": "2025-05-30",
+      "panel_score_rows": 59852,
+      "event_train_bundles": 13895,
+      "event_train_end": "2025-05-30",
+      "event_score_bundles": 2155,
+      "tfidf_features": 30000,
+      "strictly_prior_training": true,
+      "value_target_clip": [
+        -7.837837837837835,
+        8.443094132145221
+      ]
+    },
+    {
+      "period": "2025-07",
+      "score_sessions": 17,
+      "score_session_first": "2025-07-01",
+      "score_session_last": "2025-07-31",
+      "panel_train_rows": 1019568,
+      "panel_train_end": "2025-06-30",
+      "panel_score_rows": 54017,
+      "event_train_bundles": 16227,
+      "event_train_end": "2025-06-30",
+      "event_score_bundles": 1862,
+      "tfidf_features": 30000,
+      "strictly_prior_training": true,
+      "value_target_clip": [
+        -7.743748833872929,
+        8.389176369124606
+      ]
+    }
+  ],
+  "candidates": {
+    "G0_price_core": {
+      "top1": {
+        "costs": {
+          "0": {
+            "mean_pct": 0.5135427832277837,
+            "median_pct": 0.2876456741449873,
+            "win_rate": 0.6136363636363636,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": 0.315815510500511,
+            "median_pct": 0.0876456741449873,
+            "win_rate": 0.5568181818181818,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": 0.11808823777323822,
+            "median_pct": -0.1097022235798436,
+            "win_rate": 0.4431818181818182,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.07963903495403449,
+            "median_pct": -0.30970222357984356,
+            "win_rate": 0.38636363636363635,
+            "days": 88
+          }
+        },
+        "monthly_net40_mean_pct": {
+          "2024-07": 0.9206659689561169,
+          "2025-04": -1.4676620137406216,
+          "2025-05": 0.7051281414209501,
+          "2025-06": 0.14523519475422042,
+          "2025-07": -0.06966747108968982
+        },
+        "positive_months": 3,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 52,
+            "net40_mean_pct": 0.16955083138922122
+          },
+          "confirmation_a": {
+            "days": 19,
+            "net40_mean_pct": 0.14523519475422045
+          },
+          "confirmation_b": {
+            "days": 17,
+            "net40_mean_pct": -0.06966747108968982
+          }
+        },
+        "top20_winning_days_removed_net20_mean_pct": -0.5072171927374326,
+        "top10_profit_codes_cash_net20_mean_pct": -0.40018467388382023,
+        "top10_profit_codes": [
+          "7043",
+          "7345",
+          "4344",
+          "6492",
+          "5247",
+          "8938",
+          "9340",
+          "1866",
+          "175A",
+          "7808"
+        ],
+        "filled_slots": 87,
+        "scheduled_slots": 88,
+        "slot_fill_rate": 0.9886363636363636,
+        "days_with_at_least_one_filled_slot": 87,
+        "unique_codes": 41
+      },
+      "top2": {
+        "costs": {
+          "0": {
+            "mean_pct": 0.4142869527361682,
+            "median_pct": 0.3786292656414447,
+            "win_rate": 0.6363636363636364,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": 0.21769604364525905,
+            "median_pct": 0.17862926564144477,
+            "win_rate": 0.5795454545454546,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": 0.021105134554350067,
+            "median_pct": 0.010722036814339836,
+            "win_rate": 0.5113636363636364,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.17548577453655903,
+            "median_pct": -0.1874573730698348,
+            "win_rate": 0.4090909090909091,
+            "days": 88
+          }
+        },
+        "monthly_net40_mean_pct": {
+          "2024-07": 0.047569147987936204,
+          "2025-04": -0.38993129473601823,
+          "2025-05": 0.29662817785596357,
+          "2025-06": 0.1738285733582491,
+          "2025-07": -0.06426267973868871
+        },
+        "positive_months": 3,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 52,
+            "net40_mean_pct": -0.006788951874350403
+          },
+          "confirmation_a": {
+            "days": 19,
+            "net40_mean_pct": 0.17382857335824914
+          },
+          "confirmation_b": {
+            "days": 17,
+            "net40_mean_pct": -0.06426267973868871
+          }
+        },
+        "top20_winning_days_removed_net20_mean_pct": -0.3446057133209215,
+        "top10_profit_codes_cash_net20_mean_pct": -0.2571923559739377,
+        "top10_profit_codes": [
+          "7043",
+          "3991",
+          "7345",
+          "4344",
+          "9250",
+          "8139",
+          "6492",
+          "5247",
+          "7058",
+          "8938"
+        ],
+        "filled_slots": 173,
+        "scheduled_slots": 176,
+        "slot_fill_rate": 0.9829545454545454,
+        "days_with_at_least_one_filled_slot": 88,
+        "unique_codes": 87
+      }
+    },
+    "L4_price_control": {
+      "top1": {
+        "costs": {
+          "0": {
+            "mean_pct": 0.41768754237986966,
+            "median_pct": 0.2444157339729025,
+            "win_rate": 0.5909090909090909,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": 0.21996026965259705,
+            "median_pct": 0.044415733972902494,
+            "win_rate": 0.5113636363636364,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": 0.022232996925324232,
+            "median_pct": -0.13465653153152923,
+            "win_rate": 0.4090909090909091,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.1754942758019484,
+            "median_pct": -0.3346565315315292,
+            "win_rate": 0.36363636363636365,
+            "days": 88
+          }
+        },
+        "monthly_net40_mean_pct": {
+          "2024-07": 0.7121842784508425,
+          "2025-04": -1.4218867084279718,
+          "2025-05": 0.4727444863950503,
+          "2025-06": 0.07037855200472497,
+          "2025-07": -0.04774173847564419
+        },
+        "positive_months": 3,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 52,
+            "net40_mean_pct": 0.027517707604321356
+          },
+          "confirmation_a": {
+            "days": 19,
+            "net40_mean_pct": 0.07037855200472497
+          },
+          "confirmation_b": {
+            "days": 17,
+            "net40_mean_pct": -0.04774173847564417
+          }
+        },
+        "top20_winning_days_removed_net20_mean_pct": -0.6226345446778838,
+        "top10_profit_codes_cash_net20_mean_pct": -0.49148523979688785,
+        "top10_profit_codes": [
+          "7043",
+          "4344",
+          "7345",
+          "9250",
+          "5247",
+          "9340",
+          "4069",
+          "175A",
+          "7808",
+          "6346"
+        ],
+        "filled_slots": 87,
+        "scheduled_slots": 88,
+        "slot_fill_rate": 0.9886363636363636,
+        "days_with_at_least_one_filled_slot": 87,
+        "unique_codes": 42
+      },
+      "top2": {
+        "costs": {
+          "0": {
+            "mean_pct": 0.500687361773058,
+            "median_pct": 0.3786292656414447,
+            "win_rate": 0.6363636363636364,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": 0.3040964526821489,
+            "median_pct": 0.17862926564144477,
+            "win_rate": 0.5795454545454546,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": 0.10750554359123984,
+            "median_pct": -0.0213707343585553,
+            "win_rate": 0.5,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.08908536549966922,
+            "median_pct": -0.22137073435855528,
+            "win_rate": 0.4090909090909091,
+            "days": 88
+          }
+        },
+        "monthly_net40_mean_pct": {
+          "2024-07": 0.31169250256767095,
+          "2025-04": -0.34171526468655145,
+          "2025-05": 0.3437063703943262,
+          "2025-06": 0.21785797544653795,
+          "2025-07": -0.09211266703297039
+        },
+        "positive_months": 3,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 52,
+            "net40_mean_pct": 0.13244426234818046
+          },
+          "confirmation_a": {
+            "days": 19,
+            "net40_mean_pct": 0.2178579754465379
+          },
+          "confirmation_b": {
+            "days": 17,
+            "net40_mean_pct": -0.09211266703297039
+          }
+        },
+        "top20_winning_days_removed_net20_mean_pct": -0.2996486092635404,
+        "top10_profit_codes_cash_net20_mean_pct": -0.20131880672261762,
+        "top10_profit_codes": [
+          "7043",
+          "3991",
+          "7345",
+          "4344",
+          "4215",
+          "9250",
+          "6492",
+          "5247",
+          "7058",
+          "8139"
+        ],
+        "filled_slots": 173,
+        "scheduled_slots": 176,
+        "slot_fill_rate": 0.9829545454545454,
+        "days_with_at_least_one_filled_slot": 88,
+        "unique_codes": 85
+      }
+    },
+    "N0_no_event_L4": {
+      "top1": {
+        "costs": {
+          "0": {
+            "mean_pct": 0.41705219598484145,
+            "median_pct": 0.20697177911822573,
+            "win_rate": 0.5909090909090909,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": 0.221597650530296,
+            "median_pct": 0.014207400639565465,
+            "win_rate": 0.5,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": 0.026143105075750492,
+            "median_pct": -0.13465653153152923,
+            "win_rate": 0.3977272727272727,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.16931144037879492,
+            "median_pct": -0.3346565315315292,
+            "win_rate": 0.3522727272727273,
+            "days": 88
+          }
+        },
+        "monthly_net40_mean_pct": {
+          "2024-07": 0.7121842784508425,
+          "2025-04": -1.4829393400069186,
+          "2025-05": 0.42534188899245245,
+          "2025-06": 0.1937741812519183,
+          "2025-07": -0.06971815046011427
+        },
+        "positive_months": 3,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 52,
+            "net40_mean_pct": -0.0037674546018934807
+          },
+          "confirmation_a": {
+            "days": 19,
+            "net40_mean_pct": 0.1937741812519183
+          },
+          "confirmation_b": {
+            "days": 17,
+            "net40_mean_pct": -0.06971815046011424
+          }
+        },
+        "top20_winning_days_removed_net20_mean_pct": -0.6205155811890969,
+        "top10_profit_codes_cash_net20_mean_pct": -0.47845271818608476,
+        "top10_profit_codes": [
+          "7043",
+          "4344",
+          "9250",
+          "7345",
+          "5247",
+          "9340",
+          "4069",
+          "7255",
+          "175A",
+          "7808"
+        ],
+        "filled_slots": 86,
+        "scheduled_slots": 88,
+        "slot_fill_rate": 0.9772727272727273,
+        "days_with_at_least_one_filled_slot": 86,
+        "unique_codes": 44
+      },
+      "top2": {
+        "costs": {
+          "0": {
+            "mean_pct": 0.5054327390599588,
+            "median_pct": 0.31465073038106917,
+            "win_rate": 0.625,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": 0.30997819360541323,
+            "median_pct": 0.11465073038106917,
+            "win_rate": 0.5681818181818182,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": 0.11452364815086784,
+            "median_pct": -0.06600607029815209,
+            "win_rate": 0.4772727272727273,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.0809308973036776,
+            "median_pct": -0.26600607029815204,
+            "win_rate": 0.3977272727272727,
+            "days": 88
+          }
+        },
+        "monthly_net40_mean_pct": {
+          "2024-07": 0.4148570479999254,
+          "2025-04": -0.5050131358580583,
+          "2025-05": 0.32831916615949414,
+          "2025-06": 0.2719763613851036,
+          "2025-07": -0.09211266703297039
+        },
+        "positive_months": 3,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 52,
+            "net40_mean_pct": 0.12454702904845955
+          },
+          "confirmation_a": {
+            "days": 19,
+            "net40_mean_pct": 0.27197636138510356
+          },
+          "confirmation_b": {
+            "days": 17,
+            "net40_mean_pct": -0.09211266703297039
+          }
+        },
+        "top20_winning_days_removed_net20_mean_pct": -0.3254137092379865,
+        "top10_profit_codes_cash_net20_mean_pct": -0.19455760003690029,
+        "top10_profit_codes": [
+          "7043",
+          "3991",
+          "4344",
+          "7345",
+          "4215",
+          "9250",
+          "2323",
+          "6492",
+          "5247",
+          "7058"
+        ],
+        "filled_slots": 172,
+        "scheduled_slots": 176,
+        "slot_fill_rate": 0.9772727272727273,
+        "days_with_at_least_one_filled_slot": 87,
+        "unique_codes": 85
+      }
+    },
+    "T01_char_rank_event_only": {
+      "top1": {
+        "costs": {
+          "0": {
+            "mean_pct": 0.16969222605613252,
+            "median_pct": -0.024497795198430428,
+            "win_rate": 0.4772727272727273,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": -0.030307773943867564,
+            "median_pct": -0.22449779519843044,
+            "win_rate": 0.42045454545454547,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": -0.2303077739438676,
+            "median_pct": -0.42449779519843045,
+            "win_rate": 0.3522727272727273,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.43030777394386754,
+            "median_pct": -0.6244977951984304,
+            "win_rate": 0.2840909090909091,
+            "days": 88
+          }
+        },
+        "monthly_net40_mean_pct": {
+          "2024-07": -0.3269159291338562,
+          "2025-04": -0.4927114829807517,
+          "2025-05": -0.6129287202795497,
+          "2025-06": 0.5058323035457896,
+          "2025-07": -0.35889084615182265
+        },
+        "positive_months": 1,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 52,
+            "net40_mean_pct": -0.4572452594201799
+          },
+          "confirmation_a": {
+            "days": 19,
+            "net40_mean_pct": 0.5058323035457896
+          },
+          "confirmation_b": {
+            "days": 17,
+            "net40_mean_pct": -0.35889084615182265
+          }
+        },
+        "top20_winning_days_removed_net20_mean_pct": -0.9624761113005955,
+        "top10_profit_codes_cash_net20_mean_pct": -0.5996731623913086,
+        "top10_profit_codes": [
+          "3415",
+          "3662",
+          "3719",
+          "4015",
+          "3064",
+          "7134",
+          "3046",
+          "7012",
+          "7751",
+          "3917"
+        ],
+        "filled_slots": 88,
+        "scheduled_slots": 88,
+        "slot_fill_rate": 1.0,
+        "days_with_at_least_one_filled_slot": 88,
+        "unique_codes": 80
+      },
+      "top2": {
+        "costs": {
+          "0": {
+            "mean_pct": 0.08477116814326385,
+            "median_pct": -0.0010127654298031086,
+            "win_rate": 0.5,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": -0.11522883185673623,
+            "median_pct": -0.20101276542980306,
+            "win_rate": 0.38636363636363635,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": -0.31522883185673606,
+            "median_pct": -0.40101276542980313,
+            "win_rate": 0.3522727272727273,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.5152288318567362,
+            "median_pct": -0.6010127654298032,
+            "win_rate": 0.3068181818181818,
+            "days": 88
+          }
+        },
+        "monthly_net40_mean_pct": {
+          "2024-07": -0.2356676545709388,
+          "2025-04": -0.5597952904771488,
+          "2025-05": -0.753627680709853,
+          "2025-06": 0.1380646335848513,
+          "2025-07": -0.32219601606701637
+        },
+        "positive_months": 1,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 52,
+            "net40_mean_pct": -0.47857755708395533
+          },
+          "confirmation_a": {
+            "days": 19,
+            "net40_mean_pct": 0.13806463358485127
+          },
+          "confirmation_b": {
+            "days": 17,
+            "net40_mean_pct": -0.32219601606701637
+          }
+        },
+        "top20_winning_days_removed_net20_mean_pct": -0.8127165967821683,
+        "top10_profit_codes_cash_net20_mean_pct": -0.4885974793374903,
+        "top10_profit_codes": [
+          "3415",
+          "6532",
+          "3662",
+          "3399",
+          "7134",
+          "3719",
+          "4015",
+          "3064",
+          "4547",
+          "4379"
+        ],
+        "filled_slots": 176,
+        "scheduled_slots": 176,
+        "slot_fill_rate": 1.0,
+        "days_with_at_least_one_filled_slot": 88,
+        "unique_codes": 156
+      }
+    },
+    "T02_char_value_event_only": {
+      "top1": {
+        "costs": {
+          "0": {
+            "mean_pct": 0.9190585910052484,
+            "median_pct": 0.2116991014192049,
+            "win_rate": 0.5681818181818182,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": 0.7190585910052484,
+            "median_pct": 0.011699101419204883,
+            "win_rate": 0.5,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": 0.5190585910052483,
+            "median_pct": -0.18830089858079513,
+            "win_rate": 0.4772727272727273,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": 0.3190585910052483,
+            "median_pct": -0.3883008985807951,
+            "win_rate": 0.3977272727272727,
+            "days": 88
+          }
+        },
+        "monthly_net40_mean_pct": {
+          "2024-07": 0.5468226526999139,
+          "2025-04": -0.49980641598433595,
+          "2025-05": 0.7903894169507758,
+          "2025-06": 1.5585224575395769,
+          "2025-07": -0.019036121099106566
+        },
+        "positive_months": 3,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 52,
+            "net40_mean_pct": 0.3151700648825905
+          },
+          "confirmation_a": {
+            "days": 19,
+            "net40_mean_pct": 1.5585224575395769
+          },
+          "confirmation_b": {
+            "days": 17,
+            "net40_mean_pct": -0.019036121099106552
+          }
+        },
+        "top20_winning_days_removed_net20_mean_pct": -0.5720879271486576,
+        "top10_profit_codes_cash_net20_mean_pct": -0.1084843299709387,
+        "top10_profit_codes": [
+          "3652",
+          "3415",
+          "3046",
+          "4978",
+          "3399",
+          "4439",
+          "5132",
+          "3719",
+          "4015",
+          "7060"
+        ],
+        "filled_slots": 88,
+        "scheduled_slots": 88,
+        "slot_fill_rate": 1.0,
+        "days_with_at_least_one_filled_slot": 88,
+        "unique_codes": 78
+      },
+      "top2": {
+        "costs": {
+          "0": {
+            "mean_pct": 0.3144833639785686,
+            "median_pct": 0.1814016147377473,
+            "win_rate": 0.5340909090909091,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": 0.11448336397856859,
+            "median_pct": -0.018598385262252715,
+            "win_rate": 0.4772727272727273,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": -0.0855166360214314,
+            "median_pct": -0.21859838526225273,
+            "win_rate": 0.42045454545454547,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.2855166360214314,
+            "median_pct": -0.4185983852622527,
+            "win_rate": 0.375,
+            "days": 88
+          }
+        },
+        "monthly_net40_mean_pct": {
+          "2024-07": -0.15990298695824523,
+          "2025-04": -0.8009940612912314,
+          "2025-05": -0.08834919067413777,
+          "2025-06": 0.46885431508679504,
+          "2025-07": 0.024959913883933208
+        },
+        "positive_months": 2,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 52,
+            "net40_mean_pct": -0.32419258639542176
+          },
+          "confirmation_a": {
+            "days": 19,
+            "net40_mean_pct": 0.46885431508679504
+          },
+          "confirmation_b": {
+            "days": 17,
+            "net40_mean_pct": 0.024959913883933267
+          }
+        },
+        "top20_winning_days_removed_net20_mean_pct": -0.6087450735559399,
+        "top10_profit_codes_cash_net20_mean_pct": -0.2863077752985959,
+        "top10_profit_codes": [
+          "3652",
+          "3415",
+          "4978",
+          "3399",
+          "4439",
+          "5132",
+          "3719",
+          "4015",
+          "7060",
+          "6240"
+        ],
+        "filled_slots": 176,
+        "scheduled_slots": 176,
+        "slot_fill_rate": 1.0,
+        "days_with_at_least_one_filled_slot": 88,
+        "unique_codes": 153
+      }
+    },
+    "T03_char_rank_overlay_L4": {
+      "top1": {
+        "costs": {
+          "0": {
+            "mean_pct": -0.16541190565739486,
+            "median_pct": 0.0,
+            "win_rate": 0.4318181818181818,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": -0.3631391783846676,
+            "median_pct": -0.2,
+            "win_rate": 0.4090909090909091,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": -0.5608664511119403,
+            "median_pct": -0.4,
+            "win_rate": 0.3409090909090909,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.758593723839213,
+            "median_pct": -0.6,
+            "win_rate": 0.26136363636363635,
+            "days": 88
+          }
+        },
+        "monthly_net40_mean_pct": {
+          "2024-07": -0.2547986184205064,
+          "2025-04": -1.8207842613487546,
+          "2025-05": -0.44221025963333516,
+          "2025-06": -0.37481023231327554,
+          "2025-07": -0.15790387434800124
+        },
+        "positive_months": 0,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 52,
+            "net40_mean_pct": -0.7605862965381246
+          },
+          "confirmation_a": {
+            "days": 19,
+            "net40_mean_pct": -0.37481023231327554
+          },
+          "confirmation_b": {
+            "days": 17,
+            "net40_mean_pct": -0.1579038743480012
+          }
+        },
+        "top20_winning_days_removed_net20_mean_pct": -0.9321374688731361,
+        "top10_profit_codes_cash_net20_mean_pct": -0.595183111615726,
+        "top10_profit_codes": [
+          "156A",
+          "1762",
+          "1925",
+          "1827",
+          "1436",
+          "1941",
+          "1450",
+          "1518",
+          "1605",
+          "1811"
+        ],
+        "filled_slots": 87,
+        "scheduled_slots": 88,
+        "slot_fill_rate": 0.9886363636363636,
+        "days_with_at_least_one_filled_slot": 87,
+        "unique_codes": 53
+      },
+      "top2": {
+        "costs": {
+          "0": {
+            "mean_pct": -0.044732158567691416,
+            "median_pct": -0.08887289330340165,
+            "win_rate": 0.4772727272727273,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": -0.24359579493132777,
+            "median_pct": -0.2888728933034016,
+            "win_rate": 0.4318181818181818,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": -0.4424594312949642,
+            "median_pct": -0.4605536436871752,
+            "win_rate": 0.3181818181818182,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.6413230676586005,
+            "median_pct": -0.6337619121727696,
+            "win_rate": 0.29545454545454547,
+            "days": 88
+          }
+        },
+        "monthly_net40_mean_pct": {
+          "2024-07": -0.3866242561709743,
+          "2025-04": -0.9541444352518732,
+          "2025-05": -0.34798203538902506,
+          "2025-06": -0.42916642549338585,
+          "2025-07": -0.16144924554162368
+        },
+        "positive_months": 0,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 52,
+            "net40_mean_pct": -0.5391852056802867
+          },
+          "confirmation_a": {
+            "days": 19,
+            "net40_mean_pct": -0.42916642549338585
+          },
+          "confirmation_b": {
+            "days": 17,
+            "net40_mean_pct": -0.16144924554162368
+          }
+        },
+        "top20_winning_days_removed_net20_mean_pct": -0.7611556461863538,
+        "top10_profit_codes_cash_net20_mean_pct": -0.45653690768656846,
+        "top10_profit_codes": [
+          "1417",
+          "156A",
+          "149A",
+          "137A",
+          "1762",
+          "1827",
+          "1718",
+          "147A",
+          "1925",
+          "1514"
+        ],
+        "filled_slots": 175,
+        "scheduled_slots": 176,
+        "slot_fill_rate": 0.9943181818181818,
+        "days_with_at_least_one_filled_slot": 88,
+        "unique_codes": 80
+      }
+    },
+    "T04_char_value_overlay_L4": {
+      "top1": {
+        "costs": {
+          "0": {
+            "mean_pct": -0.25620592159889316,
+            "median_pct": 0.0,
+            "win_rate": 0.3977272727272727,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": -0.4539331943261659,
+            "median_pct": -0.2,
+            "win_rate": 0.375,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": -0.6516604670534387,
+            "median_pct": -0.4,
+            "win_rate": 0.3181818181818182,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.8493877397807114,
+            "median_pct": -0.6,
+            "win_rate": 0.23863636363636365,
+            "days": 88
+          }
+        },
+        "monthly_net40_mean_pct": {
+          "2024-07": -0.3533197423696057,
+          "2025-04": -1.8207842613487546,
+          "2025-05": -0.6238478731842079,
+          "2025-06": -0.31506342568527695,
+          "2025-07": -0.4069058625033278
+        },
+        "positive_months": 0,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 52,
+            "net40_mean_pct": -0.854663775963957
+          },
+          "confirmation_a": {
+            "days": 19,
+            "net40_mean_pct": -0.31506342568527695
+          },
+          "confirmation_b": {
+            "days": 17,
+            "net40_mean_pct": -0.40690586250332783
+          }
+        },
+        "top20_winning_days_removed_net20_mean_pct": -1.015445807964711,
+        "top10_profit_codes_cash_net20_mean_pct": -0.6936366192116613,
+        "top10_profit_codes": [
+          "156A",
+          "1762",
+          "1514",
+          "1925",
+          "1827",
+          "1941",
+          "1450",
+          "1605",
+          "1811",
+          "1383"
+        ],
+        "filled_slots": 87,
+        "scheduled_slots": 88,
+        "slot_fill_rate": 0.9886363636363636,
+        "days_with_at_least_one_filled_slot": 87,
+        "unique_codes": 56
+      },
+      "top2": {
+        "costs": {
+          "0": {
+            "mean_pct": -0.12038469975927465,
+            "median_pct": -0.1431116255636966,
+            "win_rate": 0.4659090909090909,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": -0.319248336122911,
+            "median_pct": -0.34311162556369657,
+            "win_rate": 0.42045454545454547,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": -0.5181119724865474,
+            "median_pct": -0.5271819064830066,
+            "win_rate": 0.32954545454545453,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.7169756088501837,
+            "median_pct": -0.7271819064830065,
+            "win_rate": 0.29545454545454547,
+            "days": 88
+          }
+        },
+        "monthly_net40_mean_pct": {
+          "2024-07": -0.392861982167679,
+          "2025-04": -0.9541444352518732,
+          "2025-05": -0.4329250081631238,
+          "2025-06": -0.5734926790145807,
+          "2025-07": -0.3087345540367789
+        },
+        "positive_months": 0,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 52,
+            "net40_mean_pct": -0.5663270242098827
+          },
+          "confirmation_a": {
+            "days": 19,
+            "net40_mean_pct": -0.5734926790145808
+          },
+          "confirmation_b": {
+            "days": 17,
+            "net40_mean_pct": -0.30873455403677885
+          }
+        },
+        "top20_winning_days_removed_net20_mean_pct": -0.8153243508366722,
+        "top10_profit_codes_cash_net20_mean_pct": -0.5079022977873129,
+        "top10_profit_codes": [
+          "156A",
+          "149A",
+          "137A",
+          "1762",
+          "1827",
+          "1417",
+          "1925",
+          "1717",
+          "1514",
+          "1418"
+        ],
+        "filled_slots": 175,
+        "scheduled_slots": 176,
+        "slot_fill_rate": 0.9943181818181818,
+        "days_with_at_least_one_filled_slot": 88,
+        "unique_codes": 79
+      }
+    },
+    "T05_novelty_event_only": {
+      "top1": {
+        "costs": {
+          "0": {
+            "mean_pct": 0.21490790251813205,
+            "median_pct": 0.0,
+            "win_rate": 0.4772727272727273,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": 0.014907902518132092,
+            "median_pct": -0.2,
+            "win_rate": 0.3977272727272727,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": -0.18509209748186786,
+            "median_pct": -0.4,
+            "win_rate": 0.29545454545454547,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.38509209748186796,
+            "median_pct": -0.6,
+            "win_rate": 0.2727272727272727,
+            "days": 88
+          }
+        },
+        "monthly_net40_mean_pct": {
+          "2024-07": -0.3698845151191783,
+          "2025-04": 0.29590274485677265,
+          "2025-05": 0.16243701755178547,
+          "2025-06": -0.12412289905526339,
+          "2025-07": -0.7451415646976949
+        },
+        "positive_months": 2,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 52,
+            "net40_mean_pct": -0.02427620954795292
+          },
+          "confirmation_a": {
+            "days": 19,
+            "net40_mean_pct": -0.12412289905526334
+          },
+          "confirmation_b": {
+            "days": 17,
+            "net40_mean_pct": -0.7451415646976949
+          }
+        },
+        "top20_winning_days_removed_net20_mean_pct": -0.8281216643153716,
+        "top10_profit_codes_cash_net20_mean_pct": -0.48159444047908234,
+        "top10_profit_codes": [
+          "3086",
+          "3121",
+          "3038",
+          "6525",
+          "6425",
+          "6044",
+          "3415",
+          "5888",
+          "7127",
+          "3097"
+        ],
+        "filled_slots": 88,
+        "scheduled_slots": 88,
+        "slot_fill_rate": 1.0,
+        "days_with_at_least_one_filled_slot": 88,
+        "unique_codes": 67
+      },
+      "top2": {
+        "costs": {
+          "0": {
+            "mean_pct": 0.2168993536483786,
+            "median_pct": 0.07418621790821478,
+            "win_rate": 0.5113636363636364,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": 0.016899353648378565,
+            "median_pct": -0.1258137820917852,
+            "win_rate": 0.42045454545454547,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": -0.18310064635162135,
+            "median_pct": -0.32581378209178524,
+            "win_rate": 0.38636363636363635,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.38310064635162155,
+            "median_pct": -0.5258137820917852,
+            "win_rate": 0.3409090909090909,
+            "days": 88
+          }
+        },
+        "monthly_net40_mean_pct": {
+          "2024-07": -0.23408962753269982,
+          "2025-04": -0.13516333776050501,
+          "2025-05": -0.18589364828315696,
+          "2025-06": -0.12258497780694745,
+          "2025-07": -0.2245832767197854
+        },
+        "positive_months": 0,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 52,
+            "net40_mean_pct": -0.19165051146873704
+          },
+          "confirmation_a": {
+            "days": 19,
+            "net40_mean_pct": -0.12258497780694748
+          },
+          "confirmation_b": {
+            "days": 17,
+            "net40_mean_pct": -0.22458327671978537
+          }
+        },
+        "top20_winning_days_removed_net20_mean_pct": -0.6223903761305548,
+        "top10_profit_codes_cash_net20_mean_pct": -0.35434482372643,
+        "top10_profit_codes": [
+          "3086",
+          "3415",
+          "4385",
+          "3046",
+          "7532",
+          "3121",
+          "3038",
+          "9984",
+          "4379",
+          "6525"
+        ],
+        "filled_slots": 176,
+        "scheduled_slots": 176,
+        "slot_fill_rate": 1.0,
+        "days_with_at_least_one_filled_slot": 88,
+        "unique_codes": 130
+      }
+    },
+    "T06_intensity_congestion_event_only": {
+      "top1": {
+        "costs": {
+          "0": {
+            "mean_pct": -0.05681264634641361,
+            "median_pct": -0.05332385353715163,
+            "win_rate": 0.4431818181818182,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": -0.2568126463464136,
+            "median_pct": -0.25332385353715164,
+            "win_rate": 0.375,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": -0.45681264634641355,
+            "median_pct": -0.45332385353715166,
+            "win_rate": 0.32954545454545453,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.6568126463464136,
+            "median_pct": -0.6533238535371516,
+            "win_rate": 0.2727272727272727,
+            "days": 88
+          }
+        },
+        "monthly_net40_mean_pct": {
+          "2024-07": 0.12656661049420573,
+          "2025-04": -0.8791475231686162,
+          "2025-05": -0.12273727466010484,
+          "2025-06": -0.7503974380378201,
+          "2025-07": -0.8057738246592658
+        },
+        "positive_months": 1,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 52,
+            "net40_mean_pct": -0.23545781801073634
+          },
+          "confirmation_a": {
+            "days": 19,
+            "net40_mean_pct": -0.7503974380378201
+          },
+          "confirmation_b": {
+            "days": 17,
+            "net40_mean_pct": -0.8057738246592657
+          }
+        },
+        "top20_winning_days_removed_net20_mean_pct": -1.18330627597694,
+        "top10_profit_codes_cash_net20_mean_pct": -0.7389795493826398,
+        "top10_profit_codes": [
+          "7686",
+          "9984",
+          "8237",
+          "3093",
+          "7777",
+          "186A",
+          "8604",
+          "6625",
+          "4978",
+          "4689"
+        ],
+        "filled_slots": 88,
+        "scheduled_slots": 88,
+        "slot_fill_rate": 1.0,
+        "days_with_at_least_one_filled_slot": 88,
+        "unique_codes": 47
+      },
+      "top2": {
+        "costs": {
+          "0": {
+            "mean_pct": 0.037778788635556546,
+            "median_pct": -0.010225851560044519,
+            "win_rate": 0.5,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": -0.16222121136444348,
+            "median_pct": -0.21022585156004453,
+            "win_rate": 0.4431818181818182,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": -0.3622212113644434,
+            "median_pct": -0.41022585156004454,
+            "win_rate": 0.38636363636363635,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.5622212113644435,
+            "median_pct": -0.6102258515600445,
+            "win_rate": 0.3181818181818182,
+            "days": 88
+          }
+        },
+        "monthly_net40_mean_pct": {
+          "2024-07": -0.2370387690696629,
+          "2025-04": -0.37578394066487475,
+          "2025-05": -0.4490994853346804,
+          "2025-06": -0.22760366307392346,
+          "2025-07": -0.5860525113023863
+        },
+        "positive_months": 0,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 52,
+            "net40_mean_pct": -0.33823277518319056
+          },
+          "confirmation_a": {
+            "days": 19,
+            "net40_mean_pct": -0.22760366307392346
+          },
+          "confirmation_b": {
+            "days": 17,
+            "net40_mean_pct": -0.5860525113023863
+          }
+        },
+        "top20_winning_days_removed_net20_mean_pct": -0.7676514089102356,
+        "top10_profit_codes_cash_net20_mean_pct": -0.4756250688009636,
+        "top10_profit_codes": [
+          "9984",
+          "7686",
+          "3093",
+          "8237",
+          "2654",
+          "2678",
+          "7134",
+          "8604",
+          "186A",
+          "3175"
+        ],
+        "filled_slots": 176,
+        "scheduled_slots": 176,
+        "slot_fill_rate": 1.0,
+        "days_with_at_least_one_filled_slot": 88,
+        "unique_codes": 80
+      }
+    },
+    "T07_corroboration_contradiction_event_only": {
+      "top1": {
+        "costs": {
+          "0": {
+            "mean_pct": -0.3169314354549654,
+            "median_pct": -0.08813574110238531,
+            "win_rate": 0.4318181818181818,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": -0.5169314354549654,
+            "median_pct": -0.2881357411023853,
+            "win_rate": 0.4090909090909091,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": -0.7169314354549653,
+            "median_pct": -0.48813574110238533,
+            "win_rate": 0.375,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.9169314354549655,
+            "median_pct": -0.6881357411023853,
+            "win_rate": 0.32954545454545453,
+            "days": 88
+          }
+        },
+        "monthly_net40_mean_pct": {
+          "2024-07": -0.8066812657006595,
+          "2025-04": -0.3929501306254361,
+          "2025-05": -0.4210361105363299,
+          "2025-06": -0.3042182344214421,
+          "2025-07": -1.6090022590110913
+        },
+        "positive_months": 0,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 52,
+            "net40_mean_pct": -0.5760919512084808
+          },
+          "confirmation_a": {
+            "days": 19,
+            "net40_mean_pct": -0.30421823442144214
+          },
+          "confirmation_b": {
+            "days": 17,
+            "net40_mean_pct": -1.609002259011091
+          }
+        },
+        "top20_winning_days_removed_net20_mean_pct": -1.4695244560118952,
+        "top10_profit_codes_cash_net20_mean_pct": -0.9617446975668963,
+        "top10_profit_codes": [
+          "7236",
+          "3626",
+          "7060",
+          "197A",
+          "3288",
+          "5332",
+          "4493",
+          "8267",
+          "6577",
+          "6098"
+        ],
+        "filled_slots": 88,
+        "scheduled_slots": 88,
+        "slot_fill_rate": 1.0,
+        "days_with_at_least_one_filled_slot": 88,
+        "unique_codes": 86
+      },
+      "top2": {
+        "costs": {
+          "0": {
+            "mean_pct": 0.08541935782708542,
+            "median_pct": -0.12712336309314565,
+            "win_rate": 0.4772727272727273,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": -0.11458064217291462,
+            "median_pct": -0.3271233630931457,
+            "win_rate": 0.4431818181818182,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": -0.31458064217291465,
+            "median_pct": -0.5271233630931456,
+            "win_rate": 0.3977272727272727,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.5145806421729145,
+            "median_pct": -0.7271233630931457,
+            "win_rate": 0.32954545454545453,
+            "days": 88
+          }
+        },
+        "monthly_net40_mean_pct": {
+          "2024-07": -0.5641903612224728,
+          "2025-04": -0.28994407920813325,
+          "2025-05": -0.057829381065190866,
+          "2025-06": -0.1666129482615206,
+          "2025-07": -0.4052153319560783
+        },
+        "positive_months": 0,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 52,
+            "net40_mean_pct": -0.3390151894421974
+          },
+          "confirmation_a": {
+            "days": 19,
+            "net40_mean_pct": -0.16661294826152062
+          },
+          "confirmation_b": {
+            "days": 17,
+            "net40_mean_pct": -0.4052153319560783
+          }
+        },
+        "top20_winning_days_removed_net20_mean_pct": -0.9647070626790369,
+        "top10_profit_codes_cash_net20_mean_pct": -0.5851796088586785,
+        "top10_profit_codes": [
+          "205A",
+          "2791",
+          "6532",
+          "7047",
+          "7581",
+          "7236",
+          "7327",
+          "3626",
+          "7060",
+          "1930"
+        ],
+        "filled_slots": 176,
+        "scheduled_slots": 176,
+        "slot_fill_rate": 1.0,
+        "days_with_at_least_one_filled_slot": 88,
+        "unique_codes": 165
+      }
+    },
+    "T08_structured_all_event_only": {
+      "top1": {
+        "costs": {
+          "0": {
+            "mean_pct": -0.0010334636008257096,
+            "median_pct": 0.0,
+            "win_rate": 0.4431818181818182,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": -0.20103346360082577,
+            "median_pct": -0.2,
+            "win_rate": 0.42045454545454547,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": -0.40103346360082565,
+            "median_pct": -0.4,
+            "win_rate": 0.3977272727272727,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.6010334636008257,
+            "median_pct": -0.6,
+            "win_rate": 0.3409090909090909,
+            "days": 88
+          }
+        },
+        "monthly_net40_mean_pct": {
+          "2024-07": -0.8828512209543632,
+          "2025-04": 0.26854476865579735,
+          "2025-05": 0.34569890651105645,
+          "2025-06": -0.11630048270404263,
+          "2025-07": -1.3454214054119216
+        },
+        "positive_months": 2,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 52,
+            "net40_mean_pct": -0.19632830256717665
+          },
+          "confirmation_a": {
+            "days": 19,
+            "net40_mean_pct": -0.11630048270404271
+          },
+          "confirmation_b": {
+            "days": 17,
+            "net40_mean_pct": -1.3454214054119216
+          }
+        },
+        "top20_winning_days_removed_net20_mean_pct": -1.1019016972707005,
+        "top10_profit_codes_cash_net20_mean_pct": -0.6617168743618056,
+        "top10_profit_codes": [
+          "7236",
+          "7327",
+          "7060",
+          "6098",
+          "3121",
+          "3288",
+          "3970",
+          "7046",
+          "7202",
+          "7638"
+        ],
+        "filled_slots": 88,
+        "scheduled_slots": 88,
+        "slot_fill_rate": 1.0,
+        "days_with_at_least_one_filled_slot": 88,
+        "unique_codes": 81
+      },
+      "top2": {
+        "costs": {
+          "0": {
+            "mean_pct": 0.011114831983301533,
+            "median_pct": 0.0625259521002064,
+            "win_rate": 0.5227272727272727,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": -0.18774880438033492,
+            "median_pct": -0.13747404789979356,
+            "win_rate": 0.42045454545454547,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": -0.38661244074397116,
+            "median_pct": -0.3374740478997935,
+            "win_rate": 0.32954545454545453,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.5854760771076076,
+            "median_pct": -0.5374740478997937,
+            "win_rate": 0.2840909090909091,
+            "days": 88
+          }
+        },
+        "monthly_net40_mean_pct": {
+          "2024-07": -0.8693982877498665,
+          "2025-04": -0.4019813204423221,
+          "2025-05": 0.30552589933856755,
+          "2025-06": 0.06459259213206696,
+          "2025-07": -0.8632682581720799
+        },
+        "positive_months": 2,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 52,
+            "net40_mean_pct": -0.39564603167410345
+          },
+          "confirmation_a": {
+            "days": 19,
+            "net40_mean_pct": 0.064592592132067
+          },
+          "confirmation_b": {
+            "days": 17,
+            "net40_mean_pct": -0.8632682581720799
+          }
+        },
+        "top20_winning_days_removed_net20_mean_pct": -0.9496000778182747,
+        "top10_profit_codes_cash_net20_mean_pct": -0.5146302087671569,
+        "top10_profit_codes": [
+          "6532",
+          "4495",
+          "8558",
+          "7236",
+          "7327",
+          "7060",
+          "5577",
+          "7148",
+          "3121",
+          "6525"
+        ],
+        "filled_slots": 175,
+        "scheduled_slots": 176,
+        "slot_fill_rate": 0.9943181818181818,
+        "days_with_at_least_one_filled_slot": 88,
+        "unique_codes": 152
+      }
+    },
+    "T09_structured_overlay_L4": {
+      "top1": {
+        "costs": {
+          "0": {
+            "mean_pct": -0.32421046838002787,
+            "median_pct": -0.042973785990546576,
+            "win_rate": 0.38636363636363635,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": -0.5219377411073005,
+            "median_pct": -0.2429737859905466,
+            "win_rate": 0.36363636363636365,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": -0.7196650138345733,
+            "median_pct": -0.4429737859905466,
+            "win_rate": 0.3068181818181818,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.9173922865618459,
+            "median_pct": -0.6429737859905466,
+            "win_rate": 0.20454545454545456,
+            "days": 88
+          }
+        },
+        "monthly_net40_mean_pct": {
+          "2024-07": -0.5859329325493234,
+          "2025-04": -1.8207842613487546,
+          "2025-05": -0.5968326115864149,
+          "2025-06": -0.5815120556423878,
+          "2025-07": -0.1839420323602602
+        },
+        "positive_months": 0,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 52,
+            "net40_mean_pct": -0.9452841848098589
+          },
+          "confirmation_a": {
+            "days": 19,
+            "net40_mean_pct": -0.5815120556423877
+          },
+          "confirmation_b": {
+            "days": 17,
+            "net40_mean_pct": -0.18394203236026016
+          }
+        },
+        "top20_winning_days_removed_net20_mean_pct": -1.0458130942098909,
+        "top10_profit_codes_cash_net20_mean_pct": -0.6890255565126856,
+        "top10_profit_codes": [
+          "1762",
+          "1925",
+          "1827",
+          "1941",
+          "1518",
+          "1605",
+          "166A",
+          "1383",
+          "1450",
+          "1820"
+        ],
+        "filled_slots": 87,
+        "scheduled_slots": 88,
+        "slot_fill_rate": 0.9886363636363636,
+        "days_with_at_least_one_filled_slot": 87,
+        "unique_codes": 53
+      },
+      "top2": {
+        "costs": {
+          "0": {
+            "mean_pct": -0.004373935470184286,
+            "median_pct": 0.005818144970637373,
+            "win_rate": 0.5113636363636364,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": -0.20323757183382066,
+            "median_pct": -0.19418185502936258,
+            "win_rate": 0.45454545454545453,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": -0.402101208197457,
+            "median_pct": -0.3941818550293626,
+            "win_rate": 0.375,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.6009648445610933,
+            "median_pct": -0.5839967287666776,
+            "win_rate": 0.3409090909090909,
+            "days": 88
+          }
+        },
+        "monthly_net40_mean_pct": {
+          "2024-07": -0.40844163223674274,
+          "2025-04": -0.9541444352518732,
+          "2025-05": 0.03449346645305047,
+          "2025-06": -0.5320058076520024,
+          "2025-07": -0.14684209028220513
+        },
+        "positive_months": 1,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 52,
+            "net40_mean_pct": -0.43808616233059
+          },
+          "confirmation_a": {
+            "days": 19,
+            "net40_mean_pct": -0.5320058076520024
+          },
+          "confirmation_b": {
+            "days": 17,
+            "net40_mean_pct": -0.1468420902822051
+          }
+        },
+        "top20_winning_days_removed_net20_mean_pct": -0.7199071429558198,
+        "top10_profit_codes_cash_net20_mean_pct": -0.45454362818479055,
+        "top10_profit_codes": [
+          "146A",
+          "156A",
+          "149A",
+          "137A",
+          "1762",
+          "1827",
+          "1718",
+          "1417",
+          "143A",
+          "1418"
+        ],
+        "filled_slots": 175,
+        "scheduled_slots": 176,
+        "slot_fill_rate": 0.9943181818181818,
+        "days_with_at_least_one_filled_slot": 88,
+        "unique_codes": 79
+      }
+    },
+    "T10_event_barbell": {
+      "top1": {
+        "costs": {
+          "0": {
+            "mean_pct": 0.9190585910052484,
+            "median_pct": 0.2116991014192049,
+            "win_rate": 0.5681818181818182,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": 0.7190585910052484,
+            "median_pct": 0.011699101419204883,
+            "win_rate": 0.5,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": 0.5190585910052483,
+            "median_pct": -0.18830089858079513,
+            "win_rate": 0.4772727272727273,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": 0.3190585910052483,
+            "median_pct": -0.3883008985807951,
+            "win_rate": 0.3977272727272727,
+            "days": 88
+          }
+        },
+        "monthly_net40_mean_pct": {
+          "2024-07": 0.5468226526999139,
+          "2025-04": -0.49980641598433595,
+          "2025-05": 0.7903894169507758,
+          "2025-06": 1.5585224575395769,
+          "2025-07": -0.019036121099106566
+        },
+        "positive_months": 3,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 52,
+            "net40_mean_pct": 0.3151700648825905
+          },
+          "confirmation_a": {
+            "days": 19,
+            "net40_mean_pct": 1.5585224575395769
+          },
+          "confirmation_b": {
+            "days": 17,
+            "net40_mean_pct": -0.019036121099106552
+          }
+        },
+        "top20_winning_days_removed_net20_mean_pct": -0.5720879271486576,
+        "top10_profit_codes_cash_net20_mean_pct": -0.1084843299709387,
+        "top10_profit_codes": [
+          "3652",
+          "3415",
+          "3046",
+          "4978",
+          "3399",
+          "4439",
+          "5132",
+          "3719",
+          "4015",
+          "7060"
+        ],
+        "filled_slots": 88,
+        "scheduled_slots": 88,
+        "slot_fill_rate": 1.0,
+        "days_with_at_least_one_filled_slot": 88,
+        "unique_codes": 78
+      },
+      "top2": {
+        "costs": {
+          "0": {
+            "mean_pct": 0.361140563472567,
+            "median_pct": 0.05021856528139301,
+            "win_rate": 0.5113636363636364,
+            "days": 88
+          },
+          "20": {
+            "mean_pct": 0.16227692710893063,
+            "median_pct": -0.14978143471860694,
+            "win_rate": 0.4772727272727273,
+            "days": 88
+          },
+          "40": {
+            "mean_pct": -0.0365867092547057,
+            "median_pct": -0.34978143471860695,
+            "win_rate": 0.42045454545454547,
+            "days": 88
+          },
+          "60": {
+            "mean_pct": -0.23545034561834202,
+            "median_pct": -0.549781434718607,
+            "win_rate": 0.38636363636363635,
+            "days": 88
+          }
+        },
+        "monthly_net40_mean_pct": {
+          "2024-07": 0.22112764957380995,
+          "2025-04": -1.1602953386665453,
+          "2025-05": 0.07910090676508344,
+          "2025-06": 0.5072351439360222,
+          "2025-07": -0.08846999772355388
+        },
+        "positive_months": 3,
+        "months": 5,
+        "slices": {
+          "discovery": {
+            "days": 52,
+            "net40_mean_pct": -0.21832900361342514
+          },
+          "confirmation_a": {
+            "days": 19,
+            "net40_mean_pct": 0.5072351439360222
+          },
+          "confirmation_b": {
+            "days": 17,
+            "net40_mean_pct": -0.0884699977235539
+          }
+        },
+        "top20_winning_days_removed_net20_mean_pct": -0.5940605338877648,
+        "top10_profit_codes_cash_net20_mean_pct": -0.2514945333791629,
+        "top10_profit_codes": [
+          "3652",
+          "3415",
+          "3046",
+          "4978",
+          "3399",
+          "4439",
+          "5132",
+          "3719",
+          "4015",
+          "7060"
+        ],
+        "filled_slots": 175,
+        "scheduled_slots": 176,
+        "slot_fill_rate": 0.9943181818181818,
+        "days_with_at_least_one_filled_slot": 88,
+        "unique_codes": 125
+      }
+    }
+  },
+  "artifacts": {
+    "picks_csv": "/tmp/v10_tdnet_text/picks.csv",
+    "picks_sha256": "34676aa450a28bf40657f346be86130cbb366111b14d09aa0b10763e8b5ddd3d",
+    "bundle_coverage_csv": "/tmp/v10_tdnet_text/bundle_coverage.csv",
+    "bundle_coverage_sha256": "7e4444bbdeaf7bd3582cbe9beda863e680960a09074e13133bb9075ec7111478"
+  }
+}

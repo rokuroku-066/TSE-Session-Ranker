@@ -5,7 +5,7 @@
 現行CLI/APIの既定モデルは0.3.0互換の`session_v3_tdnet_clear`です。正則化ロジスティック回帰に、価格履歴12特徴と寄り前までのTDnet適時開示6特徴を入力し、1位を`CORE`、2位を`RESERVE`として表示します。
 
 > [!WARNING]
-> **自動発注には使用できません。** v0.9の暫定首位は既知期間を繰り返し分析したposthoc仕様で、正確な出来高・spread・slippageを含まず、利益の多くを少数の上昇日に依存します。毎日1件のshadow候補として固定しますが、productionモデルは変更していません。CLIの既存`CORE` / `ORDER_ELIGIBLE`も研究上の発注承認を意味しません。
+> **自動発注には使用できません。** v1.0の点推定首位は88日の不連続な履歴だけで見つかり、利益の多くを少数の上昇日・銘柄に依存します。条件を変えない前向きshadow候補として固定しますが、productionモデルは変更していません。CLIの既存`CORE` / `ORDER_ELIGIBLE`も研究上の発注承認を意味しません。
 
 ## 最新の研究判断
 
@@ -26,9 +26,32 @@
 | v0.8 TDnet | fresh/follow-up・時刻・bundle等12群 | 追加採用0群 | source-complete `187/266日`、全群不合格 |
 | v0.9 L4 rank 2 | L4のscore順位2位へ100% | 1銘柄shadow対照 | net20 `+0.425289%/日`、net40 `+0.229048%/日` |
 | v0.9 25/75 | L4 rank 1/2へ25%/75% | 分散shadow対照 | net20 `+0.354240%/日`、13/13か月プラス |
-| **v0.9 valid-OC breadth** | 前営業日の始値→終値breadthでL4/L6 rank 2を切替 | **暫定首位・1銘柄shadow** | net20 `+0.487187%/日`、net60 `+0.093202%/日` |
+| v0.9 valid-OC breadth | 前営業日の始値→終値breadthでL4/L6 rank 2を切替 | retrospective predecessor | net20 `+0.487187%/日`、net60 `+0.093202%/日` |
+| **v1.0 T02 TDnet text** | 開示タイトルchar 2–5gram TF-IDF + value Ridge | **前向きexploratory shadow・実発注不可** | 88日でnet20 `+0.719059%/日`、net40 `+0.519059%/日`、net60 `+0.319059%/日` |
 
-v0.8では価格・市場状態、売買可能性、TDnet、非線形変換の計43特徴仮説と5ユニバース仮説を評価した。v0.9では有力仕様の誤差から、個別誤差/meta 20件、target・portfolio 33件、breadth反証4件の計57件を追加検証した。目的変数、risk adjustment、ensembleは改善せず、rank 2だけが局所的に高かったがrank 3は負だった。前営業日の有効な取引銘柄における始値→終値上昇比率でL4/L6のrank 2を切り替える仕様が点推定首位になった一方、L4 rank 2への増分の90%下限は負である。同じ266日の再利用を止め、2026-07-23以降へ仕様を固定する。全経緯は追記専用の[VALIDATION.md](VALIDATION.md)、v0.9の57件は[protocol ledger](research/model_v09_protocol_ledger.json)、結果と改ざん検知は[result](research/model_v09_result.json)・[audit](research/audit_model_v09.py)に保存する。
+v0.8では価格・市場状態、売買可能性、TDnet、非線形変換の計43特徴仮説と5ユニバース仮説を評価した。v0.9では有力仕様の誤差から、個別誤差/meta 20件、target・portfolio 33件、breadth反証4件の計57件を追加検証した。v1.0では19本の一次資料から12仮説を事前登録し、13モデル構造、16方策・ユニバース案、TDnetタイトル10案、外部市場8案、online expert、market/peer residualを月次walk-forwardで比較した。
+
+独立監査の結果、v0.9 breadthの追加価値は未証明であり、v1.0のpolicy Round 2も「5比較中4勝」のはずが4比較しか実装されていなかったため昇格判断を撤回した。新しいproduction採用は0件。点推定首位のT02も、好成績20日除外後net20 `-0.572088%/日`、上位利益10コードを現金化すると`-0.108484%/日`、familywise reality-check `p=0.2103`なので、2026-07-24以降の前向きshadowだけに固定する。全経緯は追記専用の[VALIDATION.md](VALIDATION.md)、統合結果は[summary report](research/model_v10_summary_report.md)、独立訂正は[integration audit](research/model_v10_integration_audit_report.md)、固定した前向き仕様は[forward protocol](research/model_v10_forward_protocol.json)に保存する。
+
+### v1.0暫定shadow仕様
+
+```text
+08:58:59 JSTまでに公開・受信・計算が完了し、
+source-completeと判定できるTDnet開示だけを使用
+
+同一銘柄の対象タイトルを公開時刻順に連結
+char 2–5gram TF-IDF:
+    min_df=3, max_features=30000, sublinear_tf=True, norm="l2"
+value target:
+    学習期間の1/99 percentileでclip後、[-10,+10]%へclip
+model:
+    Ridge(alpha=20)
+decision:
+    予測値降順、同点は銘柄コード昇順のtop1
+    eventなし・source欠落は現金、価格モデルfallbackなし
+```
+
+これは勝率ではなく平均損益を狙うため、88日のnet40勝率は47.7%、中央値は負でも平均が正になった。ただし右裾依存が強い。最低120 source-complete営業日・4か月、前後半net40正、L4比の片側90%下限非負、tail/code除外後も正、PIT遵守率98%以上、実spread・slippage・最低単元の合格をすべて満たすまで実発注へ昇格させない。
 
 ### v0.9暫定shadow仕様
 
@@ -68,6 +91,7 @@ L4・L6とも60bpコストではマイナスで、L4は単一銘柄が総損益�
 - v0.7では表示top2を固定し、モデル間合意・スコア形状・downsideと、事前日足tailを発注gateとして分離。未合格枠はrank 3で置換せず現金
 - v0.8ではモデル固定を外して17 target/model案を比較し、日内の市場共通変動を落とす同日順位Ridgeを固定shadowへ採用。追加特徴のproduction採用は0群
 - v0.9では57件を追加反証し、`prior_market_oc_breadth`でL4/L6のrank 2を切り替える1銘柄規則を前向きshadowへ固定。production採用は0
+- v1.0では先行研究・モデル構造・方策・外部市場・TDnet text・online/residualをゼロベース比較。T02 text-value top1を前向きexploratory shadowへ固定したが、tail/code集中と多重性のためproduction採用は0
 - 学習ラベルは`close > open`または損益・同日順位。研究仕様の採否は勝率ではなくコスト後損益で決定し、v0.5の主指標はtop2等金額
 - 対象日OHLCを特徴量へ入れず、価格特徴はすべて1セッション以上shift
 - 適時開示は各文書を「公開時刻以前で最初に到来する08:58:59 JSTの取引日」へ割当

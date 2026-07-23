@@ -1,0 +1,194 @@
+{
+  "schema_version": 1,
+  "protocol_id": "model_v10_zero_base_gen1_20260723",
+  "registered_at": "2026-07-23",
+  "purpose": "Replace local L4/L6 rank and breadth tuning with structurally different prediction and decision mechanisms.",
+  "authority": {
+    "analysis_type": "retrospective_method_screen",
+    "production_promotion_allowed": false,
+    "all_score_period_outcomes_previously_available_to_upstream_research": true,
+    "temporal_slices_are_not_untouched_holdouts": true
+  },
+  "frozen_input": {
+    "panel_path": "/tmp/model_v07_corrected_panel.pkl",
+    "panel_sha256": "6b86f994a1d15d1da8ed40469d44fc409adadc6cd5b3df3c08aef6717bcdf0eb",
+    "training_start": "2024-01-04",
+    "score_period": [
+      "2024-07-01",
+      "2025-07-31"
+    ],
+    "score_sessions": 266,
+    "rows": 1524104,
+    "codes": 4124
+  },
+  "temporal_slices": {
+    "discovery": [
+      "2024-07-01",
+      "2024-10-31"
+    ],
+    "confirmation_a": [
+      "2024-11-01",
+      "2025-03-31"
+    ],
+    "confirmation_b": [
+      "2025-04-01",
+      "2025-07-31"
+    ]
+  },
+  "decision_time": "08:58:59 Asia/Tokyo",
+  "portfolio": {
+    "daily_candidates": [
+      1,
+      2
+    ],
+    "primary_cost_bps": 40,
+    "reported_cost_bps": [
+      20,
+      40,
+      60
+    ],
+    "unobserved_or_untradeable_slot": "cash",
+    "tie_break": [
+      "score descending",
+      "code ascending"
+    ]
+  },
+  "feature_policy": {
+    "target_day_open_high_low_close_forbidden": true,
+    "all_rolling_stock_features_shifted_at_least_one_exchange_session": true,
+    "tdnet_cutoff_required": "08:58:59 Asia/Tokyo",
+    "exact_historical_board_pts_and_futures_unavailable": true,
+    "later_values_must_not_be_used_as_preopen_proxies": true
+  },
+  "hypotheses": [
+    {
+      "id": "Z01_code_weekday_empirical_bayes",
+      "family": "stock_calendar_seasonality",
+      "definition": "Expanding same-code same-weekday mean open-to-close return, shifted one session and shrunk to the expanding weekday market mean with prior strength 20.",
+      "prediction": "Persistent stock-specific weekday effects improve ranking beyond generic recent means."
+    },
+    {
+      "id": "Z02_max_lottery_20_penalty",
+      "family": "tail_state",
+      "definition": "Penalize the shifted maximum stock open-to-close return over the previous 20 observed sessions.",
+      "prediction": "Recent lottery-like winners underperform intraday."
+    },
+    {
+      "id": "Z03_left_tail_adjusted_alpha_60",
+      "family": "tail_state",
+      "definition": "Rank by shifted 60-session stock mean minus one half of downside semideviation.",
+      "prediction": "Persistent intraday alpha with limited left-tail exposure dominates mean-only ranking."
+    },
+    {
+      "id": "Z04_tdnet_friday_attention_overlay",
+      "family": "event_attention",
+      "definition": "Estimate TDnet category effects separately for Friday or weekend-aged disclosures with empirical-Bayes shrinkage; compare with a non-event control.",
+      "prediction": "Lower-attention release timing produces more same-day continuation after the open."
+    },
+    {
+      "id": "Z05_daily_zscore_ridge",
+      "family": "distribution_normalized_target",
+      "definition": "Monthly expanding Ridge on each training date's winsorized, cross-sectionally standardized open-to-close return.",
+      "prediction": "Daily z-scores retain economically useful magnitude while removing market-level shifts."
+    },
+    {
+      "id": "Z06_exp_decay_rank_ridge_hl60",
+      "family": "nonstationary_linear",
+      "definition": "Daily-rank Ridge with exponentially decaying date weights and a 60-session half-life.",
+      "prediction": "Smooth recency weighting adapts better than expanding or hard rolling windows."
+    },
+    {
+      "id": "Z07_exp_decay_rank_ridge_hl120",
+      "family": "nonstationary_linear",
+      "definition": "Daily-rank Ridge with exponentially decaying date weights and a 120-session half-life.",
+      "prediction": "A slower decay preserves structural signal while reducing regime staleness."
+    },
+    {
+      "id": "Z08_market_volatility_mixture",
+      "family": "mixture_of_experts",
+      "definition": "Fit separate rank models below and above the prior-only market-volatility median and route each score date using its prior market state.",
+      "prediction": "Predictive relations differ between calm and volatile regimes."
+    },
+    {
+      "id": "Z09_tdnet_event_mixture",
+      "family": "mixture_of_experts",
+      "definition": "Fit event and non-event ranking experts separately; route rows with point-in-time TDnet availability and use shrinkage when the event expert is sparse.",
+      "prediction": "Disclosure and non-disclosure rows follow different return-generating processes."
+    },
+    {
+      "id": "Z10_listnet_rank",
+      "family": "listwise_learning_to_rank",
+      "definition": "Optimize one softmax list per training date against the within-date return-rank distribution with L2 regularization.",
+      "prediction": "A listwise loss aligns training with the daily top-candidate decision better than pointwise Ridge."
+    },
+    {
+      "id": "Z11_listnet_net_utility",
+      "family": "listwise_direct_utility",
+      "definition": "Optimize one softmax list per training date against clipped positive return after 40bp cost.",
+      "prediction": "Concentrating probability on net-profitable outcomes improves realized portfolio return."
+    },
+    {
+      "id": "Z12_quantile_q25",
+      "family": "distributional_prediction",
+      "definition": "Predict the conditional 25th percentile of open-to-close return and rank by that lower quantile.",
+      "prediction": "A downside-aware conditional quantile is more robust than a conditional mean."
+    },
+    {
+      "id": "Z13_quantile_median_downside",
+      "family": "distributional_prediction",
+      "definition": "Rank by predicted median minus one half of the predicted median-to-25th-percentile downside gap.",
+      "prediction": "Separating location and downside improves tail-adjusted return."
+    },
+    {
+      "id": "Z14_temporal_block_rank_median",
+      "family": "temporal_ensemble",
+      "definition": "Train rank models on multiple strictly prior temporal blocks and rank by the median cross-sectional percentile score.",
+      "prediction": "Signals that survive training-era changes generalize better."
+    },
+    {
+      "id": "Z15_temporal_block_rank_lcb",
+      "family": "temporal_ensemble",
+      "definition": "Rank by mean cross-sectional percentile across temporal-block models minus one half of its standard deviation.",
+      "prediction": "Penalizing time-instability reduces model-selection and tail risk."
+    },
+    {
+      "id": "Z16_online_expert_hedge",
+      "family": "online_expert_aggregation",
+      "definition": "Combine preregistered literature signals using exponentially weighted prior realized net40 performance, updating only after each session closes.",
+      "prediction": "Online expert weighting adapts to nonstationarity without outcome-informed refitting of the candidate library."
+    },
+    {
+      "id": "Z17_peer_residual_model",
+      "family": "peer_relative_prediction",
+      "definition": "Cluster stocks using strictly prior behavior and predict return residual to the contemporaneous score-date peer centroid.",
+      "prediction": "Peer-relative deviations isolate idiosyncratic continuation from common group moves."
+    },
+    {
+      "id": "Z18_market_residual_target",
+      "family": "factor_residual_target",
+      "definition": "Train on same-day stock return residualized against a beta-scaled market open-to-close return, with beta estimated only from earlier sessions.",
+      "prediction": "Removing predictable common exposure improves idiosyncratic candidate ranking."
+    }
+  ],
+  "required_outputs": {
+    "per_candidate": [
+      "net20",
+      "net40",
+      "net60",
+      "monthly_net40",
+      "three_temporal_slices",
+      "best_20_days_removed",
+      "worst_20_days_removed",
+      "top_10_profit_codes_to_cash",
+      "selection_count_and_code_concentration"
+    ],
+    "family_control": "Each new family must be compared with its own simplest fixed control.",
+    "multiplicity": "Report a moving-block family-wise lower bound; no unadjusted winner may be promoted.",
+    "point_in_time": [
+      "strictly prior training maximum",
+      "target-day outcome mutation invariance",
+      "source-date audit"
+    ]
+  },
+  "stopping_rule": "After all registered hypotheses and one preregistered falsification generation, stop reuse of this panel unless a new data source or a new forward period is added."
+}

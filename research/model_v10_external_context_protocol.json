@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "protocol_id": "model_v10_external_context_gen1_20260723",
+  "registered_at": "2026-07-23",
+  "authority": {
+    "analysis_type": "retrospective_new_data_source_screen",
+    "production_promotion_allowed": false,
+    "score_outcomes_previously_available": true
+  },
+  "frozen_stock_input": {
+    "panel_sha256": "6b86f994a1d15d1da8ed40469d44fc409adadc6cd5b3df3c08aef6717bcdf0eb",
+    "score_period": [
+      "2024-07-01",
+      "2025-07-31"
+    ],
+    "score_sessions": 266
+  },
+  "external_sources": {
+    "provider": "Federal Reserve Bank of St. Louis FRED",
+    "series": [
+      "SP500",
+      "NASDAQCOM",
+      "VIXCLS",
+      "DEXJPUS"
+    ],
+    "raw_archive_sha256": "5d47280e0c18b2edddb8d8e3f8a2bc0d989f59252014ff612bb7b83f0672c90e",
+    "equity_vix_csv_sha256": "42f0a3257a04def43505c64e79e451a2f587fa4cd99fb90ee3b5fe68d121c0aa",
+    "fx_csv_sha256": "f5eb986d66d7099d4a675ef92cd123e5908b413c78dec23a008366e037d92f49"
+  },
+  "point_in_time_mapping": {
+    "rule": "For a TSE session dated D, use the latest external observation whose US observation_date is strictly earlier than D.",
+    "same_calendar_date_allowed": false,
+    "carry_rule": "A prior US trading observation may bridge US or Japanese holidays but its source date is retained.",
+    "maximum_source_date_audit_required": true,
+    "interpretation": "These are completed US-market and FX observations, not proxies for an exact 08:58 futures snapshot."
+  },
+  "hypotheses": [
+    {
+      "id": "X01_us_market_oc_beta60",
+      "definition": "For each stock, estimate a shifted rolling-60 beta of TSE open-to-close return to the pre-open S&P 500 close-to-close return; rank by beta times current pre-open S&P return.",
+      "prediction": "Stable stock heterogeneity in post-open continuation or reversal of US shocks improves ranking."
+    },
+    {
+      "id": "X02_us_growth_spread_beta60",
+      "definition": "Estimate a shifted rolling-60 beta to NASDAQ minus S&P 500 return and multiply by the current growth spread.",
+      "prediction": "Growth-sensitive Japanese stocks react differently during the TSE session."
+    },
+    {
+      "id": "X03_usdjpy_beta60",
+      "definition": "Estimate a shifted rolling-60 beta to the latest pre-open USD/JPY return and multiply by the current FX move.",
+      "prediction": "Exporter and importer response heterogeneity remains after the opening auction."
+    },
+    {
+      "id": "X04_vix_change_beta60",
+      "definition": "Estimate a shifted rolling-60 beta to VIX percentage change and multiply by the current pre-open VIX change.",
+      "prediction": "Stock-specific fear sensitivity predicts intraday continuation or recovery."
+    },
+    {
+      "id": "X05_external_beta_composite",
+      "definition": "Cross-sectionally standardize X01 through X04 each day and average them.",
+      "prediction": "Combining independent external shocks is more robust than a single market series."
+    },
+    {
+      "id": "X06_external_context_rank_ridge",
+      "definition": "Add X01 through X04 and current common-state interactions with prior stock behavior to the fixed price-core daily-rank Ridge.",
+      "prediction": "A conditional model extracts nonlinear state dependence not captured by standalone beta signals."
+    },
+    {
+      "id": "X07_tdnet_external_shock_interaction",
+      "definition": "Interact point-in-time TDnet material categories with current S&P, growth-spread, VIX and FX shocks in an event-specific model.",
+      "prediction": "Material news is absorbed differently depending on the overseas risk state."
+    },
+    {
+      "id": "X08_us_shock_regime_experts",
+      "definition": "Fit separate strictly-prior ranking experts for positive, neutral and negative S&P shock regimes and route each date using the current pre-open S&P return.",
+      "prediction": "Continuation and reversal mechanisms differ by overseas shock direction."
+    }
+  ],
+  "evaluation": {
+    "candidate_counts": [
+      1,
+      2
+    ],
+    "cost_bps": [
+      20,
+      40,
+      60
+    ],
+    "required_fragility": [
+      "three temporal slices",
+      "monthly results",
+      "best 20 days removed",
+      "top 10 profit codes to cash",
+      "source-date mutation and mapping audit",
+      "moving-block family-wise lower bound"
+    ]
+  }
+}

@@ -1,0 +1,224 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/tse-session-ranker/preopen-point-in-time-v1.schema.json",
+  "title": "TSE Session Ranker prospective pre-open ledger",
+  "description": "Append-only, point-in-time source records for an 08:58:59 Asia/Tokyo decision. Cross-field and time-cutoff invariants are enforced by preopen_pit.py.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "records"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "preopen-pit-v1"
+    },
+    "records": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/record"
+      }
+    }
+  },
+  "$defs": {
+    "aware_timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "(Z|[+-][0-9]{2}:[0-9]{2})$"
+    },
+    "field_status": {
+      "enum": [
+        "observed",
+        "zero",
+        "missing",
+        "not_applicable"
+      ]
+    },
+    "record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target_date",
+        "instrument_id",
+        "feature_group",
+        "venue",
+        "session",
+        "source",
+        "source_record_id",
+        "source_event_at",
+        "source_received_at",
+        "computed_at",
+        "coverage_status",
+        "activity_status",
+        "values",
+        "field_status"
+      ],
+      "properties": {
+        "target_date": {
+          "type": "string",
+          "format": "date",
+          "description": "Cash-session date for which the model decision is made; not necessarily the source event's calendar date."
+        },
+        "instrument_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "feature_group": {
+          "enum": [
+            "futures",
+            "auction",
+            "pts",
+            "liquidity",
+            "tdnet"
+          ]
+        },
+        "venue": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Exchange or PTS venue code. Never collapse different venues into one value before persistence."
+        },
+        "session": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Examples: day, night, preopen, prior_cash_session."
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_record_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Stable event/snapshot identity supplied or deterministically created at receipt."
+        },
+        "source_event_at": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/aware_timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Exchange/publisher event time when supplied. This alone never proves model availability."
+        },
+        "source_received_at": {
+          "$ref": "#/$defs/aware_timestamp",
+          "description": "Local timestamp when the complete source payload was received."
+        },
+        "computed_at": {
+          "$ref": "#/$defs/aware_timestamp",
+          "description": "Local timestamp after parsing and feature computation completed. available_at=max(source_received_at,computed_at)."
+        },
+        "coverage_status": {
+          "enum": [
+            "complete",
+            "partial",
+            "unavailable",
+            "not_supported"
+          ]
+        },
+        "activity_status": {
+          "enum": [
+            "active",
+            "no_activity",
+            "unknown",
+            "not_applicable"
+          ]
+        },
+        "values": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        },
+        "field_status": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "$ref": "#/$defs/field_status"
+          },
+          "$comment": "Keys must exactly match values. observed is non-null/non-zero; zero is numeric zero; missing and not_applicable are null. Enforced in Python because JSON Schema cannot compare object key sets portably."
+        },
+        "source_version": {
+          "type": "string",
+          "default": ""
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "activity_status": {
+                "const": "no_activity"
+              }
+            },
+            "required": [
+              "activity_status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "coverage_status": {
+                "const": "complete"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "x-field-catalog": {
+    "futures": {
+      "last_price": "index_points, positive",
+      "best_bid": "index_points, positive",
+      "best_ask": "index_points, positive",
+      "session_open": "index_points, positive",
+      "cumulative_volume": "contracts, non-negative",
+      "days_to_expiry": "calendar_days, non-negative"
+    },
+    "auction": {
+      "indicative_equilibrium_price": "JPY, positive; mutable pre-open indication, never call it the actual opening price",
+      "bid_qty_l1": "shares, non-negative",
+      "ask_qty_l1": "shares, non-negative",
+      "bid_qty_l3": "shares, non-negative",
+      "ask_qty_l3": "shares, non-negative",
+      "bid_qty_l10": "shares, non-negative",
+      "ask_qty_l10": "shares, non-negative",
+      "buy_market_qty": "shares, non-negative",
+      "sell_market_qty": "shares, non-negative"
+    },
+    "pts": {
+      "last_price": "JPY, positive; null when a completely covered session has no trades",
+      "best_bid": "JPY, positive",
+      "best_ask": "JPY, positive",
+      "volume": "shares, non-negative; explicit zero only with complete coverage",
+      "turnover": "JPY, non-negative; explicit zero only with complete coverage",
+      "trade_count": "trades, non-negative; explicit zero only with complete coverage"
+    },
+    "liquidity": {
+      "prior_close": "JPY, positive",
+      "prior_volume": "shares, non-negative",
+      "prior_turnover": "JPY, non-negative",
+      "median_turnover_20": "JPY, non-negative and based only on D-1 or earlier",
+      "trading_unit": "shares, positive",
+      "tick_size": "JPY, positive",
+      "amihud_20": "absolute_return_per_JPY, non-negative and explicitly labeled a proxy",
+      "high_low_proxy_20": "ratio, non-negative and explicitly labeled a proxy"
+    },
+    "tdnet": {
+      "document_count": "documents, non-negative",
+      "forecast_sales_revision_pct": "percent for the same period/scope",
+      "forecast_operating_revision_pct": "percent for the same period/scope",
+      "forecast_ordinary_revision_pct": "percent for the same period/scope",
+      "forecast_net_revision_pct": "percent for the same period/scope",
+      "dividend_change_yield_pct": "percent of the prior close",
+      "buyback_shares_pct": "percent of shares outstanding",
+      "buyback_value_market_cap_pct": "percent of prior-close market capitalization"
+    }
+  }
+}

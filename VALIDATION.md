@@ -2293,3 +2293,255 @@ manifest chain:          483511ed362a62516b632a4f78bab6a06809f7913a51baade843531
 ```
 
 </details>
+
+---
+
+## Entry 015 — 研究プロトコルv1.0：先行研究からのゼロベース再設計とTDnet text暫定首位
+
+| 項目 | 内容 |
+|---|---|
+| 検証日 | 2026-07-23 |
+| 親Entry | Entry 011～014 |
+| 目的 | 08:58:59 JSTまでの情報だけで、当日の始値→終値のコスト控除後平均損益を最大化する1～2銘柄を選ぶ |
+| 入力期間 | 2024-07-01～2025-07-31、266 score営業日 |
+| frozen panel | 1,524,104行、4,124銘柄、SHA-256 `6b86f994a1d15d1da8ed40469d44fc409adadc6cd5b3df3c08aef6717bcdf0eb` |
+| 今回の探索 | 一次資料19本・文献仮説12件、モデル構造13件、方策・universe 16件、TDnet text 10件、外部市場8件、online 3件、market/peer residual |
+| 評価 | 月次expanding walk-forward、top1/top2、未約定枠は現金、往復20/40/60bp |
+| 点推定首位 | `T02_char_value_event_only`、TDnetタイトルchar TF-IDF + value Ridge、event-only top1 |
+| 最終判断 | production変更なし。T02を2026-07-24以降の固定exploratory shadowに限定 |
+| 機械可読成果物 | `research/model_v10_summary.json`、`research/model_v10_integration_audit.json`、`research/model_v10_forward_protocol.json` |
+
+> **一行結論:** 既存日足上でモデルを複雑化した案と、先行研究から移植した価格・注意力・順位・残差仮説は頑健性を改善しなかった。TDnetタイトルから値幅を直接予測するT02が88日で点推定首位になったが、右裾依存と多重探索を通過していないため、実発注せず仕様を固定した前向きshadowへ移す。
+
+<details>
+<summary><strong>先行研究、全track比較、監査訂正、前向き仕様</strong></summary>
+
+### 権限と検証規律
+
+上流のEntry 011～014ですでに同じ266日のoutcomeを参照している。今回の
+月次walk-forwardは各fold内の未来混入を防ぐが、研究全体として未閲覧の
+holdoutを作るものではない。したがって、
+
+```text
+・retrospective結果からproductionへ昇格しない
+・各runnerの実行前にprotocolと仮説を保存する
+・結果が良い案だけでなく失敗案も同じ成果物へ残す
+・20/40/60bp、月別、時系列slice、tail、code集中を同時評価する
+・同じ履歴でT02を再調整せず、次の観測をforward counterへ送る
+```
+
+を権限境界とした。
+
+### 先行研究から移植した仮説
+
+一次資料19本を調査し、寄り付き反転、注意力、発表混雑、発表曜日、
+Learning-to-Rank、数値とテキストの組合せを12仮説へ変換した。主な
+出発点は次のとおり。
+
+| 先行研究の示唆 | 寄り前に確定する実装 | 結果 |
+|---|---|---|
+| TSEの寄り付き価格誤差は日中に修正され得る | H01 negative/positive gap hinge | top2 net20 `+0.1132%`、対照差`-0.1700pt` |
+| 日本株の大幅下落後に反発パターンがある | H01/H02 negative shockと5日OC反転 | 両方とも対照未満 |
+| overnightとintradayの投資家層には綱引きがある | H03 joint-sign rate | top2 net20 `+0.1498%`、対照差`-0.1334pt` |
+| attentionは寄り付き過大反応を生み得る | H04 overnight×ATR×activity | top1のみ改善したがtail/code/FW不合格 |
+| 同時発表の多さは情報処理を遅らせ得る | H06 TDnet市場混雑×方向 | TDnet対照より`-0.0527pt` |
+| 金曜発表は注意を得にくい | H07 disclosure age/weekday×方向 | TDnet対照より`-0.0911pt` |
+| 複数の同方向材料は単一材料を裏付ける | H08 directional corroboration | `+0.0129pt`改善、頑健性不合格 |
+| 発表順序・announcement waveが反応を変える | H09 prior completed wave | 過去waveが0件でfeasibility failure |
+| daily top選定にはLearning-to-Rankが適する | M01/M02/M06/M07 | 最良M02もnet40 `-0.0658%` |
+| 日本語開示テキストは短期反応を補足する | T01～T10 | rank/overlayは失敗、T02 valueだけ点推定首位 |
+
+文献の効果をそのまま仮定せず、今回の日本株標本で再現しなければ棄却した。
+引用、識別子、仮説への対応、取得日は
+`research/model_v10_literature_review.md`、機械可読な12仮説は
+`research/model_v10_literature_hypotheses.json`に保存した。
+
+### 全trackの比較
+
+数値はscheduled dayの日次平均%。TDnet trackはstrict source-completeな
+88日だけなので、266日trackと同一母集団の順位比較には使わない。
+
+| Track | 代表候補 | 日数 | k | net20 | net40 | net60 | 判断 |
+|---|---|---:|---:|---:|---:|---:|---|
+| G0対照 | daily-rank Ridge | 266 | 2 | +0.2553 | +0.0587 | -0.1379 | best20除外`-0.0054` |
+| 13モデル構造 | M02 extreme-gain Ridge | 266 | 2 | +0.1305 | -0.0658 | -0.2620 | 0/13合格 |
+| 文献価格block | H04 attention | 266 | 2 | +0.1810 | -0.0163 | -0.2137 | 対照差負 |
+| 方策・universe | H12 momentum分散 | 266 | 2 | +0.3044 | +0.1082 | -0.0881 | Round 2判断を監査で撤回 |
+| gen1部分実行 | Z06 exp-decay top1 | 266 | 1 | +0.3085 | +0.1138 | -0.0810 | 18登録中6実行、選定不可 |
+| 外部市場 | X06 context Ridge top1 | 266 | 1 | +0.2623 | +0.0645 | -0.1332 | 必須監査出力不足 |
+| online expert | O03 follow-leader | 266 | 2 | +0.0823 | -0.1135 | -0.3094 | 棄却 |
+| market residual | R01 | 266 | 1 | +0.0390 | -0.1595 | -0.3580 | 棄却 |
+| peer residual | Z17 | 266 | 1 | -0.2964 | -0.4964 | -0.6964 | 0/13 net40月、棄却 |
+| **TDnet text** | **T02 char-value event-only** | **88** | **1** | **+0.7191** | **+0.5191** | **+0.3191** | exploratory forwardのみ |
+
+この比較から、rank loss、pairwise、quantile、mixture、utility/hurdle、
+online experts、market/peer中立化を追加しても既存対照を頑健に上回らない
+ことを確認した。peer residualは8 peer群を各foldの過去情報だけで再構成
+したが、top1/top2ともnet20から負で、13か月すべてnet40が負だった。
+
+### T02の仕様と結果
+
+T02は勝敗分類ではなく値幅の条件付き平均を予測し、right tailを含む
+平均損益を目的にした。
+
+```text
+source:
+    08:58:59 JSTまでに公開され、
+    strict source-completeと判定できるTDnet開示
+
+bundle:
+    同一銘柄の対象タイトルを公開時刻順にseparator付きで連結
+
+representation:
+    TfidfVectorizer(
+        analyzer="char",
+        ngram_range=(2, 5),
+        min_df=3,
+        max_features=30000,
+        sublinear_tf=True,
+        norm="l2",
+    )
+
+target:
+    学習期間の1/99 percentileでclipし、
+    さらに[-10,+10]%へclipした始値→終値リターン
+
+model:
+    Ridge(alpha=20)
+
+decision:
+    event銘柄を予測値降順、同点はコード昇順
+    top1を1件、eventなしは現金
+    価格モデルfallbackなし
+```
+
+88 source-complete営業日の実測は次のとおり。
+
+| 指標 | T02 top1 |
+|---|---:|
+| net20 | `+0.719059%/日` |
+| net40 | `+0.519059%/日` |
+| net60 | `+0.319059%/日` |
+| net40勝率 | `47.73%` |
+| net40中央値 | `-0.188301%` |
+| 正の月 | `3/5` |
+| best 20勝ち日除外net20 | `-0.572088%/日` |
+| 上位利益10code現金化net20 | `-0.108484%/日` |
+| L4比paired 90%区間 | `[-0.0213pt, +1.0142pt]` |
+| candidate-family reality-check | `p=0.2103` |
+
+勝率が50%未満でも平均が正なのは、今回の目的が勝率ではなく平均損益で
+あり、大きな上昇を少数捉えたためである。同時に、tail/code除外後が負に
+なるため、同じ事実が脆弱性も示す。T10 top1はT02と完全に同じ選択であり、
+独立した再現例として数えない。
+
+### 独立監査による訂正
+
+保存された全trackの損益を独立再計算し、最大誤差は`2.22e-16`だった。
+損益式とは別に、次の手順上の問題を発見し、元の判断より監査判断を優先
+した。
+
+1. policy Round 2は「無関係な5比較中4勝」を要求したが、runnerは4比較
+   しか実装せず4/4を合格にした。H12の
+   `retain_for_forward_shadow=true`を撤回する。
+2. zero-base gen1は18登録仮説のうち6件だけを実行した。Z06の数値から
+   winnerを選べない。
+3. external contextは月次vector、source-date mutation、familywise下限が
+   未出力。X06はexploratory点推定以上に扱わない。
+4. policy H01/H04、TDnet T02/T10 top1は完全重複し、独立試行ではない。
+5. TDnet 88日は不連続な5か月で、historical HTMLに実観測時刻sidecarが
+   ない。公開時刻PITは確認できてもarchive finalityは証明できない。
+
+訂正後の権威成果物は
+`research/model_v10_integration_audit_report.md`であり、
+production置換は0件である。
+
+### 08:58 point-in-time基盤
+
+次の改善は同じ日足へのモデル追加ではなく、新しい寄り前情報を正しい
+時刻で収集することとした。
+
+```text
+1. OSE先物の08:58騰落率、basis、08:45以降13分の方向・出来高
+2. TSE寄り板の予想約定値、1/3/10本imbalance、成行差、spread
+3. PTS価格・出来高・売買代金
+4. 20日売買代金、出来高、単元金額、tick、実slippage
+5. TDnet PDF本文の旧予想、新予想、増減額、時価総額比
+6. 月次売上trend、決算数値とタイトル文脈の不一致
+```
+
+`src/tse_session_ranker/data/preopen_pit.py`は、取引所の
+`source_event_at`、ローカルの`received_at`、特徴の`computed_at`を分離し、
+
+```text
+available_at = max(received_at, computed_at)
+available_at <= target session 08:58:59 JST
+```
+
+を強制する。欠測、真の0、対象外、source不完全を別状態で保存し、同じ
+identityに異なる値を追記することも拒否する。
+
+### 固定した前向きshadow
+
+`research/model_v10_forward_protocol.json`に、結果確認後の変更を禁止した
+仕様を保存した。
+
+```text
+ID:                 v10_t02_char_value_event_top1
+開始:               2026-07-24
+候補:               原則TDnet event top1、eventなし/source欠落は0件
+用途:               exploratory shadowのみ
+実発注:             禁止
+最低観測:           120 source-complete営業日、4か月
+仕様変更:           forward counterをゼロへ戻し、別IDにする
+```
+
+昇格判断には、net40が前半・後半とも正、L4比paired片側90%下限が0以上、
+best 20日除外後と上位利益10code現金化後のnet20が正、候補生成/PIT遵守率
+98%以上、実spread・slippage・最低単元・売買代金の合格をすべて要求する。
+forward中にn-gram、Ridge alpha、clip、fallback、閾値を変更しない。
+
+### 再現と成果物
+
+```bash
+PYTHONPATH=src:. python research/audit_model_v09.py --root research
+PYTHONPATH=src:. python research/model_v10_architectures_audit.py
+python -m compileall -q src research tests
+python -m pytest -q
+```
+
+主要成果物：
+
+```text
+research/model_v10_literature_review.md
+research/model_v10_literature_hypotheses.json
+research/model_v10_literature_protocol.json
+research/model_v10_literature_result.json
+research/model_v10_literature_validation_report.md
+research/model_v10_tdnet_text_protocol.json
+research/model_v10_tdnet_text_result.json
+research/model_v10_tdnet_text_audit.json
+research/model_v10_peer_residual_protocol.json
+research/model_v10_peer_residual_result.json
+research/model_v10_peer_residual_audit.json
+research/model_v10_integration_audit.json
+research/model_v10_summary.json
+research/model_v10_forward_protocol.json
+```
+
+### 最終判断
+
+```text
+production変更:                 なし
+retrospective点推定首位:       T02 char-value event-only top1
+用途:                           仕様固定の前向きexploratory shadow
+毎日の候補数:                   TDnet eventがあれば1件、なければ0件
+同じ88日での再調整:            停止
+次の改善単位:                   08:58板・先物・実流動性・TDnet本文
+```
+
+これは改善を放棄する判断ではない。同じ結果を見ながら閾値を変えるループを
+止め、情報量を増やした未使用期間で、事前固定した仕様同士を比較できる状態へ
+移した判断である。
+
+</details>

@@ -1,0 +1,203 @@
+{
+  "schema_version": 1,
+  "protocol_id": "v10_zero_base_model_architectures_20260723",
+  "registered_at": "2026-07-23T14:20:44+09:00",
+  "status": "registered_before_execution_on_already_viewed_retrospective_panel",
+  "authority": {
+    "retrospective_only": true,
+    "production_promotion_allowed": false,
+    "reason": "All outcomes in the frozen panel were already available to the project. This family is hypothesis generation and falsification, not a sealed holdout.",
+    "earliest_new_forward_session": "2026-07-23"
+  },
+  "frozen_input": {
+    "panel_path": "/tmp/model_v07_corrected_panel.pkl",
+    "panel_sha256": "6b86f994a1d15d1da8ed40469d44fc409adadc6cd5b3df3c08aef6717bcdf0eb",
+    "manifest_path": "/tmp/model_v07_corrected_panel.pkl.manifest.json",
+    "manifest_sha256_at_registration": "25e08c564ef6400b7a29168db9fd7e8220bd0e2386c7a3c7e71b05c2ff950b02",
+    "rows": 1524104,
+    "codes": 4124,
+    "sessions": 386,
+    "calendar_period": [
+      "2024-01-04",
+      "2025-07-31"
+    ],
+    "score_period": [
+      "2024-07-01",
+      "2025-07-31"
+    ],
+    "score_sessions": 266
+  },
+  "decision": {
+    "decision_time_jst": "08:58:59",
+    "target": "same-session open-to-close gross return",
+    "portfolio": "the two highest model scores, fixed 50/50 sleeves; unexecuted slots stay cash",
+    "primary_metric": "scheduled-day arithmetic mean after 40 bp round-trip cost",
+    "reported_cost_bps": [
+      20,
+      40,
+      60
+    ],
+    "selection_rule": "Among candidates satisfying all robustness gates, retain the largest net40 mean. If none passes, retain no winner.",
+    "robustness_gates": [
+      "net40 mean > 0",
+      "top-20 winning days removed net20 mean > 0",
+      "at least 9 of 13 monthly net20 means > 0",
+      "net20 mean > 0 in discovery, confirmation_a, and confirmation_b",
+      "one-sided 80% familywise max-t lower bound for net40 uplift versus control > 0"
+    ],
+    "production_action": "none; every result remains retrospective shadow evidence"
+  },
+  "folds": {
+    "type": "calendar-month expanding walk-forward",
+    "training_start": "2024-01-04",
+    "requirement": "every fitted row date is strictly earlier than the first scored date in its month",
+    "periods": {
+      "discovery": [
+        "2024-07-01",
+        "2024-10-31"
+      ],
+      "confirmation_a": [
+        "2024-11-01",
+        "2025-03-31"
+      ],
+      "confirmation_b": [
+        "2025-04-01",
+        "2025-07-31"
+      ]
+    }
+  },
+  "point_in_time": {
+    "training_filter": "price_training_eligible == true and oc_return_pct observed",
+    "scoring_filter": "price_eligible == true",
+    "feature_source_rule": "candidate_price_source_max_date < score date whenever populated",
+    "target_day_outcome_mutation_test": true,
+    "features": [
+      "oc_last",
+      "oc_mean_5",
+      "oc_mean_20",
+      "oc_mean_60",
+      "oc_win_20",
+      "oc_std_20",
+      "overnight_last",
+      "overnight_mean_20",
+      "overnight_mean_60",
+      "night_day_corr_60",
+      "xrank_atr14_pct",
+      "xrank_close_momentum_5",
+      "xrank_close_momentum_20",
+      "xrank_close_momentum_60",
+      "xrank_prior_close_location_20"
+    ],
+    "routing_context": [
+      "prior_market_dispersion"
+    ],
+    "explicit_exclusions": [
+      "L4/L6 feature bundle selection",
+      "rank-2-only portfolio selection",
+      "prior open-to-close breadth switching",
+      "target-session open, high, low, close, volume, return, or label"
+    ]
+  },
+  "control": {
+    "id": "C00_daily_rank_ridge",
+    "model": "Ridge(alpha=1)",
+    "target": "2 * within-date average percentile rank(open-close return) - 1"
+  },
+  "hypothesis_family_size": 13,
+  "hypotheses": [
+    {
+      "id": "M01_listwise_exponential_gain_ridge",
+      "family": "listwise squared-loss surrogate",
+      "target": "exp(3 * (daily return percentile - 1))",
+      "hypothesis": "A smooth top-heavy relevance gain better aligns fitting with selecting only two names than an affine percentile target."
+    },
+    {
+      "id": "M02_listwise_extreme_gain_ridge",
+      "family": "listwise symmetric extreme-emphasis surrogate",
+      "target": "sign(2p-1) * abs(2p-1)^3",
+      "hypothesis": "Emphasising both daily winners and losers improves separation without fitting raw tail magnitudes."
+    },
+    {
+      "id": "M03_bounded_cost_utility_ridge",
+      "family": "direct bounded utility regression",
+      "target": "tanh((open-close return - 0.20) / 1.00)",
+      "hypothesis": "A bounded, explicitly cost-centred utility suppresses outlier influence while preserving economic direction."
+    },
+    {
+      "id": "M04_dual_tail_probability",
+      "family": "two binary tail models",
+      "score": "P(return > 1.0%) - 1.5 * P(return < -1.0%)",
+      "hypothesis": "Separating upside and downside tail probabilities is more useful than estimating only sign or mean."
+    },
+    {
+      "id": "M05_two_stage_cost_expected_return",
+      "family": "cost-aware hurdle mixture",
+      "score": "P(return > 0.20%) * E[clipped return | above cost] + complement * E[clipped return | not above cost]",
+      "hypothesis": "A hurdle model separates continuation probability from conditional payoff magnitude."
+    },
+    {
+      "id": "M06_magnitude_weighted_pairwise",
+      "family": "pairwise logistic rank",
+      "pairs_per_training_date": 64,
+      "pair_weight": "min(abs(return difference), 3.0), normalised equally by date",
+      "hypothesis": "Ranking pairwise differences and weighting economically meaningful separations improves top-two ordering."
+    },
+    {
+      "id": "M07_extreme_pairwise",
+      "family": "top-bottom pairwise logistic rank",
+      "pairs_per_training_date": 64,
+      "pair_population": "daily top and bottom return deciles",
+      "hypothesis": "Learning only unambiguous extreme comparisons reduces noise from near-tied middle ranks."
+    },
+    {
+      "id": "M08_lower_expectile_35",
+      "family": "iteratively reweighted linear expectile regression",
+      "expectile": 0.35,
+      "iterations": 4,
+      "hypothesis": "A lower expectile selects names with acceptable downside-conditioned expected return rather than highest mean alone."
+    },
+    {
+      "id": "M09_temporal_median_three_experts",
+      "family": "robust temporal ensemble",
+      "experts": "three Ridge daily-rank models on consecutive training-date thirds",
+      "aggregation": "median score",
+      "hypothesis": "A median of temporally distinct experts is less exposed to one historical regime."
+    },
+    {
+      "id": "M10_dispersion_mixture_rank",
+      "family": "point-in-time regime mixture",
+      "routing": "training-date median of prior_market_dispersion",
+      "experts": "low-dispersion and high-dispersion daily-rank Ridge",
+      "hypothesis": "Cross-sectional dispersion changes the mapping from lagged stock state to intraday continuation."
+    },
+    {
+      "id": "M11_lower_confidence_residual_penalty",
+      "family": "mean minus predictable-error penalty",
+      "score": "full-sample clipped-return Ridge mean - 0.5 * predicted absolute residual",
+      "residual_training": "mean model trained on first 70% of training dates and residual model fitted on the later 30%",
+      "hypothesis": "Penalising predictable forecast error improves realised utility by avoiding unstable names."
+    },
+    {
+      "id": "M12_quantile35_hgb",
+      "family": "nonlinear conditional quantile",
+      "quantile": 0.35,
+      "model": "HistGradientBoostingRegressor",
+      "hypothesis": "Nonlinear lower-quantile forecasts identify favourable outcomes with limited left-tail risk."
+    },
+    {
+      "id": "M13_dual_quantile_hgb",
+      "family": "nonlinear median/downside utility",
+      "score": "conditional median - 0.5 * (conditional median - conditional 20th percentile)",
+      "model": "two HistGradientBoostingRegressors",
+      "hypothesis": "A central-return forecast penalised by its conditional downside spread improves economic ranking."
+    }
+  ],
+  "multiplicity_and_stability": {
+    "family": "all 13 M-candidates",
+    "bootstrap": "2000 deterministic circular moving-block resamples, block length 10 sessions",
+    "adjustment": "single-step familywise max-t lower bounds for net40 uplift versus C00",
+    "tail_checks": "remove the best 5, 10, and 20 scheduled days at each cost",
+    "period_checks": "13 calendar months and three predeclared periods",
+    "concentration_checks": "largest selected-code share of total net20 slot PnL and unique selected codes"
+  }
+}

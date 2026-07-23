@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "protocol_id": "v10_momentum_diversification_falsification_20260723",
+  "registration_stage": "posthoc_after_H12_point_result_before_variant_results",
+  "authority": {
+    "retrospective_only": true,
+    "production_promotion_allowed": false,
+    "point_winner_is_already_viewed": true
+  },
+  "source": {
+    "round1_protocol": "/tmp/v10_policy_universe/protocol.json",
+    "round1_result": "/tmp/v10_policy_universe/result.json",
+    "reference": "H12_MOMENTUM_BUCKET_DIVERSIFICATION"
+  },
+  "question": "Was the small H12 uplift evidence for a specific and smooth momentum-diversification mechanism, or a local choice of horizon, split and weights?",
+  "fixed_evaluation": {
+    "cost_bps": [20, 40, 60],
+    "reference": "H12 exact reproduction",
+    "required": [
+      "13 monthly periods",
+      "four chronological blocks",
+      "top-20 winning-day removal",
+      "5 percent expected shortfall",
+      "code concentration",
+      "moving-block familywise 90 percent lower uplift versus H12"
+    ]
+  },
+  "variants": [
+    {
+      "id": "F00_H12_EXACT",
+      "definition": "Unrestricted ensemble leader plus best name in the opposite half of momentum-20; 50/50."
+    },
+    {
+      "id": "F01_MOMENTUM5_HALF",
+      "definition": "Replace momentum-20 with momentum-5; otherwise exact."
+    },
+    {
+      "id": "F02_MOMENTUM60_HALF",
+      "definition": "Replace momentum-20 with momentum-60; otherwise exact."
+    },
+    {
+      "id": "F03_OVERNIGHT20_HALF",
+      "definition": "Split on overnight_mean_20; otherwise exact."
+    },
+    {
+      "id": "F04_OCMEAN20_HALF",
+      "definition": "Split on oc_mean_20; otherwise exact."
+    },
+    {
+      "id": "F05_ATR_HALF",
+      "definition": "Split on xrank_atr14_pct; otherwise exact."
+    },
+    {
+      "id": "F06_CLOSE_LOCATION_HALF",
+      "definition": "Split on xrank_prior_close_location_20; otherwise exact."
+    },
+    {
+      "id": "F07_MOMENTUM20_LEADER75",
+      "definition": "Momentum-20 half split with 75 percent leader and 25 percent opposite-half name."
+    },
+    {
+      "id": "F08_MOMENTUM20_OPPOSITE75",
+      "definition": "Momentum-20 half split with 25 percent leader and 75 percent opposite-half name."
+    },
+    {
+      "id": "F09_MOMENTUM20_EXTREME_TERCILE",
+      "definition": "Leader plus best name in the farthest momentum-20 tercile; 50/50."
+    },
+    {
+      "id": "F10_MOMENTUM20_SIGN",
+      "definition": "Leader plus best name on the opposite side of zero momentum-20 rank; median split fallback; 50/50."
+    },
+    {
+      "id": "F11_MOMENTUM20_TOP10_OPPOSITE",
+      "definition": "Leader plus best opposite-half name only if it is in ensemble top 10; otherwise second ensemble name; 50/50."
+    },
+    {
+      "id": "F12_MOMENTUM20_TOP20_NEUTRAL",
+      "definition": "Leader plus the ensemble-top-20 name maximizing ensemble mean minus 0.10 times absolute pair-average momentum-20 exposure; 50/50."
+    },
+    {
+      "id": "F13_MOMENTUM20_EXTREMES_ONLY",
+      "definition": "Best name from the bottom momentum-20 tercile plus best name from the top tercile; 50/50."
+    },
+    {
+      "id": "F14_MOMENTUM20_RESIDUAL_ONLY",
+      "definition": "Cross-sectionally residualize ensemble mean against momentum-20 alone and take the top two; 50/50."
+    }
+  ],
+  "interpretation": {
+    "specificity_support": "The momentum-20 reference should beat at least four of five unrelated split variables and neither adjacent horizon should reverse its result.",
+    "smoothness_support": "At least two of the alternative weights/splits should remain above the original L4 control at net20 and after top-20 winning-day removal.",
+    "promotion": "No outcome can promote production; this round can only retain or falsify the mechanism for forward shadow."
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "protocol_id": "model_v10_market_residual_target_20260723",
+  "registered_at": "2026-07-23",
+  "status": "registered_before residual-target results; the underlying panel outcomes were previously viewed",
+  "authority": {
+    "analysis_type": "retrospective_mechanism_test",
+    "production_promotion_allowed": false,
+    "untouched_holdout_available": false
+  },
+  "frozen_input": {
+    "panel": "/tmp/model_v07_corrected_panel.pkl",
+    "panel_sha256": "6b86f994a1d15d1da8ed40469d44fc409adadc6cd5b3df3c08aef6717bcdf0eb",
+    "score_period": [
+      "2024-07-01",
+      "2025-07-31"
+    ],
+    "score_sessions": 266
+  },
+  "common_model": {
+    "features": [
+      "oc_last",
+      "oc_mean_5",
+      "oc_mean_20",
+      "oc_mean_60",
+      "oc_win_20",
+      "oc_std_20",
+      "overnight_last",
+      "overnight_mean_20",
+      "overnight_mean_60",
+      "night_day_corr_60",
+      "xrank_atr14_pct",
+      "xrank_close_momentum_5",
+      "xrank_close_momentum_20",
+      "xrank_close_momentum_60",
+      "xrank_prior_close_location_20"
+    ],
+    "estimator": "SimpleImputer(median, add_indicator=True) + StandardScaler + Ridge(alpha=1)",
+    "date_weights": "equal total training weight per exchange date",
+    "walk_forward": "calendar-month expanding; every fitted date strictly before score month",
+    "portfolio": "daily top1 at 100% and top2 at 50/50"
+  },
+  "hypotheses": [
+    {
+      "id": "R00_daily_raw_return_rank_control",
+      "target": "2 * within-date percentile rank(raw open-to-close return) - 1",
+      "role": "fixed control"
+    },
+    {
+      "id": "R01_prior_beta_market_residual_rank",
+      "market_return": "Each completed date's cross-sectional median open-to-close return among price_training_eligible and observed rows.",
+      "beta": "For each code/date, rolling OLS slope of stock open-to-close return on the same completed-date market return over the previous 60 observed eligible sessions, minimum 20; beta is shifted one code session and clipped to [-3,3]. Missing beta is 1 only for target construction.",
+      "residual_target": "stock open-to-close return - prior_beta * same-date market open-to-close return",
+      "fit_target": "2 * within-date percentile rank(residual_target) - 1",
+      "prediction": "Removing contemporaneous common-market payoff from the training target improves ranking of idiosyncratic same-day winners."
+    }
+  ],
+  "point_in_time": {
+    "score_date_market_return_is_never_a_feature": true,
+    "score_date_outcome_is_never_used_to_fit_or_route": true,
+    "beta_for_date_t_uses_only_completed_dates_before_t": true,
+    "same_date_market_return_is_used_only_inside_historical_training_targets": true
+  },
+  "metrics": [
+    "net20/net40/net60",
+    "13 monthly net40 means",
+    "discovery/confirmation_a/confirmation_b",
+    "best 20 days removed net20",
+    "top 10 profitable codes held in cash net20",
+    "daily overlap with raw-rank control"
+  ],
+  "acceptance": {
+    "all_required": [
+      "R01 net40 > R00 net40",
+      "R01 best-20-days-removed net20 > 0",
+      "R01 top-10-profit-codes-to-cash net20 > 0",
+      "R01 net20 positive in all three temporal slices",
+      "R01 at least 9 of 13 months positive at net40"
+    ],
+    "production_action": "none; passing means forward-shadow registration only"
+  }
+}
