@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "protocol_id": "model_v11_distributional_zero_base_20260723",
+  "protocol_sha256": "9e7b98550f3066ee6b6eb8ec0ebdaf8120d211020b7c24be29618786e124e480",
+  "occurred_at": "2026-07-23",
+  "stage": "first execution before aggregate result, picks, or performance metrics were generated",
+  "outcome_metrics_viewed": false,
+  "failure": "scikit-learn warned that fractional RandomForest max_samples=0.15 was being applied to the sum of date-equal sample weights, producing only 9 to 39 bootstrap draws instead of 15% of training rows.",
+  "action": "Execution was interrupted after the 2025-05 fold progress line. The implementation now converts the preregistered 15% row fraction to ceil(0.15 * training_rows) and passes that explicit integer to RandomForestRegressor.",
+  "hypothesis_or_gate_changed": false,
+  "protocol_changed": false,
+  "production_model_changed": false
+}

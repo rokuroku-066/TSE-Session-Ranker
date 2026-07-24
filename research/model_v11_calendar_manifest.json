@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "experiment_id": "model_v11_calendar_institution_zero_base_20260723",
+  "decision": "REJECT_ALL_CALENDAR_HYPOTHESES",
+  "production_ready": false,
+  "files": {
+    "model_v11_calendar_protocol.json": "23b4642e747e52c13ff62ffac36f438b4f88a622bb8cbb7323c7bd0495f58ddf",
+    "model_v11_calendar_protocol.sha256": "dd390527bc2374c89fbd392ab8485a4d80bab9600dc6f28e4cd3d7df31284eaf",
+    "model_v11_calendar_runner.py": "eced902fc0dfe2768eea79d461c63844b094081d56bbc5f7d9b731744e9c4033",
+    "model_v11_calendar_result.json": "0d2710712eeff8dd7f1e786edc0c13a9e75b9dfc10a6d369bb98d562a1282246",
+    "model_v11_calendar_picks.csv": "e357d760f6b82789a9a694450b32612bdc2ae7de97482adc3a8a999106404114",
+    "model_v11_calendar_audit.py": "87a6793c7eb52e511537173a72d0e081a5ed483e90e8ad6ac0683ab188efcdad",
+    "model_v11_calendar_audit.json": "399d3dac5845a7ff4b1d72e921249e28036a943edcd614d44eafe63c9381036d",
+    "model_v11_calendar_report.md": "3be25bea03df02b51b04cb6e0e251e2f8bb82d8e89785ba505110fb33790680e",
+    "test_model_v11_calendar.py": "fb16e4a4bf04cd95f5b924a56a39823cb5fb77f49862bca18599fad0939a5419"
+  },
+  "reproducibility": {
+    "runner_result_byte_identical": true,
+    "runner_picks_byte_identical": true,
+    "target_session_outcome_mutation_exact": true,
+    "independent_pnl_reproduction_exact": true
+  }
+}

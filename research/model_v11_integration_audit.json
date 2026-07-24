@@ -1,0 +1,939 @@
+{
+  "schema_version": 1,
+  "audit_id": "model_v11_cross_family_integration_20260723",
+  "audit_script_sha256": "1c3d9f3f688a3c2b95976662d09dc23ac1f014ed36bc4f822f90521f749fdd9e",
+  "audit_status": "pass",
+  "integrity": {
+    "checks": {
+      "all_seven_family_artifact_checks_pass": true,
+      "conceptual_hypothesis_total_is_67": true,
+      "candidate_policy_total_is_118": true,
+      "executable_spec_total_is_59": true,
+      "unique_selection_sequence_total_is_112": true,
+      "comparator_variant_total_is_14": true,
+      "scored_series_total_is_132": true,
+      "new_data_canonical_blocked_hypotheses_are_9": true,
+      "new_data_acquisition_groups_are_8": true,
+      "blocked_hypothesis_group_union_exact": true,
+      "all_tracks_bound_to_shared_panel": true,
+      "cross_family_ranking_is_prohibited": true,
+      "frozen_T02_protocol_sidecar_exact": true,
+      "frozen_T02_candidate_artifacts_exact": true,
+      "exact_data_blockers_derived": true
+    },
+    "passes": true
+  },
+  "families": [
+    {
+      "family": "new_data",
+      "protocol_id": "model_v11_new_data_zero_base_20260723",
+      "conceptual_hypotheses": 11,
+      "executable_specs": 3,
+      "candidate_policies": 6,
+      "familywise_gate_units": 6,
+      "selection_sequences": {
+        "candidate_variants": 6,
+        "comparator_variants": 2,
+        "scored_series": 8,
+        "unique_candidate_selection_sequences": 6,
+        "duplicate_economic_sequence_groups": [],
+        "deduplication_scope": "within_family_only",
+        "sequence_definition": "date/code portfolio weights after the frozen execute/cash rule; zero-weight cash sleeves omitted",
+        "picks_path": "research/model_v11_new_data_picks.csv",
+        "picks_sha256": "dd6d6716b5f29b79d54f96eee03995fe834b9128ba58f6882c4bc524e3cb1d3d"
+      },
+      "coverage": {
+        "score_start": "2024-06-03",
+        "score_end": "2025-07-31",
+        "score_sessions": 107,
+        "calendar_months": 6,
+        "denominator": "strict-source-complete accepted sessions"
+      },
+      "shared_panel_sha256": "6b86f994a1d15d1da8ed40469d44fc409adadc6cd5b3df3c08aef6717bcdf0eb",
+      "authority": {
+        "retrospective_only": true,
+        "production_promotion_allowed": false,
+        "lane_local_preregistration_does_not_create_fresh_OOT": true
+      },
+      "provenance_limitations": {
+        "historical_cache_receipt_timestamp_available": false,
+        "historical_archive_finality_proven": false,
+        "PIT_claim_scope": "publication timestamp plus fail-closed cache-page filter only"
+      },
+      "canonical_decision": {
+        "canonical_source": "independent_audit_and_manifest",
+        "pre_audit_result_status": null,
+        "result_was_pending_independent_audit": false,
+        "rule": "The manifest binds the result and independent audit; its no-promotion conclusion is canonical."
+      },
+      "decision": "exploratory_only_promotion_disabled",
+      "retrospective_passers": [],
+      "forward_shadow_finalist": null,
+      "production_flags": {
+        "protocol_promotion_allowed": false,
+        "result_production_ready": false,
+        "result_promotion_gate_enabled": false
+      },
+      "checks": {
+        "protocol_identity_matches_result_and_audit": true,
+        "result_protocol_hash_exact": true,
+        "audit_protocol_hash_exact": true,
+        "protocol_sidecar_matches_if_present": true,
+        "conceptual_hypothesis_count_exact": true,
+        "candidate_policy_count_exact": true,
+        "familywise_gate_units_exact": true,
+        "selection_inventory_candidate_count_exact": true,
+        "selection_inventory_series_partition_exact": true,
+        "shared_panel_hash_exact": true,
+        "result_integrity_passes": true,
+        "independent_audit_passes": true,
+        "retrospective_passers_empty": true,
+        "forward_finalist_absent": true,
+        "all_production_flags_false": true,
+        "manifest_protocol_id_exact": true,
+        "manifest_protocol_hash_exact": true,
+        "manifest_result_hash_exact": true,
+        "manifest_audit_hash_exact": true,
+        "manifest_production_ready_false": true,
+        "manifest_candidate_survived_false": true
+      },
+      "all_checks_pass": true,
+      "artifacts": {
+        "protocol": {
+          "path": "research/model_v11_new_data_protocol.json",
+          "sha256": "57f2b82e14f799ced47f58ec718e07d5e27dbf3a24f9299f628de03710ec789f"
+        },
+        "result": {
+          "path": "research/model_v11_new_data_result.json",
+          "sha256": "911b211d1d73f331127f511df3f7c40bb2d7dfc007a64e0d5673e78937a7b2ed"
+        },
+        "audit": {
+          "path": "research/model_v11_new_data_audit.json",
+          "sha256": "eb81eaac651375330f07b837d1fdcb795a0b79521c25d664e03f8d2d5c9ab21d"
+        },
+        "manifest": {
+          "path": "research/model_v11_new_data_manifest.json",
+          "sha256": "dfccaf741307dbe93f962128d581fe91f5aa7bf159817ff6198c8f4cee399db1"
+        }
+      }
+    },
+    {
+      "family": "analog",
+      "protocol_id": "v11_historical_analog_zero_base_20260723",
+      "conceptual_hypotheses": 10,
+      "executable_specs": 10,
+      "candidate_policies": 20,
+      "familywise_gate_units": 10,
+      "selection_sequences": {
+        "candidate_variants": 20,
+        "comparator_variants": 4,
+        "scored_series": 24,
+        "unique_candidate_selection_sequences": 20,
+        "duplicate_economic_sequence_groups": [],
+        "deduplication_scope": "within_family_only",
+        "sequence_definition": "date/code portfolio weights after the frozen execute/cash rule; zero-weight cash sleeves omitted",
+        "picks_path": "research/model_v11_analog_picks.csv",
+        "picks_sha256": "73f84f7d072fc889368380a445d187d80b41c0e25c576092f9f72c8eafafb76e"
+      },
+      "coverage": {
+        "score_start": "2024-07-01",
+        "score_end": "2025-07-31",
+        "score_sessions": 88,
+        "calendar_months": 5,
+        "denominator": "strict-source-complete event sessions"
+      },
+      "shared_panel_sha256": "6b86f994a1d15d1da8ed40469d44fc409adadc6cd5b3df3c08aef6717bcdf0eb",
+      "authority": {
+        "retrospective_only": true,
+        "production_promotion_allowed": false,
+        "lane_local_preregistration_does_not_create_fresh_OOT": true
+      },
+      "provenance_limitations": {
+        "historical_cache_receipt_timestamp_available": false,
+        "historical_archive_finality_proven": false,
+        "PIT_claim_scope": "publication timestamp plus fail-closed cache-page filter only"
+      },
+      "canonical_decision": {
+        "canonical_source": "independent_audit",
+        "pre_audit_result_status": "pending_independent_audit",
+        "result_was_pending_independent_audit": true,
+        "rule": "The runner result intentionally stops at pending; the later independent audit is the canonical decision."
+      },
+      "decision": "reject_family",
+      "retrospective_passers": [],
+      "forward_shadow_finalist": null,
+      "production_flags": {
+        "protocol_promotion_allowed": false,
+        "audit_production_gate_passes": false,
+        "audit_production_model_changed": false,
+        "audit_orders_allowed": false
+      },
+      "checks": {
+        "protocol_identity_matches_result_and_audit": true,
+        "result_protocol_hash_exact": true,
+        "audit_protocol_hash_exact": true,
+        "protocol_sidecar_matches_if_present": true,
+        "conceptual_hypothesis_count_exact": true,
+        "candidate_policy_count_exact": true,
+        "familywise_gate_units_exact": true,
+        "selection_inventory_candidate_count_exact": true,
+        "selection_inventory_series_partition_exact": true,
+        "shared_panel_hash_exact": true,
+        "result_integrity_passes": true,
+        "independent_audit_passes": true,
+        "retrospective_passers_empty": true,
+        "forward_finalist_absent": true,
+        "all_production_flags_false": true
+      },
+      "all_checks_pass": true,
+      "artifacts": {
+        "protocol": {
+          "path": "research/model_v11_analog_protocol.json",
+          "sha256": "823012afa89fe9ec982a7ca82c78c3f24697b6969d1d3fcaa73f5ee7d3b82e86"
+        },
+        "result": {
+          "path": "research/model_v11_analog_result.json",
+          "sha256": "6e2b2a12a27f11c5ce1c78e3bbf4080aeb50d3f4b76ced38b82d918d45860768"
+        },
+        "audit": {
+          "path": "research/model_v11_analog_audit.json",
+          "sha256": "542f0e602d10407225b8bf1180ef1158737b9c5ec6135d61bf2b8aba93d07679"
+        }
+      }
+    },
+    {
+      "family": "distributional",
+      "protocol_id": "model_v11_distributional_zero_base_20260723",
+      "conceptual_hypotheses": 8,
+      "executable_specs": 8,
+      "candidate_policies": 16,
+      "familywise_gate_units": 16,
+      "selection_sequences": {
+        "candidate_variants": 16,
+        "comparator_variants": 2,
+        "scored_series": 18,
+        "unique_candidate_selection_sequences": 15,
+        "duplicate_economic_sequence_groups": [
+          [
+            "D07_REGIME_ABSTAIN_K1",
+            "D07_REGIME_ABSTAIN_K2"
+          ]
+        ],
+        "deduplication_scope": "within_family_only",
+        "sequence_definition": "date/code portfolio weights after the frozen execute/cash rule; zero-weight cash sleeves omitted",
+        "picks_path": "research/model_v11_distributional_picks.csv",
+        "picks_sha256": "e648d4dd74eabc1d385b277dd78fb41ce23dfbbda0eaa0afd2a7cb94f0ff4f32"
+      },
+      "coverage": {
+        "score_start": "2024-07-01",
+        "score_end": "2025-07-31",
+        "score_sessions": 266,
+        "calendar_months": 13,
+        "denominator": "all price-eligible scheduled sessions"
+      },
+      "shared_panel_sha256": "6b86f994a1d15d1da8ed40469d44fc409adadc6cd5b3df3c08aef6717bcdf0eb",
+      "authority": {
+        "retrospective_only": true,
+        "production_promotion_allowed": false,
+        "lane_local_preregistration_does_not_create_fresh_OOT": true
+      },
+      "provenance_limitations": {
+        "historical_cache_receipt_timestamp_available": null,
+        "historical_archive_finality_proven": null,
+        "PIT_claim_scope": "price PIT checks; any TDnet-dependent subpolicy retains the shared historical-cache caveat"
+      },
+      "canonical_decision": {
+        "canonical_source": "finalized_result_and_independent_audit",
+        "pre_audit_result_status": null,
+        "result_was_pending_independent_audit": false,
+        "rule": "The finalized result embeds the independent audit and agrees with the standalone audit."
+      },
+      "decision": "reject_family",
+      "retrospective_passers": [],
+      "forward_shadow_finalist": null,
+      "production_flags": {
+        "protocol_promotion_allowed": false,
+        "result_production_model_changed": false,
+        "audit_production_model_changed": false
+      },
+      "checks": {
+        "protocol_identity_matches_result_and_audit": true,
+        "result_protocol_hash_exact": true,
+        "audit_protocol_hash_exact": true,
+        "protocol_sidecar_matches_if_present": true,
+        "conceptual_hypothesis_count_exact": true,
+        "candidate_policy_count_exact": true,
+        "familywise_gate_units_exact": true,
+        "selection_inventory_candidate_count_exact": true,
+        "selection_inventory_series_partition_exact": true,
+        "shared_panel_hash_exact": true,
+        "result_integrity_passes": true,
+        "independent_audit_passes": true,
+        "retrospective_passers_empty": true,
+        "forward_finalist_absent": true,
+        "all_production_flags_false": true
+      },
+      "all_checks_pass": true,
+      "artifacts": {
+        "protocol": {
+          "path": "research/model_v11_distributional_protocol.json",
+          "sha256": "9e7b98550f3066ee6b6eb8ec0ebdaf8120d211020b7c24be29618786e124e480"
+        },
+        "result": {
+          "path": "research/model_v11_distributional_result.json",
+          "sha256": "16dd511a10649fc104556ffb1a22e4c427b9c89e9c9353dc50161aad6814a39a"
+        },
+        "audit": {
+          "path": "research/model_v11_distributional_audit.json",
+          "sha256": "984ddcb65a39a4189d675060fb74e297b086689f0e4f531d2f7a1355ef6c8086"
+        }
+      }
+    },
+    {
+      "family": "uplift",
+      "protocol_id": "model_v11_uplift_zero_base_20260723",
+      "conceptual_hypotheses": 8,
+      "executable_specs": 8,
+      "candidate_policies": 16,
+      "familywise_gate_units": 16,
+      "selection_sequences": {
+        "candidate_variants": 16,
+        "comparator_variants": 0,
+        "scored_series": 16,
+        "unique_candidate_selection_sequences": 15,
+        "duplicate_economic_sequence_groups": [
+          [
+            "U06_PROPENSITY_OVERLAP_T_K1",
+            "U06_PROPENSITY_OVERLAP_T_K2"
+          ]
+        ],
+        "deduplication_scope": "within_family_only",
+        "sequence_definition": "date/code portfolio weights after the frozen execute/cash rule; zero-weight cash sleeves omitted",
+        "picks_path": "research/model_v11_uplift_picks.csv",
+        "picks_sha256": "c443146dcb72555d2fea0cff38948ecf67923f48ee00ebaa6d5a3fe17b93df91"
+      },
+      "coverage": {
+        "score_start": "2024-07-01",
+        "score_end": "2025-07-31",
+        "score_sessions": 88,
+        "calendar_months": 5,
+        "denominator": "strict-TDnet event-policy sessions"
+      },
+      "shared_panel_sha256": "6b86f994a1d15d1da8ed40469d44fc409adadc6cd5b3df3c08aef6717bcdf0eb",
+      "authority": {
+        "retrospective_only": true,
+        "production_promotion_allowed": false,
+        "lane_local_preregistration_does_not_create_fresh_OOT": true
+      },
+      "provenance_limitations": {
+        "historical_cache_receipt_timestamp_available": false,
+        "historical_archive_finality_proven": false,
+        "PIT_claim_scope": "audit verifies publication-time cutoff and source-completeness filter, not historical local receipt or archive finality"
+      },
+      "canonical_decision": {
+        "canonical_source": "independent_audit",
+        "pre_audit_result_status": "pending_independent_audit",
+        "result_was_pending_independent_audit": true,
+        "rule": "The runner result intentionally stops at pending; the later independent audit is the canonical decision."
+      },
+      "decision": "REJECT_ALL_UPLIFT_HYPOTHESES",
+      "retrospective_passers": [],
+      "forward_shadow_finalist": null,
+      "production_flags": {
+        "protocol_promotion_allowed": false,
+        "audit_production_ready": false
+      },
+      "checks": {
+        "protocol_identity_matches_result_and_audit": true,
+        "result_protocol_hash_exact": true,
+        "audit_protocol_hash_exact": true,
+        "protocol_sidecar_matches_if_present": true,
+        "conceptual_hypothesis_count_exact": true,
+        "candidate_policy_count_exact": true,
+        "familywise_gate_units_exact": true,
+        "selection_inventory_candidate_count_exact": true,
+        "selection_inventory_series_partition_exact": true,
+        "shared_panel_hash_exact": true,
+        "result_integrity_passes": true,
+        "independent_audit_passes": true,
+        "retrospective_passers_empty": true,
+        "forward_finalist_absent": true,
+        "all_production_flags_false": true
+      },
+      "all_checks_pass": true,
+      "artifacts": {
+        "protocol": {
+          "path": "research/model_v11_uplift_protocol.json",
+          "sha256": "611f9d16467fee02d5a17e415d0a0a6490917310509174ed43379c60d04c69cb"
+        },
+        "result": {
+          "path": "research/model_v11_uplift_result.json",
+          "sha256": "b155a35ad6d8d89324682be39e23c1016bf06a62122698bfab3915bcd6d5d504"
+        },
+        "audit": {
+          "path": "research/model_v11_uplift_audit.json",
+          "sha256": "d35de97959c66c28c705aff9a4e44339db2ec800377c20b09c670b3931b42a5d"
+        }
+      }
+    },
+    {
+      "family": "graph",
+      "protocol_id": "v11_cross_stock_graph_propagation_20260723",
+      "conceptual_hypotheses": 10,
+      "executable_specs": 10,
+      "candidate_policies": 20,
+      "familywise_gate_units": 10,
+      "selection_sequences": {
+        "candidate_variants": 20,
+        "comparator_variants": 4,
+        "scored_series": 24,
+        "unique_candidate_selection_sequences": 20,
+        "duplicate_economic_sequence_groups": [],
+        "deduplication_scope": "within_family_only",
+        "sequence_definition": "date/code portfolio weights after the frozen execute/cash rule; zero-weight cash sleeves omitted",
+        "picks_path": "research/model_v11_graph_picks.csv",
+        "picks_sha256": "adb0b48fa8340b9143fd8046a47c5f0b3e91a0546761978a6f32414380d4d760"
+      },
+      "coverage": {
+        "score_start": "2024-07-01",
+        "score_end": "2025-07-31",
+        "score_sessions": 266,
+        "calendar_months": 13,
+        "denominator": "all price-eligible scheduled sessions"
+      },
+      "shared_panel_sha256": "6b86f994a1d15d1da8ed40469d44fc409adadc6cd5b3df3c08aef6717bcdf0eb",
+      "authority": {
+        "retrospective_only": true,
+        "production_promotion_allowed": false,
+        "lane_local_preregistration_does_not_create_fresh_OOT": true
+      },
+      "provenance_limitations": {
+        "historical_cache_receipt_timestamp_available": null,
+        "historical_archive_finality_proven": null,
+        "PIT_claim_scope": "price PIT checks; any TDnet-dependent subpolicy retains the shared historical-cache caveat"
+      },
+      "canonical_decision": {
+        "canonical_source": "independent_audit",
+        "pre_audit_result_status": "pending_independent_audit",
+        "result_was_pending_independent_audit": true,
+        "rule": "The runner result intentionally stops at pending; the later independent audit is the canonical decision."
+      },
+      "decision": "reject_family",
+      "retrospective_passers": [],
+      "forward_shadow_finalist": null,
+      "production_flags": {
+        "protocol_promotion_allowed": false,
+        "audit_production_gate_passes": false,
+        "audit_production_model_changed": false,
+        "audit_orders_allowed": false
+      },
+      "checks": {
+        "protocol_identity_matches_result_and_audit": true,
+        "result_protocol_hash_exact": true,
+        "audit_protocol_hash_exact": true,
+        "protocol_sidecar_matches_if_present": true,
+        "conceptual_hypothesis_count_exact": true,
+        "candidate_policy_count_exact": true,
+        "familywise_gate_units_exact": true,
+        "selection_inventory_candidate_count_exact": true,
+        "selection_inventory_series_partition_exact": true,
+        "shared_panel_hash_exact": true,
+        "result_integrity_passes": true,
+        "independent_audit_passes": true,
+        "retrospective_passers_empty": true,
+        "forward_finalist_absent": true,
+        "all_production_flags_false": true
+      },
+      "all_checks_pass": true,
+      "artifacts": {
+        "protocol": {
+          "path": "research/model_v11_graph_protocol.json",
+          "sha256": "2f2382716ba9f7b151988470334b4da93bee5f68e30f7264beedcf16bf790244"
+        },
+        "result": {
+          "path": "research/model_v11_graph_result.json",
+          "sha256": "61042d0ac4e8f599eb4e7b58c1ed2860410314cd67e6a5dd75c6633bfdd8ef95"
+        },
+        "audit": {
+          "path": "research/model_v11_graph_audit.json",
+          "sha256": "d707d5cc78d7311c541283d4b7ffa1bc5fc0408e76f502c2ff3db5d9fd354eee"
+        }
+      }
+    },
+    {
+      "family": "shift",
+      "protocol_id": "model_v11_shift_zero_base_20260723",
+      "conceptual_hypotheses": 8,
+      "executable_specs": 8,
+      "candidate_policies": 16,
+      "familywise_gate_units": 16,
+      "selection_sequences": {
+        "candidate_variants": 16,
+        "comparator_variants": 2,
+        "scored_series": 18,
+        "unique_candidate_selection_sequences": 15,
+        "duplicate_economic_sequence_groups": [
+          [
+            "S06_UNSUPERVISED_LATENT_EXPERTS_K1",
+            "S06_UNSUPERVISED_LATENT_EXPERTS_K2"
+          ]
+        ],
+        "deduplication_scope": "within_family_only",
+        "sequence_definition": "date/code portfolio weights after the frozen execute/cash rule; zero-weight cash sleeves omitted",
+        "picks_path": "research/model_v11_shift_picks.csv",
+        "picks_sha256": "f71e7aeeb6f054dd7df58d9d83e809c7441a7fbf458d11f1b6d861f3e062910c"
+      },
+      "coverage": {
+        "score_start": "2024-07-01",
+        "score_end": "2025-07-31",
+        "score_sessions": 266,
+        "calendar_months": 13,
+        "denominator": "all price-eligible scheduled sessions"
+      },
+      "shared_panel_sha256": "6b86f994a1d15d1da8ed40469d44fc409adadc6cd5b3df3c08aef6717bcdf0eb",
+      "authority": {
+        "retrospective_only": true,
+        "production_promotion_allowed": false,
+        "lane_local_preregistration_does_not_create_fresh_OOT": true
+      },
+      "provenance_limitations": {
+        "historical_cache_receipt_timestamp_available": null,
+        "historical_archive_finality_proven": null,
+        "PIT_claim_scope": "price PIT checks; any TDnet-dependent subpolicy retains the shared historical-cache caveat"
+      },
+      "canonical_decision": {
+        "canonical_source": "finalized_result_and_independent_audit",
+        "pre_audit_result_status": null,
+        "result_was_pending_independent_audit": false,
+        "rule": "The finalized result embeds the independent audit and agrees with the standalone audit."
+      },
+      "decision": "reject_family",
+      "retrospective_passers": [],
+      "forward_shadow_finalist": null,
+      "production_flags": {
+        "protocol_promotion_allowed": false,
+        "result_production_model_changed": false,
+        "audit_production_model_changed": false
+      },
+      "checks": {
+        "protocol_identity_matches_result_and_audit": true,
+        "result_protocol_hash_exact": true,
+        "audit_protocol_hash_exact": true,
+        "protocol_sidecar_matches_if_present": true,
+        "conceptual_hypothesis_count_exact": true,
+        "candidate_policy_count_exact": true,
+        "familywise_gate_units_exact": true,
+        "selection_inventory_candidate_count_exact": true,
+        "selection_inventory_series_partition_exact": true,
+        "shared_panel_hash_exact": true,
+        "result_integrity_passes": true,
+        "independent_audit_passes": true,
+        "retrospective_passers_empty": true,
+        "forward_finalist_absent": true,
+        "all_production_flags_false": true
+      },
+      "all_checks_pass": true,
+      "artifacts": {
+        "protocol": {
+          "path": "research/model_v11_shift_protocol.json",
+          "sha256": "76d8c4129f57526c6d0a4d826779414c3ee4dcba48e818c72697ba8d3627a0cc"
+        },
+        "result": {
+          "path": "research/model_v11_shift_result.json",
+          "sha256": "3cdda4f91fd3e5f3e02e712c0fd000d9938cb2b31dc15d7d2a5d29fc280b858c"
+        },
+        "audit": {
+          "path": "research/model_v11_shift_audit.json",
+          "sha256": "fb24dafb6e04c26f879615125fe25ec7fee94b32bce257d0ac9b0f128bf34316"
+        }
+      }
+    },
+    {
+      "family": "calendar",
+      "protocol_id": "model_v11_calendar_institution_zero_base_20260723",
+      "conceptual_hypotheses": 12,
+      "executable_specs": 12,
+      "candidate_policies": 24,
+      "familywise_gate_units": 24,
+      "selection_sequences": {
+        "candidate_variants": 24,
+        "comparator_variants": 0,
+        "scored_series": 24,
+        "unique_candidate_selection_sequences": 21,
+        "duplicate_economic_sequence_groups": [
+          [
+            "C11_RELEASE_CLOCK_FAMILY_EB_K1",
+            "C11_RELEASE_CLOCK_FAMILY_EB_K2",
+            "C12_HIGH_DENSITY_FAMILY_EB_K1",
+            "C12_HIGH_DENSITY_FAMILY_EB_K2"
+          ]
+        ],
+        "deduplication_scope": "within_family_only",
+        "sequence_definition": "date/code portfolio weights after the frozen execute/cash rule; zero-weight cash sleeves omitted",
+        "picks_path": "research/model_v11_calendar_picks.csv",
+        "picks_sha256": "e357d760f6b82789a9a694450b32612bdc2ae7de97482adc3a8a999106404114"
+      },
+      "coverage": {
+        "score_start": "2024-07-01",
+        "score_end": "2025-07-31",
+        "score_sessions": 266,
+        "calendar_months": 13,
+        "denominator": "all price sessions; TDnet policies separately fail closed"
+      },
+      "shared_panel_sha256": "6b86f994a1d15d1da8ed40469d44fc409adadc6cd5b3df3c08aef6717bcdf0eb",
+      "authority": {
+        "retrospective_only": true,
+        "production_promotion_allowed": false,
+        "lane_local_preregistration_does_not_create_fresh_OOT": true
+      },
+      "provenance_limitations": {
+        "historical_cache_receipt_timestamp_available": false,
+        "historical_archive_finality_proven": false,
+        "PIT_claim_scope": "audit verifies publication-time cutoff and source-completeness filter, not historical local receipt or archive finality",
+        "official_calendar_dataset_provenance_available": false,
+        "calendar_feature_source": "deterministic functions of the frozen panel session index",
+        "SQ_status": "registered proxy, not an official SQ calendar"
+      },
+      "canonical_decision": {
+        "canonical_source": "independent_audit",
+        "pre_audit_result_status": "pending_independent_audit",
+        "result_was_pending_independent_audit": true,
+        "rule": "The runner result intentionally stops at pending; the later independent audit is the canonical decision."
+      },
+      "decision": "REJECT_ALL_CALENDAR_HYPOTHESES",
+      "retrospective_passers": [],
+      "forward_shadow_finalist": null,
+      "production_flags": {
+        "protocol_promotion_allowed": false,
+        "audit_production_ready": false
+      },
+      "checks": {
+        "protocol_identity_matches_result_and_audit": true,
+        "result_protocol_hash_exact": true,
+        "audit_protocol_hash_exact": true,
+        "protocol_sidecar_matches_if_present": true,
+        "conceptual_hypothesis_count_exact": true,
+        "candidate_policy_count_exact": true,
+        "familywise_gate_units_exact": true,
+        "selection_inventory_candidate_count_exact": true,
+        "selection_inventory_series_partition_exact": true,
+        "shared_panel_hash_exact": true,
+        "result_integrity_passes": true,
+        "independent_audit_passes": true,
+        "retrospective_passers_empty": true,
+        "forward_finalist_absent": true,
+        "all_production_flags_false": true
+      },
+      "all_checks_pass": true,
+      "artifacts": {
+        "protocol": {
+          "path": "research/model_v11_calendar_protocol.json",
+          "sha256": "23b4642e747e52c13ff62ffac36f438b4f88a622bb8cbb7323c7bd0495f58ddf"
+        },
+        "result": {
+          "path": "research/model_v11_calendar_result.json",
+          "sha256": "0d2710712eeff8dd7f1e786edc0c13a9e75b9dfc10a6d369bb98d562a1282246"
+        },
+        "audit": {
+          "path": "research/model_v11_calendar_audit.json",
+          "sha256": "399d3dac5845a7ff4b1d72e921249e28036a943edcd614d44eafe63c9381036d"
+        }
+      }
+    }
+  ],
+  "counts": {
+    "tracks": 7,
+    "conceptual_hypotheses": 67,
+    "executable_specs": 59,
+    "candidate_policies": 118,
+    "economically_unique_within_family_selection_sequences": 112,
+    "comparator_variants": 14,
+    "total_scored_series": 132,
+    "familywise_gate_units": 98,
+    "candidate_variants_passing": 0,
+    "forward_shadow_finalists": 0
+  },
+  "new_data_blocked_count_reconciliation": {
+    "canonical_blocked_hypothesis_count": 9,
+    "canonical_blocked_hypothesis_ids": [
+      "ND01_forecast_old_to_new",
+      "ND02_profit_delta_to_market_cap",
+      "ND03_buyback_pressure",
+      "ND06_pdf_table_shape_and_numeric_density",
+      "ND07_body_negation_and_cancellation",
+      "ND08_ose_futures_0858",
+      "ND09_tse_auction_0858",
+      "ND10_pts_night_and_day",
+      "ND11_pit_liquidity_and_unit_cost"
+    ],
+    "primary_acquisition_blocker_group_count": 8,
+    "primary_acquisition_blocker_groups": [
+      {
+        "group": "structured_forecast_numeric",
+        "hypothesis_ids": [
+          "ND01_forecast_old_to_new",
+          "ND02_profit_delta_to_market_cap"
+        ]
+      },
+      {
+        "group": "structured_buyback_and_capital",
+        "hypothesis_ids": [
+          "ND03_buyback_pressure"
+        ]
+      },
+      {
+        "group": "immutable_PDF_table_bytes",
+        "hypothesis_ids": [
+          "ND06_pdf_table_shape_and_numeric_density"
+        ]
+      },
+      {
+        "group": "document_body_text",
+        "hypothesis_ids": [
+          "ND07_body_negation_and_cancellation"
+        ]
+      },
+      {
+        "group": "exact_OSE_futures_snapshots",
+        "hypothesis_ids": [
+          "ND08_ose_futures_0858"
+        ]
+      },
+      {
+        "group": "preopen_TSE_orderbook",
+        "hypothesis_ids": [
+          "ND09_tse_auction_0858"
+        ]
+      },
+      {
+        "group": "venue_specific_PTS",
+        "hypothesis_ids": [
+          "ND10_pts_night_and_day"
+        ]
+      },
+      {
+        "group": "PIT_security_master_and_liquidity",
+        "hypothesis_ids": [
+          "ND11_pit_liquidity_and_unit_cost"
+        ]
+      }
+    ],
+    "explanation": "Nine is the canonical hypothesis count in the frozen result. Eight is only a source-acquisition grouping: ND01 and ND02 share the structured forecast-numeric feed as a prerequisite. The integration audit does not rewrite nine hypotheses as eight."
+  },
+  "selection_sequence_accounting": {
+    "candidate_variants": 118,
+    "unique_within_family_economic_sequences": 112,
+    "not_all_variants_are_economically_distinct": true,
+    "duplicate_groups_by_family": {
+      "distributional": [
+        [
+          "D07_REGIME_ABSTAIN_K1",
+          "D07_REGIME_ABSTAIN_K2"
+        ]
+      ],
+      "uplift": [
+        [
+          "U06_PROPENSITY_OVERLAP_T_K1",
+          "U06_PROPENSITY_OVERLAP_T_K2"
+        ]
+      ],
+      "shift": [
+        [
+          "S06_UNSUPERVISED_LATENT_EXPERTS_K1",
+          "S06_UNSUPERVISED_LATENT_EXPERTS_K2"
+        ]
+      ],
+      "calendar": [
+        [
+          "C11_RELEASE_CLOCK_FAMILY_EB_K1",
+          "C11_RELEASE_CLOCK_FAMILY_EB_K2",
+          "C12_HIGH_DENSITY_FAMILY_EB_K1",
+          "C12_HIGH_DENSITY_FAMILY_EB_K2"
+        ]
+      ]
+    },
+    "cross_family_deduplication_performed": false,
+    "reason": "Only within-family economic action paths are comparable; identical cash paths from incompatible families do not create a common statistical experiment."
+  },
+  "canonical_decision_precedence": {
+    "new_data": {
+      "canonical_source": "independent_audit_and_manifest",
+      "pre_audit_result_status": null,
+      "result_was_pending_independent_audit": false,
+      "rule": "The manifest binds the result and independent audit; its no-promotion conclusion is canonical."
+    },
+    "analog": {
+      "canonical_source": "independent_audit",
+      "pre_audit_result_status": "pending_independent_audit",
+      "result_was_pending_independent_audit": true,
+      "rule": "The runner result intentionally stops at pending; the later independent audit is the canonical decision."
+    },
+    "distributional": {
+      "canonical_source": "finalized_result_and_independent_audit",
+      "pre_audit_result_status": null,
+      "result_was_pending_independent_audit": false,
+      "rule": "The finalized result embeds the independent audit and agrees with the standalone audit."
+    },
+    "uplift": {
+      "canonical_source": "independent_audit",
+      "pre_audit_result_status": "pending_independent_audit",
+      "result_was_pending_independent_audit": true,
+      "rule": "The runner result intentionally stops at pending; the later independent audit is the canonical decision."
+    },
+    "graph": {
+      "canonical_source": "independent_audit",
+      "pre_audit_result_status": "pending_independent_audit",
+      "result_was_pending_independent_audit": true,
+      "rule": "The runner result intentionally stops at pending; the later independent audit is the canonical decision."
+    },
+    "shift": {
+      "canonical_source": "finalized_result_and_independent_audit",
+      "pre_audit_result_status": null,
+      "result_was_pending_independent_audit": false,
+      "rule": "The finalized result embeds the independent audit and agrees with the standalone audit."
+    },
+    "calendar": {
+      "canonical_source": "independent_audit",
+      "pre_audit_result_status": "pending_independent_audit",
+      "result_was_pending_independent_audit": true,
+      "rule": "The runner result intentionally stops at pending; the later independent audit is the canonical decision."
+    }
+  },
+  "evidence_limitations": {
+    "historical_TDnet_local_receipt_timestamp_available": false,
+    "historical_TDnet_archive_finality_proven": false,
+    "affected_families": [
+      "new_data",
+      "analog",
+      "uplift",
+      "calendar"
+    ],
+    "uplift_and_calendar_PIT_scope": "publication timestamp cutoff plus fail-closed source-completeness filtering only",
+    "calendar_official_calendar_provenance_available": false,
+    "calendar_feature_source": "deterministic functions of frozen panel session index",
+    "calendar_SQ_status": "proxy; no official SQ calendar dataset is bound",
+    "OOT_untouched_holdout_claim": false,
+    "interpretation": "No production evidence under the current freeze and available data; this is not a claim that no edge exists."
+  },
+  "window_compatibility": {
+    "cross_family_ranking_permitted": false,
+    "point_estimates_directly_comparable": false,
+    "common_window_post_hoc_ranking_permitted": false,
+    "distinct_session_counts": [
+      88,
+      107,
+      266
+    ],
+    "prohibition": "Do not rank or select families by return point estimates across incompatible windows. Do not retrofit a common window after viewing results."
+  },
+  "cross_family_authority": {
+    "shared_panel_sha256": "6b86f994a1d15d1da8ed40469d44fc409adadc6cd5b3df3c08aef6717bcdf0eb",
+    "shared_panel_track_count": 7,
+    "all_tracks_use_same_seen_panel": true,
+    "panel_status": "retrospective_project_seen",
+    "family_local_preregistration_restores_fresh_holdout": false,
+    "family_local_multiplicity_covers_cross_family_selection": false,
+    "global_118_variant_multiplicity_correction_performed": false,
+    "multiplicity_scope": "track_level_only",
+    "cross_family_ranking_permitted": false,
+    "cross_family_p_value_reported": false,
+    "cross_family_winner_selected": false,
+    "reason": "Score windows, source-completeness filters, universes, cash denominators, controls, and multiplicity methods are incompatible. All seven tracks reuse one project-seen outcome panel.",
+    "authorized_action": "falsify families and preserve zero candidates; any future selection requires a newly frozen policy and genuinely later data"
+  },
+  "fresh_OOT_and_execution": {
+    "protocol_id": "model_v11_t02_out_of_time_202508_202603",
+    "protocol_sha256": "5eceb8bf396a703a6a3bf217837331f6af95a7b303c91c79e639d132f575024d",
+    "untouched_holdout_claim": false,
+    "authority_note": "The same dates were previously evaluated by unrelated v0.4 classifiers and their aggregate returns have been inspected. T02 itself, its text representation, and its selection rule were frozen using data ending 2025-07-31 before this protocol.",
+    "protocol_sidecar_exact": true,
+    "bound_candidate_artifacts": {
+      "retrospective_protocol": {
+        "path": "research/model_v10_tdnet_text_protocol.json",
+        "present": true,
+        "sha256_exact": true
+      },
+      "retrospective_runner": {
+        "path": "research/model_v10_tdnet_text_runner.py",
+        "present": true,
+        "sha256_exact": true
+      },
+      "retrospective_result": {
+        "path": "research/model_v10_tdnet_text_result.json",
+        "present": true,
+        "sha256_exact": true
+      },
+      "forward_protocol": {
+        "path": "research/model_v10_forward_protocol.json",
+        "present": true,
+        "sha256_exact": true
+      }
+    },
+    "bound_candidate_artifacts_exact": true,
+    "evaluation_window": {
+      "warmup_session": "2025-08-01",
+      "score_start": "2025-08-04",
+      "score_end": "2026-03-31",
+      "expected_score_sessions": 159,
+      "minimum_source_complete_sessions": 120,
+      "minimum_calendar_months": 6,
+      "relationship_to_v10": "Every score session is later than the v10 panel end of 2025-07-31."
+    },
+    "available_raw_source_end": "2025-07-31",
+    "historical_cache_receipt_metadata_available": false,
+    "raw_window_reaches_score_start": false,
+    "t02_result_present": false,
+    "t02_audit_present": false,
+    "fresh_OOT_raw_data_complete": false,
+    "fresh_OOT_gate_passes": false,
+    "execution_checks": {
+      "exact_0858_execution_available": false,
+      "exact_0858_futures_available": false,
+      "exact_0858_orderbook_available": false,
+      "exact_0858_PTS_available": false,
+      "exact_0858_liquidity_available": false
+    },
+    "execution_gate_passes": false,
+    "exact_data_blockers": [
+      "frozen T02 OOT raw data missing",
+      "08:58 execution data missing",
+      "08:58 futures data missing",
+      "08:58 orderbook data missing",
+      "08:58 PTS data missing",
+      "08:58 liquidity data missing"
+    ],
+    "exact_blocker_summary": "frozen T02 OOT raw data missing; 08:58 execution/futures/orderbook/PTS/liquidity missing"
+  },
+  "production_decision": {
+    "conjunctive_rule": "A candidate requires every applicable family-specific gate, a fresh frozen OOT gate covering cross-family selection, every 08:58 execution gate, and independent approval.",
+    "checks": {
+      "all_family_artifact_and_audit_checks_pass": true,
+      "every_family_specific_retrospective_gate_passes": false,
+      "cross_family_selection_has_fresh_evidence": false,
+      "frozen_T02_fresh_OOT_gate_passes": false,
+      "execution_gate_passes": false,
+      "independent_production_approval_recorded": false
+    },
+    "all_required": true,
+    "passes": false,
+    "production_candidate_count": 0,
+    "candidate_variants_considered": 118,
+    "candidate_variants_passing_family_gates": 0,
+    "production_model_changed": false,
+    "orders_allowed": false,
+    "decision": "NO_PRODUCTION_CANDIDATE",
+    "exact_data_blockers": [
+      "frozen T02 OOT raw data missing",
+      "08:58 execution data missing",
+      "08:58 futures data missing",
+      "08:58 orderbook data missing",
+      "08:58 PTS data missing",
+      "08:58 liquidity data missing"
+    ],
+    "additional_authority_blockers": [
+      "no family-specific retrospective gate passer",
+      "within-family multiplicity does not cover cross-family selection",
+      "shared historical panel is not fresh OOT evidence"
+    ]
+  }
+}

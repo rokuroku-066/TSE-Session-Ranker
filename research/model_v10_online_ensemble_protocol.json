@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "protocol_id": "model_v10_online_expert_ensemble_20260723",
+  "registered_at": "2026-07-23",
+  "status": "registered_before_daily_pick_payload_was_read; aggregate expert results were already known",
+  "authority": {
+    "analysis_type": "retrospective_mechanism_test",
+    "production_promotion_allowed": false,
+    "untouched_holdout_available": false
+  },
+  "objective": {
+    "decision_time": "08:58:59 Asia/Tokyo",
+    "target": "same-session open-to-close return",
+    "daily_slots": 2,
+    "allocation": "50/50; missing slots stay in cash",
+    "primary_metric": "scheduled-day mean after 40 bp round-trip cost",
+    "reported_cost_bps": [
+      20,
+      40,
+      60
+    ]
+  },
+  "expert_library": {
+    "source": "/tmp/v10_model_architectures/picks.csv",
+    "expected_experts": 14,
+    "rule": "Use every preregistered architecture expert, including the price-core control. Do not remove an expert based on its realized full-period performance.",
+    "daily_expert_return": "Equal-weight two-slot open-to-close return; an unobserved slot is cash; subtract 40 bp only from observed slots."
+  },
+  "hypotheses": [
+    {
+      "id": "O01_softmax_ewma_vote_hl20",
+      "definition": "For each expert, compute an EWMA of clipped daily net40 returns using only completed prior dates, half-life 20 sessions. Convert the prior EWMA values to softmax weights with temperature 0.50 percentage points. Give each expert's rank 1 candidate one full weighted vote and rank 2 candidate one half weighted vote; sum votes by code and display the two largest.",
+      "initial_state": "All experts have EWMA value zero and equal softmax weight.",
+      "return_clip_pct": [
+        -5.0,
+        5.0
+      ],
+      "tie_break": [
+        "aggregate vote descending",
+        "best weighted contributing rank ascending",
+        "code ascending"
+      ],
+      "prediction": "Online evidence pooling adapts to model drift without selecting one full-sample winner."
+    },
+    {
+      "id": "O02_equal_vote_control",
+      "definition": "Use equal expert weights every date with the same rank-1/full and rank-2/half voting rule.",
+      "prediction": "Diversification alone, without outcome feedback, may stabilize the daily top two."
+    },
+    {
+      "id": "O03_follow_leader_hl20",
+      "definition": "Use the two candidates of the single expert with the largest strictly-prior 20-session EWMA net40; ties resolve by expert id.",
+      "initial_state": "Use C00_daily_rank_ridge until one completed score date is available.",
+      "return_clip_pct": [
+        -5.0,
+        5.0
+      ],
+      "prediction": "A hard online regime switch may adapt faster than convex voting."
+    }
+  ],
+  "point_in_time": {
+    "today_return_never_updates_today_weight": true,
+    "weights_are_shifted_one_complete_score_session": true,
+    "candidate_and_outcome_rows_are_never_used_before_their_date": true,
+    "target_day_mutation_test": "Replace each target day's returns after candidate selection and require candidate keys to remain exact."
+  },
+  "required_checks": [
+    "net20/net40/net60",
+    "13 monthly means",
+    "three fixed temporal slices",
+    "best 20 days removed",
+    "top 10 profitable codes held in cash",
+    "daily candidate overlap with C00",
+    "expert weight concentration",
+    "independent P&L recomputation"
+  ],
+  "acceptance": {
+    "all_required": [
+      "net40 > C00 net40",
+      "net20 after best 20 winning days removed > 0",
+      "at least 9 of 13 months have positive net40",
+      "net20 positive in discovery, confirmation_a, and confirmation_b",
+      "top 10 profitable codes held in cash leaves net20 > 0"
+    ],
+    "production_action": "none; a passing result would become forward-shadow only"
+  }
+}

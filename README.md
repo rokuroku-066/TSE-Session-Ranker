@@ -5,7 +5,7 @@
 現行CLI/APIの既定モデルは0.3.0互換の`session_v3_tdnet_clear`です。正則化ロジスティック回帰に、価格履歴12特徴と寄り前までのTDnet適時開示6特徴を入力し、1位を`CORE`、2位を`RESERVE`として表示します。
 
 > [!WARNING]
-> **自動発注には使用できません。** v0.8の同日順位Ridgeは既知期間でプラスでしたが、全結果を見た後のretrospective探索であり、追加特徴の多重比較調整後の優位性は未証明です。毎日top2のshadow表示は維持しますが、productionモデルは変更していません。CLIの既存`CORE` / `ORDER_ELIGIBLE`も研究上の発注承認を意味しません。
+> **自動発注には使用できません。** v1.1では情報源・推定対象・意思決定構造が異なる7系統をゼロベースで検証しましたが、118 variantの本番gate通過は0件でした。凍結T02のOOT rawと08:58実行証拠も未充足です。productionモデルは変更しておらず、CLIの既存`CORE` / `ORDER_ELIGIBLE`も研究上の発注承認を意味しません。
 
 ## 最新の研究判断
 
@@ -24,8 +24,66 @@
 | v0.8 L4平均役 | G0 + `flat_oc_rate_20`、同日順位Ridge | 固定shadow候補 | net20 `+0.283192%/日`、net40 `+0.086575%/日` |
 | v0.8 L6頑健役 | G0 + 売買不能・横ばいproxy 4列、同日順位Ridge | 固定shadow候補 | net20 `+0.259376%/日`、net40 `+0.068023%/日` |
 | v0.8 TDnet | fresh/follow-up・時刻・bundle等12群 | 追加採用0群 | source-complete `187/266日`、全群不合格 |
+| v0.9 L4 rank 2 | L4のscore順位2位へ100% | 1銘柄shadow対照 | net20 `+0.425289%/日`、net40 `+0.229048%/日` |
+| v0.9 25/75 | L4 rank 1/2へ25%/75% | 分散shadow対照 | net20 `+0.354240%/日`、13/13か月プラス |
+| v0.9 valid-OC breadth | 前営業日の始値→終値breadthでL4/L6 rank 2を切替 | retrospective predecessor | net20 `+0.487187%/日`、net60 `+0.093202%/日` |
+| **v1.0 T02 TDnet text** | 開示タイトルchar 2–5gram TF-IDF + value Ridge | **前向きexploratory shadow・実発注不可** | 88日でnet20 `+0.719059%/日`、net40 `+0.519059%/日`、net60 `+0.319059%/日` |
+| **v1.1 zero-base audit** | 7機構family、59 spec・118 capacity variant | **全件棄却・本番候補0** | family gate `0/118` |
 
-v0.8ではゼロベースで、価格・市場状態12群、売買可能性13群、TDnet 12群、非線形変換6群の計43特徴仮説と5つのユニバース仮説をすべてwalk-forward評価しました。単純な上昇確率より、各日の始値→終値リターン順位を目的変数にしたRidgeが良好でした。ただしL4のG0比改善は`+0.027871pt/日`に対してmax-statistic調整後の片側80%下限が`-0.094078pt`で、特徴追加の優位性は証明できていません。同じ結果を再利用する探索はここで停止し、2026-07-23以降の未使用セッションへ仕様を固定します。v0.6候補は[feature candidate inventory](research/model_v06_feature_candidates.md)、v0.8の全候補定義は[feature protocol](research/model_v08_feature_protocol.json)・[target protocol](research/model_v08_target_protocol.json)・[TDnet protocol](research/model_v08_tdnet_protocol.json)、全経緯は追記専用の[VALIDATION.md](VALIDATION.md)にあります。3系統のhash chainと全候補の収録は[aggregate audit](research/audit_model_v08_zero_base.py)で機械検証できます。
+v0.8では価格・市場状態、売買可能性、TDnet、非線形変換の計43特徴仮説と5ユニバース仮説を評価した。v0.9では有力仕様の誤差から、個別誤差/meta 20件、target・portfolio 33件、breadth反証4件の計57件を追加検証した。v1.0では19本の一次資料から12仮説を事前登録し、13モデル構造、16方策・ユニバース案、TDnetタイトル10案、外部市場8案、online expert、market/peer residualを月次walk-forwardで比較した。v1.1では67の概念仮説をnew data、historical analog、distributional decision、uplift、cross-stock graph、distribution shift、calendar/institutionへ分け、58実装可能仮説と1固定combinationを118 capacity variantとして反証した。
+
+独立監査の結果、v0.9 breadthの追加価値は未証明であり、v1.0のpolicy Round 2も「5比較中4勝」のはずが4比較しか実装されていなかったため昇格判断を撤回した。点推定首位のT02も、好成績20日除外後net20 `-0.572088%/日`、上位利益10コードを現金化すると`-0.108484%/日`、familywise reality-check `p=0.2103`である。v1.1でもfamily gate通過は0件だったため、新しいproduction採用は0件。全経緯は追記専用の[VALIDATION.md](VALIDATION.md)、v1.1の横断判断は[integration report](research/model_v11_integration_report.md)、入力不足は[data-readiness report](research/model_v11_production_readiness_report.md)、条件を変えないT02の次回評価は[OOT protocol](research/model_v11_t02_oot_protocol.json)に保存する。
+
+### v1.1ゼロベース検証
+
+```text
+conceptual hypotheses:                 67
+executable hypotheses + fixed combo: 58 + 1
+capacity variants:                    118
+family-local unique selections:       112
+family gate passers:                  0
+forward finalists:                    0
+production candidates:                0
+```
+
+7系統は同じ微調整の枝ではなく、異なる情報・目的変数・選択機構から作った。評価窓はstrict-source 88日、new-data 107日、price-panel 266日で、universe、cash denominator、controlも異なるため、点推定だけの横断順位は作っていない。distributional、shift、calendarにはnet40が正の代表仕様もあったが、familywise下限、tail除外、期間slice、銘柄集中のいずれかを通過できなかった。
+
+凍結T02を変えずに評価する2025-08-04～2026-03-31のOOT protocolも登録した。ただし現在のworkspaceで再現可能なrawはJPX `0/160`、TDnet `0/243`、joint provenance-completeはminimum `0/120`である。data-readiness verifierは20件の重複し得るblocking requirementと、先物・PTS・出来高の任意research context 3項目を分離し、ファイル名やheaderだけを証拠にしない。registry・parser audit・source manifestをhash固定し、JPX raw再parse、TDnet page/meta照合、T02 decisionの独立replay、全注文結果の完全被覆、08:58 bid/ask・tick/lot・spread/slippage再計算、予定額と実約定額双方の日次合計capacityまで通らなければ入力readyにしない。自己申告auditは内部整合性までしか通さず、dated security master・価格履歴からの参照値再計算と外部認証がない限りexecution evidenceをvalidにしない。hashは内部整合性を示すだけで外部真正性や本番認可を示さず、登録期間もgenuinely untouchedではない。したがって現時点の判断は`orders_allowed=false`で、既存package/productionモデルは変更しない。
+
+### v1.0暫定shadow仕様
+
+```text
+08:58:59 JSTまでに公開・受信・計算が完了し、
+source-completeと判定できるTDnet開示だけを使用
+
+同一銘柄の対象タイトルを公開時刻順に連結
+char 2–5gram TF-IDF:
+    min_df=3, max_features=30000, sublinear_tf=True, norm="l2"
+value target:
+    学習期間の1/99 percentileでclip後、[-10,+10]%へclip
+model:
+    Ridge(alpha=20)
+decision:
+    予測値降順、同点は銘柄コード昇順のtop1
+    eventなし・source欠落は現金、価格モデルfallbackなし
+```
+
+これは勝率ではなく平均損益を狙うため、88日のnet40勝率は47.7%、中央値は負でも平均が正になった。ただし右裾依存が強い。最低120 source-complete営業日・4か月、前後半net40正、L4比の片側90%下限非負、tail/code除外後も正、PIT遵守率98%以上、実spread・slippage・最低単元の合格をすべて満たすまで実発注へ昇格させない。
+
+### v0.9暫定shadow仕様
+
+```text
+prior_market_oc_breadth =
+    前営業日の traded & outcome_observed & source_complete 銘柄について
+    mean(open_to_close_return > 0)
+
+prior_market_oc_breadth < 0.50:
+    L4のscore順位2位を1銘柄
+otherwise:
+    L6のscore順位2位を1銘柄
+```
+
+表示銘柄へstrategy sleeveの100%を配分する評価で、2024-07～2025-07のnet20は`+0.487187%/日`だった。ただし既知期間のposthoc結果であり、best 20日または上位利益10コードを除くと余裕は小さい。並走対照として、L4 rank 1/2の50/50、L4 rank 2単独、L4 rank 1/2の25/75を同時保存する。breadth閾値・rank・配分はforward中に変更しない。
 
 ### v0.8固定shadow仕様
 
@@ -49,6 +107,9 @@ L4・L6とも60bpコストではマイナスで、L4は単一銘柄が総損益�
 - v0.6では特徴候補を先に7群へ固定し、共通モデルのgroup ablationで追加寄与を分離。次期間まで残った追加群は0
 - v0.7では表示top2を固定し、モデル間合意・スコア形状・downsideと、事前日足tailを発注gateとして分離。未合格枠はrank 3で置換せず現金
 - v0.8ではモデル固定を外して17 target/model案を比較し、日内の市場共通変動を落とす同日順位Ridgeを固定shadowへ採用。追加特徴のproduction採用は0群
+- v0.9では57件を追加反証し、`prior_market_oc_breadth`でL4/L6のrank 2を切り替える1銘柄規則を前向きshadowへ固定。production採用は0
+- v1.0では先行研究・モデル構造・方策・外部市場・TDnet text・online/residualをゼロベース比較。T02 text-value top1を前向きexploratory shadowへ固定したが、tail/code集中と多重性のためproduction採用は0
+- v1.1では情報源・推定対象・意思決定構造の異なる7 familyを独立protocolで反証。118 variantのgate通過0、非互換窓の横断順位なし、fresh OOTと実行証拠が揃うまでproduction採用0
 - 学習ラベルは`close > open`または損益・同日順位。研究仕様の採否は勝率ではなくコスト後損益で決定し、v0.5の主指標はtop2等金額
 - 対象日OHLCを特徴量へ入れず、価格特徴はすべて1セッション以上shift
 - 適時開示は各文書を「公開時刻以前で最初に到来する08:58:59 JSTの取引日」へ割当

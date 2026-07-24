@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "protocol_id": "v10_h12_incremental_concentration_audit_20260723",
+  "registration_stage": "posthoc_after_round1_and_round2; standard incremental-value audit",
+  "authority": {
+    "retrospective_only": true,
+    "production_promotion_allowed": false
+  },
+  "reference": {
+    "candidate": "H12_MOMENTUM_BUCKET_DIVERSIFICATION / F00_H12_EXACT",
+    "control": "C00_L4_TOP2_EQUAL",
+    "reason": "Absolute strategy robustness is insufficient; the replacement decision depends on robustness of the matched daily improvement over the existing control."
+  },
+  "audits": [
+    "matched daily uplift at 20/40/60 bp",
+    "uplift after removing the 5, 10 and 20 largest positive uplift days",
+    "1/99 and 5/95 winsorized daily uplift",
+    "uplift by all 13 months and four chronological blocks",
+    "moving-block confidence interval",
+    "candidate overlap and selected-leg decomposition",
+    "leave-one-code-out uplift",
+    "share of positive uplift from the 5, 10 and 20 largest uplift days",
+    "random binary style-split null preserving ensemble order",
+    "tail-risk change versus control"
+  ],
+  "fixed_support_rule": {
+    "requirements": [
+      "top-20 positive-uplift days removed mean remains positive",
+      "at least 8 of 13 monthly uplifts are positive",
+      "all four chronological blocks have nonnegative uplift",
+      "1/99 winsorized uplift remains positive",
+      "ordinary moving-block one-sided 90 percent lower uplift exceeds zero",
+      "random-split one-sided p-value is below 0.10",
+      "expected shortfall 5 percent is no worse than control"
+    ],
+    "interpretation": "Failure means the mechanism is not a robust replacement. It may remain a labelled forward research arm, but not the primary shadow specification."
+  },
+  "random_null": {
+    "seed": 20260723,
+    "repetitions": 5000,
+    "definition": "Keep the ensemble leader. Assign subsequent ensemble-ordered candidates independently to the opposite pseudo-style group with probability 0.5 and take the first opposite candidate, which is the null analogue of an arbitrary binary style split."
+  }
+}

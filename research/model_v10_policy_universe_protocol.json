@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "protocol_id": "v10_zero_base_policy_universe_20260723",
+  "registered_at_jst": "2026-07-23",
+  "authority": {
+    "retrospective_only": true,
+    "untouched_confirmation_available": false,
+    "production_promotion_allowed": false,
+    "reason": "The frozen panel outcomes have already been viewed in earlier project rounds. This is a mechanism screen, not a sealed holdout."
+  },
+  "frozen_input": {
+    "panel": "/tmp/model_v07_corrected_panel.pkl",
+    "panel_sha256": "6b86f994a1d15d1da8ed40469d44fc409adadc6cd5b3df3c08aef6717bcdf0eb",
+    "score_period": ["2024-07-01", "2025-07-31"],
+    "training_start": "2024-01-04",
+    "folds": "calendar-month expanding walk-forward; every fitted target is strictly before the scoring month"
+  },
+  "objective": {
+    "decision_time": "before the same-session open",
+    "return": "same-session open-to-close percent",
+    "primary": "scheduled-day portfolio mean after 20 bp round-trip cost",
+    "stress_cost_bps": [40, 60],
+    "candidate_goal": "normally one or two names per session; explicit abstention hypotheses may hold cash",
+    "allocation": "weights are fixed before target-day outcomes; missing execution remains cash"
+  },
+  "guardrails": {
+    "forbidden": [
+      "selecting L4 rank 2 alone",
+      "switching L4/L6 on prior market breadth",
+      "changing a threshold after reading this run",
+      "promoting any retrospective winner to production"
+    ],
+    "required": [
+      "20/40/60 bp results",
+      "monthly and four-block stability",
+      "top-5/top-10/top-20 winning-day removal",
+      "worst-day and expected-shortfall diagnostics",
+      "code and day concentration",
+      "multiplicity-aware comparison with the control"
+    ]
+  },
+  "scorers": {
+    "G0": "daily-rank Ridge alpha=1 with the 15 base features",
+    "L4": "G0 plus flat_oc_rate_20",
+    "L6": "G0 plus no_trade_rate_20, no_trade_rate_60, flat_oc_rate_20, zero_range_rate_20",
+    "normalization": "within-session percentile rank separately for each scorer"
+  },
+  "control": {
+    "id": "C00_L4_TOP2_EQUAL",
+    "definition": "L4 top two, 50 percent each"
+  },
+  "hypotheses": [
+    {
+      "id": "H01_ENSEMBLE_MEAN",
+      "definition": "Top two by the mean within-session percentile across G0, L4 and L6; equal weights.",
+      "mechanism": "Model averaging should reduce feature-set specification noise."
+    },
+    {
+      "id": "H02_ENSEMBLE_WORSTCASE",
+      "definition": "Top two by the minimum of the three within-session model percentiles; equal weights.",
+      "mechanism": "A pessimistic score rewards candidates that remain strong under every specification."
+    },
+    {
+      "id": "H03_DISAGREEMENT_PENALTY",
+      "definition": "Top two by ensemble mean minus 0.50 times cross-model percentile standard deviation; equal weights.",
+      "mechanism": "Explicit uncertainty penalization should avoid unstable extrapolations."
+    },
+    {
+      "id": "H04_STABLE_TOPSET",
+      "definition": "Order first by the number of models placing the name in their top 20, then by ensemble mean; select two equally.",
+      "mechanism": "Top-set stability is a rank-robust alternative to relying on one exact ordering."
+    },
+    {
+      "id": "H05_INVERSE_UNCERTAINTY_WEIGHT",
+      "definition": "Use the top two by ensemble mean and allocate in proportion to 1/(0.05 + cross-model percentile standard deviation).",
+      "mechanism": "Keep diversification while assigning less capital to model-sensitive names."
+    },
+    {
+      "id": "H06_GAP_CONFIDENCE_COUNT",
+      "definition": "Use one fully invested name when the ensemble top1-minus-top3 gap exceeds the strictly-prior trailing-60-session median gap; otherwise use the top two equally. Default to two until 20 prior gaps exist.",
+      "mechanism": "Candidate count should respond to cross-sectional separability, not a fixed rank preference."
+    },
+    {
+      "id": "H07_LIQUIDITY_RELIABILITY_UNIVERSE",
+      "definition": "Restrict to no_trade_rate_20 at or below the session median and flat_oc_rate_20 at or below the session 75th percentile, then take the top two by ensemble mean.",
+      "mechanism": "A reliability universe may reduce stale-price and non-execution artifacts."
+    },
+    {
+      "id": "H08_ADVERSE_EVENT_EXCLUSION",
+      "definition": "Exclude pre-open adverse-event flags (downward revision/dividend, external financing, impairment, audit problem, correction or support/adverse conflict), then take the top two by ensemble mean.",
+      "mechanism": "A technical score may be invalidated by a contemporaneous negative disclosure."
+    },
+    {
+      "id": "H09_EVENT_BARBBELL",
+      "definition": "When a TDnet-event name is in the top ensemble decile, allocate 25 percent to the best such event and 75 percent to the best no-event name; otherwise use the best two no-event names equally.",
+      "mechanism": "Separate event alpha from the broad technical signal without letting sparse events dominate."
+    },
+    {
+      "id": "H10_STYLE_RESIDUAL",
+      "definition": "Each session regress ensemble mean on momentum-20 rank, ATR rank and prior-close-location rank; select the top two residuals equally.",
+      "mechanism": "Remove common style exposures and rank idiosyncratic predicted alpha."
+    },
+    {
+      "id": "H11_RISK_UTILITY",
+      "definition": "Rank ensemble mean - 0.15*ATR percentile - 0.10*OC-volatility percentile + 0.05*OC-mean20 percentile; select two equally.",
+      "mechanism": "Optimize predicted alpha net of observable intraday risk rather than score alone."
+    },
+    {
+      "id": "H12_MOMENTUM_BUCKET_DIVERSIFICATION",
+      "definition": "Select the ensemble leader and the highest ensemble name from the opposite half of the session momentum-20 distribution; allocate equally.",
+      "mechanism": "Diversify latent momentum exposure while preserving one unconstrained leader."
+    },
+    {
+      "id": "H13_LOW_CORRELATION_PAIR",
+      "definition": "Select the ensemble leader, then choose from ensemble ranks 2-10 by ensemble percentile minus 0.15 times its trailing-60-session OC correlation mapped to [0,1] with the leader; allocate equally.",
+      "mechanism": "Pair-level diversification may improve tail behavior without discarding predicted return."
+    },
+    {
+      "id": "H14_POSTERIOR_NET_ABSTAIN",
+      "definition": "Estimate the strictly-prior out-of-sample net20 mean of the daily ensemble top-decile with a zero-mean 50-observation prior; take the ensemble top two only when the posterior mean is positive, otherwise hold cash.",
+      "mechanism": "Trade only when realised out-of-sample evidence says the current score region clears costs."
+    },
+    {
+      "id": "H15_SPREAD_CASH_OVERLAY",
+      "definition": "Use ensemble top two equally but set total exposure to clip(current top1-top3 gap / strictly-prior trailing-60 gap 75th percentile, 0.25, 1.00); default 50 percent exposure until 20 prior gaps exist.",
+      "mechanism": "Scale gross exposure continuously with cross-sectional signal strength."
+    },
+    {
+      "id": "H16_EVENT_AWARE_UTILITY",
+      "definition": "Add 0.05 to ensemble utility for supportive revision/dividend/buyback flags and subtract 0.10 for adverse flags, then select two equally.",
+      "mechanism": "Use disclosure direction as a bounded overlay rather than a separate event-only strategy."
+    }
+  ],
+  "selection_policy": {
+    "no_reselection": "All sixteen hypotheses are reported. A point winner is descriptive only.",
+    "retrospective_shortlist_rule": [
+      "net20 greater than control",
+      "net40 positive",
+      "top20-winning-days-removed net20 positive",
+      "at least 8 of 13 positive months",
+      "all four chronological blocks nonnegative",
+      "multiplicity-adjusted one-sided 90 percent lower uplift above zero"
+    ],
+    "forward_action": "A mechanism passing all retrospective checks may only become a separately named shadow challenger."
+  }
+}

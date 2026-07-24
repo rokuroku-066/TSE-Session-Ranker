@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "protocol_id": "v10_t02_forward_shadow_20260724",
+  "registered_on": "2026-07-23",
+  "timezone": "Asia/Tokyo",
+  "authority": {
+    "purpose": "prospective exploratory shadow validation",
+    "production_model_changed": false,
+    "production_promotion_allowed_during_run": false,
+    "orders_allowed": false
+  },
+  "bound_retrospective_artifacts": {
+    "protocol": {
+      "path": "research/model_v10_tdnet_text_protocol.json",
+      "sha256": "700b0262f805c37659453af72651897d116e8bd1f6329a602989b90b212c5b3a"
+    },
+    "runner": {
+      "path": "research/model_v10_tdnet_text_runner.py",
+      "sha256": "f49203ef23a6ff15bb609178c6c3aa278b3d052e6383503703a45ec1b3e67744"
+    },
+    "result": {
+      "path": "research/model_v10_tdnet_text_result.json",
+      "sha256": "3a40e3541fb24f89f2b009b48b2af4d3a84afe2e96ce03010ea0a87442800196"
+    }
+  },
+  "candidate": {
+    "id": "v10_t02_char_value_event_top1",
+    "decision_cutoff": "08:58:59",
+    "universe": "stocks with at least one qualifying overnight TDnet disclosure on a source-complete target session",
+    "bundle": "join the code's qualifying titles in publication-time order with the frozen separator",
+    "representation": {
+      "type": "TfidfVectorizer",
+      "analyzer": "char",
+      "ngram_range": [
+        2,
+        5
+      ],
+      "min_df": 3,
+      "max_features": 30000,
+      "sublinear_tf": true,
+      "norm": "l2"
+    },
+    "target": {
+      "name": "open_to_close_return_pct",
+      "training_clip": "training-period 1st and 99th percentiles, followed by [-10,+10] percentage points"
+    },
+    "model": {
+      "type": "Ridge",
+      "alpha": 20.0
+    },
+    "decision": {
+      "portfolio_size": 1,
+      "sort": [
+        "predicted_value descending",
+        "security_code ascending"
+      ],
+      "allocation": "100% of the research sleeve to the selected shadow candidate",
+      "no_qualifying_event": "cash",
+      "fallback": null
+    }
+  },
+  "prospective_window": {
+    "start_session": "2026-07-24",
+    "minimum_source_complete_sessions": 120,
+    "minimum_calendar_months": 4,
+    "changes_reset_counter": true,
+    "forbidden_during_window": [
+      "change n-gram range or vectorizer settings",
+      "change Ridge alpha or target clipping",
+      "add a price-model fallback",
+      "select a threshold after observing outcomes",
+      "silently treat missing TDnet pages as no event"
+    ]
+  },
+  "point_in_time_contract": {
+    "published_at_must_be_at_or_before_cutoff": true,
+    "received_at_must_be_at_or_before_cutoff": true,
+    "computed_at_must_be_at_or_before_cutoff": true,
+    "available_at": "max(received_at, computed_at)",
+    "availability_requirement": "available_at <= target session 08:58:59 JST",
+    "missing_source_policy": "fail closed and record no candidate",
+    "append_only_prediction_log": true
+  },
+  "evaluation": {
+    "outcome": "target-session close-to-open return",
+    "round_trip_cost_bps": [
+      20,
+      40,
+      60
+    ],
+    "primary_metric": "mean daily net return at 40 bps with cash on no-candidate days",
+    "required_reports": [
+      "median and win rate",
+      "first-half and second-half net40",
+      "calendar-month net40",
+      "best 20 winning days removed net20",
+      "top 10 profit-contributing codes replaced by cash net20",
+      "paired difference versus frozen L4 comparator",
+      "candidate-generation and PIT-compliance rates",
+      "realized spread, slippage, turnover, and minimum-lot feasibility when available"
+    ]
+  },
+  "promotion_gate_after_window": {
+    "all_required": true,
+    "requirements": [
+      "at least 120 source-complete sessions spanning at least 4 calendar months",
+      "net40 is positive in both chronological halves",
+      "one-sided paired 90% lower bound versus frozen L4 is at least zero",
+      "best-20-days-removed net20 is positive",
+      "top-10-profit-codes-cash net20 is positive",
+      "candidate generation and PIT compliance are both at least 98%",
+      "minimum-lot, spread, slippage, and turnover checks show the strategy is executable"
+    ],
+    "failure_action": "retain as research or reject; do not tune on the same forward window"
+  }
+}

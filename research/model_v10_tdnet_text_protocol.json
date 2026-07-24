@@ -1,0 +1,212 @@
+{
+  "schema_version": 1,
+  "protocol_id": "v10_tdnet_text_zero_base_20260723",
+  "registered_at": "2026-07-23T00:00:00+09:00",
+  "authority": {
+    "purpose": "retrospective exploratory validation",
+    "production_promotion_allowed": false,
+    "outcomes_viewed_before_registration": false,
+    "note": "Cache file names, date bounds, parser implementation, panel schema, and prior control specification were inspected before registration; candidate outcomes were not."
+  },
+  "frozen_inputs": {
+    "panel": {
+      "path": "/tmp/model_v07_corrected_panel.pkl",
+      "sha256": "6b86f994a1d15d1da8ed40469d44fc409adadc6cd5b3df3c08aef6717bcdf0eb",
+      "manifest_sha256": "25e08c564ef6400b7a29168db9fd7e8220bd0e2386c7a3c7e71b05c2ff950b02"
+    },
+    "tdnet_caches": [
+      {
+        "path": "tdnet_date_cache_2024",
+        "html_files": 110,
+        "filename_date_bounds": ["2024-04-02", "2024-07-31"],
+        "aggregate_sha256": "795852d3f64f8767191805e339dbd7c16972c9a249996ea6847fbbe023bea0f3"
+      },
+      {
+        "path": "tdnet_date_cache",
+        "html_files": 108,
+        "filename_date_bounds": ["2025-03-31", "2025-07-31"],
+        "aggregate_sha256": "012a11b23d09a5931726146cb37cb715f58e8c6e020d67700fa199c912628d38"
+      }
+    ],
+    "provenance_limit": "The historical HTML caches lack sidecar observation metadata. Publication timestamps can enforce event-time PIT, but archive finality and observation-time provenance cannot be proven. Results must remain exploratory."
+  },
+  "time_mapping": {
+    "timezone": "Asia/Tokyo",
+    "decision_cutoff": "08:58:59",
+    "assignment": "Each disclosure is assigned to the first panel session whose cutoff is at or after published_at.",
+    "new_overnight_event": "Only same-session premarket, prior-session post-close, or intervening non-session disclosures enter title bundles. Intraday disclosures from an earlier session are excluded because the market could already trade them.",
+    "market_close": "15:00 before 2024-11-05 and 15:30 from 2024-11-05",
+    "strict_source_complete": "For a target session, every calendar-date HTML page from the previous panel session through the target session inclusive must exist. Source-missing sessions are excluded, never encoded as no-event.",
+    "no_event_definition": "No qualifying disclosure for a code on a strict-source-complete target session."
+  },
+  "sample": {
+    "training": "All strict-source-complete cached sessions strictly before each scoring month with observed outcomes and the applicable eligibility flag.",
+    "score": "Frozen panel score window 2024-07-01 through 2025-07-31, restricted to strict-source-complete sessions.",
+    "walk_forward": "Refit at each calendar month. Minimum 20 prior complete sessions and 100 qualifying event-code bundles.",
+    "discovery_slice": ["2024-07-01", "2025-05-31"],
+    "confirmation_a": ["2025-06-01", "2025-06-30"],
+    "confirmation_b": ["2025-07-01", "2025-07-31"]
+  },
+  "controls": {
+    "G0_price_core": [
+      "oc_last",
+      "oc_mean_5",
+      "oc_mean_20",
+      "oc_mean_60",
+      "oc_win_20",
+      "oc_std_20",
+      "overnight_last",
+      "overnight_mean_20",
+      "overnight_mean_60",
+      "night_day_corr_60",
+      "xrank_atr14_pct",
+      "xrank_close_momentum_5",
+      "xrank_close_momentum_20",
+      "xrank_close_momentum_60",
+      "xrank_prior_close_location_20"
+    ],
+    "L4_price_control": "G0_price_core plus flat_oc_rate_20",
+    "N0_no_event_L4": "L4 ranking after excluding qualifying event codes on strict-source-complete sessions; diagnostic no-event baseline",
+    "model": "daily-percentile Ridge, alpha=1.0"
+  },
+  "title_representation": {
+    "bundle_text": "Titles joined in publication-time order with a separator token.",
+    "vectorizer": {
+      "type": "TfidfVectorizer",
+      "analyzer": "char",
+      "ngram_range": [2, 5],
+      "min_df": 3,
+      "max_features": 30000,
+      "sublinear_tf": true,
+      "norm": "l2"
+    },
+    "rank_target": "Within-session percentile of observed open-to-close return, transformed to [-1,1].",
+    "value_target": "Open-to-close return clipped to training 1st/99th percentiles and then clipped to [-10,10] percentage points.",
+    "rank_ridge_alpha": 10.0,
+    "value_ridge_alpha": 20.0
+  },
+  "registered_hypotheses": [
+    {
+      "id": "T01_char_rank_event_only",
+      "model": "char TF-IDF Ridge on rank target",
+      "policy": "rank only qualifying overnight event stocks; unfilled slots are cash"
+    },
+    {
+      "id": "T02_char_value_event_only",
+      "model": "char TF-IDF Ridge on clipped value target",
+      "policy": "rank only qualifying overnight event stocks; unfilled slots are cash"
+    },
+    {
+      "id": "T03_char_rank_overlay_L4",
+      "model": "separate L4 and title rank models",
+      "policy": "daily combined score = L4 percentile + 0.5*(event title percentile-0.5) for event stocks; no-event stocks retain L4 percentile"
+    },
+    {
+      "id": "T04_char_value_overlay_L4",
+      "model": "separate L4 and title value models",
+      "policy": "daily combined score = L4 percentile + 0.5*(event title percentile-0.5) for event stocks; no-event stocks retain L4 percentile"
+    },
+    {
+      "id": "T05_novelty_event_only",
+      "model": "regularized dense Ridge on global TF-IDF novelty, same-code novelty, and title rarity plus structured event features",
+      "policy": "event-only ranking"
+    },
+    {
+      "id": "T06_intensity_congestion_event_only",
+      "model": "regularized dense Ridge on document count, bundle width, age, same-day market event congestion, and code prior-event frequency",
+      "policy": "event-only ranking"
+    },
+    {
+      "id": "T07_corroboration_contradiction_event_only",
+      "model": "regularized dense Ridge on preregistered positive/negative title families, corroborating family count, and mixed-sign contradiction",
+      "policy": "event-only ranking"
+    },
+    {
+      "id": "T08_structured_all_event_only",
+      "model": "regularized dense Ridge on novelty, intensity, congestion, and corroboration/contradiction features",
+      "policy": "event-only ranking"
+    },
+    {
+      "id": "T09_structured_overlay_L4",
+      "model": "separate L4 and T08 structured rank models",
+      "policy": "same fixed 0.5 centered percentile overlay as T03"
+    },
+    {
+      "id": "T10_event_barbell",
+      "model": "T02 value prediction",
+      "policy": "top1 uses best positive-prediction event when available; remaining slot(s) use L4 excluding that code; otherwise L4"
+    }
+  ],
+  "structured_features": {
+    "estimator": {
+      "pipeline": "median imputation, StandardScaler, Ridge",
+      "alpha": 10.0,
+      "target": "same rank target as the title rank model"
+    },
+    "novelty": [
+      "1 - maximum cosine similarity to any training title bundle",
+      "1 - maximum cosine similarity to a training title bundle of the same code, with 1 for unseen code",
+      "mean inverse-document-frequency of nonzero title terms"
+    ],
+    "intensity_congestion": [
+      "log1p document count in bundle",
+      "log1p bundle width in minutes",
+      "log1p latest information age in hours",
+      "log1p number of qualifying marketwide bundles for that target session",
+      "log1p number of qualifying marketwide documents for that target session",
+      "log1p prior complete-session event count for the code over 60 sessions"
+    ],
+    "corroboration_contradiction": {
+      "positive_families": [
+        "upward earnings revision",
+        "dividend increase",
+        "initial market buyback decision",
+        "shareholder benefit",
+        "stock split"
+      ],
+      "negative_families": [
+        "downward earnings revision",
+        "dividend decrease",
+        "external equity financing",
+        "impairment/loss",
+        "audit/internal-control problem"
+      ],
+      "features": [
+        "positive family count",
+        "negative family count",
+        "positive corroboration >=2",
+        "negative corroboration >=2",
+        "mixed positive and negative",
+        "unclear-direction revision/dividend"
+      ]
+    }
+  },
+  "evaluation": {
+    "portfolio_sizes": [1, 2],
+    "slot_weighting": "equal; absent event-only slots are cash",
+    "cost_bps_round_trip": [0, 20, 40, 60],
+    "primary_metric": "mean daily net return at 40 bps",
+    "secondary": [
+      "mean net at 20 and 60 bps",
+      "median",
+      "win rate",
+      "positive months",
+      "discovery/confirmation slices",
+      "top 20 winning days removed",
+      "top 10 profit-contributing codes replaced by cash",
+      "coverage, event-day count, and slots filled"
+    ],
+    "comparators": ["G0_price_core", "L4_price_control", "N0_no_event_L4"],
+    "multiplicity": "Exploratory family; no production claim even if a point estimate wins."
+  },
+  "promotion_gate": {
+    "enabled": false,
+    "informational_requirements": [
+      "positive 40bp mean in both confirmation slices",
+      "positive 20bp mean after top-20-day removal",
+      "positive 20bp mean after replacing top-10 profit codes by cash",
+      "positive in at least 3 of 5 scored calendar months",
+      "better than L4 at 40bp without reducing daily candidate coverage"
+    ]
+  }
+}

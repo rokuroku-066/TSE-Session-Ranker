@@ -1,0 +1,245 @@
+{
+  "schema_version": 1,
+  "protocol_id": "model_v11_calendar_institution_zero_base_20260723",
+  "registered_at": "2026-07-23T19:25:00+09:00",
+  "status": "registered_before_any_calendar_family_execution_on_an_outcome_panel_already_seen_by_the_wider_project",
+  "purpose": "Falsify deterministic exchange-calendar, institutional-date, and disclosure-seasonality policies for pre-open open-to-close ranking. These are conditional historical policies and hierarchical posteriors, not dummy additions or tuning of a price Ridge model.",
+  "authority": {
+    "analysis_type": "retrospective_mechanism_screen",
+    "panel_outcomes_previously_available_to_the_project": true,
+    "calendar_hypotheses_not_scored_before_registration": true,
+    "production_promotion_allowed_from_this_run": false,
+    "maximum_retrospective_action": "freeze exactly one forward-shadow finalist",
+    "earliest_forward_session": "2026-07-24"
+  },
+  "frozen_inputs": {
+    "panel": {
+      "path": "/tmp/model_v07_corrected_panel.pkl",
+      "sha256": "6b86f994a1d15d1da8ed40469d44fc409adadc6cd5b3df3c08aef6717bcdf0eb",
+      "manifest_path": "/tmp/model_v07_corrected_panel.pkl.manifest.json",
+      "manifest_sha256": "25e08c564ef6400b7a29168db9fd7e8220bd0e2386c7a3c7e71b05c2ff950b02",
+      "rows": 1524104,
+      "codes": 4124,
+      "sessions": 386,
+      "calendar_bounds": [
+        "2024-01-04",
+        "2025-07-31"
+      ]
+    },
+    "tdnet_caches": [
+      {
+        "path": "tdnet_date_cache_2024",
+        "html_files": 110,
+        "aggregate_sha256": "795852d3f64f8767191805e339dbd7c16972c9a249996ea6847fbbe023bea0f3"
+      },
+      {
+        "path": "tdnet_date_cache",
+        "html_files": 108,
+        "aggregate_sha256": "012a11b23d09a5931726146cb37cb715f58e8c6e020d67700fa199c912628d38"
+      }
+    ]
+  },
+  "point_in_time": {
+    "decision_time": "08:58:59 Asia/Tokyo",
+    "score_period": [
+      "2024-07-01",
+      "2025-07-31"
+    ],
+    "folds": "calendar-month expanding walk-forward",
+    "training_rule": "Every return used in a calendar cell, issuer posterior, event-family posterior, release-clock cell, density threshold, or score has date strictly earlier than the first scored session of its month.",
+    "calendar_source": "The frozen JPX panel session index only. Weekday, calendar gaps, month position, quarter month, reporting window and SQ proxy are deterministic functions of dates and the session index; outcome results cannot alter them.",
+    "price_training_filter": "price_training_eligible true and open-to-close return observed",
+    "price_scoring_filter": "price_eligible true",
+    "tdnet_fail_closed": "TDnet-dependent policies may train and score only sessions for which every calendar-day index from the preceding panel session through the target session exists in the frozen caches. Missing pages mean unknown, never no disclosure.",
+    "source_rule": "candidate_price_source_max_date is null or strictly before row date; mapped disclosure timestamp is no later than 08:58:59 on row date",
+    "target_mutation_test": "For each score month replace scoring return and label values, rerun all twelve scorers and selections, and require exact scores, masks, and selected keys."
+  },
+  "deterministic_calendar_definitions": {
+    "weekday": "Monday=0 through Friday=4 from the target session date",
+    "post_holiday": "Target session minus preceding panel session is at least three calendar days",
+    "pre_holiday": "Following panel session minus target is at least three calendar days; last panel session has state unknown and is ineligible",
+    "month_start": "First three panel sessions in calendar month",
+    "month_end": "Last three panel sessions in a completed calendar month",
+    "turn_of_month": "Last two sessions of a completed calendar month or first three sessions of a calendar month",
+    "quarter_end": "Last five sessions of March, June, September or December",
+    "fiscal_half_or_year_end": "Last five sessions of March or September",
+    "sq_proxy": "Second Friday of the calendar month; if it is not a panel session, use the most recent panel session in the same Monday-Friday week",
+    "earnings_season": "Last five sessions of January, April, July or October, plus first ten sessions of February, May, August or November",
+    "release_clock": "Latest qualifying bundle document: same-day premarket; prior-session close through 16:29; 16:30 through 19:59; or 20:00 and later/weekend/older",
+    "high_disclosure_density": "Current strict session bundle count is at least the 75th percentile of strictly prior strict-session bundle counts; quantile method higher"
+  },
+  "hierarchical_lock": {
+    "continuous_target": "Open-to-close percentage return clipped to [-5,+5]",
+    "issuer_prior_strength": 20,
+    "issuer_differential_prior_strength": 30,
+    "family_prior_strength": 50,
+    "family_issuer_prior_strength": 20,
+    "release_cell_prior_strength": 50,
+    "global_prior": "Strictly prior cross-sectional cell mean; zero if the cell has no prior observations",
+    "minimum_family_cell_rows": 30,
+    "minimum_release_cell_rows": 30,
+    "gross_break_even_pct": 0.4,
+    "random_seed": 20260723
+  },
+  "registered_hypotheses": [
+    {
+      "id": "C01_WEEKDAY_ISSUER_EB",
+      "family": "weekday hierarchical issuer posterior",
+      "mechanism": "On every session, rank all price-eligible names by issuer-by-weekday clipped-return mean shrunk with twenty observations toward the prior global weekday mean.",
+      "prediction": "Persistent issuer-specific inventory or flow patterns recur on a given weekday."
+    },
+    {
+      "id": "C02_POST_HOLIDAY_ISSUER_EB",
+      "family": "post-holiday conditional posterior",
+      "mechanism": "Trade only deterministic post-holiday sessions and rank by issuer post-holiday mean shrunk toward the prior global post-holiday mean.",
+      "prediction": "Multi-day information accumulation creates issuer-specific continuation or reversal at the next open-to-close session."
+    },
+    {
+      "id": "C03_PRE_HOLIDAY_ISSUER_EB",
+      "family": "pre-holiday conditional posterior",
+      "mechanism": "Trade only deterministic pre-holiday sessions and rank by issuer pre-holiday mean shrunk toward the prior global pre-holiday mean.",
+      "prediction": "Position reduction before long closures creates stable issuer-level intraday effects."
+    },
+    {
+      "id": "C04_MONTH_START_ISSUER_EB",
+      "family": "month-opening institutional flow",
+      "mechanism": "Trade only the first three sessions of each month and rank by issuer month-start posterior mean.",
+      "prediction": "Periodic allocation and contribution flows recur at month opening."
+    },
+    {
+      "id": "C05_MONTH_END_ISSUER_EB",
+      "family": "month-closing institutional flow",
+      "mechanism": "Trade only the final three sessions of completed months and rank by issuer month-end posterior mean.",
+      "prediction": "Benchmarking, window dressing and rebalancing create issuer-specific month-end pressure."
+    },
+    {
+      "id": "C06_TURN_MONTH_DIFFERENTIAL_EB",
+      "family": "turn-of-month issuer differential",
+      "mechanism": "On last-two/first-three turn sessions, estimate each issuer's turn-of-month mean minus its non-turn mean, shrink the differential with thirty observations, and add the prior global turn mean.",
+      "prediction": "A differential self-control removes persistent issuer return level and isolates turn-specific flow."
+    },
+    {
+      "id": "C07_QUARTER_END_ISSUER_EB",
+      "family": "quarter-end institutional flow",
+      "mechanism": "Trade only the final five sessions of quarter-ending months and rank by issuer quarter-end posterior mean.",
+      "prediction": "Quarterly benchmark and balance-sheet activity creates a distinct issuer ranking."
+    },
+    {
+      "id": "C08_FISCAL_HALF_YEAR_ISSUER_EB",
+      "family": "Japan fiscal half/year end",
+      "mechanism": "Trade only the final five sessions of March or September and rank by issuer fiscal-half/year-end posterior mean.",
+      "prediction": "Japanese fiscal reporting and institutional book-closing flows differ from generic quarter-end effects."
+    },
+    {
+      "id": "C09_SQ_PROXY_ISSUER_EB",
+      "family": "monthly SQ institutional date",
+      "mechanism": "Trade only the deterministic second-Friday SQ proxy and rank by issuer SQ-session posterior mean.",
+      "prediction": "Index derivative settlement and hedging create repeatable issuer-level open-to-close pressure."
+    },
+    {
+      "id": "C10_EARNINGS_SEASON_TDNET_FAMILY",
+      "family": "reporting-window event-family hierarchy",
+      "mechanism": "During fixed reporting windows, rank only observed pre-open TDnet bundles. Estimate primary-family return, then add an issuer-family deviation shrunk with twenty observations; family cells require thirty prior rows.",
+      "prediction": "The same disclosure family is interpreted differently during scheduled reporting congestion than outside it."
+    },
+    {
+      "id": "C11_RELEASE_CLOCK_FAMILY_EB",
+      "family": "release-clock bunching hierarchy",
+      "mechanism": "Rank only observed bundles by primary-family-by-fixed-release-clock posterior mean shrunk with fifty observations toward the family mean; cells require thirty prior rows.",
+      "prediction": "Managerial release timing and investor processing time jointly change the intraday payoff distribution."
+    },
+    {
+      "id": "C12_HIGH_DENSITY_FAMILY_EB",
+      "family": "disclosure-attention congestion hierarchy",
+      "mechanism": "On strict sessions whose known bundle count exceeds the locked expanding 75th-percentile density state, rank observed bundles by family-in-high-density posterior mean shrunk toward the overall family mean.",
+      "prediction": "Attention congestion changes which disclosure families retain unabsorbed value after the open."
+    }
+  ],
+  "candidate_family_size": 24,
+  "portfolio": {
+    "capacities": [
+      1,
+      2
+    ],
+    "tie_break": [
+      "posterior expected return descending",
+      "code ascending"
+    ],
+    "cash_rule": "Execute a slot only when its posterior expected gross return is strictly greater than +0.40%. Empty or ineligible slots remain cash with fixed weight 1/capacity; do not renormalise.",
+    "cost_bps": [
+      20,
+      40,
+      60
+    ],
+    "primary_cost_bps": 40,
+    "scheduled_day_denominator": "All 266 score-period panel sessions, including full-cash days and fail-closed TDnet days"
+  },
+  "evaluation": {
+    "primary_metric": "scheduled-day arithmetic mean net40 return",
+    "temporal_slices": {
+      "discovery": [
+        "2024-07-01",
+        "2024-10-31"
+      ],
+      "confirmation_a": [
+        "2024-11-01",
+        "2025-03-31"
+      ],
+      "confirmation_b": [
+        "2025-04-01",
+        "2025-07-31"
+      ]
+    },
+    "reported": [
+      "gross and net20/net40/net60 mean",
+      "monthly net40 and three locked temporal slices",
+      "best and worst 5/10/20 days removed",
+      "net40 5% expected shortfall",
+      "slots, traded days, cash days, unique codes",
+      "largest and top-ten code weight share",
+      "largest positive-code P&L share",
+      "top-ten positive-P&L codes replaced by cash"
+    ],
+    "multiplicity": "5000 deterministic circular moving-block resamples, block length ten sessions; studentised one-sided familywise max-t lower bounds and White-style reality-check adjusted p-values against cash across all twenty-four policies.",
+    "selection_rule": "Freeze the highest net40 candidate only if every retrospective gate passes. If none passes, freeze no finalist."
+  },
+  "retrospective_gate": {
+    "net40_mean_positive": true,
+    "net60_mean_positive": true,
+    "familywise_95_lower_net40_mean_positive": true,
+    "familywise_reality_check_p_at_most": 0.1,
+    "all_three_temporal_slices_net40_positive": true,
+    "positive_months_at_least": 8,
+    "best_20_days_removed_net20_positive": true,
+    "top_10_positive_pnl_codes_to_cash_net20_positive": true,
+    "traded_days_at_least": 80,
+    "executed_slot_fraction_at_least": 0.3,
+    "unique_codes_at_least": 100,
+    "largest_code_weight_share_at_most": 0.05,
+    "top10_code_weight_share_at_most": 0.25,
+    "largest_positive_code_pnl_share_at_most": 0.25,
+    "independent_pnl_audit_exact": true,
+    "target_mutation_exact": true,
+    "deterministic_rerun_exact": true
+  },
+  "production_gate": {
+    "retrospective_gate_must_pass": true,
+    "prospective_sessions_at_least": 60,
+    "prospective_net40_mean_positive": true,
+    "prospective_one_sided_95_block_bootstrap_lower_mean_positive": true,
+    "prospective_all_three_consecutive_20_session_slices_net40_positive": true,
+    "prospective_best_5_days_removed_net20_positive": true,
+    "prospective_independent_pnl_audit_exact": true,
+    "no_refit_or_candidate_substitution": true,
+    "failure_action": "Reject the full calendar family and preregister a structurally different mechanism; never redefine calendar windows from observed returns."
+  },
+  "prior_research_scope_warning": {
+    "statement": "Japanese calendar-effect evidence is old, mixed and largely index/close-to-close based. It cannot be transferred unconditionally to individual-stock open-to-close ranking.",
+    "sources": [
+      "https://doi.org/10.14490/jjss.34.129",
+      "https://doi.org/10.1016/0922-1425(91)90001-S",
+      "https://doi.org/10.1016/0927-538X(94)00026-4",
+      "https://doi.org/10.1016/S0922-1425(01)00067-6"
+    ]
+  }
+}

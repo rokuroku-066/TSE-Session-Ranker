@@ -2086,3 +2086,723 @@ aggregate audit SHA-256: 0b7674a4681d44e1e4cbd315b17b04bbddf43421fd56459eb8c3b2a
 ```
 
 </details>
+
+---
+
+## Entry 014 — 研究プロトコルv0.9：個別誤差、順位深度、市場breadthの反証ループ
+
+| 項目 | 内容 |
+|---|---|
+| 検証日 | 2026-07-23 |
+| 親Entry | Entry 011～013 |
+| 目的 | 現行L4/L6の実行結果を個別に分析し、寄り前に確定する規則へ変換して、始値→終値のコスト後損益を再検証する |
+| 入力期間 | 2024-07-01～2025-07-31、266営業日 |
+| frozen panel | 1,524,104行、4,124銘柄、SHA-256 `6b86f994a1d15d1da8ed40469d44fc409adadc6cd5b3df3c08aef6717bcdf0eb` |
+| 今回の台帳 | 個別誤差/meta 20件、target・portfolio 33件、breadth反証4件、計57件 |
+| 主コスト | 往復20bp。40bp必須stress、60bp追加stress |
+| 暫定首位 | 前営業日の有効な始値→終値breadthでL4/L6のrank 2を切り替える1銘柄shadow |
+| 採用判断 | production変更なし。全結果は既知期間のretrospective / posthoc診断 |
+| 機械可読成果物 | `research/model_v09_protocol_ledger.json`、`research/model_v09_result.json`、`research/model_v09_manifest.json` |
+
+> **一行結論:** 目的変数・正則化・ensembleより、L4/L6の2位と前営業日の始値→終値breadthの組合せが高かった。ただし2位優位は3位へ連続せず、利益の大半を少数の上昇日に依存し、breadthによるL4 rank 2への増分も未証明なので、仕様を固定した前向きshadowへ移す。
+
+<details>
+<summary><strong>57仮説、反証結果、暫定仕様、停止判断</strong></summary>
+
+### 権限と検証順序
+
+上流のv0.8ですでに266日のoutcomeを参照している。したがって、以下の`discovery`、`confirmation A/B`はsub-analysis内の時系列規律を表すだけで、未閲覧holdoutではない。
+
+```text
+discovery:       2024-07-01～2024-10-31、84日
+confirmation A:  2024-11-01～2025-03-31、98日
+confirmation B:  2025-04-01～2025-07-31、84日
+```
+
+検証は次の順で行った。
+
+1. discoveryの個別誤差からH01～H19を固定し、A/Bへ変更なしで適用。
+2. breadth switchとrank 2を見た後、統合規則を個別誤差系H20として別protocolへ固定。
+3. target、前処理、配分のH01～H16を実行。
+4. rank 1の弱さを見た後、rank 2/3と配分のH17～H21を固定。
+5. 選択頻度の影響H22～H26、rank 2の仕様感度H27～H33を順次固定。
+6. 最後にbreadthの分母とreturn horizonをF1/F1b/F2/F3で反証。
+
+後の段階ほどadaptive / posthocである。名前が重なる二つのH20は、機械可読台帳では次のようにnamespaceを分離した。
+
+```text
+error_meta.H20_breadth_rank2_one
+target_portfolio.H20_L4_rank3_only
+```
+
+### 現行対照と主要結果
+
+すべてscheduled-dayの平均リターン。1銘柄規則は表示銘柄へstrategy sleeveの100%、2銘柄規則は明記した比率を配分する。1銘柄の結果を「2枠の片方50%、残り現金」と読み替えない。
+
+| 規則 | 銘柄/日 | 配分 | net20 | net40 | net60 | best 20日除外net20 | 正の月 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| v0.8 L4 rank 1+2 | 2 | 50/50 | +0.283192% | +0.086575% | -0.110041% | +0.013510% | 11/13 |
+| v0.8 L6 rank 1+2 | 2 | 50/50 | +0.259376% | +0.068023% | -0.123331% | +0.017913% | 12/13 |
+| L4 rank 1 | 1 | 100% | +0.141095% | -0.055897% | -0.252890% | -0.195468% | 10/13 |
+| **L4 rank 2** | 1 | 100% | **+0.425289%** | **+0.229048%** | **+0.032808%** | +0.006616% | 11/13 |
+| L4 rank 3 | 1 | 100% | -0.128573% | -0.325565% | -0.522558% | -0.383063% | 4/13 |
+| L4 rank 1+2 | 2 | 25/75 | +0.354240% | +0.157812% | -0.038617% | **+0.025392%** | **13/13** |
+| H03 OC breadth switch | 2 | 50/50 | +0.343128% | +0.147263% | -0.048602% | +0.062756% | 12/13 |
+| posthoc H20・raw OC breadth rank 2 | 1 | 100% | +0.482449% | +0.285457% | +0.088464% | +0.050425% | 11/13 |
+| **H20分母修正版・valid OC breadth rank 2** | 1 | 100% | **+0.487187%** | **+0.290195%** | **+0.093202%** | — | 11/13 |
+| canonical CC breadth rank 2 | 1 | 100% | +0.310433% | +0.113441% | -0.083552% | — | 9/13 |
+
+H20分母修正版の未使用ではない`confirmation A+B`では、net20 `+0.474899%`、net40 `+0.277097%`、net60 `+0.079295%`、約定銘柄の勝率60.56%、8/9か月プラスだった。best 20日除外後は`+0.012029%`、上位利益10コードを現金化すると`+0.025963%`まで薄くなる。
+
+### target・前処理を変えても改善しなかった
+
+H01～H09で次を検証した。
+
+```text
+厳密ゼロ中心の同日順位target
+日次5/95% winsor後の順位
+事前20日volでrisk-adjustした順位
+boundedな実現値幅を混ぜた順位
+日付等重みのimputer/scaler
+alpha 1/10/100のrank ensemble
+L4/L6のmodel-rank ensemble
+```
+
+厳密ゼロ中心と日付等重みpreprocessは、L4/L6とも532/532枠が既存仕様と完全一致した。winsor版L4の改善は`+0.000903pt/日`だけ。risk-adjust版はnet20 `+0.148613%`、実現値幅版は`-0.169830%`、alpha ensembleは`+0.190351%`へ悪化した。
+
+したがって、有限銘柄数による小さなtarget offsetや前処理の行重みは現在の律速ではない。実現値幅を強めれば損益が上がるという仮説も棄却した。
+
+### rank 2は滑らかなscore overshootではない
+
+全額配分のnet20は、
+
+```text
+rank 1  +0.141095%
+rank 2  +0.425289%
+rank 3  -0.128573%
+```
+
+となった。rank 2とrank 3がともにrank 1を上回るなら「最大score付近だけが過熱」という説明が可能だったが、rank 3で直ちに損失へ反転した。よってrank 2は広い中位plateauではなく、同じ履歴に固有の局所的な順位反転として扱う。
+
+rank 2は3つの等日数期間すべてでプラスだった一方、best 20日が累積net20利益の98.56%を占めた。20日除外後はnet20 `+0.006616%`、net40 `-0.189319%`、net60 `-0.385254%`。全H01～H33を一つのadaptive familyとして扱ったL4 top2比upliftの片側80%下限は`-0.071372pt`だった。
+
+一方、rank 1/2を25/75にする規則は13/13か月プラスで、best 20日除外後もnet20 `+0.025392%`。平均はrank 2単独より低いが、分散shadowとして残す。
+
+### 選択頻度ではrank 2を説明できない
+
+直前20回で3回以上選ばれたrank 1をrank 2へ置換、前日連続選定の置換、20/60日novelty、rank 1/2の頻度tiltをH22～H26で検証した。単一銘柄のnet20は`+0.122761%`～`+0.244592%`で、rank 2単独を再現しなかった。
+
+さらにwinsor target、alpha ensemble、L4/L6 ensemble、L6、alpha 10/100、rolling 120学習窓のrank 2をH27～H33で検証した。
+
+```text
+自身のtop2対照を上回る:       5/7
+net40がプラス:                6/7
+best 20日除外後net20がプラス: 0/7
+3条件すべて合格:              0/7
+```
+
+rank 2の方向は複数仕様へ部分的に移ったが、tail-day依存は解消しなかった。
+
+### breadthの意味を分解した
+
+元H20のbreadthは、raw日足に存在した全行について`open_to_close > 0`の比率を計算していた。これにはflat行が非上昇として含まれ、2024年7月にはraw分母が一時的に約3,700から約3,100へ減る日もあった。
+
+そこで結果を見る前に次の三定義を固定した。
+
+| 定義 | return horizon | 分母 |
+|---|---|---|
+| raw OC | 始値→終値 | rawに存在する全行 |
+| **valid OC** | 始値→終値 | `traded & outcome_observed & source_complete` |
+| canonical CC | 前日終値→当日終値 | `traded & outcome_observed & source_complete` |
+
+ルールはすべて同じ。
+
+```text
+前営業日のbreadth < 0.50  → L4 rank 2
+前営業日のbreadth >= 0.50 → L6 rank 2
+```
+
+raw OCとvalid OCの相関は0.9994、状態が変わったのは5/266日で、`confirmation A+B`のnet20は`+0.4680%`から`+0.4749%`へほぼ不変だった。無効・非取引行を除く修正は、成績を見て選ぶ改善ではなく定義のhardeningとして採用する。
+
+canonical CCとの相関は0.7055で、状態は63/266日、実際の選択銘柄は33/266日変わった。`confirmation A+B`のnet20は`+0.296389%`、net60は`-0.099216%`へ悪化した。したがって効いている可能性があるのは「市場breadth一般」ではなく、前営業日の**始値→終値の買い持続幅**である。
+
+`.45/.50/.55`の感度は反証用途だけに固定した。raw OCは三つとも`confirmation A+B`のnet60がプラスだったが、同じ履歴の点推定で閾値を選び直さず`.50`を維持する。
+
+### 独立監査で見つかった制約
+
+- H03/H20の保存損益はpicksから誤差0で再計算でき、breadth sourceは全266日で対象日の直前営業日だった。
+- locked picksと別系統raw日足を照合すると901行は最大誤差`1.78e-15`、131行はraw側にdate×code自体がなくprovenanceを照合できなかった。誤ラベルとは断定しないが、入力系統を一本化する。
+- 個別銘柄のrolling特徴は直前営業日一致84.96%、最大28暦日staleだった。これは20営業日ではなくlast-20-observed-rowsになる場合がある。
+- 保存された`max_t_*`はstudentized max-tではなく、未標準化のmax-mean統計量だった。再計算値は正しいが名称を訂正する。studentized感度の片側90%下限はH03 `-0.024531pt`、posthoc H20のL4 top2比で`-0.048538pt`。
+- H20の適切な増分対照はL4 top2ではなくL4 rank 2。raw OC H20の増分は`+0.042881pt/日`、通常5日block bootstrapの片側90%下限は`-0.033398pt`で、breadth追加価値は未証明。
+
+### 暫定shadow仕様
+
+点推定首位を、閾値を再調整せず次のIDで固定する。
+
+```text
+v09_valid_oc_breadth_rank2
+
+prior_market_oc_breadth =
+    前営業日の有効・取引銘柄について
+    mean(open_to_close_return > 0)
+
+if prior_market_oc_breadth < 0.50:
+    L4のscore順位2位を1銘柄
+else:
+    L6のscore順位2位を1銘柄
+
+表示銘柄へstrategy sleeveの100%
+候補数は毎日1件
+```
+
+並走する対照は三つ。
+
+```text
+C0: L4 rank 1+2、50/50
+C1: L4 rank 2、100%
+C2: L4 rank 1+2、25/75
+```
+
+この仕様は「最も高かったretrospective shadow」であり、実発注承認ではない。正確な出来高、売買代金、単元、spread、08:58板、PTS、先物snapshotが履歴にないため、0.49%/日の点推定を約定可能収益として扱わない。
+
+### 前向き昇格条件と停止判断
+
+2026-07-23以降を新しいforward counterとし、途中で特徴、rank、breadth閾値を変えない。変更した場合は別IDでゼロから数える。
+
+```text
+最低120 source-complete営業日、4か月
+候補生成遵守率98%以上
+実spread・slippage込み40bp stress後がプラス
+非重複20日blockの4/5以上がプラス
+best 20日除外後と上位利益10コード除外後がプラス
+L4 rank 2に対するpaired差の調整済み下限が0以上
+```
+
+同じ266日へ新しいtarget、interaction、閾値を追加しても、真の改善と選択バイアスを区別できない。今回の57件で、既存日足だけを使う同一panel探索を停止する。次の改善余地は、08:58:59以前の先物、板、PTS、実流動性と、TDnet PDF本文の定量値を前向きに保存し、outcomeを見る前にprotocolへ固定することに限定する。
+
+```bash
+PYTHONPATH=src:. python research/audit_model_v09.py --root research
+pytest -q tests/test_model_v09_artifacts.py tests/test_research_regimes.py
+```
+
+```text
+protocol ledger SHA-256: 177f077e2ecb9130c4e95fe77f3614afe1ba8e79f985171089ccc8755f25c26d
+result SHA-256:          faad02135eaf2a3fd3b7d0250919bbfd8abe5e11385fd67d0bf4c752be00c80d
+manifest chain:          483511ed362a62516b632a4f78bab6a06809f7913a51baade8435311a1b49a81
+```
+
+</details>
+
+---
+
+## Entry 015 — 研究プロトコルv1.0：先行研究からのゼロベース再設計とTDnet text暫定首位
+
+| 項目 | 内容 |
+|---|---|
+| 検証日 | 2026-07-23 |
+| 親Entry | Entry 011～014 |
+| 目的 | 08:58:59 JSTまでの情報だけで、当日の始値→終値のコスト控除後平均損益を最大化する1～2銘柄を選ぶ |
+| 入力期間 | 2024-07-01～2025-07-31、266 score営業日 |
+| frozen panel | 1,524,104行、4,124銘柄、SHA-256 `6b86f994a1d15d1da8ed40469d44fc409adadc6cd5b3df3c08aef6717bcdf0eb` |
+| 今回の探索 | 一次資料19本・文献仮説12件、モデル構造13件、方策・universe 16件、TDnet text 10件、外部市場8件、online 3件、market/peer residual |
+| 評価 | 月次expanding walk-forward、top1/top2、未約定枠は現金、往復20/40/60bp |
+| 点推定首位 | `T02_char_value_event_only`、TDnetタイトルchar TF-IDF + value Ridge、event-only top1 |
+| 最終判断 | production変更なし。T02を2026-07-24以降の固定exploratory shadowに限定 |
+| 機械可読成果物 | `research/model_v10_summary.json`、`research/model_v10_integration_audit.json`、`research/model_v10_forward_protocol.json` |
+
+> **一行結論:** 既存日足上でモデルを複雑化した案と、先行研究から移植した価格・注意力・順位・残差仮説は頑健性を改善しなかった。TDnetタイトルから値幅を直接予測するT02が88日で点推定首位になったが、右裾依存と多重探索を通過していないため、実発注せず仕様を固定した前向きshadowへ移す。
+
+<details>
+<summary><strong>先行研究、全track比較、監査訂正、前向き仕様</strong></summary>
+
+### 権限と検証規律
+
+上流のEntry 011～014ですでに同じ266日のoutcomeを参照している。今回の
+月次walk-forwardは各fold内の未来混入を防ぐが、研究全体として未閲覧の
+holdoutを作るものではない。したがって、
+
+```text
+・retrospective結果からproductionへ昇格しない
+・各runnerの実行前にprotocolと仮説を保存する
+・結果が良い案だけでなく失敗案も同じ成果物へ残す
+・20/40/60bp、月別、時系列slice、tail、code集中を同時評価する
+・同じ履歴でT02を再調整せず、次の観測をforward counterへ送る
+```
+
+を権限境界とした。
+
+### 先行研究から移植した仮説
+
+一次資料19本を調査し、寄り付き反転、注意力、発表混雑、発表曜日、
+Learning-to-Rank、数値とテキストの組合せを12仮説へ変換した。主な
+出発点は次のとおり。
+
+| 先行研究の示唆 | 寄り前に確定する実装 | 結果 |
+|---|---|---|
+| TSEの寄り付き価格誤差は日中に修正され得る | H01 negative/positive gap hinge | top2 net20 `+0.1132%`、対照差`-0.1700pt` |
+| 日本株の大幅下落後に反発パターンがある | H01/H02 negative shockと5日OC反転 | 両方とも対照未満 |
+| overnightとintradayの投資家層には綱引きがある | H03 joint-sign rate | top2 net20 `+0.1498%`、対照差`-0.1334pt` |
+| attentionは寄り付き過大反応を生み得る | H04 overnight×ATR×activity | top1のみ改善したがtail/code/FW不合格 |
+| 同時発表の多さは情報処理を遅らせ得る | H06 TDnet市場混雑×方向 | TDnet対照より`-0.0527pt` |
+| 金曜発表は注意を得にくい | H07 disclosure age/weekday×方向 | TDnet対照より`-0.0911pt` |
+| 複数の同方向材料は単一材料を裏付ける | H08 directional corroboration | `+0.0129pt`改善、頑健性不合格 |
+| 発表順序・announcement waveが反応を変える | H09 prior completed wave | 過去waveが0件でfeasibility failure |
+| daily top選定にはLearning-to-Rankが適する | M01/M02/M06/M07 | 最良M02もnet40 `-0.0658%` |
+| 日本語開示テキストは短期反応を補足する | T01～T10 | rank/overlayは失敗、T02 valueだけ点推定首位 |
+
+文献の効果をそのまま仮定せず、今回の日本株標本で再現しなければ棄却した。
+引用、識別子、仮説への対応、取得日は
+`research/model_v10_literature_review.md`、機械可読な12仮説は
+`research/model_v10_literature_hypotheses.json`に保存した。
+
+### 全trackの比較
+
+数値はscheduled dayの日次平均%。TDnet trackはstrict source-completeな
+88日だけなので、266日trackと同一母集団の順位比較には使わない。
+
+| Track | 代表候補 | 日数 | k | net20 | net40 | net60 | 判断 |
+|---|---|---:|---:|---:|---:|---:|---|
+| G0対照 | daily-rank Ridge | 266 | 2 | +0.2553 | +0.0587 | -0.1379 | best20除外`-0.0054` |
+| 13モデル構造 | M02 extreme-gain Ridge | 266 | 2 | +0.1305 | -0.0658 | -0.2620 | 0/13合格 |
+| 文献価格block | H04 attention | 266 | 2 | +0.1810 | -0.0163 | -0.2137 | 対照差負 |
+| 方策・universe | H12 momentum分散 | 266 | 2 | +0.3044 | +0.1082 | -0.0881 | Round 2判断を監査で撤回 |
+| gen1部分実行 | Z06 exp-decay top1 | 266 | 1 | +0.3085 | +0.1138 | -0.0810 | 18登録中6実行、選定不可 |
+| 外部市場 | X06 context Ridge top1 | 266 | 1 | +0.2623 | +0.0645 | -0.1332 | 必須監査出力不足 |
+| online expert | O03 follow-leader | 266 | 2 | +0.0823 | -0.1135 | -0.3094 | 棄却 |
+| market residual | R01 | 266 | 1 | +0.0390 | -0.1595 | -0.3580 | 棄却 |
+| peer residual | Z17 | 266 | 1 | -0.2964 | -0.4964 | -0.6964 | 0/13 net40月、棄却 |
+| **TDnet text** | **T02 char-value event-only** | **88** | **1** | **+0.7191** | **+0.5191** | **+0.3191** | exploratory forwardのみ |
+
+この比較から、rank loss、pairwise、quantile、mixture、utility/hurdle、
+online experts、market/peer中立化を追加しても既存対照を頑健に上回らない
+ことを確認した。peer residualは8 peer群を各foldの過去情報だけで再構成
+したが、top1/top2ともnet20から負で、13か月すべてnet40が負だった。
+
+### T02の仕様と結果
+
+T02は勝敗分類ではなく値幅の条件付き平均を予測し、right tailを含む
+平均損益を目的にした。
+
+```text
+source:
+    08:58:59 JSTまでに公開され、
+    strict source-completeと判定できるTDnet開示
+
+bundle:
+    同一銘柄の対象タイトルを公開時刻順にseparator付きで連結
+
+representation:
+    TfidfVectorizer(
+        analyzer="char",
+        ngram_range=(2, 5),
+        min_df=3,
+        max_features=30000,
+        sublinear_tf=True,
+        norm="l2",
+    )
+
+target:
+    学習期間の1/99 percentileでclipし、
+    さらに[-10,+10]%へclipした始値→終値リターン
+
+model:
+    Ridge(alpha=20)
+
+decision:
+    event銘柄を予測値降順、同点はコード昇順
+    top1を1件、eventなしは現金
+    価格モデルfallbackなし
+```
+
+88 source-complete営業日の実測は次のとおり。
+
+| 指標 | T02 top1 |
+|---|---:|
+| net20 | `+0.719059%/日` |
+| net40 | `+0.519059%/日` |
+| net60 | `+0.319059%/日` |
+| net40勝率 | `47.73%` |
+| net40中央値 | `-0.188301%` |
+| 正の月 | `3/5` |
+| best 20勝ち日除外net20 | `-0.572088%/日` |
+| 上位利益10code現金化net20 | `-0.108484%/日` |
+| L4比paired 90%区間 | `[-0.0213pt, +1.0142pt]` |
+| candidate-family reality-check | `p=0.2103` |
+
+勝率が50%未満でも平均が正なのは、今回の目的が勝率ではなく平均損益で
+あり、大きな上昇を少数捉えたためである。同時に、tail/code除外後が負に
+なるため、同じ事実が脆弱性も示す。T10 top1はT02と完全に同じ選択であり、
+独立した再現例として数えない。
+
+### 独立監査による訂正
+
+保存された全trackの損益を独立再計算し、最大誤差は`2.22e-16`だった。
+損益式とは別に、次の手順上の問題を発見し、元の判断より監査判断を優先
+した。
+
+1. policy Round 2は「無関係な5比較中4勝」を要求したが、runnerは4比較
+   しか実装せず4/4を合格にした。H12の
+   `retain_for_forward_shadow=true`を撤回する。
+2. zero-base gen1は18登録仮説のうち6件だけを実行した。Z06の数値から
+   winnerを選べない。
+3. external contextは月次vector、source-date mutation、familywise下限が
+   未出力。X06はexploratory点推定以上に扱わない。
+4. policy H01/H04、TDnet T02/T10 top1は完全重複し、独立試行ではない。
+5. TDnet 88日は不連続な5か月で、historical HTMLに実観測時刻sidecarが
+   ない。公開時刻PITは確認できてもarchive finalityは証明できない。
+
+訂正後の権威成果物は
+`research/model_v10_integration_audit_report.md`であり、
+production置換は0件である。
+
+### 08:58 point-in-time基盤
+
+次の改善は同じ日足へのモデル追加ではなく、新しい寄り前情報を正しい
+時刻で収集することとした。
+
+```text
+1. OSE先物の08:58騰落率、basis、08:45以降13分の方向・出来高
+2. TSE寄り板の予想約定値、1/3/10本imbalance、成行差、spread
+3. PTS価格・出来高・売買代金
+4. 20日売買代金、出来高、単元金額、tick、実slippage
+5. TDnet PDF本文の旧予想、新予想、増減額、時価総額比
+6. 月次売上trend、決算数値とタイトル文脈の不一致
+```
+
+`src/tse_session_ranker/data/preopen_pit.py`は、取引所の
+`source_event_at`、ローカルの`received_at`、特徴の`computed_at`を分離し、
+
+```text
+available_at = max(received_at, computed_at)
+available_at <= target session 08:58:59 JST
+```
+
+を強制する。欠測、真の0、対象外、source不完全を別状態で保存し、同じ
+identityに異なる値を追記することも拒否する。
+
+### 固定した前向きshadow
+
+`research/model_v10_forward_protocol.json`に、結果確認後の変更を禁止した
+仕様を保存した。
+
+```text
+ID:                 v10_t02_char_value_event_top1
+開始:               2026-07-24
+候補:               原則TDnet event top1、eventなし/source欠落は0件
+用途:               exploratory shadowのみ
+実発注:             禁止
+最低観測:           120 source-complete営業日、4か月
+仕様変更:           forward counterをゼロへ戻し、別IDにする
+```
+
+昇格判断には、net40が前半・後半とも正、L4比paired片側90%下限が0以上、
+best 20日除外後と上位利益10code現金化後のnet20が正、候補生成/PIT遵守率
+98%以上、実spread・slippage・最低単元・売買代金の合格をすべて要求する。
+forward中にn-gram、Ridge alpha、clip、fallback、閾値を変更しない。
+
+### 再現と成果物
+
+```bash
+PYTHONPATH=src:. python research/audit_model_v09.py --root research
+PYTHONPATH=src:. python research/model_v10_architectures_audit.py
+python -m compileall -q src research tests
+python -m pytest -q
+```
+
+主要成果物：
+
+```text
+research/model_v10_literature_review.md
+research/model_v10_literature_hypotheses.json
+research/model_v10_literature_protocol.json
+research/model_v10_literature_result.json
+research/model_v10_literature_validation_report.md
+research/model_v10_tdnet_text_protocol.json
+research/model_v10_tdnet_text_result.json
+research/model_v10_tdnet_text_audit.json
+research/model_v10_peer_residual_protocol.json
+research/model_v10_peer_residual_result.json
+research/model_v10_peer_residual_audit.json
+research/model_v10_integration_audit.json
+research/model_v10_summary.json
+research/model_v10_forward_protocol.json
+```
+
+### 最終判断
+
+```text
+production変更:                 なし
+retrospective点推定首位:       T02 char-value event-only top1
+用途:                           仕様固定の前向きexploratory shadow
+毎日の候補数:                   TDnet eventがあれば1件、なければ0件
+同じ88日での再調整:            停止
+次の改善単位:                   08:58板・先物・実流動性・TDnet本文
+```
+
+これは改善を放棄する判断ではない。同じ結果を見ながら閾値を変えるループを
+止め、情報量を増やした未使用期間で、事前固定した仕様同士を比較できる状態へ
+移した判断である。
+
+</details>
+
+---
+
+## Entry 016 — 研究プロトコルv1.1：7系統ゼロベース反証と本番readinessのfail-closed統合
+
+| 項目 | 内容 |
+|---|---|
+| 検証日 | 2026-07-23 |
+| 親Entry | Entry 015 |
+| 目的 | T02の微調整ではなく、情報源・推定対象・意思決定構造が異なる7系統をゼロベースで反証し、本番採用の証拠権限を統合監査する |
+| 7系統 | new data、historical analog、distributional decision、uplift、cross-stock graph、distribution shift、calendar/institution |
+| 探索規模 | 概念仮説67件、実行可能spec 59件、capacity別候補variant 118件 |
+| 選択の独立性 | family内の経済的に異なるselection sequenceは112件。comparator 14件を含むscored seriesは132件 |
+| 評価窓 | strict-source 88日、new-data 107日、price-panel 266日が混在 |
+| family gate | 通過0/118、forward-shadow finalist 0 |
+| 最終判断 | 現行freeze/dataの下で本番採用を支持する証拠は0件。production変更なし、orders不許可 |
+| 機械可読成果物 | `research/model_v11_integration_audit.json`、`research/model_v11_production_readiness.json`、各`model_v11_*_{protocol,result,audit}.json` |
+
+> **一行結論:** 67の概念仮説を7つの異なる機構familyへ分け、59 spec・118 candidate variantを事前固定して検証したが、family固有の全gateを通過したvariantは0件だった。窓・universe・cash denominator・controlが異なるためfamily間の点推定順位は作らず、共有済み履歴panel上のfamily-local多重性補正も横断選抜の権限には使わない。凍結T02のfresh OOT rawと08:58実行データも未充足なので、本番候補は0のままとする。
+
+<details>
+<summary><strong>7系統の結果、統合監査、fresh OOT/readiness</strong></summary>
+
+### 権限と数え方
+
+7系統はいずれも各runnerの実行前にprotocolを固定し、月次expanding
+walk-forward、対象月outcome mutation、独立P&L再計算を行った。ただし
+全系統がprojectで既に参照した同一panel
+`6b86f994a1d15d1da8ed40469d44fc409adadc6cd5b3df3c08aef6717bcdf0eb`
+を再利用している。family内の未来混入を防いでも、project-levelのfresh
+holdoutには戻らない。
+
+```text
+概念仮説:                         67
+実行可能な概念仮説:               58
+固定combination spec:              1
+実行可能spec合計:                 59
+capacity別candidate variant:      118
+family内unique selection sequence: 112
+comparator variant:                14
+scored series合計:                132
+family gate通過:                 0/118
+forward-shadow finalist:            0
+production candidate:               0
+```
+
+118 variantはすべて経済的に別ではない。日付・銘柄・実行weightの
+selection sequenceをfamily内でhashすると112件になる。
+`D07_REGIME_ABSTAIN_K1/K2`、`U06_PROPENSITY_OVERLAP_T_K1/K2`、
+`S06_UNSUPERVISED_LATENT_EXPERTS_K1/K2`、calendarの
+`C11_RELEASE_CLOCK_FAMILY_EB_K1/K2`と
+`C12_HIGH_DENSITY_FAMILY_EB_K1/K2`は、それぞれ全cashのため重複する。
+非互換なfamily間は同じcash pathでも同一試行としてdeduplicateしない。
+
+new-dataの凍結resultが列挙するblocked hypothesisは9件
+（ND01、ND02、ND03、ND06、ND07、ND08、ND09、ND10、ND11）である。
+取得routeではND01/ND02がstructured forecast numeric feedを共有するため
+8 groupにまとめられるが、登録仮説数を8へ書き換えない。
+
+### family間順位を作らない
+
+数値は各family内の代表的な点推定であり、横断ランキングではない。
+
+| family | representative | scheduled sessions | net40 | familywise evidence | 結論 |
+|---|---|---:|---:|---|---|
+| new data | `ND05_release_clock_and_fiscal_horizon__top1` | 107 | `-0.230428%` | L4差`-0.294670pt`、Holm p=`0.2974` | promotion gate自体を無効化、0件 |
+| historical analog | `A06_dual_tail_neighbor_utility` top1 | 88 | `-0.048478%` | T02差`-0.567536pt`、simultaneous L90=`-1.220501pt` | 0/10 |
+| distributional | `D08_SLOTWISE_CASH_STOP_K1` | 266 | `+0.118420%` | matched control差`+0.110518pt`、FW L95=`-0.134116pt` | tail・集中・sliceを含む全gate不合格 |
+| uplift | `U04_DATE_RESIDUAL_UPLIFT_K2` | 88 | `+0.070633%` | FW L95=`-0.190559%`、global p=`0.9224` | 0/16 |
+| graph | `G10_graph_disagreement_cash` top1 | 266 | `-0.176527%` | C00差`-0.184429pt`、simultaneous L90=`-0.486103pt` | 0/10 |
+| distribution shift | `S08_ENVIRONMENT_RESIDUALISED_K1` | 266 | `+0.076608%` | matched control差`+0.068707pt`、FW L95=`-0.052917pt` | slice・tail・集中を含む全gate不合格 |
+| calendar/institution | `C03_PRE_HOLIDAY_ISSUER_EB_K1` | 266 | `+0.058234%` | FW L95=`-0.250769%`、global p=`0.8376` | 0/24 |
+
+calendarのC03はnet20/net40/net60が
+`+0.100339/+0.058234/+0.016129%`だったが、取引は56/266日、unique codeは
+9だけだった。confirmation Aはnet40 `-0.164160%`、best 20日除外net20は
+`-0.211241%`、上位利益10 code現金化net20は`-0.128115%`である。
+calendar全24 policyのfamilywise現実性検定もglobal p=`0.837632`で、
+forward finalistはない。
+
+88日、107日、266日は同じ母集団ではない。さらにsource-completeness、
+候補universe、cashを含むscheduled-day denominator、capacity、control、
+familywise手法が異なる。したがって、
+
+```text
+cross-family ranking permitted: false
+common-window posthoc reranking: false
+global 118-variant multiplicity correction: 未実施
+selection authority from family-local correction: なし
+```
+
+とする。各familyの補正はfamily内の反証には使えるが、7 familyを見た後の
+winner選択を補正しない。窓が非互換なまま横断p値を作る代わりに、
+retrospective panelから候補を選ばないことを保守的な措置とした。
+
+### canonical decisionの優先順位
+
+analog、graph、uplift、calendarのrunner resultは、独立監査前の
+`pending_independent_audit`を意図的に保持している。最終判断には後発の
+auditを使う。
+
+| family | canonical decision source |
+|---|---|
+| new data | independent audit + hash-binding manifest |
+| analog | independent audit |
+| distributional | independent auditを埋め込んだfinalized result + standalone audit |
+| uplift | independent audit |
+| graph | independent audit |
+| shift | independent auditを埋め込んだfinalized result + standalone audit |
+| calendar | independent audit |
+
+runner resultの`pending`表示だけを読んで、auditの0 passersを上書きしては
+ならない。7 familyすべてでprotocol hash、result binding、target mutation、
+独立P&L、production falseを統合auditが再確認した。
+
+### PIT・archive finality・calendar provenance
+
+new-data/analogの履歴TDnet cacheはpublication timestampを持つが、当時の
+local receipt timestampとarchive finalityを証明するsidecarを持たない。
+uplift/calendarのPIT PASSも、publication-time cutoffと
+source-completeness filterを検証したという限定された意味であり、履歴時点で
+同じarchive bytesを受領済みだったことの証明ではない。
+
+calendar featureはfrozen panelのsession indexから決定論的に生成した。
+official holiday/SQ calendar datasetはbindされておらず、C09のSQはproxyで
+ある。これは実装の未来混入がないことと、制度calendarの公式provenanceが
+あることを区別するための制限である。
+
+### 凍結T02のfresh OOT
+
+`research/model_v11_t02_oot_protocol.json`は、v1.0 T02のvectorizer、target、
+Ridge alpha、universe、rank、fallback、cash ruleを変更せず、次の期間だけを
+評価する。
+
+```text
+warmup:                        2025-08-01
+score:                         2025-08-04 ... 2026-03-31
+expected score sessions:       159
+minimum source-complete:        120
+minimum calendar months:          6
+untouched_holdout_claim:       false
+T02 result/audit:              なし
+```
+
+`untouched_holdout_claim=false`なのは、同じ日付のaggregate returnが無関係な
+v0.4分析で既に参照されたためである。一方、T02仕様自体は2025-07-31までの
+データで固定され、bound artifact 4/4のhashは一致した。
+
+現在のworkspaceでは対象期間のJPX raw PDFはhash-exact `0/160`、TDnet日別
+pageは`0/243`、joint provenance-complete score sessionは`0/120` minimumで
+ある。したがってexact no-tuning OOT統計gateもexecution gateも実行できない。
+
+統合auditのexact data blockerは次の6件。
+
+```text
+frozen T02 OOT raw data missing
+08:58 execution data missing
+08:58 futures data missing
+08:58 orderbook data missing
+08:58 PTS data missing
+08:58 liquidity data missing
+```
+
+data-readiness verifier v3はGit管理rootとevidence registryへ明示登録した
+source rootだけを探索し、protocolが要求するraw、provenance、実行/context
+fieldが揃うかをfail-closedで点検した。過去auditに残る絶対pathから`/tmp`を
+推測して走査しないため、別test runの一時fileで結果は変わらない。
+20件のblocking requirementと、未取得のoptional research-context 3 fieldを
+分離して記録する。blocker件数は重複し得るfailed requirement数であり、
+独立した欠測dataset数ではない。
+
+ファイル名・CSV/TSV headerの探索結果はdiagnostic candidateに限定し、
+header-only fileはgate evidenceにならない。positive certificationには、
+明示的に凍結したmanifest/content reader、非空のOOT行、PIT timestamp、
+型・非欠測率、provenance/hash、joint-session coverageが必要である。
+verifier自身はdata readinessだけを判定し、本番を認可しない。
+`model_v11_data_evidence_registry.json`には、T02 protocol hash、parser-audit
+hash、160取引日のdate-set digest、JPX/TDnet parser SHA、許可source host/path
+を固定し、registry自体のSHAもverifierへ固定した。
+TDnetの空pageは日付見出しだけでなくtable headerと前日・翌日linkを要求し、
+page/meta双方を243日manifestへhash bindする。JPXは公式host、raw byte count、
+parser version/SHAを照合したうえでcanonical parserにより各PDFを再parseし、
+日付・必須列・row数・reject数をauditと照合する。runtime importのpath/SHAも
+canonical parserへ一致させる。execution evidenceには正方向のregistry-bound
+CSV validatorを実装し、T02 decision artifactと独立replay audit、approved
+source、policy/simulator hashへ結合する。全order decisionを`filled`、
+`cancelled_special_quote`、`cancelled_delayed_open`、
+`cancelled_liquidity`、`unfilled`のいずれかで過不足なく被覆し、cash decisionは
+ledgerへ混入させない。40約定・30約定日、08:58:00～08:58:59 PIT、bid/ask、
+tick/lot、価格からのspread/slippage、予定注文額、実売買代金0.5%、
+予想寄付売買代金5%、予定額と実約定額双方の日次合計intended capitalを
+再計算する。自己申告されたreplay/policy auditは内部整合性までしか通さず、
+dated security master・JPX履歴からのtick/lot/20日売買代金再導出と
+provider-authenticated originがない限りexecution evidenceの`valid`をfalseにする。
+このregistryはrepository hashで固定されるが外部署名ではないため、verifierは
+引き続き本番を認可しない。
+
+### 本番認可rule
+
+本番候補には次をすべて要求する。
+
+1. 該当familyの事前登録retrospective gateを全て通過
+2. 横断選抜も事前固定した、genuinely laterなfresh OOT gateを通過
+3. source receipt/finalityとPIT complianceを独立検証
+4. 08:58 indicative/bid/askまたはorder simulation、realized spread/slippage、
+   special quote、delayed open、turnover、tick/lot、予想寄付turnover、
+   outcome完全被覆、日次capacityを検証
+5. 独立P&L auditと明示的人手承認
+
+現在は1～4が未充足なので、その積集合は空である。
+先物、PTS、volumeは追加研究contextであり、現行execution gateの必須項目とは
+数えない。bid/askとtickはspread/slippage・指値・丸めを再計算するため必須である。
+また登録済みhistorical windowはgenuinely untouchedではないため、これを通過しても
+事前固定したpaper-liveまたはさらに後年のholdoutを通過するまで本番認可しない。
+
+```text
+production candidate:    0
+production model changed: false
+orders allowed:          false
+```
+
+これは「edgeが存在しない」という結論ではない。正確な結論は
+**「現行freezeと利用可能dataの下で、本番採用を支持する証拠がない」**である。
+不足dataを取得した後も、既存結果へ閾値を合わせるのではなく、新しいprotocolと
+fresh periodを登録して検証する。
+
+### 再現と成果物
+
+```bash
+python research/model_v11_integration_audit.py
+PYTHONPATH=src:. python research/model_v11_production_readiness.py
+python -m unittest tests.test_model_v11_integration -v
+python -m pytest -q
+```
+
+最終回帰結果：
+
+```text
+307 passed
+166 subtests passed
+```
+
+主要成果物：
+
+```text
+research/model_v11_new_data_{protocol,result,audit}.json
+research/model_v11_analog_{protocol,result,audit}.json
+research/model_v11_distributional_{protocol,result,audit}.json
+research/model_v11_uplift_{protocol,result,audit}.json
+research/model_v11_graph_{protocol,result,audit}.json
+research/model_v11_shift_{protocol,result,audit}.json
+research/model_v11_calendar_{protocol,result,audit}.json
+research/model_v11_integration_audit.json
+research/model_v11_integration_report.md
+research/model_v11_t02_oot_protocol.json
+research/model_v11_data_evidence_registry.json
+research/model_v11_production_readiness.json
+research/model_v11_production_readiness_report.md
+```
+
+</details>

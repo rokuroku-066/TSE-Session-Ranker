@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "registry_id": "model_v11_t02_data_evidence_contract_20260723",
+  "scope": "Data identities and approved provenance endpoints for the frozen T02 OOT protocol. This registry does not contain or certify model results.",
+  "protocol": {
+    "path": "research/model_v11_t02_oot_protocol.json",
+    "sha256": "5eceb8bf396a703a6a3bf217837331f6af95a7b303c91c79e639d132f575024d"
+  },
+  "parser_audit": {
+    "path": "research/model_v04_parser_recovery_audit.json",
+    "sha256": "317d5cde9741429263cc91c11575300660f94f62123725fc8ce2d76cdee02eeb"
+  },
+  "protocol_evaluation_window": {
+    "score_start": "2025-08-04",
+    "score_end": "2026-03-31"
+  },
+  "jpx": {
+    "expected_session_count_including_warmup": 160,
+    "session_date_sha256": "7f26c43523ae564e6dbd4825091d7a043e97c64a39f5324cba45f6b93b952b0d",
+    "parser_version": "jpx_daily_text_v6_special_quote_marker",
+    "parser_sha256": "1bd2e74acced608eb36c3606b593ea407d2d1e5f54b3283790ef8fd0fb1041f7",
+    "approved_source_host": "www.jpx.co.jp",
+    "approved_source_path_prefix": "/markets/statistics-equities/daily/",
+    "registered_acquisition_parse_manifest": {
+      "path": null,
+      "sha256": null,
+      "schema_version": 1,
+      "state": "to_be_frozen_after_explicitly_approved_acquisition"
+    }
+  },
+  "tdnet": {
+    "parser_contract_version": "tdnet_index_html_heading_and_card_v1",
+    "parser_sha256": "4ee9b02566b8ae2f638454e1d1c01e0dfb3c935271e620c3e01abe7c4fe5fc29",
+    "approved_index_host": "contents.webapi.yanoshin.jp",
+    "approved_index_path_prefix": "/contents/tdnet_date/",
+    "approved_release_host": "www.release.tdnet.info",
+    "registered_page_manifest": {
+      "path": null,
+      "sha256": null,
+      "schema_version": 1,
+      "state": "to_be_frozen_after_explicitly_approved_acquisition"
+    }
+  },
+  "registered_source_roots": [],
+  "execution_evidence_contract": {
+    "validator_id": "execution_ledger_csv_v1",
+    "minimum_rows": 40,
+    "minimum_sessions": 30,
+    "minimum_filled_rows": 40,
+    "minimum_filled_sessions": 30,
+    "latest_eligible_open_time_jst": "09:10:00",
+    "required_columns": [
+      "session_date",
+      "decision_id",
+      "order_id",
+      "code",
+      "side",
+      "evidence_mode",
+      "execution_outcome",
+      "preopen_observed_at",
+      "decision_at",
+      "policy_action_at",
+      "cancel_requested_at",
+      "cancel_ack_at",
+      "bid_price_0858",
+      "ask_price_0858",
+      "indicative_price",
+      "simulated_fill_price",
+      "actual_fill_price",
+      "realized_spread_bps",
+      "slippage_bps",
+      "special_quote_0858",
+      "actual_open_at",
+      "turnover_jpy",
+      "minimum_trading_unit",
+      "effective_tick_size",
+      "predicted_opening_turnover_jpy",
+      "order_quantity",
+      "planned_order_notional_jpy",
+      "order_notional_jpy"
+    ],
+    "required_policy_scenarios": [
+      "normal_fill",
+      "special_quote_cancel",
+      "delayed_open_cancel",
+      "tick_rounding",
+      "lot_rounding",
+      "liquidity_veto"
+    ]
+  },
+  "registered_t02_decision_artifact": {
+    "path": null,
+    "sha256": null,
+    "schema_version": 1,
+    "state": "to_be_frozen_after_statistical_gate"
+  },
+  "registered_t02_decision_replay_audit": {
+    "path": null,
+    "sha256": null,
+    "schema_version": 1,
+    "state": "to_be_frozen_after_exact_replay_with_registered_sources"
+  },
+  "approved_execution_source_ids": [],
+  "registered_execution_policy_audit": {
+    "path": null,
+    "sha256": null,
+    "schema_version": 1,
+    "state": "to_be_frozen_after_simulator_and_policy_review"
+  },
+  "registered_execution_evidence_manifests": [],
+  "intended_capital_jpy": null,
+  "state": "awaiting_explicitly_approved_acquisition_and_execution_evidence"
+}

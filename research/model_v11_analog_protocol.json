@@ -1,0 +1,284 @@
+{
+  "schema_version": 1,
+  "protocol_id": "v11_historical_analog_zero_base_20260723",
+  "registered_at": "2026-07-23T16:20:00+09:00",
+  "status": "registered_before_any_v11_outcome_computation",
+  "research_question": "Can a genuinely nonparametric historical-event reaction model, with no fitted outcome coefficients, rank 08:58:59-known TDnet events well enough to clear an independent production-readiness gate?",
+  "authority": {
+    "purpose": "retrospective zero-base hypothesis falsification and possible forward-shadow qualification",
+    "retrospective_panel_outcomes_were_previously_viewed_by_project": true,
+    "v10_t02_results_were_known_before_registration": true,
+    "v11_candidate_outcomes_viewed_before_registration": false,
+    "production_promotion_allowed_from_this_run": false,
+    "orders_allowed": false,
+    "reason": "The panel is retrospective and the HTML caches lack archive observation timestamps. Even a full statistical pass can only qualify a frozen candidate for a new prospective shadow."
+  },
+  "frozen_inputs": {
+    "panel": {
+      "path": "/tmp/model_v07_corrected_panel.pkl",
+      "sha256": "6b86f994a1d15d1da8ed40469d44fc409adadc6cd5b3df3c08aef6717bcdf0eb",
+      "manifest_path": "/tmp/model_v07_corrected_panel.pkl.manifest.json",
+      "manifest_sha256": "25e08c564ef6400b7a29168db9fd7e8220bd0e2386c7a3c7e71b05c2ff950b02",
+      "rows": 1524104,
+      "codes": 4124,
+      "sessions": 386,
+      "calendar_bounds": [
+        "2024-01-04",
+        "2025-07-31"
+      ]
+    },
+    "tdnet_caches": [
+      {
+        "path": "tdnet_date_cache_2024",
+        "html_files": 110,
+        "filename_date_bounds": [
+          "2024-04-02",
+          "2024-07-31"
+        ],
+        "aggregate_sha256": "795852d3f64f8767191805e339dbd7c16972c9a249996ea6847fbbe023bea0f3"
+      },
+      {
+        "path": "tdnet_date_cache",
+        "html_files": 108,
+        "filename_date_bounds": [
+          "2025-03-31",
+          "2025-07-31"
+        ],
+        "aggregate_sha256": "012a11b23d09a5931726146cb37cb715f58e8c6e020d67700fa199c912628d38"
+      }
+    ],
+    "known_comparator_artifacts": {
+      "v10_tdnet_protocol": {
+        "path": "research/model_v10_tdnet_text_protocol.json",
+        "sha256": "700b0262f805c37659453af72651897d116e8bd1f6329a602989b90b212c5b3a"
+      },
+      "v10_tdnet_result": {
+        "path": "research/model_v10_tdnet_text_result.json",
+        "sha256": "3a40e3541fb24f89f2b009b48b2af4d3a84afe2e96ce03010ea0a87442800196"
+      }
+    }
+  },
+  "point_in_time_contract": {
+    "timezone": "Asia/Tokyo",
+    "decision_cutoff": "08:58:59",
+    "disclosure_assignment": "Assign to the first panel session whose 08:58:59 cutoff is at or after published_at.",
+    "market_close": "15:00 before 2024-11-05 and 15:30 from 2024-11-05.",
+    "overnight_rule": "Exclude a prior-session disclosure published before that session's market close; accept same-session premarket, prior-session post-close, and intervening non-session disclosures.",
+    "source_completeness": "Every calendar-date cache page from the prior panel session through the target session inclusive must exist. Missing-source sessions are excluded and never treated as no-event.",
+    "training_time_rule": "For every calendar-month fold, every analog outcome and every comparator training row must have date strictly earlier than the first scored session in that month.",
+    "feature_rule": "Only title text, publication metadata known by cutoff, code identity, event-family flags parsed from title, and marketwide bundle counts known by cutoff may enter analog retrieval. Target-session open, high, low, close, volume, return, and label are prohibited."
+  },
+  "sample_and_folds": {
+    "score_window": [
+      "2024-07-01",
+      "2025-07-31"
+    ],
+    "score_sessions": "All strict-source-complete panel sessions in the score window.",
+    "training": "All strict-source-complete event-code bundles strictly before the score month, inner-joined to price_training_eligible rows with observed open-to-close outcomes.",
+    "score": "Event-code bundles on score sessions inner-joined to price_eligible panel rows.",
+    "walk_forward": "Calendar-month expanding; refit the text vocabulary and rebuild the analog library once per scored month.",
+    "minimum_training_bundles": 100,
+    "predeclared_slices": {
+      "discovery": [
+        "2024-07-01",
+        "2024-07-31"
+      ],
+      "confirmation_a": [
+        "2025-04-01",
+        "2025-05-31"
+      ],
+      "confirmation_b": [
+        "2025-06-01",
+        "2025-07-31"
+      ]
+    }
+  },
+  "outcome_and_portfolio": {
+    "target": "same-session open-to-close gross return in percentage points",
+    "training_target_clipping": "Within each fold, clip observed training outcomes to its 1st and 99th percentiles, additionally bounded to [-10, 10].",
+    "portfolio_sizes": [
+      1,
+      2
+    ],
+    "selection": "Highest analog scores among eligible event bundles; deterministic code-ascending tie break.",
+    "slot_weighting": "Equal sleeves. A missing or abstained slot remains cash and pays no cost.",
+    "round_trip_cost_bps": [
+      20,
+      40,
+      60
+    ],
+    "primary_portfolio": "top1",
+    "primary_metric": "scheduled-session arithmetic mean after 40 bp round-trip cost"
+  },
+  "shared_retrieval_contract": {
+    "representation": {
+      "type": "char TF-IDF cosine",
+      "analyzer": "char",
+      "ngram_range": [
+        2,
+        5
+      ],
+      "min_df": 3,
+      "max_features": 30000,
+      "sublinear_tf": true,
+      "norm": "l2",
+      "fit_scope": "strictly prior training bundles in each monthly fold"
+    },
+    "single_neighbor_count": 31,
+    "neighbor_tie_break": "higher cosine similarity, then earlier date, then code ascending, then stable row order",
+    "base_similarity_weight": "cosine_similarity squared; if the selected support has zero total weight, use equal weights",
+    "no_k_grid": true,
+    "no_similarity_threshold_grid": true,
+    "no_post_outcome_candidate_mutation": true
+  },
+  "comparators": {
+    "L4_price_control": {
+      "model": "daily-percentile Ridge(alpha=1) on the frozen v10 L4 price feature set",
+      "purpose": "deployed-style price-only control, evaluated on exactly the same score sessions"
+    },
+    "T02_char_value_event_only": {
+      "model": "char TF-IDF Ridge(alpha=20) on clipped value target",
+      "purpose": "strong known v10 event-title comparator, reproduced in the same folds and portfolio engine"
+    }
+  },
+  "hypothesis_family_size": 10,
+  "registered_hypotheses": [
+    {
+      "id": "A01_global_similarity_mean",
+      "family": "plain historical nearest-event reaction",
+      "analog_pool": "all prior event bundles",
+      "score": "similarity-squared weighted mean clipped return across the common 31 neighbors",
+      "trade_policy": "rank all score bundles; absent slots are cash",
+      "hypothesis": "Local title geometry contains repeatable reactions that a nonparametric conditional mean can recover without fitted coefficients."
+    },
+    {
+      "id": "A02_issuer_excluded_mean",
+      "family": "issuer-excluded historical analog",
+      "analog_pool": "all prior bundles except the scored issuer",
+      "score": "similarity-squared weighted mean clipped return across the common 31 neighbors",
+      "trade_policy": "rank all score bundles; absent slots are cash",
+      "hypothesis": "Transferable event semantics, not issuer autocorrelation, drives the reaction."
+    },
+    {
+      "id": "A03_time_decay_mean",
+      "family": "recency-weighted historical analog",
+      "analog_pool": "all prior event bundles",
+      "score": "weighted mean with cosine-squared weight multiplied by an exponential 126-session half-life",
+      "trade_policy": "rank all score bundles; absent slots are cash",
+      "hypothesis": "The reaction map drifts, so recent analogs should dominate without estimating model coefficients."
+    },
+    {
+      "id": "A04_cross_code_one_per_issuer",
+      "family": "cross-code diversified analog",
+      "analog_pool": "prior bundles from other issuers, retaining only the highest-similarity bundle per historical issuer before taking the common 31 neighbors",
+      "score": "similarity-squared weighted mean clipped return",
+      "trade_policy": "rank all score bundles; absent slots are cash",
+      "hypothesis": "Issuer clusters can create false confidence; one analog per other issuer estimates a genuinely cross-code reaction."
+    },
+    {
+      "id": "A05_neighbor_lower_quantile",
+      "family": "distributional neighbor lower bound",
+      "analog_pool": "all prior event bundles",
+      "score": "similarity-weighted empirical 35th percentile of clipped return across the common 31 neighbors",
+      "trade_policy": "execute only bundles whose lower-bound score exceeds the 40 bp primary cost; rejected or missing slots are cash",
+      "hypothesis": "A positive local lower-tail outcome is safer than a high local mean for sparse top-of-list trading."
+    },
+    {
+      "id": "A06_dual_tail_neighbor_utility",
+      "family": "nonparametric asymmetric tail probability",
+      "analog_pool": "all prior event bundles",
+      "score": "weighted P(return > 1.0%) minus 1.5 times weighted P(return < -1.0%) over the common 31 neighbors",
+      "trade_policy": "execute only positive-utility bundles; rejected or missing slots are cash",
+      "hypothesis": "Separating upside and downside reaction frequency is more useful than estimating a conditional mean."
+    },
+    {
+      "id": "A07_event_family_prototype",
+      "family": "event-family prototype reaction",
+      "analog_pool": "all prior bundles represented by fixed parsed title-family flags rather than TF-IDF proximity",
+      "score": "Jaccard-similarity weighted mean clipped return over all prototypes with positive family overlap; fall back to the prior global event mean only when no overlap exists",
+      "trade_policy": "rank all score bundles; absent slots are cash",
+      "hypothesis": "Coarse corporate-action family prototypes generalize better than lexical nearest neighbors."
+    },
+    {
+      "id": "A08_same_issuer_memory",
+      "family": "issuer-specific episodic memory",
+      "analog_pool": "only prior bundles of the scored issuer",
+      "score": "similarity-squared weighted mean clipped return over up to the common 31 available issuer events",
+      "trade_policy": "no global fallback; issuers without prior events abstain and slots remain cash",
+      "hypothesis": "Issuer-specific disclosure style and investor base dominate cross-issuer semantic transfer."
+    },
+    {
+      "id": "A09_robust_neighbor_consensus",
+      "family": "robust sign-consensus analog",
+      "analog_pool": "all prior event bundles",
+      "score": "weighted median clipped return multiplied by the absolute weighted positive-minus-negative reaction share",
+      "trade_policy": "rank all score bundles; absent slots are cash",
+      "hypothesis": "A robust local center discounted by sign disagreement avoids mean estimates driven by a few extreme analogs."
+    },
+    {
+      "id": "A10_family_then_text_cross_code",
+      "family": "hierarchical event-family then lexical retrieval",
+      "analog_pool": "other-issuer prior bundles having the maximum available Jaccard event-family overlap with the score bundle, then the common 31 highest cosine similarities",
+      "score": "similarity-squared weighted mean clipped return",
+      "trade_policy": "rank all score bundles; absent slots are cash",
+      "hypothesis": "Restricting lexical analogs to the closest structural event family prevents semantically adjacent but economically different titles from mixing."
+    }
+  ],
+  "evaluation_and_audit": {
+    "point_metrics": [
+      "gross and net mean, median, win rate at 20/40/60 bp",
+      "filled and scheduled slots, cash rate, unique codes"
+    ],
+    "stability": [
+      "each scored calendar month",
+      "three predeclared slices",
+      "net20 after removing the best 20 scheduled sessions",
+      "net20 after replacing the top 10 positive-contribution codes with cash"
+    ],
+    "multiplicity": {
+      "candidate_family": "all ten A-candidates",
+      "bootstrap": "10000 deterministic circular moving-block resamples within month, block length 5 sessions, seed 20260723",
+      "primary_comparator": "the stronger observed top1 net40 comparator among L4_price_control and T02_char_value_event_only",
+      "adjustment": "single-step familywise max-centered-mean reality check and 90% simultaneous lower bound for candidate uplift"
+    },
+    "required_integrity_checks": [
+      "all input hashes exactly match the protocol",
+      "strictly prior training in every fold",
+      "zero future-publication violations",
+      "source-missing sessions never encoded as no-event",
+      "target-session outcome mutation leaves every score, selection key, and fill decision unchanged",
+      "saved pick outcomes reproduce every reported gross/net P&L metric exactly",
+      "deterministic rerun produces byte-identical picks and candidate metrics"
+    ]
+  },
+  "independent_gate": {
+    "candidate_selection": "Select the largest top1 net40 mean among candidates passing every retrospective statistical and robustness requirement. No fallback winner.",
+    "retrospective_requirements": [
+      "top1 net40 mean > 0",
+      "top2 net40 mean > 0",
+      "top1 net40 uplift versus both L4_price_control and T02_char_value_event_only > 0",
+      "top1 90% familywise simultaneous lower bound for uplift versus the stronger comparator > 0",
+      "top1 familywise reality-check p-value <= 0.10",
+      "top1 net20 after best-20-session removal > 0",
+      "top1 net20 after top-10 positive-contribution codes are replaced by cash > 0",
+      "top1 net40 mean > 0 in discovery, confirmation_a, and confirmation_b",
+      "top1 net40 mean > 0 in at least 4 of 5 scored months",
+      "top1 has a filled slot on at least 80% of scheduled score sessions",
+      "all integrity, mutation, deterministic-reproduction, and P&L audits pass"
+    ],
+    "production_requirements": [
+      "one candidate passes every retrospective requirement without post-registration mutation",
+      "historical source observation provenance is independently proven or rebuilt from timestamped archives",
+      "the frozen candidate then passes at least 120 new strict-source-complete prospective sessions beginning after registration",
+      "prospective top1 net40 mean > 0 with a one-sided 95% moving-block lower confidence bound > 0",
+      "prospective top1 net20 remains > 0 after best-20-session removal and top-10-code cash replacement",
+      "no production or order-routing change occurs before an explicit human approval"
+    ],
+    "permitted_decisions": [
+      "reject_family",
+      "retain_single_candidate_for_new_forward_shadow",
+      "promote_after_separate_prospective_gate_and_human_approval"
+    ],
+    "decision_this_run": "retrospective run can only reject or retain for a new forward shadow"
+  }
+}

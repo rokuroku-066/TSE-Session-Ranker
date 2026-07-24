@@ -1,0 +1,267 @@
+{
+  "schema_version": 1,
+  "seed": 20260723,
+  "replicates": 10000,
+  "block_length_sessions_within_month": 5,
+  "picks_sha256": "34676aa450a28bf40657f346be86130cbb366111b14d09aa0b10763e8b5ddd3d",
+  "top_k": {
+    "top1": {
+      "sessions": 88,
+      "candidate_family_size": 10,
+      "best_candidate_by_delta": "T02_char_value_event_only",
+      "best_delta_vs_L4_net40_mean_pct": 0.4968255940799242,
+      "familywise_reality_check_p_value": 0.21027897210278973,
+      "candidates": {
+        "T01_char_rank_event_only": {
+          "net40_mean_pct": -0.2303077739438676,
+          "net40_mean_90pct_block_interval": [
+            -0.5429431391478027,
+            0.09917552908637751
+          ],
+          "delta_vs_L4_net40_mean_pct": -0.2525407708691919,
+          "delta_vs_L4_90pct_block_interval": [
+            -0.6506597046213718,
+            0.1541484767931296
+          ]
+        },
+        "T02_char_value_event_only": {
+          "net40_mean_pct": 0.5190585910052483,
+          "net40_mean_90pct_block_interval": [
+            0.09340567669128605,
+            0.9349669652939843
+          ],
+          "delta_vs_L4_net40_mean_pct": 0.4968255940799242,
+          "delta_vs_L4_90pct_block_interval": [
+            -0.0212980460047634,
+            1.0141920473602237
+          ]
+        },
+        "T03_char_rank_overlay_L4": {
+          "net40_mean_pct": -0.5608664511119403,
+          "net40_mean_90pct_block_interval": [
+            -0.85199493572341,
+            -0.279571481512413
+          ],
+          "delta_vs_L4_net40_mean_pct": -0.5830994480372648,
+          "delta_vs_L4_90pct_block_interval": [
+            -0.9606009740991082,
+            -0.19521737358637933
+          ]
+        },
+        "T04_char_value_overlay_L4": {
+          "net40_mean_pct": -0.6516604670534387,
+          "net40_mean_90pct_block_interval": [
+            -0.958419748194459,
+            -0.35519510124693576
+          ],
+          "delta_vs_L4_net40_mean_pct": -0.6738934639787629,
+          "delta_vs_L4_90pct_block_interval": [
+            -1.0763829018501743,
+            -0.2626021453610482
+          ]
+        },
+        "T05_novelty_event_only": {
+          "net40_mean_pct": -0.18509209748186783,
+          "net40_mean_90pct_block_interval": [
+            -0.5414936714238625,
+            0.2181895865460629
+          ],
+          "delta_vs_L4_net40_mean_pct": -0.20732509440719216,
+          "delta_vs_L4_90pct_block_interval": [
+            -0.660927230004175,
+            0.27502087712726336
+          ]
+        },
+        "T06_intensity_congestion_event_only": {
+          "net40_mean_pct": -0.45681264634641355,
+          "net40_mean_90pct_block_interval": [
+            -0.8887190604561577,
+            -0.01414520478613364
+          ],
+          "delta_vs_L4_net40_mean_pct": -0.4790456432717377,
+          "delta_vs_L4_90pct_block_interval": [
+            -0.9567854735096112,
+            0.05159039632406403
+          ]
+        },
+        "T07_corroboration_contradiction_event_only": {
+          "net40_mean_pct": -0.7169314354549654,
+          "net40_mean_90pct_block_interval": [
+            -1.1614108364621991,
+            -0.285065661869799
+          ],
+          "delta_vs_L4_net40_mean_pct": -0.7391644323802896,
+          "delta_vs_L4_90pct_block_interval": [
+            -1.252186099896827,
+            -0.2217824905121317
+          ]
+        },
+        "T08_structured_all_event_only": {
+          "net40_mean_pct": -0.40103346360082565,
+          "net40_mean_90pct_block_interval": [
+            -0.7914026665649213,
+            -0.012528767719976219
+          ],
+          "delta_vs_L4_net40_mean_pct": -0.4232664605261499,
+          "delta_vs_L4_90pct_block_interval": [
+            -0.995577772111649,
+            0.1578560662334496
+          ]
+        },
+        "T09_structured_overlay_L4": {
+          "net40_mean_pct": -0.7196650138345733,
+          "net40_mean_90pct_block_interval": [
+            -1.0253133877624423,
+            -0.41874159537881694
+          ],
+          "delta_vs_L4_net40_mean_pct": -0.7418980107598976,
+          "delta_vs_L4_90pct_block_interval": [
+            -1.1233758043239241,
+            -0.3568437888827445
+          ]
+        },
+        "T10_event_barbell": {
+          "net40_mean_pct": 0.5190585910052483,
+          "net40_mean_90pct_block_interval": [
+            0.09340567669128605,
+            0.9349669652939843
+          ],
+          "delta_vs_L4_net40_mean_pct": 0.4968255940799242,
+          "delta_vs_L4_90pct_block_interval": [
+            -0.0212980460047634,
+            1.0141920473602237
+          ]
+        }
+      }
+    },
+    "top2": {
+      "sessions": 88,
+      "candidate_family_size": 10,
+      "best_candidate_by_delta": "T10_event_barbell",
+      "best_delta_vs_L4_net40_mean_pct": -0.1440922528459455,
+      "familywise_reality_check_p_value": 0.9968003199680032,
+      "candidates": {
+        "T01_char_rank_event_only": {
+          "net40_mean_pct": -0.3152288318567361,
+          "net40_mean_90pct_block_interval": [
+            -0.5811704184648273,
+            -0.03370957411866693
+          ],
+          "delta_vs_L4_net40_mean_pct": -0.4227343754479763,
+          "delta_vs_L4_90pct_block_interval": [
+            -0.6661329913259009,
+            -0.17819547531780947
+          ]
+        },
+        "T02_char_value_event_only": {
+          "net40_mean_pct": -0.0855166360214314,
+          "net40_mean_90pct_block_interval": [
+            -0.3337368562078058,
+            0.1646525199750114
+          ],
+          "delta_vs_L4_net40_mean_pct": -0.19302217961267118,
+          "delta_vs_L4_90pct_block_interval": [
+            -0.4814301389393819,
+            0.08730643077480241
+          ]
+        },
+        "T03_char_rank_overlay_L4": {
+          "net40_mean_pct": -0.4424594312949642,
+          "net40_mean_90pct_block_interval": [
+            -0.698190606387884,
+            -0.18045473064120315
+          ],
+          "delta_vs_L4_net40_mean_pct": -0.5499649748862038,
+          "delta_vs_L4_90pct_block_interval": [
+            -0.8064274644659262,
+            -0.28177602743722086
+          ]
+        },
+        "T04_char_value_overlay_L4": {
+          "net40_mean_pct": -0.5181119724865474,
+          "net40_mean_90pct_block_interval": [
+            -0.7699825904860796,
+            -0.26177076589146736
+          ],
+          "delta_vs_L4_net40_mean_pct": -0.6256175160777872,
+          "delta_vs_L4_90pct_block_interval": [
+            -0.8749921301782104,
+            -0.368148787988882
+          ]
+        },
+        "T05_novelty_event_only": {
+          "net40_mean_pct": -0.18310064635162135,
+          "net40_mean_90pct_block_interval": [
+            -0.41497926988440736,
+            0.060415224389290964
+          ],
+          "delta_vs_L4_net40_mean_pct": -0.29060618994286114,
+          "delta_vs_L4_90pct_block_interval": [
+            -0.5625088484102672,
+            -0.005938136086211281
+          ]
+        },
+        "T06_intensity_congestion_event_only": {
+          "net40_mean_pct": -0.3622212113644434,
+          "net40_mean_90pct_block_interval": [
+            -0.6529540434390076,
+            -0.07247596922984571
+          ],
+          "delta_vs_L4_net40_mean_pct": -0.4697267549556832,
+          "delta_vs_L4_90pct_block_interval": [
+            -0.7559498223277135,
+            -0.15706777089384175
+          ]
+        },
+        "T07_corroboration_contradiction_event_only": {
+          "net40_mean_pct": -0.31458064217291465,
+          "net40_mean_90pct_block_interval": [
+            -0.7104578031142723,
+            0.10181270308733764
+          ],
+          "delta_vs_L4_net40_mean_pct": -0.4220861857641545,
+          "delta_vs_L4_90pct_block_interval": [
+            -0.8193167837985694,
+            -0.002247179491616946
+          ]
+        },
+        "T08_structured_all_event_only": {
+          "net40_mean_pct": -0.38661244074397116,
+          "net40_mean_90pct_block_interval": [
+            -0.6358286826096937,
+            -0.1369508075372978
+          ],
+          "delta_vs_L4_net40_mean_pct": -0.4941179843352108,
+          "delta_vs_L4_90pct_block_interval": [
+            -0.7694501473132361,
+            -0.21907083480288567
+          ]
+        },
+        "T09_structured_overlay_L4": {
+          "net40_mean_pct": -0.402101208197457,
+          "net40_mean_90pct_block_interval": [
+            -0.6621161794272775,
+            -0.14080406257100161
+          ],
+          "delta_vs_L4_net40_mean_pct": -0.5096067517886969,
+          "delta_vs_L4_90pct_block_interval": [
+            -0.769831496142482,
+            -0.23789379461229024
+          ]
+        },
+        "T10_event_barbell": {
+          "net40_mean_pct": -0.036586709254705745,
+          "net40_mean_90pct_block_interval": [
+            -0.29978623038719054,
+            0.22412016095315887
+          ],
+          "delta_vs_L4_net40_mean_pct": -0.1440922528459455,
+          "delta_vs_L4_90pct_block_interval": [
+            -0.4193702186459785,
+            0.13728633611073685
+          ]
+        }
+      }
+    }
+  }
+}

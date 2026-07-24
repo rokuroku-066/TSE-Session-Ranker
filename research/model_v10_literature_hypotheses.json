@@ -1,0 +1,703 @@
+{
+  "schema_version": 1,
+  "repository_artifact": "research/model_v10_literature_hypotheses.json",
+  "artifact_id": "v10_literature_zero_base_hypotheses_20260723",
+  "created_at": "2026-07-23T00:00:00+09:00",
+  "objective": {
+    "decision_cutoff_jst": "08:58:59",
+    "target": "same_session_open_to_close_return_pct",
+    "display_slots": 2,
+    "primary_metric": "scheduled_day_top2_equal_weight_net_mean_pct_after_20bp",
+    "secondary_metrics": [
+      "top1_net_mean_pct_after_20bp",
+      "top2_net_mean_pct_after_40bp",
+      "top2_net_median_pct_after_20bp",
+      "profit_factor",
+      "positive_month_fraction",
+      "top20_winning_days_removed_net20",
+      "top10_profitable_codes_held_in_cash_net20"
+    ]
+  },
+  "data_audit": {
+    "panel_path": "/tmp/model_v07_corrected_panel.pkl",
+    "rows": 1524104,
+    "columns": 110,
+    "price_history_has_volume": false,
+    "historical_target_day_actual_open_forbidden": true,
+    "tdnet_missing_is_not_zero": true,
+    "tdnet_complete_period_must_be_enforced": true
+  },
+  "global_pit_constraints": [
+    "Every rolling price or outcome feature must be shifted by at least one completed exchange session.",
+    "feature_source_max_date and candidate_price_source_max_date must be strictly before the target date.",
+    "Current target-date actual open, high, low, close and actual overnight return are forbidden.",
+    "Current TDnet data are allowed only when their source timestamp is at or before 08:58:59 JST and tdnet_source_complete is true.",
+    "Missing source coverage must never be encoded as no event.",
+    "Training, preprocessing, calibration, grouping thresholds and uncertainty estimates must use dates strictly before the score date.",
+    "All train/test splits must be by exchange date, never by row."
+  ],
+  "hypotheses": [
+    {
+      "id": "H01_tse_asymmetric_large_loss_rebound",
+      "family": "price_mechanism",
+      "priority": 1,
+      "title": "TSE asymmetric large-loss rebound",
+      "novelty_vs_existing": "Replaces the existing symmetric linear cc_reversal_1_atr treatment with separately identified negative and positive hinges and a market-residual negative shock.",
+      "required_existing_columns": [
+        "cc_reversal_1_atr",
+        "range_shock_1_20",
+        "prior_market_cc_return_pct"
+      ],
+      "engineered_features": [
+        "neg_shock_1=min(max(-cc_reversal_1_atr,0),5)",
+        "pos_shock_1=min(max(cc_reversal_1_atr,0),5)",
+        "neg_shock_sq=neg_shock_1^2",
+        "pos_shock_sq=pos_shock_1^2",
+        "neg_shock_x_range=neg_shock_1*range_shock_1_20",
+        "neg_shock_x_market_nonnegative=neg_shock_1*I(prior_market_cc_return_pct>=0)"
+      ],
+      "predicted_sign": {
+        "neg_shock_1": "positive",
+        "neg_shock_sq": "positive",
+        "neg_shock_x_market_nonnegative": "positive",
+        "pos_shock_1": "smaller absolute effect than neg_shock_1"
+      },
+      "falsification": "Reject if negative hinges do not improve fixed-period net20 over the symmetric linear control, if positive and negative shocks are economically symmetric, or if the sign fails across fixed time blocks.",
+      "pit_constraints": [
+        "Use only the immediately prior completed close-to-close return and prior market return.",
+        "Do not construct the shock from the target session open."
+      ],
+      "source_ids": [
+        "S01",
+        "S02",
+        "S03"
+      ],
+      "current_repo_testable": true
+    },
+    {
+      "id": "H02_weekly_intraday_inventory_reversal",
+      "family": "price_mechanism",
+      "priority": 2,
+      "title": "Weekly intraday inventory reversal conditioned on friction and market volatility",
+      "novelty_vs_existing": "Uses past OC rather than close-to-close return and imposes the Japan-specific reversal interaction with lagged activity friction and market volatility.",
+      "required_existing_columns": [
+        "oc_mean_5",
+        "no_trade_rate_20",
+        "flat_oc_rate_20",
+        "zero_range_rate_20",
+        "market_cc_vol_ratio_5_20"
+      ],
+      "engineered_features": [
+        "oc5_reversal=-oc_mean_5",
+        "activity_friction=mean(no_trade_rate_20,flat_oc_rate_20,zero_range_rate_20)",
+        "oc5_reversal_x_activity_friction",
+        "oc5_reversal_x_market_volatility"
+      ],
+      "predicted_sign": {
+        "oc5_reversal": "positive",
+        "oc5_reversal_x_activity_friction": "positive",
+        "oc5_reversal_x_market_volatility": "positive"
+      },
+      "falsification": "Reject if the reversal sign is absent, if the interaction signs do not repeat in fixed blocks, or if tail-removed net20 fails to improve.",
+      "pit_constraints": [
+        "All five OC observations must be completed before the target date.",
+        "No-trade rows are excluded from return means and are retained only in the explicit friction proxy."
+      ],
+      "source_ids": [
+        "S04"
+      ],
+      "current_repo_testable": true
+    },
+    {
+      "id": "H03_joint_overnight_day_tug_state",
+      "family": "price_mechanism",
+      "priority": 1,
+      "title": "Joint overnight-day tug-of-war state",
+      "novelty_vs_existing": "Models the joint sign path on the same historical session rather than relying on separate overnight and OC means or their linear correlation.",
+      "required_existing_columns": [
+        "overnight_last",
+        "oc_return_pct",
+        "outcome_observed",
+        "source_complete",
+        "code",
+        "date"
+      ],
+      "engineered_features": [
+        "posnight_negday_rate_20",
+        "negnight_posday_rate_20",
+        "tug_balance_20=negnight_posday_rate_20-posnight_negday_rate_20",
+        "tug_balance_60"
+      ],
+      "predicted_sign": {
+        "tug_balance_20": "positive",
+        "posnight_negday_rate_20": "negative",
+        "negnight_posday_rate_20": "positive"
+      },
+      "falsification": "Reject if joint rates add no fixed-period net20 beyond separate oc_mean and overnight_mean controls or if their signs reverse between periods.",
+      "pit_constraints": [
+        "Build each joint pair only after both prior-session overnight and OC are observed.",
+        "Shift the rolling statistic one complete exchange session.",
+        "Exclude nontrades and incomplete source rows from both numerator and denominator."
+      ],
+      "source_ids": [
+        "S01",
+        "S05",
+        "S06",
+        "S09"
+      ],
+      "current_repo_testable": true
+    },
+    {
+      "id": "H04_retail_attention_open_overpricing",
+      "family": "price_mechanism",
+      "priority": 2,
+      "title": "Retail-attention opening overpricing proxy",
+      "novelty_vs_existing": "Creates an asymmetric positive-overnight attention state multiplied by valuation/arbitrage-difficulty proxies; the prior gap-response group did not encode this mechanism.",
+      "required_existing_columns": [
+        "overnight_last",
+        "overnight_std_20",
+        "xrank_atr14_pct",
+        "no_trade_rate_20",
+        "flat_oc_rate_20",
+        "zero_range_rate_20"
+      ],
+      "engineered_features": [
+        "positive_overnight_rate_20",
+        "positive_overnight_streak",
+        "attention_pressure=positive_overnight_rate_20*positive_atr_rank*activity_friction",
+        "attention_pressure_x_positive_overnight_last"
+      ],
+      "predicted_sign": {
+        "attention_pressure": "negative",
+        "attention_pressure_x_positive_overnight_last": "negative"
+      },
+      "falsification": "Reject if the high-pressure group does not reverse intraday, if the effect is equally strong in low-friction stocks, or if it adds nothing beyond overnight_mean.",
+      "pit_constraints": [
+        "overnight_last is the prior completed session's gap, not the target-date gap.",
+        "Do not label activity proxies as measured spreads or turnover."
+      ],
+      "source_ids": [
+        "S07",
+        "S08",
+        "S09"
+      ],
+      "current_repo_testable": true
+    },
+    {
+      "id": "H05_day_only_horizon_separation",
+      "family": "price_mechanism",
+      "priority": 2,
+      "title": "Day-only horizon-separated reversal and momentum",
+      "novelty_vs_existing": "Uses literature-aligned nonoverlapping short-reversal and twelve-month-minus-one-month momentum windows and a same-window overnight placebo instead of allowing a pooled model to mix horizons and sessions.",
+      "required_existing_columns": [
+        "date",
+        "code",
+        "oc_return_pct",
+        "overnight_last",
+        "outcome_observed",
+        "source_complete"
+      ],
+      "engineered_features": [
+        "short_day_reversal_20=-sum(OC[t-20:t-1])",
+        "day_momentum_252_skip20=sum(OC[t-252:t-21])",
+        "night_momentum_252_skip20=sum(overnight[t-252:t-21])"
+      ],
+      "predicted_sign": {
+        "short_day_reversal_20": "positive",
+        "day_momentum_252_skip20": "positive",
+        "night_momentum_252_skip20": "zero incremental momentum"
+      },
+      "falsification": "Reject if the day-only specification does not beat an equal-capacity day-plus-night control, if day momentum is unstable, or if it is indistinguishable from the overnight placebo.",
+      "pit_constraints": [
+        "Fix 20, 252 and skip-20 windows before reading results.",
+        "Use completed OC and overnight observations only.",
+        "Rows with fewer than 252 complete prior sessions are missing for this hypothesis and must not be filled with zero."
+      ],
+      "source_ids": [
+        "S04",
+        "S05",
+        "S10"
+      ],
+      "current_repo_testable": true
+    },
+    {
+      "id": "H06_tdnet_marketwide_distraction",
+      "family": "tdnet_attention",
+      "priority": 2,
+      "title": "Marketwide TDnet distraction interacted with event direction",
+      "novelty_vs_existing": "Counts the contemporaneous marketwide information load rather than only the focal firm's document and family counts.",
+      "required_existing_columns": [
+        "date",
+        "tdnet_source_complete",
+        "tdnet_clean_any",
+        "tdnet_clean_document_count_log1p",
+        "tdnet_clean_has_earnings",
+        "tdnet_clean_revision_up_title",
+        "tdnet_clean_revision_down_title",
+        "tdnet_clean_dividend_up_title",
+        "tdnet_clean_dividend_down_title",
+        "tdnet_clean_has_buyback_decision"
+      ],
+      "engineered_features": [
+        "market_tdnet_code_count",
+        "market_tdnet_document_count",
+        "market_earnings_count",
+        "supportive_event_x_log_market_tdnet_count",
+        "adverse_event_x_log_market_tdnet_count"
+      ],
+      "predicted_sign": {
+        "supportive_event_x_log_market_tdnet_count": "positive",
+        "adverse_event_x_log_market_tdnet_count": "negative"
+      },
+      "falsification": "Reject if supportive events do not show stronger OC continuation on congested days, if the effect appears equally among non-event stocks, or if source-complete fixed blocks disagree.",
+      "pit_constraints": [
+        "Aggregate only records available by 08:58:59 JST.",
+        "Require complete TDnet coverage for the whole date before computing the market count.",
+        "Do not encode an incomplete date as zero congestion."
+      ],
+      "source_ids": [
+        "S11",
+        "S18"
+      ],
+      "current_repo_testable": true,
+      "coverage_limitation": "Evaluate only dates on which the repository proves complete TDnet coverage."
+    },
+    {
+      "id": "H07_tdnet_attention_calendar",
+      "family": "tdnet_attention",
+      "priority": 3,
+      "title": "Friday-disclosure and post-long-holiday directional disclosure drift",
+      "novelty_vs_existing": "Tests event direction against the actual source-disclosure weekday and elapsed holiday interval, not a generic target-day weekday sine/cosine feature.",
+      "required_existing_columns": [
+        "date",
+        "tdnet_clean_feature_source_max_timestamp",
+        "tdnet_clean_latest_age_hours_log1p",
+        "tdnet_clean_weekend_age",
+        "tdnet_clean_revision_up_title",
+        "tdnet_clean_dividend_up_title",
+        "tdnet_clean_has_buyback_decision",
+        "tdnet_clean_revision_down_title",
+        "tdnet_clean_dividend_down_title"
+      ],
+      "engineered_features": [
+        "source_event_is_friday",
+        "calendar_days_since_prior_exchange_session",
+        "supportive_event_x_source_event_is_friday",
+        "supportive_event_x_weekend_age",
+        "supportive_event_x_post_long_holiday",
+        "latest_age_x_attention_day"
+      ],
+      "predicted_sign": {
+        "supportive_event_x_source_event_is_friday": "positive",
+        "supportive_event_x_weekend_age": "positive",
+        "supportive_event_x_post_long_holiday": "positive"
+      },
+      "falsification": "Reject if the effect is also present in no-event stocks, has no direction asymmetry, or disappears outside one calendar month.",
+      "pit_constraints": [
+        "Calendar features must be known before open.",
+        "Use only cutoff-safe disclosure features and a frozen exchange calendar."
+      ],
+      "source_ids": [
+        "S12",
+        "S18"
+      ],
+      "current_repo_testable": true,
+      "coverage_limitation": "TDnet source-complete dates only."
+    },
+    {
+      "id": "H08_tdnet_directional_corroboration",
+      "family": "tdnet_information_structure",
+      "priority": 2,
+      "title": "Corroborated directional disclosure bundle",
+      "novelty_vs_existing": "Separates same-direction economic corroboration from raw family count and generic support-adverse conflict.",
+      "required_existing_columns": [
+        "tdnet_clean_has_earnings",
+        "tdnet_clean_revision_up_title",
+        "tdnet_clean_revision_down_title",
+        "tdnet_clean_dividend_up_title",
+        "tdnet_clean_dividend_down_title",
+        "tdnet_clean_has_buyback_decision",
+        "tdnet_clean_support_adverse_conflict",
+        "tdnet_clean_family_count_log1p"
+      ],
+      "engineered_features": [
+        "positive_corroboration",
+        "negative_corroboration",
+        "directional_conflict",
+        "corroboration_count"
+      ],
+      "predicted_sign": {
+        "positive_corroboration": "positive",
+        "negative_corroboration": "negative",
+        "directional_conflict": "negative or higher uncertainty"
+      },
+      "falsification": "Reject if positive corroboration does not beat isolated positive events after controlling for document count or if conflict is indistinguishable.",
+      "pit_constraints": [
+        "All component disclosures must be in the same cutoff-safe bundle.",
+        "Direction-unknown titles remain unknown and cannot be imputed as supportive."
+      ],
+      "source_ids": [
+        "S13",
+        "S18"
+      ],
+      "current_repo_testable": true,
+      "coverage_limitation": "TDnet source-complete dates only."
+    },
+    {
+      "id": "H09_earnings_wave_sequence",
+      "family": "tdnet_information_structure",
+      "priority": 3,
+      "title": "Point-in-time earnings-wave sequence",
+      "novelty_vs_existing": "Uses the point-in-time position within the market earnings wave rather than a fixed month or generic event flag.",
+      "required_existing_columns": [
+        "date",
+        "tdnet_clean_has_earnings",
+        "tdnet_source_complete"
+      ],
+      "engineered_features": [
+        "prior_20_session_market_earnings_count",
+        "days_since_market_earnings_wave_start",
+        "current_wave_percentile_using_expanding_historical_wave_size",
+        "earnings_x_early_wave",
+        "earnings_x_late_wave"
+      ],
+      "predicted_sign": {
+        "earnings_x_early_wave": "positive relative to late wave",
+        "earnings_x_late_wave": "lower than early wave"
+      },
+      "falsification": "Reject if early-versus-late differences disappear after event direction and month controls, or if signs fail across earnings waves.",
+      "pit_constraints": [
+        "Never divide by the final number of announcements in the current future-completed wave.",
+        "Use only an expanding estimate based on prior completed waves.",
+        "Require complete TDnet coverage."
+      ],
+      "source_ids": [
+        "S14",
+        "S18"
+      ],
+      "current_repo_testable": true,
+      "coverage_limitation": "TDnet source-complete dates and enough prior completed waves are required."
+    },
+    {
+      "id": "H10_top_heavy_listwise_net_gain",
+      "family": "model_objective",
+      "priority": 1,
+      "title": "Top-heavy listwise net-gain ranker",
+      "novelty_vs_existing": "Directly optimizes each date's top one or two net gains; the existing pairwise model samples broad pairs and the Ridge target treats the whole daily rank nearly uniformly.",
+      "required_existing_columns": [
+        "date",
+        "code",
+        "oc_return_pct",
+        "price_training_eligible",
+        "price_eligible",
+        "source_complete"
+      ],
+      "engineered_features": [
+        "net_utility=clip(oc_return_pct,-5,5)-0.20",
+        "nonnegative_relevance=net_utility+5.20",
+        "date_as_query_group",
+        "top_rank_discount=[1.0,0.5]"
+      ],
+      "predicted_sign": {
+        "objective_effect": "higher scheduled-day top1 and top2 net20 than pointwise Ridge and uniform pairwise rank"
+      },
+      "falsification": "Reject if no fixed untouched retrospective block improves top2 net20, tail-removed net20 and monthly stability versus both daily-rank Ridge and pairwise linear rank.",
+      "pit_constraints": [
+        "The query label and gain exist only for training dates.",
+        "Fit preprocessing and ranker on dates strictly before each score month.",
+        "Never sample train and score rows from the same date."
+      ],
+      "source_ids": [
+        "S15",
+        "S16"
+      ],
+      "current_repo_testable": true
+    },
+    {
+      "id": "H11_opening_noise_group_experts",
+      "family": "model_structure",
+      "priority": 2,
+      "title": "Opening-noise group-specific experts",
+      "novelty_vs_existing": "Fits separate models for economically heterogeneous opening-noise and ordinary groups rather than adding another global interaction term.",
+      "required_existing_columns": [
+        "overnight_std_20",
+        "xrank_atr14_pct",
+        "no_trade_rate_20",
+        "flat_oc_rate_20",
+        "zero_range_rate_20",
+        "date",
+        "code"
+      ],
+      "engineered_features": [
+        "historical_posnight_negday_rate",
+        "activity_friction",
+        "opening_noise_group_from_training_fold_median",
+        "ordinary_group"
+      ],
+      "predicted_sign": {
+        "opening_noise_expert_overnight_attention_effect": "negative",
+        "ordinary_expert_medium_day_momentum_effect": "positive",
+        "group_expert_net20_uplift": "positive versus one global model"
+      },
+      "falsification": "Reject if group coefficient differences do not repeat, if the global model wins, or if gains depend on one sparse group or a few codes.",
+      "pit_constraints": [
+        "Estimate group cutoffs inside each training fold.",
+        "Assign score rows with only their lagged features.",
+        "Use identical base feature count and regularization policy in both experts."
+      ],
+      "source_ids": [
+        "S07",
+        "S09",
+        "S17"
+      ],
+      "current_repo_testable": true
+    },
+    {
+      "id": "H12_distributional_net_value",
+      "family": "model_objective",
+      "priority": 2,
+      "title": "Two-part distributional net-value decision",
+      "novelty_vs_existing": "Separates the probability of clearing cost from positive and negative conditional magnitudes and adds a training-only uncertainty penalty; this differs from the existing fixed-threshold ordinal integration.",
+      "required_existing_columns": [
+        "oc_return_pct",
+        "date",
+        "code",
+        "price_training_eligible",
+        "price_eligible"
+      ],
+      "engineered_features": [
+        "p_pos=P(OC>0.20)",
+        "mu_pos=E[min(OC,5)|OC>0.20]",
+        "mu_neg=E[max(OC,-5)|OC<=0.20]",
+        "net_value=p_pos*mu_pos+(1-p_pos)*mu_neg-0.20",
+        "uncertainty_penalty=0.5*expanding_residual_MAD_by_prediction_decile"
+      ],
+      "predicted_sign": {
+        "net_value": "positive",
+        "uncertainty_penalty": "negative",
+        "objective_effect": "higher top1 and top2 net return after 20 and 40bp"
+      },
+      "falsification": "Reject if conditional magnitude calibration fails across blocks, if 20bp gains disappear at 40bp, or if sign-logit and daily-rank Ridge remain superior.",
+      "pit_constraints": [
+        "Fit all three conditional models and calibration bins using training dates only.",
+        "Compute residual MAD expanding through the prior date only.",
+        "Keep the daily top two display separate from the optional net_value<=0 cash decision."
+      ],
+      "source_ids": [
+        "S19"
+      ],
+      "current_repo_testable": true
+    }
+  ],
+  "sources": [
+    {
+      "id": "S01",
+      "authors": "Yakov Amihud and Haim Mendelson",
+      "year": 1989,
+      "title": "Market microstructure and price discovery on the Tokyo Stock Exchange",
+      "venue": "Japan and the World Economy",
+      "url": "https://doi.org/10.1016/0922-1425(89)90013-3",
+      "primary_finding_used": "TSE opening prices display overreaction and opening pricing errors are corrected during the trading day.",
+      "market": "Japan"
+    },
+    {
+      "id": "S02",
+      "authors": "Yakov Amihud and Haim Mendelson",
+      "year": 1991,
+      "title": "Volatility, Efficiency, and Trading: Evidence from the Japanese Stock Market",
+      "venue": "The Journal of Finance",
+      "url": "https://doi.org/10.1111/j.1540-6261.1991.tb04643.x",
+      "primary_finding_used": "The morning periodic clearing is noisier and less efficient than the midday clearing.",
+      "market": "Japan"
+    },
+    {
+      "id": "S03",
+      "authors": "Marc Bremer, Takato Hiraki, and Richard J. Sweeney",
+      "year": 1997,
+      "title": "Predictable Patterns after Large Stock Price Changes on the Tokyo Stock Exchange",
+      "venue": "Journal of Financial and Quantitative Analysis",
+      "url": "https://doi.org/10.2307/2331204",
+      "primary_finding_used": "Large decreases are followed by positive returns on the TSE, with little symmetric evidence after large increases.",
+      "market": "Japan"
+    },
+    {
+      "id": "S04",
+      "authors": "Kotaro Miwa",
+      "year": 2019,
+      "title": "Short-Term Return Reversals and Intraday Transactions",
+      "venue": "The Quarterly Journal of Finance",
+      "url": "https://doi.org/10.1142/S2010139219500022",
+      "primary_finding_used": "Japanese short-term reversals come from past intraday returns and are stronger for illiquid stocks and volatile markets.",
+      "market": "Japan"
+    },
+    {
+      "id": "S05",
+      "authors": "Dong Lou, Christopher Polk, and Spyros Skouras",
+      "year": 2019,
+      "title": "A tug of war: Overnight versus intraday expected returns",
+      "venue": "Journal of Financial Economics",
+      "url": "https://doi.org/10.1016/j.jfineco.2019.03.011",
+      "primary_finding_used": "Firm-level overnight and intraday components each continue while returns reverse across the two periods.",
+      "market": "United States and strategy portfolios"
+    },
+    {
+      "id": "S06",
+      "authors": "Ferhat Akbas, Ekkehart Boehmer, Chao Jiang, and Paul Koch",
+      "year": 2022,
+      "title": "Overnight returns, daytime reversals, and future stock returns",
+      "venue": "Journal of Financial Economics",
+      "url": "https://doi.org/10.1016/j.jfineco.2021.09.019",
+      "primary_finding_used": "Frequent positive overnight returns followed by negative daytime reversals identify a persistent tug-of-war state.",
+      "market": "United States"
+    },
+    {
+      "id": "S07",
+      "authors": "Henk Berkman, Paul D. Koch, Laura Tuttle, and Ying Jenny Zhang",
+      "year": 2012,
+      "title": "Paying Attention: Overnight Returns and the Hidden Cost of Buying at the Open",
+      "venue": "Journal of Financial and Quantitative Analysis",
+      "url": "https://doi.org/10.1017/S0022109012000270",
+      "primary_finding_used": "Retail attention inflates opening prices and produces daytime reversals, especially where valuation and arbitrage are difficult.",
+      "market": "United States"
+    },
+    {
+      "id": "S08",
+      "authors": "David Aboody, Omri Even-Tov, Reuven Lehavy, and Brett Trueman",
+      "year": 2018,
+      "title": "Overnight Returns and Firm-Specific Investor Sentiment",
+      "venue": "Journal of Financial and Quantitative Analysis",
+      "url": "https://doi.org/10.1017/S0022109017000989",
+      "primary_finding_used": "Overnight returns persist at short horizons and persistence is stronger for hard-to-value firms.",
+      "market": "United States"
+    },
+    {
+      "id": "S09",
+      "authors": "Zhongjin Lu, Steven Malliaris, and Zhongling Qin",
+      "year": 2023,
+      "title": "Heterogeneous liquidity providers and night-minus-day return predictability",
+      "venue": "Journal of Financial Economics",
+      "url": "https://doi.org/10.1016/j.jfineco.2023.03.002",
+      "primary_finding_used": "Opening information asymmetry and heterogeneous liquidity provision create opposite-signed night and day expected returns.",
+      "market": "United States"
+    },
+    {
+      "id": "S10",
+      "authors": "Yashar H. Barardehi, Vincent Bogousslavsky, and Dmitriy Muravyev",
+      "year": 2026,
+      "title": "What Drives Momentum and Reversal? Evidence from Day and Night Signals",
+      "venue": "The Review of Financial Studies",
+      "url": "https://doi.org/10.1093/rfs/hhag036",
+      "primary_finding_used": "Past intraday returns exhibit momentum while past overnight returns do not show the same momentum pattern.",
+      "market": "United States with international evidence"
+    },
+    {
+      "id": "S11",
+      "authors": "David Hirshleifer, Sonya Seongyeon Lim, and Siew Hong Teoh",
+      "year": 2009,
+      "title": "Driven to Distraction: Extraneous Events and Underreaction to Earnings News",
+      "venue": "The Journal of Finance",
+      "url": "https://doi.org/10.1111/j.1540-6261.2009.01501.x",
+      "primary_finding_used": "More same-day competing announcements weaken immediate reaction and strengthen later drift.",
+      "market": "United States"
+    },
+    {
+      "id": "S12",
+      "authors": "Stefano DellaVigna and Joshua M. Pollet",
+      "year": 2009,
+      "title": "Investor Inattention and Friday Earnings Announcements",
+      "venue": "The Journal of Finance",
+      "url": "https://doi.org/10.1111/j.1540-6261.2009.01447.x",
+      "primary_finding_used": "Friday announcements have weaker immediate response and stronger delayed response.",
+      "market": "United States"
+    },
+    {
+      "id": "S13",
+      "authors": "Alex Kane, Young Ki Lee, and Alan J. Marcus",
+      "year": 1984,
+      "title": "Earnings and Dividend Announcements: Is There a Corroboration Effect?",
+      "venue": "The Journal of Finance / NBER Working Paper",
+      "url": "https://www.nber.org/papers/w1248",
+      "primary_finding_used": "Contemporaneous earnings and dividend news interact, with same-direction news corroborating the other signal.",
+      "market": "United States"
+    },
+    {
+      "id": "S14",
+      "authors": "Pavel Savor and Mungo Wilson",
+      "year": 2016,
+      "title": "Earnings Announcements and Systematic Risk",
+      "venue": "The Journal of Finance",
+      "url": "https://doi.org/10.1111/jofi.12361",
+      "primary_finding_used": "Announcement premia differ by announcement sequence, with early announcers earning more than late announcers.",
+      "market": "United States"
+    },
+    {
+      "id": "S15",
+      "authors": "Daniel Poh, Bryan Lim, Stefan Zohren, and Stephen Roberts",
+      "year": 2020,
+      "title": "Building Cross-Sectional Systematic Strategies By Learning to Rank",
+      "venue": "arXiv / SSRN working paper",
+      "url": "https://arxiv.org/abs/2012.07149",
+      "primary_finding_used": "Pairwise and listwise learning-to-rank can improve cross-sectional portfolio ranking relative to sorted pointwise predictions.",
+      "market": "Cross-sectional futures strategy"
+    },
+    {
+      "id": "S16",
+      "authors": "Xin Zhang, Lan Wu, and Zhixue Chen",
+      "year": 2022,
+      "title": "Constructing long-short stock portfolio with a new listwise learn-to-rank algorithm",
+      "venue": "Quantitative Finance",
+      "url": "https://doi.org/10.1080/14697688.2021.1939117",
+      "primary_finding_used": "A portfolio-oriented listwise loss can emphasize economically relevant rank-list extremes.",
+      "market": "China A-share"
+    },
+    {
+      "id": "S17",
+      "authors": "Clint Howard",
+      "year": 2024,
+      "title": "Choices Matter When Training Machine Learning Models for Return Prediction",
+      "venue": "Financial Analysts Journal",
+      "url": "https://doi.org/10.1080/0015198X.2024.2388024",
+      "primary_finding_used": "Group-specific models and relative-return prediction address cross-sectional heterogeneity and can improve economic performance.",
+      "market": "United States"
+    },
+    {
+      "id": "S18",
+      "authors": "Japan Exchange Group",
+      "year": 2026,
+      "title": "TDnet overview",
+      "venue": "Official exchange documentation",
+      "url": "https://www.jpx.co.jp/equities/listing/disclosure/tdnet/index.html",
+      "primary_finding_used": "TDnet is the official fair, rapid and broad timely-disclosure system and supplies the operational publication boundary.",
+      "market": "Japan"
+    },
+    {
+      "id": "S19",
+      "authors": "Nicolae Gârleanu and Lasse Heje Pedersen",
+      "year": 2013,
+      "title": "Dynamic Trading with Predictable Returns and Transaction Costs",
+      "venue": "The Journal of Finance",
+      "url": "https://doi.org/10.1111/jofi.12080",
+      "primary_finding_used": "Optimal decisions explicitly trade predictive return and signal persistence against transaction costs.",
+      "market": "General model with commodity implementation"
+    }
+  ],
+  "recommended_first_screen": [
+    "H01_tse_asymmetric_large_loss_rebound",
+    "H03_joint_overnight_day_tug_state",
+    "H10_top_heavy_listwise_net_gain"
+  ],
+  "validation_policy": {
+    "freeze_before_metrics": true,
+    "families_kept_separate": [
+      "price_mechanism",
+      "tdnet_attention",
+      "tdnet_information_structure",
+      "model_objective",
+      "model_structure"
+    ],
+    "single_addition_vs_capacity_matched_control": true,
+    "global_multiple_testing_adjustment": true,
+    "retrospective_winner_cannot_promote_production": true,
+    "prospective_start": "2026-07-23"
+  }
+}

@@ -1,0 +1,123 @@
+{
+  "protocol_id": "v10_literature_blocks_20260723",
+  "repository_artifact": "research/model_v10_literature_protocol.json",
+  "registered_at_jst": "2026-07-23",
+  "authority": "retrospective_research_only",
+  "production_promotion_allowed": false,
+  "panel": {
+    "path": "/tmp/model_v07_corrected_panel.pkl",
+    "expected_sha256": "6b86f994a1d15d1da8ed40469d44fc409adadc6cd5b3df3c08aef6717bcdf0eb",
+    "immutable": true
+  },
+  "objective": "Maximize equal-weight open-to-close return among the daily top one or two names, net of 20/40/60 bps round-trip costs.",
+  "score_window": ["2024-07-01", "2025-07-31"],
+  "training": {
+    "start": "2024-01-04",
+    "scheme": "monthly expanding walk-forward",
+    "minimum_prior_sessions": 60,
+    "rows": "price_training_eligible=true and observed open-to-close outcome",
+    "date_equal_sample_weight": true,
+    "target": "within-date average percentile rank of open-to-close return, mapped to [-1,1]",
+    "model": "median imputation with missing indicators, standard scaling, Ridge(alpha=1.0)",
+    "tie_break": "descending model score then ascending code"
+  },
+  "control_features": [
+    "oc_last",
+    "oc_mean_5",
+    "oc_mean_20",
+    "oc_mean_60",
+    "oc_win_20",
+    "oc_std_20",
+    "overnight_last",
+    "overnight_mean_20",
+    "overnight_mean_60",
+    "night_day_corr_60",
+    "xrank_atr14_pct",
+    "xrank_close_momentum_5",
+    "xrank_close_momentum_20",
+    "xrank_close_momentum_60",
+    "xrank_prior_close_location_20",
+    "flat_oc_rate_20"
+  ],
+  "price_blocks": {
+    "H01": {
+      "name": "asymmetric_large_loss_rebound",
+      "features": {
+        "h01_neg_cc_shock": "clip(-cc_reversal_1_atr, 0, 5)",
+        "h01_pos_cc_shock": "clip(cc_reversal_1_atr, 0, 5)",
+        "h01_neg_cc_shock_sq": "h01_neg_cc_shock squared",
+        "h01_pos_cc_shock_sq": "h01_pos_cc_shock squared",
+        "h01_neg_x_range_shock": "h01_neg_cc_shock * range_shock_1_20",
+        "h01_neg_x_nonnegative_market": "h01_neg_cc_shock * I(prior_market_cc_return_pct >= 0)"
+      }
+    },
+    "H02": {
+      "name": "weekly_intraday_inventory_reversal",
+      "features": {
+        "h02_reversal_5": "-oc_mean_5",
+        "h02_activity_friction": "row mean of no_trade_rate_20, flat_oc_rate_20, zero_range_rate_20; all three required",
+        "h02_reversal_x_friction": "h02_reversal_5 * h02_activity_friction",
+        "h02_reversal_x_market_vol": "h02_reversal_5 * market_cc_vol_ratio_5_20"
+      }
+    },
+    "H03": {
+      "name": "joint_overnight_day_tug_state",
+      "features": {
+        "h03_posnight_negday_rate20": "rolling 20 valid prior sessions of I(overnight>0 and day<0), min 8",
+        "h03_negpos_balance20": "rolling 20 rate(overnight<0 and day>0) minus posnight-negday rate, min 8",
+        "h03_negpos_balance60": "rolling 60 rate(overnight<0 and day>0) minus posnight-negday rate, min 20"
+      },
+      "leakage_guards": [
+        "open-to-close outcome is shifted exactly one exchange session within code before constructing signs",
+        "overnight_last is already strictly prior in the frozen panel",
+        "rows with missing prior open-to-close or prior overnight are excluded from each rolling denominator",
+        "zero returns remain in the valid denominator but in neither directional numerator",
+        "source date of every included sign is strictly before target date"
+      ]
+    },
+    "H04": {
+      "name": "retail_attention_opening_overpricing",
+      "features": {
+        "h04_positive_overnight_rate20": "rolling 20 valid values of I(overnight_last>0), min 8",
+        "h04_positive_overnight_streak": "consecutive strictly-prior positive overnight returns, capped at 10",
+        "h04_attention": "positive overnight rate20 * clip(xrank_atr14_pct,0,1) * H02 activity friction",
+        "h04_attention_x_positive_last": "h04_attention * I(overnight_last>0)"
+      }
+    }
+  },
+  "tdnet_blocks": {
+    "scope": "Only source-complete dates; control is refit on the identical complete-date rows.",
+    "H06": "marketwide TDnet distraction counts interacted with supportive/adverse own-stock disclosures",
+    "H07": "Friday/weekend/long-holiday source timing interacted with disclosure direction",
+    "H08": "same-bundle directional corroboration, conflict, and directional family count",
+    "H09": "point-in-time earnings-wave position relative to sizes of previously completed waves"
+  },
+  "periods": {
+    "discovery": ["2024-07-01", "2024-10-31"],
+    "confirmation_a": ["2024-11-01", "2025-03-31"],
+    "confirmation_b": ["2025-04-01", "2025-07-31"],
+    "overall": ["2024-07-01", "2025-07-31"]
+  },
+  "required_outputs": {
+    "portfolios": [1, 2],
+    "cost_bps": [20, 40, 60],
+    "periods": ["discovery", "confirmation_a", "confirmation_b", "overall"],
+    "monthly_net20": true,
+    "best_20_days_removed": true,
+    "top_10_profit_contributing_codes_set_to_cash": true,
+    "familywise_bootstrap": {
+      "method": "paired circular moving-block max-t",
+      "block_length_sessions": 5,
+      "samples": 10000,
+      "one_sided_confidence": 0.9,
+      "seed": 20260723,
+      "families": ["H01-H04", "H06-H09"],
+      "reported_for": ["discovery", "confirmation_a", "confirmation_b", "overall"]
+    }
+  },
+  "decision_rule": {
+    "research_support": "candidate top2 net20 mean exceeds control, three of three named subperiod net20 means are positive, best20-removed net20 remains positive, and top10-profit-code cash test remains positive",
+    "confirmatory_support": "family-wise one-sided 90% lower bound for top2 net20 uplift is nonnegative",
+    "notes": "No block is promoted to production by this retrospective run. Sparse or truncated periods are explicitly reported rather than imputed."
+  }
+}

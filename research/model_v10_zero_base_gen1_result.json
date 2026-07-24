@@ -1,0 +1,894 @@
+{
+  "schema_version": 1,
+  "protocol_id": "model_v10_zero_base_gen1_20260723",
+  "authority": "retrospective_method_screen_no_production_promotion",
+  "protocol_sha256": "f8867299501d295770c52ecd6437195802ef1b7728e07107f47c620f4d01ad18",
+  "panel_sha256": "6b86f994a1d15d1da8ed40469d44fc409adadc6cd5b3df3c08aef6717bcdf0eb",
+  "runner_sha256": "6537451cd7d5c498713cafd228d64557258c775fef57c1ad93ede88ed0fde354",
+  "score_sessions": 266,
+  "candidate_count": 12,
+  "candidates": {
+    "Z01_code_weekday_empirical_bayes__top1": {
+      "top_k": 1,
+      "scheduled_days": 266,
+      "executed_slots": 265,
+      "unique_codes": 66,
+      "mean_pct": {
+        "net20": -0.07067160425508034,
+        "net40": -0.2699197245558322,
+        "net60": -0.469167844856584
+      },
+      "temporal_slices_net40": {
+        "discovery": -0.5046376917549926,
+        "confirmation_a": -0.4218370380367068,
+        "confirmation_b": 0.14203510837101532
+      },
+      "monthly_net40": {
+        "2024-07": -1.2207370287353525,
+        "2024-08": -0.4338633278017372,
+        "2024-09": -0.1155304416755647,
+        "2024-10": -0.19214287270770036,
+        "2024-11": -0.30451741021923345,
+        "2024-12": -0.6324714822268803,
+        "2025-01": -0.7094222290020046,
+        "2025-02": 0.1457957912064987,
+        "2025-03": -0.55565411435635,
+        "2025-04": 0.5650660151464403,
+        "2025-05": -0.7062423911108664,
+        "2025-06": 0.4564687915234935,
+        "2025-07": 0.20925299933245467
+      },
+      "positive_months_net40": 4,
+      "best_days_removed_net20": {
+        "5": -0.3066924072586727,
+        "10": -0.433179600660792,
+        "20": -0.6216484908612032
+      },
+      "worst_days_removed_net20": {
+        "5": 0.10127860586373803,
+        "10": 0.18438552972854635,
+        "20": 0.3310089086381584
+      },
+      "top_10_profit_codes_to_cash_net20": -0.39883633118800477,
+      "largest_profit_code_share": null
+    },
+    "Z01_code_weekday_empirical_bayes__top2": {
+      "top_k": 2,
+      "scheduled_days": 266,
+      "executed_slots": 528,
+      "unique_codes": 103,
+      "mean_pct": {
+        "net20": -0.02311406248311917,
+        "net40": -0.22161030308462284,
+        "net60": -0.4201065436861267
+      },
+      "temporal_slices_net40": {
+        "discovery": -0.6799356220475001,
+        "confirmation_a": -0.12552736779155652,
+        "confirmation_b": 0.12461825803634355
+      },
+      "monthly_net40": {
+        "2024-07": -1.2770110308175506,
+        "2024-08": -0.8915036911668602,
+        "2024-09": -0.49585493771749733,
+        "2024-10": -0.03988764740306268,
+        "2024-11": -0.5686339295023427,
+        "2024-12": 0.03336112384230031,
+        "2025-01": 0.4606660444732648,
+        "2025-02": 0.18708289886206367,
+        "2025-03": -0.6874867039361586,
+        "2025-04": 0.21109747969698198,
+        "2025-05": 0.30826406014900365,
+        "2025-06": -0.3228606613040923,
+        "2025-07": 0.30225814935555045
+      },
+      "positive_months_net40": 6,
+      "best_days_removed_net20": {
+        "5": -0.16888946161929116,
+        "10": -0.28294991904878875,
+        "20": -0.4350437784697882
+      },
+      "worst_days_removed_net20": {
+        "5": 0.09405211666387323,
+        "10": 0.17403076287129673,
+        "20": 0.3075418404949468
+      },
+      "top_10_profit_codes_to_cash_net20": -0.28893629717520936,
+      "largest_profit_code_share": null
+    },
+    "Z02_max_lottery_20_penalty__top1": {
+      "top_k": 1,
+      "scheduled_days": 266,
+      "executed_slots": 265,
+      "unique_codes": 71,
+      "mean_pct": {
+        "net20": -0.18964133681506712,
+        "net40": -0.388889457115819,
+        "net60": -0.5881375774165708
+      },
+      "temporal_slices_net40": {
+        "discovery": -0.4143296584830752,
+        "confirmation_a": -0.31252291928912906,
+        "confirmation_b": -0.4525435498797011
+      },
+      "monthly_net40": {
+        "2024-07": -0.4570431045468384,
+        "2024-08": -0.36803081555893497,
+        "2024-09": -0.36219577733755215,
+        "2024-10": -0.46083527801803387,
+        "2024-11": -0.364980202239524,
+        "2024-12": 0.009862936882105775,
+        "2025-01": -0.5998857998617585,
+        "2025-02": -0.39262972315394307,
+        "2025-03": -0.2534799252962002,
+        "2025-04": -0.3253883054053906,
+        "2025-05": -0.5157941939687657,
+        "2025-06": -0.5022653885342977,
+        "2025-07": -0.4689566698993692
+      },
+      "positive_months_net40": 1,
+      "best_days_removed_net20": {
+        "5": -0.25838313268622676,
+        "10": -0.28033720199815193,
+        "20": -0.31374782139700585
+      },
+      "worst_days_removed_net20": {
+        "5": -0.13886235956593354,
+        "10": -0.12186559360034303,
+        "20": -0.09214755738342213
+      },
+      "top_10_profit_codes_to_cash_net20": -0.25510552561304967,
+      "largest_profit_code_share": null
+    },
+    "Z02_max_lottery_20_penalty__top2": {
+      "top_k": 2,
+      "scheduled_days": 266,
+      "executed_slots": 531,
+      "unique_codes": 115,
+      "mean_pct": {
+        "net20": -0.24345552600824708,
+        "net40": -0.443079586158623,
+        "net60": -0.642703646308999
+      },
+      "temporal_slices_net40": {
+        "discovery": -0.4463228618409304,
+        "confirmation_a": -0.4264533666575044,
+        "confirmation_b": -0.4592335665609542
+      },
+      "monthly_net40": {
+        "2024-07": -0.49205261235728154,
+        "2024-08": -0.3061478193102095,
+        "2024-09": -0.4583182460444716,
+        "2024-10": -0.5240369110190267,
+        "2024-11": -0.594977956797614,
+        "2024-12": -0.23574335711450153,
+        "2025-01": -0.49207040979096084,
+        "2025-02": -0.4911555834003976,
+        "2025-03": -0.3376061004921601,
+        "2025-04": -0.3825397419477939,
+        "2025-05": -0.4585600727625418,
+        "2025-06": -0.5181087562221217,
+        "2025-07": -0.47685453065004957
+      },
+      "positive_months_net40": 0,
+      "best_days_removed_net20": {
+        "5": -0.28785988423187836,
+        "10": -0.3084806740527336,
+        "20": -0.335049469571874
+      },
+      "worst_days_removed_net20": {
+        "5": -0.2039130446213089,
+        "10": -0.1823648566021192,
+        "20": -0.15282760518910227
+      },
+      "top_10_profit_codes_to_cash_net20": -0.2745793192553568,
+      "largest_profit_code_share": null
+    },
+    "Z03_left_tail_adjusted_alpha_60__top1": {
+      "top_k": 1,
+      "scheduled_days": 266,
+      "executed_slots": 261,
+      "unique_codes": 45,
+      "mean_pct": {
+        "net20": -0.04341137820350606,
+        "net40": -0.2396519797072655,
+        "net60": -0.4358925812110249
+      },
+      "temporal_slices_net40": {
+        "discovery": -0.1361735346699383,
+        "confirmation_a": -0.6018142034217517,
+        "confirmation_b": 0.07939216958897471
+      },
+      "monthly_net40": {
+        "2024-07": -0.19159850899438052,
+        "2024-08": 0.3210241115805478,
+        "2024-09": -0.20624013642927422,
+        "2024-10": -0.456652430246988,
+        "2024-11": -0.5503364295901388,
+        "2024-12": 0.1465175646829928,
+        "2025-01": -1.5040965221966842,
+        "2025-02": -0.9622119398167968,
+        "2025-03": -0.25751416817161993,
+        "2025-04": -0.5782310115635397,
+        "2025-05": 0.3981763729755611,
+        "2025-06": -0.6001819230926995,
+        "2025-07": 1.0660039278974398
+      },
+      "positive_months_net40": 4,
+      "best_days_removed_net20": {
+        "5": -0.2989495508945081,
+        "10": -0.43918357426099647,
+        "20": -0.6222449488505013
+      },
+      "worst_days_removed_net20": {
+        "5": 0.19765580849585312,
+        "10": 0.31745134926089935,
+        "20": 0.49323891136788706
+      },
+      "top_10_profit_codes_to_cash_net20": -0.41044132539331263,
+      "largest_profit_code_share": null
+    },
+    "Z03_left_tail_adjusted_alpha_60__top2": {
+      "top_k": 2,
+      "scheduled_days": 266,
+      "executed_slots": 525,
+      "unique_codes": 65,
+      "mean_pct": {
+        "net20": -0.012800050890704108,
+        "net40": -0.21016847194333566,
+        "net60": -0.4075368929959673
+      },
+      "temporal_slices_net40": {
+        "discovery": -0.2166549250517341,
+        "confirmation_a": -0.25411492636234906,
+        "confirmation_b": -0.15241115534608835
+      },
+      "monthly_net40": {
+        "2024-07": 0.05925506942922958,
+        "2024-08": 0.19561719089605628,
+        "2024-09": -0.7165357779940872,
+        "2024-10": -0.45438211175992005,
+        "2024-11": -0.0858406302272301,
+        "2024-12": 0.2655876052020023,
+        "2025-01": -0.542525723388203,
+        "2025-02": -0.7289149046498525,
+        "2025-03": -0.2667666430067227,
+        "2025-04": -0.2696781282049409,
+        "2025-05": -0.3892259509234989,
+        "2025-06": -0.6179566705172793,
+        "2025-07": 0.6191960337529634
+      },
+      "positive_months_net40": 4,
+      "best_days_removed_net20": {
+        "5": -0.1588377035056783,
+        "10": -0.2485322789117267,
+        "20": -0.390551512672761
+      },
+      "worst_days_removed_net20": {
+        "5": 0.1384723176633599,
+        "10": 0.2235664146106423,
+        "20": 0.33982939168258613
+      },
+      "top_10_profit_codes_to_cash_net20": -0.2896324152752142,
+      "largest_profit_code_share": null
+    },
+    "Z05_daily_zscore_ridge__top1": {
+      "top_k": 1,
+      "scheduled_days": 266,
+      "executed_slots": 260,
+      "unique_codes": 113,
+      "mean_pct": {
+        "net20": 0.15046055907374786,
+        "net40": -0.045028162730763426,
+        "net60": -0.24051688453527467
+      },
+      "temporal_slices_net40": {
+        "discovery": 0.029235764987599073,
+        "confirmation_a": -0.15136098631502332,
+        "confirmation_b": 0.0047628703991772535
+      },
+      "monthly_net40": {
+        "2024-07": 0.7180494569152438,
+        "2024-08": -0.8097287229238888,
+        "2024-09": 0.17762201990402451,
+        "2024-10": 0.01310004591127989,
+        "2024-11": -0.516563514428909,
+        "2024-12": -0.1382941957981114,
+        "2025-01": -0.3536217878600831,
+        "2025-02": 0.26806483343252147,
+        "2025-03": 0.01478593545112128,
+        "2025-04": -1.3782419724066761,
+        "2025-05": 1.0316861793415852,
+        "2025-06": 0.3734897477377609,
+        "2025-07": 0.039370647488472986
+      },
+      "positive_months_net40": 8,
+      "best_days_removed_net20": {
+        "5": 0.028323908340388382,
+        "10": -0.05569506603379881,
+        "20": -0.1868986331350068
+      },
+      "worst_days_removed_net20": {
+        "5": 0.3166876593445432,
+        "10": 0.40052590896294205,
+        "20": 0.5298393388321558
+      },
+      "top_10_profit_codes_to_cash_net20": -0.25374459331087057,
+      "largest_profit_code_share": 0.9004285835589456
+    },
+    "Z05_daily_zscore_ridge__top2": {
+      "top_k": 2,
+      "scheduled_days": 266,
+      "executed_slots": 521,
+      "unique_codes": 210,
+      "mean_pct": {
+        "net20": 0.092993708713578,
+        "net40": -0.1028709529405573,
+        "net60": -0.29873561459469267
+      },
+      "temporal_slices_net40": {
+        "discovery": -0.08730928859825038,
+        "confirmation_a": -0.21896297950913418,
+        "confirmation_b": 0.01700808038047555
+      },
+      "monthly_net40": {
+        "2024-07": 0.018057955925142567,
+        "2024-08": -0.38540479848327613,
+        "2024-09": -0.07888168960930114,
+        "2024-10": 0.08459079991451586,
+        "2024-11": -0.37072642331288275,
+        "2024-12": -0.22922918734008177,
+        "2025-01": -0.23256962257437735,
+        "2025-02": 0.07370880124457733,
+        "2025-03": -0.30689830924924993,
+        "2025-04": -0.7334336733000281,
+        "2025-05": 0.5210177077950158,
+        "2025-06": 0.34474495068654337,
+        "2025-07": -0.03769146495714518
+      },
+      "positive_months_net40": 5,
+      "best_days_removed_net20": {
+        "5": -0.005056299719146448,
+        "10": -0.060937194441353135,
+        "20": -0.14935371061170497
+      },
+      "worst_days_removed_net20": {
+        "5": 0.21675269950314124,
+        "10": 0.2818794906330524,
+        "20": 0.3784150875160273
+      },
+      "top_10_profit_codes_to_cash_net20": -0.20274002548869144,
+      "largest_profit_code_share": 0.7655023508966549
+    },
+    "Z06_exp_decay_rank_ridge_hl60__top1": {
+      "top_k": 1,
+      "scheduled_days": 266,
+      "executed_slots": 259,
+      "unique_codes": 118,
+      "mean_pct": {
+        "net20": 0.3085072157957308,
+        "net40": 0.11377037369046766,
+        "net60": -0.08096646841479549
+      },
+      "temporal_slices_net40": {
+        "discovery": 0.210564200333014,
+        "confirmation_a": -0.09622550406508647,
+        "confirmation_b": 0.2619717377627345
+      },
+      "monthly_net40": {
+        "2024-07": 0.9710987576948593,
+        "2024-08": -0.35432742158923647,
+        "2024-09": 0.21370033099550417,
+        "2024-10": -0.01346410349337905,
+        "2024-11": -0.0008637175122240992,
+        "2024-12": -0.165859491091337,
+        "2025-01": -0.06270430135092861,
+        "2025-02": -0.04728023522766429,
+        "2025-03": -0.19436748877251572,
+        "2025-04": 0.030269589624643895,
+        "2025-05": 0.7179484650011956,
+        "2025-06": 0.45056480240100993,
+        "2025-07": -0.11140298002240616
+      },
+      "positive_months_net40": 5,
+      "best_days_removed_net20": {
+        "5": 0.16471686607597255,
+        "10": 0.0793425210034854,
+        "20": -0.05211309007107555
+      },
+      "worst_days_removed_net20": {
+        "5": 0.4030728213953285,
+        "10": 0.4649223460288534,
+        "20": 0.5717527455722445
+      },
+      "top_10_profit_codes_to_cash_net20": -0.06768520740033153,
+      "largest_profit_code_share": 0.2866862565751102
+    },
+    "Z06_exp_decay_rank_ridge_hl60__top2": {
+      "top_k": 2,
+      "scheduled_days": 266,
+      "executed_slots": 522,
+      "unique_codes": 209,
+      "mean_pct": {
+        "net20": 0.11810140676574796,
+        "net40": -0.0781391947380114,
+        "net60": -0.2743797962417709
+      },
+      "temporal_slices_net40": {
+        "discovery": -0.10797631616443433,
+        "confirmation_a": -0.05169344758333587,
+        "confirmation_b": -0.07915544499204327
+      },
+      "monthly_net40": {
+        "2024-07": 0.15356523998522945,
+        "2024-08": -0.35902814873942696,
+        "2024-09": -0.2235734621817875,
+        "2024-10": -0.03004358784116383,
+        "2024-11": 0.014249034118891798,
+        "2024-12": -0.1177576070509317,
+        "2025-01": -0.06595718300265166,
+        "2025-02": -0.04954970475311657,
+        "2025-03": -0.036647381743435306,
+        "2025-04": -0.5031530157908599,
+        "2025-05": 0.16871445116198214,
+        "2025-06": 0.08657998627853451,
+        "2025-07": -0.057968762855111204
+      },
+      "positive_months_net40": 4,
+      "best_days_removed_net20": {
+        "5": 0.016759486961496695,
+        "10": -0.040120362511597285,
+        "20": -0.1194911149068041
+      },
+      "worst_days_removed_net20": {
+        "5": 0.21821940128730258,
+        "10": 0.27272668390969645,
+        "20": 0.3550099393482537
+      },
+      "top_10_profit_codes_to_cash_net20": -0.14528546395078012,
+      "largest_profit_code_share": 0.6001827371632725
+    },
+    "Z07_exp_decay_rank_ridge_hl120__top1": {
+      "top_k": 1,
+      "scheduled_days": 266,
+      "executed_slots": 261,
+      "unique_codes": 114,
+      "mean_pct": {
+        "net20": 0.24449080035260506,
+        "net40": 0.04825019884884562,
+        "net60": -0.14799040265491376
+      },
+      "temporal_slices_net40": {
+        "discovery": 0.13788612222208738,
+        "confirmation_a": -0.10053957473355646,
+        "confirmation_b": 0.132202344655073
+      },
+      "monthly_net40": {
+        "2024-07": 1.0104106597646372,
+        "2024-08": -0.4416945923157193,
+        "2024-09": 0.07683248875595224,
+        "2024-10": -0.12867414072271172,
+        "2024-11": 0.0030013177565500317,
+        "2024-12": -0.22690955214139782,
+        "2025-01": -0.07056513862727383,
+        "2025-02": 0.08345384957954102,
+        "2025-03": -0.2654617871281858,
+        "2025-04": -0.4422133594839976,
+        "2025-05": 0.6766252604324767,
+        "2025-06": 0.30419493075333925,
+        "2025-07": 0.021403579350928337
+      },
+      "positive_months_net40": 7,
+      "best_days_removed_net20": {
+        "5": 0.12261532018296119,
+        "10": 0.04034014259809737,
+        "20": -0.08935243859584538
+      },
+      "worst_days_removed_net20": {
+        "5": 0.3387896057605391,
+        "10": 0.39998243245349474,
+        "20": 0.5068421311104061
+      },
+      "top_10_profit_codes_to_cash_net20": -0.12806570297146727,
+      "largest_profit_code_share": 0.4292760725392598
+    },
+    "Z07_exp_decay_rank_ridge_hl120__top2": {
+      "top_k": 2,
+      "scheduled_days": 266,
+      "executed_slots": 521,
+      "unique_codes": 208,
+      "mean_pct": {
+        "net20": 0.23858092175725254,
+        "net40": 0.04271626010311728,
+        "net60": -0.1531484015510181
+      },
+      "temporal_slices_net40": {
+        "discovery": 0.04440355452749399,
+        "confirmation_a": 0.06741629037653592,
+        "confirmation_b": 0.01221226369308547
+      },
+      "monthly_net40": {
+        "2024-07": 0.045901939872484435,
+        "2024-08": 0.2529461262578,
+        "2024-09": -0.10706934755093006,
+        "2024-10": -0.02534068840142233,
+        "2024-11": 0.07409547365052878,
+        "2024-12": 0.3315977260299137,
+        "2025-01": -0.09238652995789137,
+        "2025-02": 0.11705712640058977,
+        "2025-03": -0.10951747343744618,
+        "2025-04": -0.4322406000156658,
+        "2025-05": 0.3823648650460516,
+        "2025-06": 0.19660459569747685,
+        "2025-07": -0.07605050272817664
+      },
+      "positive_months_net40": 7,
+      "best_days_removed_net20": {
+        "5": 0.12502257621489807,
+        "10": 0.06022459149412043,
+        "20": -0.022414512438531264
+      },
+      "worst_days_removed_net20": {
+        "5": 0.31315306538584664,
+        "10": 0.36121232690238014,
+        "20": 0.4428637953401739
+      },
+      "top_10_profit_codes_to_cash_net20": -0.05804999384198461,
+      "largest_profit_code_share": 0.2936654117764481
+    }
+  },
+  "folds": [
+    {
+      "period": "2024-07",
+      "candidate_id": "Z05_daily_zscore_ridge",
+      "train_start": "2024-04-03",
+      "train_end": "2024-06-28",
+      "train_rows": 201708,
+      "score_rows": 70947,
+      "strictly_prior": true
+    },
+    {
+      "period": "2024-07",
+      "candidate_id": "Z06_exp_decay_rank_ridge_hl60",
+      "train_start": "2024-04-03",
+      "train_end": "2024-06-28",
+      "train_rows": 201708,
+      "score_rows": 70947,
+      "strictly_prior": true
+    },
+    {
+      "period": "2024-07",
+      "candidate_id": "Z07_exp_decay_rank_ridge_hl120",
+      "train_start": "2024-04-03",
+      "train_end": "2024-06-28",
+      "train_rows": 201708,
+      "score_rows": 70947,
+      "strictly_prior": true
+    },
+    {
+      "period": "2024-08",
+      "candidate_id": "Z05_daily_zscore_ridge",
+      "train_start": "2024-04-03",
+      "train_end": "2024-07-31",
+      "train_rows": 275857,
+      "score_rows": 45999,
+      "strictly_prior": true
+    },
+    {
+      "period": "2024-08",
+      "candidate_id": "Z06_exp_decay_rank_ridge_hl60",
+      "train_start": "2024-04-03",
+      "train_end": "2024-07-31",
+      "train_rows": 275857,
+      "score_rows": 45999,
+      "strictly_prior": true
+    },
+    {
+      "period": "2024-08",
+      "candidate_id": "Z07_exp_decay_rank_ridge_hl120",
+      "train_start": "2024-04-03",
+      "train_end": "2024-07-31",
+      "train_rows": 275857,
+      "score_rows": 45999,
+      "strictly_prior": true
+    },
+    {
+      "period": "2024-09",
+      "candidate_id": "Z05_daily_zscore_ridge",
+      "train_start": "2024-04-03",
+      "train_end": "2024-08-30",
+      "train_rows": 348502,
+      "score_rows": 59553,
+      "strictly_prior": true
+    },
+    {
+      "period": "2024-09",
+      "candidate_id": "Z06_exp_decay_rank_ridge_hl60",
+      "train_start": "2024-04-03",
+      "train_end": "2024-08-30",
+      "train_rows": 348502,
+      "score_rows": 59553,
+      "strictly_prior": true
+    },
+    {
+      "period": "2024-09",
+      "candidate_id": "Z07_exp_decay_rank_ridge_hl120",
+      "train_start": "2024-04-03",
+      "train_end": "2024-08-30",
+      "train_rows": 348502,
+      "score_rows": 59553,
+      "strictly_prior": true
+    },
+    {
+      "period": "2024-10",
+      "candidate_id": "Z05_daily_zscore_ridge",
+      "train_start": "2024-04-03",
+      "train_end": "2024-09-30",
+      "train_rows": 413056,
+      "score_rows": 68772,
+      "strictly_prior": true
+    },
+    {
+      "period": "2024-10",
+      "candidate_id": "Z06_exp_decay_rank_ridge_hl60",
+      "train_start": "2024-04-03",
+      "train_end": "2024-09-30",
+      "train_rows": 413056,
+      "score_rows": 68772,
+      "strictly_prior": true
+    },
+    {
+      "period": "2024-10",
+      "candidate_id": "Z07_exp_decay_rank_ridge_hl120",
+      "train_start": "2024-04-03",
+      "train_end": "2024-09-30",
+      "train_rows": 413056,
+      "score_rows": 68772,
+      "strictly_prior": true
+    },
+    {
+      "period": "2024-11",
+      "candidate_id": "Z05_daily_zscore_ridge",
+      "train_start": "2024-04-03",
+      "train_end": "2024-10-31",
+      "train_rows": 485497,
+      "score_rows": 61847,
+      "strictly_prior": true
+    },
+    {
+      "period": "2024-11",
+      "candidate_id": "Z06_exp_decay_rank_ridge_hl60",
+      "train_start": "2024-04-03",
+      "train_end": "2024-10-31",
+      "train_rows": 485497,
+      "score_rows": 61847,
+      "strictly_prior": true
+    },
+    {
+      "period": "2024-11",
+      "candidate_id": "Z07_exp_decay_rank_ridge_hl120",
+      "train_start": "2024-04-03",
+      "train_end": "2024-10-31",
+      "train_rows": 485497,
+      "score_rows": 61847,
+      "strictly_prior": true
+    },
+    {
+      "period": "2024-12",
+      "candidate_id": "Z05_daily_zscore_ridge",
+      "train_start": "2024-04-03",
+      "train_end": "2024-11-29",
+      "train_rows": 550697,
+      "score_rows": 65084,
+      "strictly_prior": true
+    },
+    {
+      "period": "2024-12",
+      "candidate_id": "Z06_exp_decay_rank_ridge_hl60",
+      "train_start": "2024-04-03",
+      "train_end": "2024-11-29",
+      "train_rows": 550697,
+      "score_rows": 65084,
+      "strictly_prior": true
+    },
+    {
+      "period": "2024-12",
+      "candidate_id": "Z07_exp_decay_rank_ridge_hl120",
+      "train_start": "2024-04-03",
+      "train_end": "2024-11-29",
+      "train_rows": 550697,
+      "score_rows": 65084,
+      "strictly_prior": true
+    },
+    {
+      "period": "2025-01",
+      "candidate_id": "Z05_daily_zscore_ridge",
+      "train_start": "2024-04-03",
+      "train_end": "2024-12-30",
+      "train_rows": 619207,
+      "score_rows": 60809,
+      "strictly_prior": true
+    },
+    {
+      "period": "2025-01",
+      "candidate_id": "Z06_exp_decay_rank_ridge_hl60",
+      "train_start": "2024-04-03",
+      "train_end": "2024-12-30",
+      "train_rows": 619207,
+      "score_rows": 60809,
+      "strictly_prior": true
+    },
+    {
+      "period": "2025-01",
+      "candidate_id": "Z07_exp_decay_rank_ridge_hl120",
+      "train_start": "2024-04-03",
+      "train_end": "2024-12-30",
+      "train_rows": 619207,
+      "score_rows": 60809,
+      "strictly_prior": true
+    },
+    {
+      "period": "2025-02",
+      "candidate_id": "Z05_daily_zscore_ridge",
+      "train_start": "2024-04-03",
+      "train_end": "2025-01-31",
+      "train_rows": 683387,
+      "score_rows": 56971,
+      "strictly_prior": true
+    },
+    {
+      "period": "2025-02",
+      "candidate_id": "Z06_exp_decay_rank_ridge_hl60",
+      "train_start": "2024-04-03",
+      "train_end": "2025-01-31",
+      "train_rows": 683387,
+      "score_rows": 56971,
+      "strictly_prior": true
+    },
+    {
+      "period": "2025-02",
+      "candidate_id": "Z07_exp_decay_rank_ridge_hl120",
+      "train_start": "2024-04-03",
+      "train_end": "2025-01-31",
+      "train_rows": 683387,
+      "score_rows": 56971,
+      "strictly_prior": true
+    },
+    {
+      "period": "2025-03",
+      "candidate_id": "Z05_daily_zscore_ridge",
+      "train_start": "2024-04-03",
+      "train_end": "2025-02-28",
+      "train_rows": 743542,
+      "score_rows": 63000,
+      "strictly_prior": true
+    },
+    {
+      "period": "2025-03",
+      "candidate_id": "Z06_exp_decay_rank_ridge_hl60",
+      "train_start": "2024-04-03",
+      "train_end": "2025-02-28",
+      "train_rows": 743542,
+      "score_rows": 63000,
+      "strictly_prior": true
+    },
+    {
+      "period": "2025-03",
+      "candidate_id": "Z07_exp_decay_rank_ridge_hl120",
+      "train_start": "2024-04-03",
+      "train_end": "2025-02-28",
+      "train_rows": 743542,
+      "score_rows": 63000,
+      "strictly_prior": true
+    },
+    {
+      "period": "2025-04",
+      "candidate_id": "Z05_daily_zscore_ridge",
+      "train_start": "2024-04-03",
+      "train_end": "2025-03-31",
+      "train_rows": 810434,
+      "score_rows": 52287,
+      "strictly_prior": true
+    },
+    {
+      "period": "2025-04",
+      "candidate_id": "Z06_exp_decay_rank_ridge_hl60",
+      "train_start": "2024-04-03",
+      "train_end": "2025-03-31",
+      "train_rows": 810434,
+      "score_rows": 52287,
+      "strictly_prior": true
+    },
+    {
+      "period": "2025-04",
+      "candidate_id": "Z07_exp_decay_rank_ridge_hl120",
+      "train_start": "2024-04-03",
+      "train_end": "2025-03-31",
+      "train_rows": 810434,
+      "score_rows": 52287,
+      "strictly_prior": true
+    },
+    {
+      "period": "2025-05",
+      "candidate_id": "Z05_daily_zscore_ridge",
+      "train_start": "2024-04-03",
+      "train_end": "2025-04-30",
+      "train_rows": 882045,
+      "score_rows": 63126,
+      "strictly_prior": true
+    },
+    {
+      "period": "2025-05",
+      "candidate_id": "Z06_exp_decay_rank_ridge_hl60",
+      "train_start": "2024-04-03",
+      "train_end": "2025-04-30",
+      "train_rows": 882045,
+      "score_rows": 63126,
+      "strictly_prior": true
+    },
+    {
+      "period": "2025-05",
+      "candidate_id": "Z07_exp_decay_rank_ridge_hl120",
+      "train_start": "2024-04-03",
+      "train_end": "2025-04-30",
+      "train_rows": 882045,
+      "score_rows": 63126,
+      "strictly_prior": true
+    },
+    {
+      "period": "2025-06",
+      "candidate_id": "Z05_daily_zscore_ridge",
+      "train_start": "2024-04-03",
+      "train_end": "2025-05-30",
+      "train_rows": 949687,
+      "score_rows": 66152,
+      "strictly_prior": true
+    },
+    {
+      "period": "2025-06",
+      "candidate_id": "Z06_exp_decay_rank_ridge_hl60",
+      "train_start": "2024-04-03",
+      "train_end": "2025-05-30",
+      "train_rows": 949687,
+      "score_rows": 66152,
+      "strictly_prior": true
+    },
+    {
+      "period": "2025-06",
+      "candidate_id": "Z07_exp_decay_rank_ridge_hl120",
+      "train_start": "2024-04-03",
+      "train_end": "2025-05-30",
+      "train_rows": 949687,
+      "score_rows": 66152,
+      "strictly_prior": true
+    },
+    {
+      "period": "2025-07",
+      "candidate_id": "Z05_daily_zscore_ridge",
+      "train_start": "2024-04-03",
+      "train_end": "2025-06-30",
+      "train_rows": 1019568,
+      "score_rows": 69764,
+      "strictly_prior": true
+    },
+    {
+      "period": "2025-07",
+      "candidate_id": "Z06_exp_decay_rank_ridge_hl60",
+      "train_start": "2024-04-03",
+      "train_end": "2025-06-30",
+      "train_rows": 1019568,
+      "score_rows": 69764,
+      "strictly_prior": true
+    },
+    {
+      "period": "2025-07",
+      "candidate_id": "Z07_exp_decay_rank_ridge_hl120",
+      "train_start": "2024-04-03",
+      "train_end": "2025-06-30",
+      "train_rows": 1019568,
+      "score_rows": 69764,
+      "strictly_prior": true
+    }
+  ],
+  "picks_path": "/tmp/v10_root_gen1/picks.csv"
+}

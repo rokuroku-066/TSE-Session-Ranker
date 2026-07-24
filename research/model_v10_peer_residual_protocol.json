@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "protocol_id": "model_v10_Z17_peer_residual_20260723",
+  "registered_at": "2026-07-23",
+  "registration_status": "frozen before any Z17 model score or portfolio result was generated",
+  "hypothesis": {
+    "id": "Z17_peer_residual_model",
+    "family": "peer_relative_prediction",
+    "definition": "Cluster stocks from strictly prior behavior and train a rank Ridge on stock open-to-close return minus its same-date peer-group mean.",
+    "prediction": "Peer-relative training targets isolate idiosyncratic continuation from common group moves."
+  },
+  "authority": {
+    "analysis_type": "retrospective single-hypothesis mechanism test",
+    "outcomes_previously_available_to_upstream_research": true,
+    "untouched_holdout_claim": false,
+    "production_promotion_allowed": false,
+    "post_result_tuning_allowed": false,
+    "economic_acceptance_rule": "none; report the preregistered result without selecting, tuning, or promoting it"
+  },
+  "frozen_input": {
+    "panel_path": "/tmp/model_v07_corrected_panel.pkl",
+    "panel_sha256": "6b86f994a1d15d1da8ed40469d44fc409adadc6cd5b3df3c08aef6717bcdf0eb",
+    "manifest_path": "/tmp/model_v07_corrected_panel.pkl.manifest.json",
+    "manifest_sha256": "25e08c564ef6400b7a29168db9fd7e8220bd0e2386c7a3c7e71b05c2ff950b02",
+    "expected_rows": 1524104,
+    "expected_codes": 4124
+  },
+  "time_design": {
+    "timezone": "Asia/Tokyo",
+    "decision_time": "08:58:59",
+    "training_start": "2024-01-04",
+    "score_start": "2024-07-01",
+    "score_end": "2025-07-31",
+    "walk_forward": "13 calendar-month expanding folds",
+    "fold_rule": "for score month m, all model fitting, profile estimation, scaling, and clustering use rows dated from training_start through the last exchange date before m",
+    "expected_score_sessions": 266
+  },
+  "peer_model": {
+    "interpretation_of_eight_peers": "exactly eight mutually exclusive peer groups, encoded as integer labels 0 through 7",
+    "profile_features": [
+      "oc_mean_20",
+      "oc_std_20",
+      "overnight_mean_20",
+      "xrank_atr14_pct",
+      "xrank_close_momentum_20",
+      "no_trade_rate_20"
+    ],
+    "profile_history_mask": "training_start <= date < fold score start and price_training_eligible is true",
+    "qualified_profile": "a code must have at least 20 historical rows on which all six profile features are finite; its six-dimensional profile is the arithmetic mean over those complete rows",
+    "fit": {
+      "scaler": "StandardScaler() fit across qualified code profiles",
+      "clusterer": "KMeans(n_clusters=8, random_state=20260723, n_init=10, algorithm='lloyd')",
+      "required_occupied_groups": 8
+    },
+    "low_history_or_missing_profile_fallback": "For an unqualified code, compute each feature mean from all finite values in its historical profile-mask rows. Fill absent feature means with the corresponding arithmetic mean across qualified code profiles, transform with the frozen scaler, and assign the nearest frozen KMeans centroid by Euclidean distance. A code with no finite historical profile values therefore uses the all-global profile and its nearest centroid.",
+    "assignment_scope": "assign every code appearing in the fold's model-training or scoring rows to exactly one frozen peer group",
+    "training_peer_mean": "Within each training date and frozen peer group, arithmetic mean open-to-close return of other price_training_eligible observed stocks; the focal stock is excluded.",
+    "peer_outcome_fallback": "If the focal row has no other observed member in its peer group that date, use the same-date arithmetic mean of all other price_training_eligible observed stocks. If that global leave-one-out mean is unavailable, fail closed.",
+    "fold_fixed_note": "The score-fold clustering is fixed once from all information available before that score month and is applied to every historical target row in that fold."
+  },
+  "predictive_model": {
+    "features": [
+      "oc_last",
+      "oc_mean_5",
+      "oc_mean_20",
+      "oc_mean_60",
+      "oc_win_20",
+      "oc_std_20",
+      "overnight_last",
+      "overnight_mean_20",
+      "overnight_mean_60",
+      "night_day_corr_60",
+      "xrank_atr14_pct",
+      "xrank_close_momentum_5",
+      "xrank_close_momentum_20",
+      "xrank_close_momentum_60",
+      "xrank_prior_close_location_20"
+    ],
+    "training_rows": "fold history with price_training_eligible true, observed finite open-to-close return, and a finite peer-residual target",
+    "raw_target": "stock open-to-close return minus fold-fixed same-date leave-one-out peer mean",
+    "fit_target": "2 * within-training-date average percentile rank(raw_target) - 1",
+    "pipeline": "SimpleImputer(strategy='median', add_indicator=True), StandardScaler(), Ridge(alpha=1.0)",
+    "sample_weights": "inverse number of model-training rows on that date, so every training date has total weight exactly one",
+    "scoring_rows": "score-month rows with price_eligible true",
+    "tie_break": [
+      "model score descending",
+      "code ascending"
+    ]
+  },
+  "portfolio": {
+    "variants": [
+      "top1 at 100 percent",
+      "top2 at 50/50"
+    ],
+    "score_session_grid": "all 266 expected panel sessions in the score period",
+    "unfilled_or_unobserved_slot": "cash with zero return and zero cost; no lower-ranked replacement",
+    "cost_bps": [
+      20,
+      40,
+      60
+    ],
+    "cost_formula": "an observed executed slot subtracts cost_bps/100 percentage points before fixed sleeve weighting"
+  },
+  "required_reporting": {
+    "overall": "mean daily net return at 20, 40, and 60 bps for top1 and top2",
+    "monthly": "13 calendar-month mean daily returns at each of 20, 40, and 60 bps",
+    "temporal_slices": {
+      "discovery": [
+        "2024-07-01",
+        "2024-10-31"
+      ],
+      "confirmation_a": [
+        "2024-11-01",
+        "2025-03-31"
+      ],
+      "confirmation_b": [
+        "2025-04-01",
+        "2025-07-31"
+      ]
+    },
+    "slice_costs": [
+      20,
+      40,
+      60
+    ],
+    "best20_removed": "remove the 20 highest daily net20 portfolio returns and report the remaining mean net20",
+    "top10_profit_codes_cash": "rank codes by cumulative fixed-sleeve net20 contribution, replace every slot in the ten highest codes with cash without replacement, preserve every date and portfolio denominator, and report mean net20",
+    "concentration": "selected unique codes and top-10 selection share"
+  },
+  "integrity_tests": {
+    "target_day_outcome_mutation": "Within every fold, deterministically replace score-month oc_return_pct and label values, predict again from the untouched feature columns with the already fitted model, and require exact model scores and exact top1/top2 code/rank selections.",
+    "point_in_time": [
+      "panel feature_source_max_date is strictly before date for every model-training and scoring row",
+      "each fold's maximum profile/model-training date is strictly before its minimum scoring date",
+      "each cluster profile row is strictly before its score-fold start",
+      "all eight peer labels are occupied in every fold",
+      "every fitted date has total sample weight one"
+    ],
+    "independent_pnl": "recompute every daily top1/top2 return in a separate explicit date-and-slot loop and require agreement with the primary vectorized calculation within 1e-12 percentage points",
+    "fail_closed": "On any input hash/schema mismatch, infeasible eight-group clustering, unavailable leave-one-out fallback, nonfinite model score, missing expected score session, mutation failure, point-in-time failure, or P&L mismatch, emit no economic result and exit nonzero."
+  },
+  "outputs": {
+    "runner": "run_model_v10_peer_residual.py",
+    "result": "model_v10_peer_residual_result.json",
+    "audit": "model_v10_peer_residual_audit.json",
+    "report": "model_v10_peer_residual_report.md"
+  }
+}

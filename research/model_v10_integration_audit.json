@@ -1,0 +1,198 @@
+{
+  "schema_version": 1,
+  "audit_id": "v10_integration_audit_20260723",
+  "authority": "independent_read_only_recalculation",
+  "detailed_calculation": {
+    "path": "/tmp/v10_integration_audit/calc.json",
+    "sha256": "6f29c110aed2e4e4c9986823245c7ced4c8e223fcdf8e0feaffe259ae89f0df7",
+    "runner": "/tmp/v10_integration_audit/audit_calc.py",
+    "runner_sha256": "dac181d630a1e1c8c3a8f65c8f0827306bd6402b8338a409dfa265ce3f45ce5d"
+  },
+  "hash_audit": {
+    "all_referenced_protocol_hashes_exact": true,
+    "all_referenced_runner_hashes_exact": true,
+    "all_referenced_panel_and_manifest_hashes_exact": true,
+    "all_referenced_pick_hashes_exact": true,
+    "unreferenced_root_gen1_picks_sha256": "0fa208fbbbcde328f4c3cad795979d9f3665024f68d77592b792ff3b777840ed",
+    "unreferenced_external_context_picks_sha256": "a16efc0b71afa8a73664798733c5cadb516b46df7d7eb1f1b8b3f792563d101e",
+    "note": "The root-gen1 and external-context result files store only a picks path, not a picks digest."
+  },
+  "pnl_audit": {
+    "model_architectures": {
+      "candidate_streams": 14,
+      "sessions": 266,
+      "max_abs_difference": 1.1102230246251565e-16,
+      "scheduled_grid_complete": true
+    },
+    "root_gen1": {
+      "candidate_streams": 12,
+      "sessions": 266,
+      "max_abs_difference": 1.1102230246251565e-16,
+      "scheduled_grid_complete": true
+    },
+    "external_context": {
+      "candidate_streams": 18,
+      "sessions": 266,
+      "max_abs_difference": 1.1102230246251565e-16,
+      "scheduled_grid_complete": true
+    },
+    "policy_selected_control": {
+      "recomputed": [
+        "C00_L4_TOP2_EQUAL",
+        "H12_MOMENTUM_BUCKET_DIVERSIFICATION",
+        "F08_MOMENTUM20_OPPOSITE75"
+      ],
+      "sessions": 266,
+      "max_abs_difference": 6.938893903907228e-17
+    },
+    "online_ensemble": {
+      "candidate_streams": 4,
+      "sessions": 266,
+      "max_abs_difference": 0.0,
+      "scheduled_grid_complete": true
+    },
+    "market_residual": {
+      "candidate_streams": 4,
+      "sessions": 266,
+      "max_abs_difference": 5.551115123125783e-17,
+      "scheduled_grid_complete": true
+    },
+    "tdnet_text": {
+      "candidate_streams": 26,
+      "sessions": 88,
+      "max_abs_difference": 2.220446049250313e-16,
+      "scheduled_grid_complete": true
+    }
+  },
+  "protocol_counts": {
+    "model_architectures": {
+      "registered_new_hypotheses": 13,
+      "evaluated_new_hypotheses": 13,
+      "controls": 1,
+      "status": "complete"
+    },
+    "root_gen1": {
+      "registered_new_hypotheses": 18,
+      "evaluated_new_hypotheses": 6,
+      "evaluated_ids": [
+        "Z01",
+        "Z02",
+        "Z03",
+        "Z05",
+        "Z06",
+        "Z07"
+      ],
+      "status": "incomplete"
+    },
+    "external_context": {
+      "registered_new_hypotheses": 8,
+      "evaluated_new_hypotheses": 8,
+      "candidate_streams_including_two_controls": 18,
+      "status": "metrics_incomplete"
+    },
+    "policy_round1": {
+      "registered_new_hypotheses": 16,
+      "evaluated_new_hypotheses": 16,
+      "exact_unique_new_selection_streams": 15,
+      "status": "complete_with_duplicate"
+    },
+    "policy_round2": {
+      "registered_streams_including_H12_reference": 15,
+      "evaluated_streams": 15,
+      "unrelated_comparators_required": 5,
+      "unrelated_comparators_implemented": 4,
+      "status": "failed_locked_decision_rule"
+    },
+    "online_ensemble": {
+      "registered_new_hypotheses": 3,
+      "evaluated_new_hypotheses": 3,
+      "controls": 1,
+      "status": "complete_metrics_incomplete_mutation_audit"
+    },
+    "market_residual": {
+      "registered_new_hypotheses": 1,
+      "evaluated_new_hypotheses": 1,
+      "candidate_streams_with_control_and_top1_top2": 4,
+      "status": "complete"
+    },
+    "tdnet_text": {
+      "registered_new_hypotheses": 10,
+      "evaluated_new_hypotheses": 10,
+      "candidate_streams_with_three_controls_and_top1_top2": 26,
+      "exact_unique_candidate_streams": 25,
+      "status": "complete_exploratory"
+    }
+  },
+  "exact_identities": {
+    "common_G0_top2_model_external_market_online_exact_all_266_days": true,
+    "policy_H01_ensemble_mean_equals_H04_stable_topset_all_266_days": true,
+    "tdnet_T02_value_event_equals_T10_barbell_top1_all_88_days": true
+  },
+  "point_in_time_audit": {
+    "model_architectures": "pass; strictly-prior folds and all-candidate target-day mutation are recorded",
+    "root_gen1": "code is prior-only for the six implemented specifications, but the required target-day mutation artifact is absent",
+    "external_context": "all mapped external source dates are strictly earlier than the TSE date; maximum age is 3 days; the required source-date mutation artifact is absent",
+    "policy_universe": "round-one state variables and pair returns are prior-only",
+    "online_ensemble": "selection precedes state update in code, but the recorded mutation test strips all outcomes and verifies only outcome-independent O02, not stateful O01/O03 target-date invariance",
+    "market_residual": "same-date market return is used only in historical targets; beta is shifted one code session",
+    "tdnet_text": "zero future-publication violations; missing pages are not encoded as no event; historical cache observation-time provenance is unavailable"
+  },
+  "material_issues": [
+    {
+      "severity": "high",
+      "track": "policy_round2",
+      "issue": "The locked criterion requires wins against at least four of five unrelated splits, but only four unrelated splits are implemented. The adjacent-horizon clause is reported but not included in the decision boolean.",
+      "protocol_reference": "/tmp/v10_policy_universe/protocol_round2.json:90-93",
+      "runner_reference": "/tmp/v10_policy_universe/runner_round2.py:296-304,318-320,337-350",
+      "result_reference": "/tmp/v10_policy_universe/result_round2.json:1099-1115",
+      "correction": "Withdraw retain_for_forward_shadow=true. It cannot be repaired by relabeling 4/4 as 4/5; the missing comparator requires a new locked run."
+    },
+    {
+      "severity": "high",
+      "track": "root_gen1",
+      "issue": "Only 6 of 18 registered hypotheses are evaluated. Family controls, familywise multiplicity, and target-day mutation required by the protocol are absent.",
+      "protocol_reference": "research/model_v10_zero_base_protocol.json:63-193",
+      "correction": "Treat this artifact as a partial generation-one screen only. Z06 is not an admissible selected specification."
+    },
+    {
+      "severity": "high",
+      "track": "external_context",
+      "issue": "The eight hypotheses are scored, but required monthly result vectors, source-date mutation, and moving-block familywise lower bounds are absent.",
+      "protocol_reference": "research/model_v10_external_context_protocol.json:79-96",
+      "result_reference": "/tmp/v10_external_context/result.json",
+      "correction": "X06 remains an unadjusted exploratory point estimate; no shadow or production decision is admissible."
+    },
+    {
+      "severity": "medium",
+      "track": "online_ensemble",
+      "issue": "The protocol requests target-day mutation and independent P&L recomputation. The runner mutates all outcomes and compares only O02, which is outcome-independent; it does not empirically test O01/O03 same-day invariance.",
+      "protocol_reference": "research/model_v10_online_ensemble_protocol.json:61-75",
+      "runner_reference": "research/run_model_v10_online_ensemble.py:307-324",
+      "correction": "Arithmetic is now independently verified, and source order is PIT by inspection. Record the missing stateful mutation test before calling protocol compliance complete."
+    },
+    {
+      "severity": "medium",
+      "track": "cross_artifact",
+      "issue": "Several displayed experiments are exact duplicates, so they are not independent confirmations and raw candidate counts overstate breadth.",
+      "correction": "Deduplicate H01/H04, T02/T10-top1, and the common G0 control when summarizing evidence."
+    },
+    {
+      "severity": "medium",
+      "track": "tdnet_text",
+      "issue": "The 88-session, five-month, discontinuous source-complete sample is not comparable to the 266-session price-only samples; archive observation-time provenance is unavailable.",
+      "correction": "Report T02 separately and retain exploratory-only status."
+    }
+  ],
+  "corrected_decisions": {
+    "model_architectures": "reject all 13 new models; control remains comparison-only",
+    "root_gen1": "no decision; incomplete protocol",
+    "external_context": "no decision; incomplete required validation",
+    "policy_round1": "H12 is descriptive only and failed familywise uplift",
+    "policy_round2": "withdraw forward-shadow retention because the locked specificity rule was not implemented",
+    "policy_round3": "H12 robust replacement remains rejected",
+    "online_ensemble": "reject O01-O03 on returns; no production change",
+    "market_residual": "reject R01; it is worse than R00",
+    "tdnet_text": "T02 is the strongest point estimate but remains a frozen exploratory forward hypothesis only; no production promotion",
+    "overall": "No v0.10 artifact supports a production replacement. The only worthwhile forward-only leads are T02 and, after a clean new registration rather than the invalid round-two decision, the momentum-diversification family."
+  }
+}
