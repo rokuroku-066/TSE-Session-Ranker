@@ -1,0 +1,227 @@
+{
+  "schema_version": 2,
+  "protocol_id": "v11_t02_forward_shadow_v2_20260724",
+  "registered_on": "2026-07-24",
+  "timezone": "Asia/Tokyo",
+  "authority": {
+    "purpose": "prospective exploratory shadow validation",
+    "production_model_changed": false,
+    "production_promotion_allowed_during_run": false,
+    "orders_allowed": false,
+    "historical_artifacts_immutable": true,
+    "supersedes_for_future_observations_only": {
+      "path": "research/model_v10_forward_protocol.json",
+      "sha256": "493db7bcada6e431ebb3872f903634fbafb7c61c4de38e294bed7a88ba12bed2"
+    },
+    "correction_scope": [
+      "Correct the evaluation outcome wording from close-to-open to open-to-close.",
+      "Freeze the monthly expanding retraining contract and required fold artifacts.",
+      "Require a hash-bound activation manifest before any forward session is counted."
+    ]
+  },
+  "bound_candidate_artifacts": {
+    "retrospective_protocol": {
+      "path": "research/model_v10_tdnet_text_protocol.json",
+      "sha256": "700b0262f805c37659453af72651897d116e8bd1f6329a602989b90b212c5b3a"
+    },
+    "retrospective_runner": {
+      "path": "research/model_v10_tdnet_text_runner.py",
+      "sha256": "f49203ef23a6ff15bb609178c6c3aa278b3d052e6383503703a45ec1b3e67744"
+    },
+    "retrospective_result": {
+      "path": "research/model_v10_tdnet_text_result.json",
+      "sha256": "3a40e3541fb24f89f2b009b48b2af4d3a84afe2e96ce03010ea0a87442800196"
+    },
+    "oot_protocol": {
+      "path": "research/model_v11_t02_oot_protocol.json",
+      "sha256": "5eceb8bf396a703a6a3bf217837331f6af95a7b303c91c79e639d132f575024d"
+    }
+  },
+  "errata": [
+    {
+      "source_path": "research/model_v10_forward_protocol.json",
+      "json_pointer": "/evaluation/outcome",
+      "recorded_value": "target-session close-to-open return",
+      "correct_value": "target-session open-to-close return",
+      "interpretation": "This is a wording correction only. The retrospective target, runner column oc_return_pct, and OOT protocol all define open-to-close return."
+    }
+  ],
+  "candidate": {
+    "id": "v10_t02_char_value_event_top1",
+    "decision_cutoff": "08:58:59",
+    "universe": "Stocks with at least one qualifying overnight TDnet disclosure on a source-complete target session.",
+    "bundle": "Join qualifying titles for each code in publication-time order with the frozen separator.",
+    "representation": {
+      "type": "TfidfVectorizer",
+      "analyzer": "char",
+      "ngram_range": [
+        2,
+        5
+      ],
+      "min_df": 3,
+      "max_features": 30000,
+      "sublinear_tf": true,
+      "norm": "l2",
+      "dtype": "float32"
+    },
+    "target": {
+      "name": "open_to_close_return_pct",
+      "formula": "(close / open - 1) * 100",
+      "training_clip": "Training-period 1st and 99th percentiles, then [-10,+10] percentage points."
+    },
+    "model": {
+      "type": "Ridge",
+      "alpha": 20.0,
+      "solver": "lsqr"
+    },
+    "decision": {
+      "portfolio_size": 1,
+      "sort": [
+        "predicted_value descending",
+        "security_code ascending"
+      ],
+      "allocation": "100% of the research sleeve to the selected shadow candidate.",
+      "no_qualifying_event": "cash",
+      "source_incomplete": "no decision and excluded from the source-complete score counter",
+      "fallback": null
+    }
+  },
+  "training_contract": {
+    "mode": "monthly_expanding_walk_forward",
+    "fit_schedule": "Fit once before the first scored session of each calendar month.",
+    "training_sample": "All qualifying event-code bundles from source-complete sessions strictly before the scored month whose target-session close and outcome were already known before fitting.",
+    "minimum_history": {
+      "source_complete_sessions": 20,
+      "qualifying_event_code_bundles": 100
+    },
+    "intramonth_refit_allowed": false,
+    "future_or_target_month_outcomes_allowed": false,
+    "refit_vectorizer_each_fold": true,
+    "refit_estimator_each_fold": true,
+    "hyperparameter_changes_allowed": false,
+    "required_fold_artifacts": [
+      "score_month",
+      "fit_started_at",
+      "fit_completed_at",
+      "training_session_first",
+      "training_session_last",
+      "training_session_count",
+      "training_bundle_count",
+      "training_row_identity_sha256",
+      "source_manifest_sha256",
+      "parser_sha256",
+      "python_version",
+      "numpy_version",
+      "pandas_version",
+      "scikit_learn_version",
+      "vectorizer_vocabulary_sha256",
+      "vectorizer_idf_sha256",
+      "ridge_coef_sha256",
+      "ridge_intercept",
+      "prediction_artifact_sha256"
+    ],
+    "failure_policy": "Fail closed for the affected month. Do not substitute an earlier fold, partial source window, or retrospectively rebuilt unregistered artifact.",
+    "changes_reset_counter": true
+  },
+  "activation": {
+    "status": "pending_hash_bound_activation",
+    "start_session": null,
+    "activation_manifest_required": true,
+    "activation_manifest_path": "research/model_v11_t02_forward_activation.json",
+    "eligibility_rule": "The first counted session must be a source-complete JPX session whose 08:58:59 JST cutoff is strictly after the activation manifest was committed to the default branch and whose acquisition, feature, scoring, and append-only logging pipeline was running before that cutoff.",
+    "pre_activation_sessions": "Never backfill or count them in the forward counter.",
+    "activation_manifest_required_fields": [
+      "schema_version",
+      "protocol_path",
+      "protocol_sha256",
+      "activation_commit_sha",
+      "activated_at",
+      "first_eligible_session",
+      "training_snapshot_path",
+      "training_snapshot_sha256",
+      "source_registry_path",
+      "source_registry_sha256",
+      "scoring_code_sha256",
+      "activation_approved_by"
+    ]
+  },
+  "point_in_time_contract": {
+    "published_at_must_be_at_or_before_cutoff": true,
+    "received_at_must_be_at_or_before_cutoff": true,
+    "computed_at_must_be_at_or_before_cutoff": true,
+    "available_at": "max(received_at, computed_at)",
+    "availability_requirement": "available_at <= target session 08:58:59 JST",
+    "source_completeness": "Every required calendar-date TDnet page from the previous JPX session through the target session must be present, parser-valid, finalized, and provenance-complete.",
+    "missing_source_policy": "Fail closed and record no decision; a missing page is never a no-event day.",
+    "append_only_prediction_log": true
+  },
+  "decision_log_contract": {
+    "required_fields": [
+      "session_date",
+      "decision_id",
+      "protocol_sha256",
+      "fold_artifact_sha256",
+      "source_manifest_sha256",
+      "candidate_generation_started_at",
+      "decision_at",
+      "published_at_max",
+      "received_at_max",
+      "computed_at",
+      "source_complete",
+      "qualifying_event_count",
+      "selected_code",
+      "selected_score",
+      "decision",
+      "decision_payload_sha256"
+    ],
+    "decision_values": [
+      "selected",
+      "cash_no_event",
+      "fail_closed_source",
+      "fail_closed_model"
+    ],
+    "immutability": "Conflicting records for the same decision_id are rejected."
+  },
+  "evaluation": {
+    "outcome": "target-session open-to-close return",
+    "outcome_field": "open_to_close_return_pct",
+    "scheduled_day_denominator": "Every activated source-complete score session; valid no-event sessions contribute cash return 0.",
+    "round_trip_cost_bps": [
+      20,
+      40,
+      60
+    ],
+    "primary_metric": "Mean daily net return at 40 bps over every activated source-complete score session.",
+    "comparators": [
+      "frozen L4 price control top1 evaluated on the identical source-complete sessions",
+      "cash",
+      "equal-weight qualifying-event mean as a selection-skill diagnostic"
+    ],
+    "required_reports": [
+      "gross and net mean, median, win rate, and profit factor",
+      "calendar-month results",
+      "chronological first-half and second-half net40",
+      "non-overlapping 20-session blocks",
+      "best 20 winning days removed net20",
+      "top 10 profit-contributing codes replaced by cash net20",
+      "maximum single-day and single-code profit contribution",
+      "paired block-bootstrap difference versus frozen L4",
+      "candidate-generation, source-completeness, and PIT-compliance rates",
+      "realized spread, slippage, turnover, minimum-lot, and capacity diagnostics when registered evidence is available"
+    ]
+  },
+  "promotion_gate_after_window": {
+    "all_required": true,
+    "requirements": [
+      "At least 120 source-complete sessions spanning at least 4 calendar months.",
+      "Net40 is positive in both chronological halves.",
+      "The one-sided paired 90% lower bound versus frozen L4 is at least zero.",
+      "Best-20-winning-days-removed net20 is positive.",
+      "Top-10-profit-codes-cash net20 is positive.",
+      "Candidate generation and PIT compliance are both at least 98%.",
+      "Minimum-lot, spread, slippage, turnover, and intended-capital checks show the strategy is executable."
+    ],
+    "failure_action": "Retain as research or reject. Do not tune on the same forward window.",
+    "production_action": "A passing result is still not an order authorization; independent audit and explicit human approval remain required."
+  }
+}
