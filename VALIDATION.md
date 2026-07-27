@@ -3018,3 +3018,206 @@ orders allowed:                  false
 ```
 
 </details>
+
+
+---
+
+## Entry 018 — 研究プロトコルv1.3：OHLC symbolic context treeのゼロベース反証
+
+| 項目 | 内容 |
+|---|---|
+| 検証日 | 2026-07-27 |
+| 親Entry | Entry 017 |
+| 目的 | 連続値のtabular回帰をやめ、完了済みOHLCのsymbol列を逐次学習する可変長context treeを反証する |
+| base protocol | `model_v13_symbolic_context_zero_base_20260727` |
+| input revision | outcome未計算のpreflight failure後、公式JPX PDF 19本へinput-only v2 erratum |
+| 候補 | absolute path、relative path、direction path、3者固定平均 |
+| variant | 4 candidate × top1/top2 = 8 |
+| score期間 | 2024-07-01～2025-07-31、266 scheduled session |
+| 対照 | v0.8 G0 15特徴、同日順位`Ridge(alpha=1)`、同一universe・calendar・cost |
+| 最良点推定 | `CT02_RELATIVE_PATH__top1`、net20 `+0.181176%/日`、net40 `-0.018824%/日` |
+| gate | `0/8` |
+| 最終判断 | 全件棄却。forward shadow追加なし、production変更なし、orders不許可 |
+
+> **一行結論:** OHLCをabsolute/relative/direction token列へ変換し、1～6 sessionのsuffix別損益をscore後に日次更新する非回帰型context treeを事前登録して検証した。最良CT02 top1も40 bp後は負で、3期間、上位10日除外、利益上位10 code除外、familywise対照比較を通過せず、8 variantすべてを棄却した。
+
+<details>
+<summary><strong>事前登録、input erratum、結果、独立監査</strong></summary>
+
+### 従来方式との非重複
+
+今回のfeatureはrolling meanやmomentumの列を増やすものではない。
+完了した各sessionを次のsymbolへ変換し、target日にはshift済みtokenだけを使う。
+
+```text
+absolute shape:
+  open-to-close / overnight / range / close-locationを固定bin化
+  maximum suffix depth = 3
+
+relative shape:
+  同じ4量を当日のtraded銘柄内tertileへ変換
+  maximum suffix depth = 3
+
+direction:
+  open-to-close / overnightのcoarse direction
+  maximum suffix depth = 6
+```
+
+モデルはRidge、logit、pairwise rank、tree ensemble、TDnetタイトル近傍検索ではない。
+各contextのclipped returnをdate-equalで集計し、次の固定reliabilityで親suffixへ
+backoffするprequential reward tableである。
+
+```text
+reliability =
+  min(
+    rows / (rows + 200),
+    distinct_dates / (distinct_dates + 20)
+  )
+
+prediction =
+  reliability * context_mean
+  + (1 - reliability) * parent_prediction
+```
+
+各sessionは候補をscoreした後にだけupdateする。同日outcomeが同日predictionへ
+入ることはなく、target/future OHLC mutation testもPASSした。
+
+### 事前登録とpreflight failure
+
+candidate outcomeを計算する前に、protocol、runner、合成fixture testをcommit
+`71284929c462ab77f39d1f370aa7bdf4225ed612`へ固定した。
+
+最初の7列pickleは既存の90%収録率検査で2024年7月の18 sessionを不完備と判定し、
+feature/model scoring前に停止した。
+
+```text
+candidate scores computed:     0
+candidate outcomes inspected:  false
+coverage threshold relaxed:    false
+```
+
+failureを`model_v13_symbolic_context_execution_failure_001.json`へ保存し、
+inputだけをv0.5でhash固定済みのJPX公式月次PDF 19本・parser v6へ変更した。
+feature、bin、depth、backoff、candidate、capacity、cost、gate、score期間は
+変更していない。
+
+```text
+base protocol SHA-256:
+7762221b33781a9d976487e50c1f5483bfc7ec6cea0e2b615d19ed36cf0b9703
+
+input erratum v2 SHA-256:
+991ef4dfd20171d9be371d1b8d69d4074fe6536339bb7ff264f9708758c67853
+```
+
+### 公式JPX input
+
+```text
+PDF files:             19
+canonical rows:        1,523,928
+modeling rows:         1,524,104
+codes:                 4,124
+sessions:              386
+no-trade rows:         57,465
+partial-session rows:  34,495
+parser rejected rows:  0
+source-incomplete:     0
+score sessions:        266
+calendar SHA-256:
+966f4a416d0929487d850b16be87c9c1cd69cd9f8c0447a3e76214a5715c489e
+```
+
+### 全variant結果
+
+主判定costは40 bpである。paired L90は、8 variantのBonferroni補正後、
+5日moving-block bootstrapによる同capacity C00との差の片側90%下限。
+
+| variant | net20 | net40 | net60 | 正の月 | paired delta | familywise L90 | gate |
+|---|---:|---:|---:|---:|---:|---:|---|
+| CT01 absolute top1 | -0.106171 | -0.306171 | -0.506171 | 2/13 | -0.314073 | -0.761986 | FAIL |
+| CT01 absolute top2 | -0.152299 | -0.352299 | -0.552299 | 2/13 | -0.411003 | -0.725630 | FAIL |
+| **CT02 relative top1** | **+0.181176** | **-0.018824** | **-0.218824** | **5/13** | **-0.026726** | **-0.435428** | **FAIL** |
+| CT02 relative top2 | -0.009507 | -0.209507 | -0.409507 | 3/13 | -0.268212 | -0.562390 | FAIL |
+| CT03 direction top1 | -0.450965 | -0.650213 | -0.849461 | 0/13 | -0.658115 | -1.194361 | FAIL |
+| CT03 direction top2 | -0.334574 | -0.534198 | -0.733822 | 0/13 | -0.592902 | -0.944968 | FAIL |
+| CT04 consensus top1 | -0.455736 | -0.654984 | -0.854232 | 0/13 | -0.662886 | -1.032674 | FAIL |
+| CT04 consensus top2 | -0.362191 | -0.561815 | -0.761439 | 0/13 | -0.620520 | -0.928573 | FAIL |
+
+同じinputから再学習したC00は次のとおり。
+
+| control | net20 | net40 | net60 |
+|---|---:|---:|---:|
+| C00 top1 | +0.204894 | +0.007902 | -0.189091 |
+| C00 top2 | +0.255321 | +0.058705 | -0.137912 |
+
+C00 top2 net20はEntry 011の既知値
+`+0.25532118075031435%/日`と小数点以下まで一致した。
+
+### 最良CT02 top1のgate
+
+| check | observed | required | result |
+|---|---:|---:|---|
+| 全期間net40 | -0.018824 | > 0 | FAIL |
+| discovery net40 | -0.055737 | > 0 | FAIL |
+| confirmation A net40 | -0.136220 | > 0 | FAIL |
+| confirmation B net40 | +0.155050 | > 0 | PASS |
+| 上位10日除外net40 | -0.326248 | > 0 | FAIL |
+| 利益上位10 code現金化net40 | -0.313757 | > 0 | FAIL |
+| 正の月 | 5/13 | >= 9/13 | FAIL |
+| familywise paired L90 | -0.435428 | >= 0 | FAIL |
+| unique code | 246 | >= 50 | PASS |
+| 最大code選択比率 | 1.13% | <= 10% | PASS |
+
+集中度は低いため、単一銘柄への依存だけが失敗原因ではない。
+confirmation Bだけが正で、低cost点推定も上位日・上位codeを除くと崩れた。
+固定したsymbolic pathとcontext treeでは、安定した条件付き期待損益を示せなかった。
+
+### 独立監査
+
+runnerとは別のauditで次を再計算し、すべてPASSした。
+
+```text
+artifact binding:                       PASS
+5 models x 266 sessions x 2 slots:      PASS
+label / return sign:                    PASS
+v0.8 G0 exact reproduction:             PASS
+cost / subperiod / tail-code removal:   PASS
+familywise bootstrap:                   PASS
+gate decision:                          PASS
+production / order boundary:            PASS
+```
+
+```text
+result SHA-256:
+1f1a47ce04c4f72e5c581195120741c45d3a9cf013801627ecd2c1a356fa33de
+
+picks SHA-256:
+3d47891da9a18469bce7a38ee4b74952485a6092f25a54e326817b88f8cb8715
+
+audit SHA-256:
+dc6cb31b1661cb398277b058629007a3635efd941044258bde9ebbc3d28cbb23
+```
+
+### 再現と最終状態
+
+```bash
+PYTHONPATH=src:. python research/model_v13_symbolic_context_runner.py \
+  --jpx-directory research/.cache/model_v05_jpx
+
+PYTHONPATH=src:. python research/model_v13_symbolic_context_audit.py
+
+python -m pytest -q
+```
+
+```text
+registered variants:       8
+gate passers:              0
+forward shadow candidate:  none
+production candidate:      none
+production model changed:  false
+orders allowed:            false
+```
+
+同じ266日を見てbin、depth、backoff、consensus比率を再調整しない。
+新しい試行は、別protocolと未観測期間または異なる情報源を必要とする。
+
+</details>
