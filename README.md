@@ -5,7 +5,7 @@
 現行CLI/APIの既定モデルは0.3.0互換の`session_v3_tdnet_clear`です。正則化ロジスティック回帰に、価格履歴12特徴と寄り前までのTDnet適時開示6特徴を入力し、1位を`CORE`、2位を`RESERVE`として表示します。
 
 > [!WARNING]
-> **自動発注には使用できません。** v1.1では情報源・推定対象・意思決定構造が異なる7系統をゼロベースで検証しましたが、118 variantの本番gate通過は0件でした。凍結T02のOOT rawと08:58実行証拠も未充足です。productionモデルは変更しておらず、CLIの既存`CORE` / `ORDER_ELIGIBLE`も研究上の発注承認を意味しません。
+> **自動発注には使用できません。** v1.1では情報源・推定対象・意思決定構造が異なる7系統をゼロベースで検証しましたが、118 variantの本番gate通過は0件でした。凍結T02のOOT rawと08:58実行証拠も未充足です。v1.2 forward protocol v2もactivation前で、forward counterは0です。productionモデルは変更しておらず、`orders_allowed=false`のままです。CLIの既存`CORE` / `ORDER_ELIGIBLE`も研究上の発注承認を意味しません。
 
 ## 最新の研究判断
 
@@ -29,10 +29,11 @@
 | v0.9 valid-OC breadth | 前営業日の始値→終値breadthでL4/L6 rank 2を切替 | retrospective predecessor | net20 `+0.487187%/日`、net60 `+0.093202%/日` |
 | **v1.0 T02 TDnet text** | 開示タイトルchar 2–5gram TF-IDF + value Ridge | **前向きexploratory shadow・実発注不可** | 88日でnet20 `+0.719059%/日`、net40 `+0.519059%/日`、net60 `+0.319059%/日` |
 | **v1.1 zero-base audit** | 7機構family、59 spec・118 capacity variant | **全件棄却・本番候補0** | family gate `0/118` |
+| **v1.2 T02 forward protocol v2** | 凍結T02、月次expanding再学習、fold artifact hash固定 | **activation待ち・counter 0・実発注不可** | forward実績なし |
 
-v0.8では価格・市場状態、売買可能性、TDnet、非線形変換の計43特徴仮説と5ユニバース仮説を評価した。v0.9では有力仕様の誤差から、個別誤差/meta 20件、target・portfolio 33件、breadth反証4件の計57件を追加検証した。v1.0では19本の一次資料から12仮説を事前登録し、13モデル構造、16方策・ユニバース案、TDnetタイトル10案、外部市場8案、online expert、market/peer residualを月次walk-forwardで比較した。v1.1では67の概念仮説をnew data、historical analog、distributional decision、uplift、cross-stock graph、distribution shift、calendar/institutionへ分け、58実装可能仮説と1固定combinationを118 capacity variantとして反証した。
+v0.8では価格・市場状態、売買可能性、TDnet、非線形変換の計43特徴仮説と5ユニバース仮説を評価した。v0.9では有力仕様の誤差から、個別誤差/meta 20件、target・portfolio 33件、breadth反証4件の計57件を追加検証した。v1.0では19本の一次資料から12仮説を事前登録し、13モデル構造、16方策・ユニバース案、TDnetタイトル10案、外部市場8案、online expert、market/peer residualを月次walk-forwardで比較した。v1.1では67の概念仮説をnew data、historical analog、distributional decision、uplift、cross-stock graph、distribution shift、calendar/institutionへ分け、58実装可能仮説と1固定combinationを118 capacity variantとして反証した。v1.2ではT02の特徴・モデル・順位規則を変えず、将来観測のactivation、月次再学習、PIT、fold保存、fail-closed評価を明文化した。
 
-独立監査の結果、v0.9 breadthの追加価値は未証明であり、v1.0のpolicy Round 2も「5比較中4勝」のはずが4比較しか実装されていなかったため昇格判断を撤回した。点推定首位のT02も、好成績20日除外後net20 `-0.572088%/日`、上位利益10コードを現金化すると`-0.108484%/日`、familywise reality-check `p=0.2103`である。v1.1でもfamily gate通過は0件だったため、新しいproduction採用は0件。全経緯は追記専用の[VALIDATION.md](VALIDATION.md)、v1.1の横断判断は[integration report](research/model_v11_integration_report.md)、入力不足は[data-readiness report](research/model_v11_production_readiness_report.md)、条件を変えないT02の次回評価は[OOT protocol](research/model_v11_t02_oot_protocol.json)に保存する。
+独立監査の結果、v0.9 breadthの追加価値は未証明であり、v1.0のpolicy Round 2も「5比較中4勝」のはずが4比較しか実装されていなかったため昇格判断を撤回した。点推定首位のT02も、好成績20日除外後net20 `-0.572088%/日`、上位利益10コードを現金化すると`-0.108484%/日`、familywise reality-check `p=0.2103`である。v1.1でもfamily gate通過は0件だったため、新しいproduction採用は0件。全経緯は追記専用の[VALIDATION.md](VALIDATION.md)、v1.1の横断判断は[integration report](research/model_v11_integration_report.md)、入力不足は[data-readiness report](research/model_v11_production_readiness_report.md)、条件を変えないT02の履歴評価は[OOT protocol](research/model_v11_t02_oot_protocol.json)、将来評価は[forward protocol v2](research/model_v11_t02_forward_protocol_v2.json)と[次回検証計画](research/model_v11_t02_next_validation.md)に保存する。
 
 ### v1.1ゼロベース検証
 
@@ -50,6 +51,25 @@ production candidates:                0
 
 凍結T02を変えずに評価する2025-08-04～2026-03-31のOOT protocolも登録した。ただし現在のworkspaceで再現可能なrawはJPX `0/160`、TDnet `0/243`、joint provenance-completeはminimum `0/120`である。data-readiness verifierは20件の重複し得るblocking requirementと、先物・PTS・出来高の任意research context 3項目を分離し、ファイル名やheaderだけを証拠にしない。registry・parser audit・source manifestをhash固定し、JPX raw再parse、TDnet page/meta照合、T02 decisionの独立replay、全注文結果の完全被覆、08:58 bid/ask・tick/lot・spread/slippage再計算、予定額と実約定額双方の日次合計capacityまで通らなければ入力readyにしない。自己申告auditは内部整合性までしか通さず、dated security master・価格履歴からの参照値再計算と外部認証がない限りexecution evidenceをvalidにしない。hashは内部整合性を示すだけで外部真正性や本番認可を示さず、登録期間もgenuinely untouchedではない。したがって現時点の判断は`orders_allowed=false`で、既存package/productionモデルは変更しない。
 
+### v1.2 forward protocol v2
+
+旧forward protocolの`close-to-open`表記を、実装・目的変数どおり
+`open-to-close`へ訂正した。T02の特徴、Ridge、順位規則は変更していない。
+月次expanding再学習とfold artifactをhash固定する。activationは、payloadを
+default branchへ固定した後、独立時刻付きreceiptでそのcommitを証明する二段階とし、
+過去sessionを遡及算入しない。現状はpayload・receiptとも未作成、forward counter
+`0`、`orders_allowed=false`である。
+
+source-completeなno-event日は`cash_no_event`とする。一方、source不完備やmodel
+failureはno-eventへ読み替えず、fail-closedのno-decisionとして記録する。評価上は
+全activated scheduled sessionを分母とし、fail-closed日はgross returnとcostを
+ともに`0`とする。source completenessとfailure率は損益とは別に報告する。
+
+08:58:59時点の判断には、その時刻までに公開・受信・計算済みで、登録済み
+source watermarkを持つlive cutoff snapshotだけを使う。後から取得したfinal
+archiveはprefix一致と再現監査に使うが、当日の候補、decision hash、forward
+counterを遡及変更しない。
+
 ### v1.0暫定shadow仕様
 
 ```text
@@ -65,7 +85,12 @@ model:
     Ridge(alpha=20)
 decision:
     予測値降順、同点は銘柄コード昇順のtop1
-    eventなし・source欠落は現金、価格モデルfallbackなし
+    source-completeかつeventなしはcash_no_event
+    source不完備・model failureはfail-closedのno-decision
+    価格モデルfallbackなし
+evaluation:
+    全activated scheduled sessionが分母
+    fail-closed日はgross return=0、cost=0
 ```
 
 これは勝率ではなく平均損益を狙うため、88日のnet40勝率は47.7%、中央値は負でも平均が正になった。ただし右裾依存が強い。最低120 source-complete営業日・4か月、前後半net40正、L4比の片側90%下限非負、tail/code除外後も正、PIT遵守率98%以上、実spread・slippage・最低単元の合格をすべて満たすまで実発注へ昇格させない。
@@ -110,6 +135,7 @@ L4・L6とも60bpコストではマイナスで、L4は単一銘柄が総損益�
 - v0.9では57件を追加反証し、`prior_market_oc_breadth`でL4/L6のrank 2を切り替える1銘柄規則を前向きshadowへ固定。production採用は0
 - v1.0では先行研究・モデル構造・方策・外部市場・TDnet text・online/residualをゼロベース比較。T02 text-value top1を前向きexploratory shadowへ固定したが、tail/code集中と多重性のためproduction採用は0
 - v1.1では情報源・推定対象・意思決定構造の異なる7 familyを独立protocolで反証。118 variantのgate通過0、非互換窓の横断順位なし、fresh OOTと実行証拠が揃うまでproduction採用0
+- v1.2ではT02を変更せずforward protocolを改訂。activation前はcounter 0、live cutoff snapshotとfinal archiveを分離し、source不完備・model failureをno-event化しない
 - 学習ラベルは`close > open`または損益・同日順位。研究仕様の採否は勝率ではなくコスト後損益で決定し、v0.5の主指標はtop2等金額
 - 対象日OHLCを特徴量へ入れず、価格特徴はすべて1セッション以上shift
 - 適時開示は各文書を「公開時刻以前で最初に到来する08:58:59 JSTの取引日」へ割当
