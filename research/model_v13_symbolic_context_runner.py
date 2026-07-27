@@ -39,6 +39,10 @@ from tse_session_ranker.data.common import (  # noqa: E402
     session_calendar_hash,
 )
 from tse_session_ranker.features import build_feature_panel  # noqa: E402
+from tse_session_ranker.data.jpx import (  # noqa: E402
+    PARSER_VERSION as JPX_PARSER_VERSION,
+    collect_jpx,
+)
 from tse_session_ranker.profit import (  # noqa: E402
     daily_portfolio_returns,
     profit_metrics,
@@ -54,8 +58,15 @@ from tse_session_ranker.validation import (  # noqa: E402
 
 PROTOCOL = ROOT / "research/model_v13_symbolic_context_protocol.json"
 PROTOCOL_SHA256 = "7762221b33781a9d976487e50c1f5483bfc7ec6cea0e2b615d19ed36cf0b9703"
-INPUT_SHA256 = "18878ab5597bea531b06e94eef2395a52f94aa64c7265a736bd137a8d48b602d"
-PROTOCOL_ID = "model_v13_symbolic_context_zero_base_20260727"
+INPUT_ERRATUM = ROOT / "research/model_v13_symbolic_context_input_erratum_v2.json"
+INPUT_ERRATUM_SHA256 = (
+    "991ef4dfd20171d9be371d1b8d69d4074fe6536339bb7ff264f9708758c67853"
+)
+INPUT_MANIFEST = ROOT / "research/model_v05_input_lock.json"
+INPUT_MANIFEST_SHA256 = (
+    "02370bda9c5fe73b166c557bcdc837d363f5deafbe91baa2d450b33dfcd45272"
+)
+PROTOCOL_ID = "model_v13_symbolic_context_zero_base_20260727_input_v2"
 SCORE_START = pd.Timestamp("2024-07-01")
 SCORE_END = pd.Timestamp("2025-07-31")
 TARGET_CLIP = 10.0
@@ -487,46 +498,103 @@ class DenseContextTree:
         }
 
 
-def _validate_protocol() -> dict[str, Any]:
+def _validate_protocol() -> tuple[dict[str, Any], dict[str, Any]]:
     actual = sha256_file(PROTOCOL)
     if actual != PROTOCOL_SHA256:
         raise ValueError(
             f"v1.3 protocol SHA-256 mismatch: expected {PROTOCOL_SHA256}, got {actual}"
         )
     protocol = read_json(PROTOCOL)
-    if protocol.get("protocol_id") != PROTOCOL_ID:
-        raise ValueError("unexpected v1.3 protocol id")
+    if protocol.get("protocol_id") != "model_v13_symbolic_context_zero_base_20260727":
+        raise ValueError("unexpected v1.3 base protocol id")
     if protocol["authority"]["production_promotion_allowed"] is not False:
         raise ValueError("retrospective v1.3 protocol cannot promote production")
     if protocol["authority"]["orders_allowed"] is not False:
         raise ValueError("v1.3 protocol must keep orders disabled")
     if int(protocol["family_size"]) != len(CANDIDATES) * len(CAPACITIES):
         raise ValueError("v1.3 family size differs from implementation")
-    return protocol
+    erratum_sha = sha256_file(INPUT_ERRATUM)
+    if erratum_sha != INPUT_ERRATUM_SHA256:
+        raise ValueError(
+            "v1.3 input erratum SHA-256 mismatch: "
+            f"expected {INPUT_ERRATUM_SHA256}, got {erratum_sha}"
+        )
+    erratum = read_json(INPUT_ERRATUM)
+    if erratum.get("protocol_id") != PROTOCOL_ID:
+        raise ValueError("unexpected v1.3 input-v2 protocol id")
+    if erratum["base_protocol"]["sha256"] != PROTOCOL_SHA256:
+        raise ValueError("v1.3 input erratum does not bind the base protocol")
+    if erratum["authority"]["input_revision_only"] is not True:
+        raise ValueError("v1.3 erratum must be input-only")
+    if erratum["authority"]["production_promotion_allowed"] is not False:
+        raise ValueError("v1.3 input-v2 protocol cannot promote production")
+    if erratum["authority"]["orders_allowed"] is not False:
+        raise ValueError("v1.3 input-v2 protocol must keep orders disabled")
+    return protocol, erratum
 
 
 def load_and_build_panel(
-    prices_path: str | Path,
+    jpx_directory: str | Path,
     protocol: dict[str, Any],
+    erratum: dict[str, Any],
 ) -> tuple[pd.DataFrame, pd.DatetimeIndex, dict[str, Any]]:
-    prices_path = Path(prices_path)
-    actual_sha = sha256_file(prices_path)
-    if actual_sha != INPUT_SHA256:
+    if sha256_file(INPUT_MANIFEST) != INPUT_MANIFEST_SHA256:
         raise ValueError(
-            f"v1.3 input SHA-256 mismatch: expected {INPUT_SHA256}, got {actual_sha}"
+            "v1.3 JPX input manifest SHA-256 differs from the v2 erratum"
         )
-    prices = pd.read_pickle(prices_path)
-    frozen = protocol["frozen_input"]
-    if list(prices.columns) != frozen["columns"]:
-        raise ValueError("v1.3 input columns differ from the protocol")
+    manifest = read_json(INPUT_MANIFEST)
+    jpx_manifest = manifest.get("jpx", {})
+    frozen = erratum["frozen_input_v2"]
+    if jpx_manifest.get("parser_version") != frozen["parser_version"]:
+        raise ValueError("v1.3 JPX manifest parser version changed")
+    if JPX_PARSER_VERSION != frozen["parser_version"]:
+        raise ValueError("v1.3 imported JPX parser version changed")
+    directory = Path(jpx_directory)
+    pdfs = sorted(directory.glob("*.pdf"))
+    expected_sources = jpx_manifest.get("sources", [])
+    if len(pdfs) != int(frozen["source_files"]) or len(pdfs) != len(
+        expected_sources
+    ):
+        raise ValueError("v1.3 JPX source-file count changed")
+    if [path.name for path in pdfs] != [
+        source["filename"] for source in expected_sources
+    ]:
+        raise ValueError("v1.3 JPX source filenames changed")
+    source_checks: list[dict[str, Any]] = []
+    for path, expected in zip(pdfs, expected_sources, strict=True):
+        observed = {
+            "filename": path.name,
+            "bytes": path.stat().st_size,
+            "sha256": sha256_file(path),
+        }
+        if observed["bytes"] != int(expected["bytes"]):
+            raise ValueError(f"v1.3 JPX source size changed: {path.name}")
+        if observed["sha256"] != expected["sha256"]:
+            raise ValueError(f"v1.3 JPX source SHA-256 changed: {path.name}")
+        source_checks.append(observed)
+    prices, parse_report = collect_jpx(pdfs)
+    rejected_rows = sum(
+        int(item.get("rejected_rows", 0))
+        for item in parse_report.get("inputs", [])
+    )
+    if parse_report.get("parser_version") != frozen["parser_version"]:
+        raise ValueError("v1.3 JPX parse report version changed")
+    if rejected_rows != int(frozen["required_rejected_ordinary_stock_rows"]):
+        raise ValueError("v1.3 JPX parser rejected ordinary-stock rows")
     dates = pd.to_datetime(prices["date"], errors="coerce")
     if dates.isna().any():
         raise ValueError("v1.3 input contains an invalid date")
     sessions = normalize_expected_sessions(dates.drop_duplicates())
     checks = {
-        "sha256": actual_sha,
+        "input_manifest_sha256": INPUT_MANIFEST_SHA256,
+        "input_erratum_sha256": INPUT_ERRATUM_SHA256,
+        "parser_version": JPX_PARSER_VERSION,
+        "source_files": source_checks,
+        "rejected_rows": rejected_rows,
         "rows": int(len(prices)),
         "codes": int(prices["code"].astype(str).nunique()),
+        "no_trade_rows": int((~prices["traded"]).sum()),
+        "partial_session_rows": int(prices["partial_session"].sum()),
         "sessions": int(len(sessions)),
         "date_bounds": [
             sessions.min().strftime("%Y-%m-%d"),
@@ -535,8 +603,10 @@ def load_and_build_panel(
         "calendar_sha256": session_calendar_hash(sessions),
     }
     expected = {
-        "rows": int(frozen["rows"]),
-        "codes": int(frozen["codes"]),
+        "rows": int(frozen["canonical_rows"]),
+        "codes": int(frozen["canonical_codes"]),
+        "no_trade_rows": int(frozen["canonical_no_trade_rows"]),
+        "partial_session_rows": int(frozen["canonical_partial_session_rows"]),
         "sessions": int(frozen["sessions"]),
         "date_bounds": list(frozen["date_bounds"]),
     }
@@ -553,9 +623,9 @@ def load_and_build_panel(
         expected_sessions=sessions,
     )
     incomplete = coverage.loc[~coverage["source_complete"], "date"]
-    if len(incomplete):
+    if len(incomplete) != int(frozen["required_source_incomplete_sessions"]):
         raise ValueError(
-            "v1.3 official-price source is incomplete on: "
+            "v1.3 official-price source completeness differs from v2: "
             + ", ".join(str(pd.Timestamp(value).date()) for value in incomplete[:5])
         )
     panel = build_feature_panel(modeling, settings)
@@ -923,7 +993,10 @@ def _semantic_hash(frame: pd.DataFrame) -> str:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--prices", default="jpx_daily_2024_2025.pkl")
+    parser.add_argument(
+        "--jpx-directory",
+        default="research/.cache/model_v05_jpx",
+    )
     parser.add_argument(
         "--output",
         default="research/model_v13_symbolic_context_result.json",
@@ -938,8 +1011,12 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     started = time.monotonic()
-    protocol = _validate_protocol()
-    panel, sessions, input_checks = load_and_build_panel(args.prices, protocol)
+    protocol, erratum = _validate_protocol()
+    panel, sessions, input_checks = load_and_build_panel(
+        args.jpx_directory,
+        protocol,
+        erratum,
+    )
     scheduled = sessions[(sessions >= SCORE_START) & (sessions <= SCORE_END)]
     symbolic, symbolic_details = run_symbolic(panel, scheduled)
     control, control_folds = run_control(panel, scheduled)
@@ -991,7 +1068,8 @@ def main() -> None:
     result = {
         "schema_version": 1,
         "protocol_id": PROTOCOL_ID,
-        "protocol_sha256": PROTOCOL_SHA256,
+        "base_protocol_sha256": PROTOCOL_SHA256,
+        "input_erratum_sha256": INPUT_ERRATUM_SHA256,
         "runner_sha256": sha256_file(__file__),
         "input": input_checks,
         "runtime": {

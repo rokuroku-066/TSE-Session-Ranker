@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "protocol_id": "model_v13_symbolic_context_zero_base_20260727_input_v2",
+  "registered_at": "2026-07-27T11:12:40+09:00",
+  "base_protocol": {
+    "path": "research/model_v13_symbolic_context_protocol.json",
+    "sha256": "7762221b33781a9d976487e50c1f5483bfc7ec6cea0e2b615d19ed36cf0b9703",
+    "inherit_without_change": [
+      "research question",
+      "authority and non-production boundary",
+      "point-in-time contract",
+      "all symbolic feature definitions and bins",
+      "all context depths",
+      "the context-tree model and both backoff strengths",
+      "all four candidates and both capacities",
+      "the C00 control",
+      "score period, costs, bootstrap, qualification gate, anti-leakage tests, and stop rule"
+    ]
+  },
+  "superseded_preflight_input": {
+    "logical_name": "jpx_daily_2024_2025.pkl",
+    "sha256": "18878ab5597bea531b06e94eef2395a52f94aa64c7265a736bd137a8d48b602d",
+    "note": "This correctly identifies the failed preflight input but is documentary only and must not be accepted by the v2 runner."
+  },
+  "execution_failure": {
+    "path": "research/model_v13_symbolic_context_execution_failure_001.json",
+    "candidate_scores_computed": 0,
+    "candidate_outcomes_inspected": false
+  },
+  "reason_for_input_only_revision": "The originally locked seven-column derived pickle failed the existing source-coverage preflight for 18 July 2024 sessions. Weakening the threshold would fail open. The replacement inputs are the same 19 official JPX monthly PDFs, hashes, and parser already locked and audited by model v0.5.",
+  "frozen_input_v2": {
+    "manifest_path": "research/model_v05_input_lock.json",
+    "manifest_sha256": "02370bda9c5fe73b166c557bcdc837d363f5deafbe91baa2d450b33dfcd45272",
+    "section": "jpx",
+    "source_files": 19,
+    "filename_bounds": [
+      "202401.pdf",
+      "202507.pdf"
+    ],
+    "parser_version": "jpx_daily_text_v6_special_quote_marker",
+    "canonical_rows": 1523928,
+    "canonical_codes": 4124,
+    "canonical_no_trade_rows": 57465,
+    "canonical_partial_session_rows": 34495,
+    "sessions": 386,
+    "date_bounds": [
+      "2024-01-04",
+      "2025-07-31"
+    ],
+    "required_rejected_ordinary_stock_rows": 0,
+    "required_source_incomplete_sessions": 0
+  },
+  "authority": {
+    "input_revision_only": true,
+    "outcome_driven_change": false,
+    "production_promotion_allowed": false,
+    "orders_allowed": false
+  }
+}

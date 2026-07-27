@@ -52,12 +52,23 @@ def test_protocol_is_locked_and_non_production() -> None:
     observed = hashlib.sha256(path.read_bytes()).hexdigest()
     assert observed == runner.PROTOCOL_SHA256
     protocol = json.loads(path.read_text(encoding="utf-8"))
-    assert protocol["protocol_id"] == runner.PROTOCOL_ID
+    assert protocol["protocol_id"] == "model_v13_symbolic_context_zero_base_20260727"
     assert protocol["authority"]["production_promotion_allowed"] is False
     assert protocol["authority"]["orders_allowed"] is False
     assert protocol["family_size"] == (
         len(runner.CANDIDATES) * len(runner.CAPACITIES)
     )
+    erratum_path = (
+        ROOT / "research/model_v13_symbolic_context_input_erratum_v2.json"
+    )
+    assert hashlib.sha256(erratum_path.read_bytes()).hexdigest() == (
+        runner.INPUT_ERRATUM_SHA256
+    )
+    erratum = json.loads(erratum_path.read_text(encoding="utf-8"))
+    assert erratum["protocol_id"] == runner.PROTOCOL_ID
+    assert erratum["authority"]["input_revision_only"] is True
+    assert erratum["authority"]["production_promotion_allowed"] is False
+    assert erratum["authority"]["orders_allowed"] is False
 
 
 def test_target_and_future_ohlc_cannot_change_existing_contexts() -> None:
