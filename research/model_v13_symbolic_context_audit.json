@@ -1,0 +1,161 @@
+{
+  "audit_id": "model_v13_symbolic_context_independent_audit_20260727",
+  "audit_runner_sha256": "eed65900aad0369f69c605ad2a89dccc2ea8c68cdbb880c8bf434554a3847a35",
+  "base_protocol_sha256": "7762221b33781a9d976487e50c1f5483bfc7ec6cea0e2b615d19ed36cf0b9703",
+  "best_point_estimate_net40_pct": -0.018824142289096436,
+  "best_point_estimate_variant": "CT02_RELATIVE_PATH__top1",
+  "checks": {
+    "artifact_binding": "PASS",
+    "cost_and_robustness_recalculation": "PASS",
+    "familywise_bootstrap_recalculation": "PASS",
+    "five_models_x_266_sessions_x_two_slots": "PASS",
+    "gate_recalculation": "PASS",
+    "label_return_sign": "PASS",
+    "production_and_order_boundary": "PASS",
+    "v08_g0_control_exact_reproduction": "PASS"
+  },
+  "decision": {
+    "audit_passed": true,
+    "conclusion": "The artifacts are internally reproducible. All eight preregistered variants fail the qualification gate.",
+    "forward_shadow_candidate": null,
+    "orders_allowed": false,
+    "production_candidate": null
+  },
+  "gate_passers": [],
+  "input_erratum_sha256": "991ef4dfd20171d9be371d1b8d69d4074fe6536339bb7ff264f9708758c67853",
+  "known_control_top2_net20_pct": 0.25532118075031435,
+  "picks_file_sha256": "3d47891da9a18469bce7a38ee4b74952485a6092f25a54e326817b88f8cb8715",
+  "result_sha256": "1f1a47ce04c4f72e5c581195120741c45d3a9cf013801627ecd2c1a356fa33de",
+  "runner_sha256": "2607dc11b5dc4ea83294361170e01a18632840c8e5922dfc52dd3b97d30c4b41",
+  "schema_version": 1,
+  "variants": [
+    {
+      "failed_checks": [
+        "net40_positive",
+        "all_three_subperiods_positive",
+        "top10_days_removed_positive",
+        "top10_profit_codes_cash_positive",
+        "positive_months_at_least_9_of_13",
+        "familywise_paired_lower_vs_control_nonnegative"
+      ],
+      "gate_passed": false,
+      "net20_mean_pct": -0.10617134410988412,
+      "net40_mean_pct": -0.3061713441098841,
+      "net60_mean_pct": -0.5061713441098841,
+      "paired_lower_delta_pct": -0.761985601857649,
+      "variant_id": "CT01_ABSOLUTE_PATH__top1"
+    },
+    {
+      "failed_checks": [
+        "net40_positive",
+        "all_three_subperiods_positive",
+        "top10_days_removed_positive",
+        "top10_profit_codes_cash_positive",
+        "positive_months_at_least_9_of_13",
+        "familywise_paired_lower_vs_control_nonnegative"
+      ],
+      "gate_passed": false,
+      "net20_mean_pct": -0.1522986713697215,
+      "net40_mean_pct": -0.3522986713697214,
+      "net60_mean_pct": -0.5522986713697214,
+      "paired_lower_delta_pct": -0.7256297384364139,
+      "variant_id": "CT01_ABSOLUTE_PATH__top2"
+    },
+    {
+      "failed_checks": [
+        "net40_positive",
+        "all_three_subperiods_positive",
+        "top10_days_removed_positive",
+        "top10_profit_codes_cash_positive",
+        "positive_months_at_least_9_of_13",
+        "familywise_paired_lower_vs_control_nonnegative"
+      ],
+      "gate_passed": false,
+      "net20_mean_pct": 0.18117585771090353,
+      "net40_mean_pct": -0.018824142289096436,
+      "net60_mean_pct": -0.2188241422890965,
+      "paired_lower_delta_pct": -0.43542810785373276,
+      "variant_id": "CT02_RELATIVE_PATH__top1"
+    },
+    {
+      "failed_checks": [
+        "net40_positive",
+        "all_three_subperiods_positive",
+        "top10_days_removed_positive",
+        "top10_profit_codes_cash_positive",
+        "positive_months_at_least_9_of_13",
+        "familywise_paired_lower_vs_control_nonnegative"
+      ],
+      "gate_passed": false,
+      "net20_mean_pct": -0.009507309452079895,
+      "net40_mean_pct": -0.20950730945207985,
+      "net60_mean_pct": -0.4095073094520799,
+      "paired_lower_delta_pct": -0.5623899507049637,
+      "variant_id": "CT02_RELATIVE_PATH__top2"
+    },
+    {
+      "failed_checks": [
+        "net40_positive",
+        "all_three_subperiods_positive",
+        "top10_days_removed_positive",
+        "top10_profit_codes_cash_positive",
+        "positive_months_at_least_9_of_13",
+        "familywise_paired_lower_vs_control_nonnegative"
+      ],
+      "gate_passed": false,
+      "net20_mean_pct": -0.4509651115720632,
+      "net40_mean_pct": -0.650213231872815,
+      "net60_mean_pct": -0.849461352173567,
+      "paired_lower_delta_pct": -1.194361164531549,
+      "variant_id": "CT03_DIRECTION_PATH__top1"
+    },
+    {
+      "failed_checks": [
+        "net40_positive",
+        "all_three_subperiods_positive",
+        "top10_days_removed_positive",
+        "top10_profit_codes_cash_positive",
+        "positive_months_at_least_9_of_13",
+        "familywise_paired_lower_vs_control_nonnegative"
+      ],
+      "gate_passed": false,
+      "net20_mean_pct": -0.334573734064457,
+      "net40_mean_pct": -0.5341977942148329,
+      "net60_mean_pct": -0.7338218543652089,
+      "paired_lower_delta_pct": -0.944968419641607,
+      "variant_id": "CT03_DIRECTION_PATH__top2"
+    },
+    {
+      "failed_checks": [
+        "net40_positive",
+        "all_three_subperiods_positive",
+        "top10_days_removed_positive",
+        "top10_profit_codes_cash_positive",
+        "positive_months_at_least_9_of_13",
+        "familywise_paired_lower_vs_control_nonnegative"
+      ],
+      "gate_passed": false,
+      "net20_mean_pct": -0.4557358985052614,
+      "net40_mean_pct": -0.6549840188060133,
+      "net60_mean_pct": -0.8542321391067652,
+      "paired_lower_delta_pct": -1.0326735280426373,
+      "variant_id": "CT04_FIXED_CONSENSUS__top1"
+    },
+    {
+      "failed_checks": [
+        "net40_positive",
+        "all_three_subperiods_positive",
+        "top10_days_removed_positive",
+        "top10_profit_codes_cash_positive",
+        "positive_months_at_least_9_of_13",
+        "familywise_paired_lower_vs_control_nonnegative"
+      ],
+      "gate_passed": false,
+      "net20_mean_pct": -0.3621910017961873,
+      "net40_mean_pct": -0.5618150619465632,
+      "net60_mean_pct": -0.7614391220969392,
+      "paired_lower_delta_pct": -0.9285728634926047,
+      "variant_id": "CT04_FIXED_CONSENSUS__top2"
+    }
+  ]
+}

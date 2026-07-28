@@ -1,0 +1,214 @@
+{
+  "schema_version": 1,
+  "protocol_id": "model_v13_symbolic_context_zero_base_20260727",
+  "registered_at": "2026-07-27T11:01:55+09:00",
+  "research_question": "Can a prequential variable-order symbolic context tree, trained as a reward process rather than a row-wise regression or classifier, rank Tokyo Stock Exchange names from strictly prior OHLC paths with robust net open-to-close profit?",
+  "authority": {
+    "purpose": "retrospective falsification of a genuinely different representation and learning mechanism",
+    "prior_project_outcomes_already_viewed": true,
+    "candidate_outcomes_viewed_before_registration": false,
+    "production_promotion_allowed": false,
+    "forward_shadow_qualification_only_if_all_gates_pass": true,
+    "orders_allowed": false,
+    "reason": "The 2024-01-04 through 2025-07-31 outcomes have been repeatedly used by earlier project generations. This run can reject the family or qualify a frozen forward shadow, but cannot establish production performance."
+  },
+  "non_overlap_with_prior_work": {
+    "representation": "Fixed symbolic words made from entire ordered prior-session paths, not rolling aggregates, TDnet text vectors, issuer graphs, calendar dummies, or fitted latent market regimes.",
+    "model": "A prequential hierarchical context-tree reward table with deterministic Bayesian-style backoff, not Ridge, logistic regression, pairwise rank regression, tree ensembles, nearest-title retrieval, causal uplift, distributional regression, or an ensemble of earlier model scores.",
+    "update_rule": "Outcomes are incorporated after each scored session and may first affect the following session. Earlier work predominantly refit supervised models by calendar month."
+  },
+  "frozen_input": {
+    "logical_name": "jpx_daily_2024_2025.pkl",
+    "sha256": "18878ab5597bea531b06e94eef2395a52f94aa64c7265a736bd137a8d48b602d",
+    "rows": 1421669,
+    "codes": 3962,
+    "sessions": 386,
+    "date_bounds": [
+      "2024-01-04",
+      "2025-07-31"
+    ],
+    "columns": [
+      "date",
+      "code",
+      "name",
+      "open",
+      "high",
+      "low",
+      "close"
+    ],
+    "data_limitations": [
+      "OHLC only: no volume, turnover, trading unit, bid, ask, auction imbalance, spread, slippage, futures, PTS, or TDnet body data",
+      "Historical parser input does not provide independent live receipt-time evidence",
+      "The same outcome period has been inspected by prior project generations"
+    ]
+  },
+  "point_in_time_contract": {
+    "decision_time": "08:58:59 Asia/Tokyo",
+    "candidate_universe": "The preceding official session's ordinary-stock universe, with the existing RankerConfig price-history eligibility rules.",
+    "feature_cutoff": "A target-session context contains only tokens from sessions strictly earlier than the target date.",
+    "outcome_update": "The target-session open-to-close outcome is added to context statistics only after that session has been scored; it can influence no earlier prediction.",
+    "missing_session": "A prior-universe name without four target-session OHLC prices receives an explicit no-trade token. It is never silently removed from the sequence.",
+    "source_failure": "A source-incomplete scheduled session is retained as cash and is not reclassified as a no-event observation.",
+    "tie_break": "Higher context score, then security code ascending."
+  },
+  "symbolic_features": {
+    "absolute_shape_token": {
+      "description": "One token per completed session from open-to-close return, overnight gap, range, and close location; a non-traded session is a separate token.",
+      "open_to_close_bins_pct": [
+        "-inf",
+        -0.5,
+        0.5,
+        "inf"
+      ],
+      "overnight_bins_pct": [
+        "-inf",
+        -0.5,
+        0.5,
+        "inf"
+      ],
+      "range_bins_pct_of_prior_close": [
+        0.0,
+        1.0,
+        3.0,
+        "inf"
+      ],
+      "close_location_bins": [
+        0.0,
+        0.3333333333333333,
+        0.6666666666666666,
+        1.0
+      ],
+      "maximum_context_depth": 3
+    },
+    "relative_shape_token": {
+      "description": "The same four completed-session quantities converted to deterministic within-session tertiles among traded rows before tokenization.",
+      "rank_method": "average",
+      "quantile_bins": [
+        0.0,
+        0.3333333333333333,
+        0.6666666666666666,
+        1.0
+      ],
+      "maximum_context_depth": 3
+    },
+    "direction_token": {
+      "description": "A coarser long word from open-to-close and overnight directions, plus an explicit no-trade state.",
+      "direction_thresholds_pct": [
+        -0.25,
+        0.25
+      ],
+      "maximum_context_depth": 6
+    },
+    "lag_rule": "For every target row, depth one is the immediately preceding session token. Deeper contexts append older tokens in chronological order and never include the target-session token."
+  },
+  "model": {
+    "family": "prequential_variable_order_context_tree_reward_model",
+    "target": "same-session open-to-close return in percentage points",
+    "target_clip_pct": [
+      -10.0,
+      10.0
+    ],
+    "training_weight": "Each training date has total weight one before context aggregation.",
+    "backoff": {
+      "parent": "The next shallower suffix, ending at the global date-equal clipped-return mean.",
+      "row_prior_strength": 200.0,
+      "date_prior_strength": 20.0,
+      "reliability": "min(n/(n+200), distinct_dates/(distinct_dates+20))",
+      "posterior": "reliability * context_weighted_mean + (1-reliability) * parent_prediction"
+    },
+    "refit_schedule": "Prequential daily state update; score first, then add that date's eligible observed outcomes.",
+    "randomness": "none"
+  },
+  "registered_candidates": [
+    {
+      "id": "CT01_ABSOLUTE_PATH",
+      "score": "absolute-shape context tree at maximum depth 3"
+    },
+    {
+      "id": "CT02_RELATIVE_PATH",
+      "score": "relative-shape context tree at maximum depth 3"
+    },
+    {
+      "id": "CT03_DIRECTION_PATH",
+      "score": "direction context tree at maximum depth 6"
+    },
+    {
+      "id": "CT04_FIXED_CONSENSUS",
+      "score": "unweighted arithmetic mean of CT01, CT02, and CT03"
+    }
+  ],
+  "capacity_variants": [
+    1,
+    2
+  ],
+  "family_size": 8,
+  "control": {
+    "id": "C00_DAILY_RANK_RIDGE",
+    "features": "Frozen v0.8 G0 15-feature price set",
+    "target": "within-session open-to-close percentile mapped to [-1,1]",
+    "model": "Ridge(alpha=1)",
+    "fit_schedule": "calendar-month expanding",
+    "purpose": "Same source, universe, schedule, costs, and capacity comparator; not a candidate in the symbolic family."
+  },
+  "evaluation": {
+    "training_start": "2024-01-04",
+    "score_period": [
+      "2024-07-01",
+      "2025-07-31"
+    ],
+    "scheduled_score_sessions": 266,
+    "subperiods": {
+      "discovery": [
+        "2024-07-01",
+        "2024-10-31"
+      ],
+      "confirmation_a": [
+        "2024-11-01",
+        "2025-03-31"
+      ],
+      "confirmation_b": [
+        "2025-04-01",
+        "2025-07-31"
+      ]
+    },
+    "cost_bps": [
+      20.0,
+      40.0,
+      60.0
+    ],
+    "primary_cost_bps": 40.0,
+    "cash_rule": "Every scheduled session has exactly capacity slots. Missing selections and unexecuted slots remain cash and incur no cost.",
+    "bootstrap": {
+      "unit": "scheduled daily portfolio return",
+      "method": "moving block",
+      "block_length": 5,
+      "samples": 10000,
+      "random_state": 20260727,
+      "familywise_one_sided_confidence": 0.9,
+      "multiplicity_adjustment": "Bonferroni across all 8 registered candidate/capacity variants"
+    }
+  },
+  "qualification_gate": {
+    "all_required": true,
+    "checks": [
+      "net mean at 40 bp is positive across all 266 scheduled sessions",
+      "net mean at 40 bp is positive in discovery, confirmation_a, and confirmation_b separately",
+      "net mean at 40 bp remains positive after removing the 10 best scheduled days",
+      "net mean at 40 bp remains positive after replacing every selection from the 10 most profitable security codes with cash",
+      "at least 9 of 13 calendar months have positive mean net return at 40 bp",
+      "the Bonferroni-adjusted one-sided 90% moving-block lower bound for candidate minus same-capacity C00 control is non-negative",
+      "at least 50 unique security codes are selected",
+      "no single security code exceeds 10% of all signaled slots"
+    ],
+    "result_authority": "Passing can freeze a new forward-shadow candidate only. Failing rejects the candidate/capacity variant. Neither outcome changes production or order permissions."
+  },
+  "anti_leakage_tests": [
+    "Mutating target-session OHLC cannot change that session's symbolic contexts or scores.",
+    "Mutating future-session OHLC cannot change any earlier context or score.",
+    "Every training outcome date is strictly earlier than its prediction date.",
+    "Scoring is performed before the same date's outcome update.",
+    "Row order changes cannot alter security-code tie ordering.",
+    "Repeated runs produce byte-equivalent result semantics and identical picks."
+  ],
+  "stop_rule": "Run all 8 registered variants once. Do not alter bins, context depths, backoff strengths, consensus weights, capacity, gates, or score period after viewing results. Any new design requires a new protocol and new untouched outcomes."
+}
