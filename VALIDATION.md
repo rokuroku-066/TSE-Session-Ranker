@@ -2806,3 +2806,215 @@ research/model_v11_production_readiness_report.md
 ```
 
 </details>
+
+---
+
+## Entry 017 — 研究プロトコルv1.2：T02 forward契約の再監査とPhase 0 runtime
+
+| 項目 | 内容 |
+|---|---|
+| 検証日 | 2026-07-27 |
+| 親Entry | Entry 016 |
+| 対象 | draft PR #4 `agent/harden-t02-forward-validation`、base `998e2c0a3f93fe751e85dddfb168344f7c32298e` |
+| registration | `v12_t02_forward_protocol_v2_pr4_20260727` |
+| registration SHA-256 | `544732bdcff81840453a4b336e55467f5d84555b61326af903ac59c4fdfb84f8` |
+| 候補 | 凍結済み`v10_t02_char_value_event_top1`。特徴・Ridge・順位規則は変更なし |
+| Phase 0 | synthetic fixture runtime 18 tests PASS。実市場損益は0観測 |
+| activation | payloadなし、receiptなし、first counted sessionなし、counter 0 |
+| 最終判断 | protocol/runtimeの内部契約はPhase 0 PASS。本番根拠は増えておらず、production変更なし・orders不許可 |
+
+> **一行結論:** 前向き検証の実行可能性をゼロから再監査し、activation SHAの自己参照、TDnet live completenessと翌日finalityの混同、月初foldと月末prediction hashの循環、価格適格性mask漏れ、source欠落日を主分母から落とす選択バイアスを訂正した。PIT、月次fit、4 decision state、canonical hash、ledger chainを合成fixtureで実行できたが、activationも実市場観測も開始していないため、本番候補は引き続き0件である。
+
+<details>
+<summary><strong>再監査、protocol v2、Phase 0、残るblocker</strong></summary>
+
+### 追記専用履歴
+
+Entry 016までの先頭150,920 bytesは変更していない。
+
+```text
+Entry 016 prefix SHA-256:
+33a3e107942dc5b0f128b16aee13cfd318a895059b9600067cf3db7c573ce4a8
+```
+
+回帰testはこのprefixをbyte単位で検証する。今後はEntry 017を書き換えず、
+Entry 018以降へ追記する。
+
+### clean-checkoutで発見した差
+
+最初のclean cloneでは全test中1件だけ失敗した。判定値ではなく、
+Entry 016のimmutable readiness artifactに、生成環境固有の
+`build/lib/tse_session_ranker/data/jpx.py`がcanonical source pathと重複して
+記録されていたためである。
+
+```text
+fresh matching_paths:
+  src/tse_session_ranker/data/jpx.py
+
+stored matching_paths:
+  build/lib/tse_session_ranker/data/jpx.py
+  src/tse_session_ranker/data/jpx.py
+```
+
+過去artifactは上書きしていない。環境依存の探索path一覧だけをcore比較から分離し、
+canonical source pathがfresh/stored双方に存在すること、それ以外のJPX readiness、
+blocker、raw件数、parser SHAが完全一致することを検証する。
+
+### protocol v2の主要訂正
+
+#### activation
+
+同じfileへ、そのfileを含むcommit SHAを書くのは自己参照になるため廃止した。
+
+```text
+activation payload:
+  protocol / code / config / training snapshot / source schema
+  not_before_session / payload_sha256
+  containing commit SHAは書かない
+
+independent timestamp receipt:
+  payload SHA
+  payloadがdefault branchへ到達したcommit SHA
+  ref観測時刻・tip SHA
+  issuer・署名・earliest_calendar_eligible_session
+```
+
+Git author/committer dateはactivation時刻に使わない。
+`first_counted_session`は`earliest_calendar_eligible_session`と一致させる。
+foldまたはpipelineが間に合わなければactivationを無効にし、新しい
+payload/receiptを作る。後の日を結果確認後に開始日へ置き換えない。
+
+#### TDnet PIT
+
+08:58:59までの候補生成には、cutoff前にrequest、receipt、parse、computeが完了し、
+登録済みwatermarkを持つlive snapshotだけを使う。翌日以後のfinal archiveは
+prefix、raw hash、parser hash、record identityの監査専用とする。不一致は
+PIT violationとして追記し、元decisionやcounterを遡及変更しない。
+
+#### monthly fold
+
+未来の月内prediction hashを月初foldへ入れない。
+
+```text
+pre-score fold:
+  ordered training identity / title / target / source payload
+  price_training_eligible mask
+  clip lower / upper
+  source / parser / scoring / config / eligibility code SHA
+  vocabulary / IDF / coefficient / intercept / environment versions
+
+month closeout:
+  sealed fold SHA / scheduled session set
+  decision-ledger head / prediction SHA / outcome SHA
+```
+
+凍結runnerと同じく、学習は`price_training_eligible == true`、推論は
+`price_eligible == true`に限定する。maskまたはcode/config hashを変える場合は
+別candidate・別counterとする。
+
+#### prospective評価分母
+
+historical OOTのsource欠落日はsource-complete集合から除外する。一方、
+prospective shadowは`first_counted_session`以後の全scheduled JPX sessionを
+主分母に固定する。
+
+```text
+selected           実際の始値→終値、登録cost
+cash_no_event      gross 0、cost 0
+fail_closed_source gross 0、cost 0
+fail_closed_model  gross 0、cost 0
+```
+
+source-complete subsetは診断だけに使う。未知の終値はpre-open decisionへ入れず、
+大引け後のoutcome logをdecision SHAへlinkする。
+
+### Phase 0 runtime
+
+`src/tse_session_ranker/t02_forward.py`へ、外部取得・注文機能を持たないpureな
+forward primitiveを追加した。
+
+```text
+cutoff:
+  strict JST、request_started <= received <= computed <= 08:58:59
+
+training:
+  monthly expanding、target monthとfit時点未確定outcomeを除外
+  char 2-5 TF-IDF、Ridge(alpha=20, solver=lsqr)
+
+scoring:
+  price_eligible event-codeのみ
+  predicted value降順、同点code昇順、top1
+
+decision:
+  selected / cash_no_event / fail_closed_source / fail_closed_model
+  protocol / activation payload / receipt / sessionをhash bind
+
+ledger:
+  decision ID一意、zero-based sequence
+  previous_record_sha256 / record_sha256
+  exact retryはidempotent、異payloadと時系列逆行はreject
+```
+
+hashは`project_canonical_json_v1`を使う。これはPython
+`json.dumps(ensure_ascii=False, sort_keys=True, separators=(",", ":"),
+allow_nan=False)`のUTF-8 bytesであり、RFC 8785準拠とは主張しない。
+
+合成fixtureで、post-cutoff拒否、live/final prefix差、provenance mutation、
+target-month outcome mutation不変、train/score mask、4状態、同点code昇順、
+fold/decision再現、activation hash binding、ledger conflictを確認した。
+Phase 0はedge・外部真正性・実行可能性の証拠ではなく、in-memory ledgerも
+durable external append-only storeの代替ではない。
+
+### 登録成果物とblocker
+
+```text
+research/model_v12_t02_forward_registration.json
+SHA-256:
+544732bdcff81840453a4b336e55467f5d84555b61326af903ac59c4fdfb84f8
+```
+
+registrationはprotocol、plan、runtime、tests、README、CI workflowをhash bindし、
+synthetic-only、market observation 0、activation未開始を明示する。
+
+```text
+historical OOT:
+  JPX official raw PDFs         0 / 160
+  TDnet calendar pages          0 / 243
+  joint provenance sessions     0 / 120 minimum
+
+prospective:
+  approved live cutoff source   なし
+  activation payload / receipt  なし
+  first counted session         なし
+
+execution:
+  registered 08:58 board/fill/capacity evidence なし
+```
+
+したがってhistorical OOT、prospective損益、execution/capacityは未評価である。
+
+### 再現と最終状態
+
+```bash
+python -m json.tool research/model_v11_t02_forward_protocol_v2.json
+python -m json.tool research/model_v12_t02_forward_registration.json
+python -m compileall -q src research tests
+python -m pytest -q
+```
+
+```text
+342 passed
+192 subtests passed
+
+Phase 0 synthetic runtime:      PASS
+historical OOT:                 BLOCKED_INPUT_MISSING
+activation payload:             absent
+activation receipt:             absent
+first counted session:          none
+forward counter:                 0
+production candidate:           false
+production model changed:       false
+orders allowed:                  false
+```
+
+</details>

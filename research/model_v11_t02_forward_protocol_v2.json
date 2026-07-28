@@ -1,0 +1,491 @@
+{
+  "schema_version": 2,
+  "protocol_id": "v11_t02_forward_shadow_v2_20260724",
+  "registered_on": "2026-07-24",
+  "timezone": "Asia/Tokyo",
+  "authority": {
+    "purpose": "prospective exploratory shadow validation",
+    "production_model_changed": false,
+    "production_promotion_allowed_during_run": false,
+    "orders_allowed": false,
+    "historical_artifacts_immutable": true,
+    "supersedes_for_future_observations_only": {
+      "path": "research/model_v10_forward_protocol.json",
+      "sha256": "493db7bcada6e431ebb3872f903634fbafb7c61c4de38e294bed7a88ba12bed2"
+    },
+    "correction_scope": [
+      "Correct the evaluation outcome wording from close-to-open to open-to-close.",
+      "Freeze the monthly expanding retraining contract, eligibility masks, and required fold artifacts.",
+      "Replace the self-referential activation manifest with a hash-bound payload plus an independently timestamped receipt.",
+      "Separate prospective all-scheduled-session P&L from the historical OOT source-complete denominator."
+    ]
+  },
+  "bound_candidate_artifacts": {
+    "retrospective_protocol": {
+      "path": "research/model_v10_tdnet_text_protocol.json",
+      "sha256": "700b0262f805c37659453af72651897d116e8bd1f6329a602989b90b212c5b3a"
+    },
+    "retrospective_runner": {
+      "path": "research/model_v10_tdnet_text_runner.py",
+      "sha256": "f49203ef23a6ff15bb609178c6c3aa278b3d052e6383503703a45ec1b3e67744"
+    },
+    "retrospective_result": {
+      "path": "research/model_v10_tdnet_text_result.json",
+      "sha256": "3a40e3541fb24f89f2b009b48b2af4d3a84afe2e96ce03010ea0a87442800196"
+    },
+    "oot_protocol": {
+      "path": "research/model_v11_t02_oot_protocol.json",
+      "sha256": "5eceb8bf396a703a6a3bf217837331f6af95a7b303c91c79e639d132f575024d"
+    }
+  },
+  "hashing_contract": {
+    "id": "project_canonical_json_v1",
+    "serialization": "UTF-8 bytes from Python json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(\",\", \":\"), allow_nan=False).",
+    "normalization": "Mapping keys are strings; dates and aware datetimes are ISO-8601 strings; arrays preserve order; NumPy scalars are converted to Python scalars; non-finite floats are rejected.",
+    "self_hash_rule": "A self-hash field is omitted only when the calling contract explicitly names that exact field. No hash field is removed implicitly.",
+    "version_binding": "Every project-produced hashed manifest or ledger payload records python_version and canonical_json_contract=project_canonical_json_v1. An external receipt instead records canonical_json_contract, canonicalizer_implementation, and canonicalizer_version.",
+    "not_rfc8785": true
+  },
+  "errata": [
+    {
+      "source_path": "research/model_v10_forward_protocol.json",
+      "json_pointer": "/evaluation/outcome",
+      "recorded_value": "target-session close-to-open return",
+      "correct_value": "target-session open-to-close return",
+      "interpretation": "This is a wording correction only. The retrospective target, runner column oc_return_pct, and OOT protocol all define open-to-close return."
+    },
+    {
+      "source_path": "research/model_v11_t02_oot_protocol.json",
+      "json_pointer": "/candidate/decision",
+      "recorded_value": "Rank qualifying event codes by predicted value descending, then code ascending. Select top1. No qualifying event or incomplete source means cash. No price-model fallback.",
+      "correct_value": "Rank qualifying event codes by predicted value descending, then code ascending. Select top1. No qualifying event on a source-complete historical OOT session means cash. Incomplete source excludes the affected historical OOT session from the source-complete OOT denominator and is never classified as no-event. No price-model fallback.",
+      "interpretation": "This correction applies to historical OOT only. In the prospective shadow, every activated scheduled session remains in the primary denominator and fail-closed source or model states contribute gross return 0 and cost 0."
+    }
+  ],
+  "candidate": {
+    "id": "v10_t02_char_value_event_top1",
+    "decision_cutoff": "08:58:59",
+    "universe": "Stocks with at least one qualifying overnight TDnet disclosure on the target session and price_eligible == true. Source completeness is a session-level decision-state requirement, not a post-outcome universe filter.",
+    "bundle": "Join qualifying titles for each code in publication-time order with the exact separator \" [SEP] \".",
+    "eligibility_contract": {
+      "scoring_mask": "qualifying overnight event-code bundle AND price_eligible == true",
+      "training_mask": "qualifying overnight event-code bundle AND price_training_eligible == true AND open_to_close_return_pct is observed",
+      "retrospective_runner": {
+        "path": "research/model_v10_tdnet_text_runner.py",
+        "sha256": "f49203ef23a6ff15bb609178c6c3aa278b3d052e6383503703a45ec1b3e67744"
+      },
+      "universe_config": {
+        "path": "src/tse_session_ranker/config.py",
+        "sha256": "ad48e274ae4226234555ac96df73722ef2804bdec260e79234016e4226898ad0"
+      },
+      "eligibility_code": {
+        "path": "src/tse_session_ranker/features.py",
+        "sha256": "aafeeae021d3917bbe5dd9c36acf1993b8b2e24130cc630b7f67c9a46d622e92"
+      },
+      "frozen_universe_policy": {
+        "min_history": 60,
+        "price_min": 100.0,
+        "price_max": 30000.0,
+        "atr14_min_pct": 0.25,
+        "atr14_max_pct": 5.0,
+        "model_training_atr_max_pct": 15.0,
+        "max_zero_oc_20": 0.2
+      },
+      "change_policy": "Any change to either eligibility mask, its code/config hash, or the frozen policy creates a new candidate ID and resets the forward counter."
+    },
+    "representation": {
+      "type": "TfidfVectorizer",
+      "analyzer": "char",
+      "ngram_range": [
+        2,
+        5
+      ],
+      "min_df": 3,
+      "max_features": 30000,
+      "sublinear_tf": true,
+      "norm": "l2",
+      "dtype": "float32"
+    },
+    "target": {
+      "name": "open_to_close_return_pct",
+      "formula": "(close / open - 1) * 100",
+      "training_clip": "Training-period 1st and 99th percentiles, then [-10,+10] percentage points."
+    },
+    "model": {
+      "type": "Ridge",
+      "alpha": 20.0,
+      "solver": "lsqr"
+    },
+    "decision": {
+      "portfolio_size": 1,
+      "sort": [
+        "predicted_value descending",
+        "security_code ascending"
+      ],
+      "allocation": "100% of the research sleeve to the selected shadow candidate.",
+      "no_qualifying_event": "cash",
+      "source_incomplete": "fail_closed_source with gross return 0 and cost 0; retained in the all-scheduled-session primary denominator",
+      "fallback": null
+    }
+  },
+  "training_contract": {
+    "mode": "monthly_expanding_walk_forward",
+    "fit_schedule": "Fit once before the first scored session of each calendar month.",
+    "training_sample": "All qualifying event-code bundles satisfying price_training_eligible == true from source-complete sessions strictly before the scored month whose target-session close and outcome were already known before fitting.",
+    "minimum_history": {
+      "source_complete_sessions": 20,
+      "qualifying_event_code_bundles": 100
+    },
+    "intramonth_refit_allowed": false,
+    "future_or_target_month_outcomes_allowed": false,
+    "refit_vectorizer_each_fold": true,
+    "refit_estimator_each_fold": true,
+    "hyperparameter_changes_allowed": false,
+    "pre_score_fold_manifest": {
+      "seal_rule": "The immutable pre-score fold manifest and every referenced artifact must exist, be hash-valid, and have fit_completed_at before the first activated scheduled-session cutoff in the score month.",
+      "canonical_hashing": "project_canonical_json_v1; array order is significant; numeric arrays additionally bind dtype, shape, byte order, and C-order raw bytes.",
+      "manifest_hash_rule": "pre_score_fold_manifest_sha256 is computed with project_canonical_json_v1 and pre_score_fold_manifest_sha256 explicitly omitted.",
+      "required_fields": [
+        "score_month",
+        "fit_started_at",
+        "fit_completed_at",
+        "training_session_first",
+        "training_session_last",
+        "training_session_count",
+        "training_bundle_count",
+        "training_row_identity_sha256",
+        "training_bundle_text_sha256",
+        "training_target_sha256",
+        "training_source_payload_sha256",
+        "target_clip_lower_pct",
+        "target_clip_upper_pct",
+        "source_manifest_sha256",
+        "parser_sha256",
+        "scoring_code_sha256",
+        "universe_config_sha256",
+        "eligibility_code_sha256",
+        "python_version",
+        "canonical_json_contract",
+        "numpy_version",
+        "pandas_version",
+        "scipy_version",
+        "scikit_learn_version",
+        "vectorizer_vocabulary_sha256",
+        "vectorizer_idf_sha256",
+        "ridge_coef_sha256",
+        "ridge_intercept",
+        "pre_score_fold_manifest_sha256"
+      ],
+      "forbidden_fields": [
+        "prediction_artifact_sha256",
+        "month_closeout_manifest_sha256",
+        "target_month_outcomes"
+      ]
+    },
+    "month_closeout_manifest": {
+      "creation_rule": "Create only after the score month closes. It may reference but never mutate the sealed pre-score fold manifest.",
+      "manifest_hash_rule": "month_closeout_manifest_sha256 is computed with project_canonical_json_v1 and month_closeout_manifest_sha256 explicitly omitted.",
+      "required_fields": [
+        "score_month",
+        "python_version",
+        "canonical_json_contract",
+        "pre_score_fold_manifest_sha256",
+        "activated_scheduled_session_set_sha256",
+        "activated_scheduled_session_count",
+        "decision_ledger_first_sequence",
+        "decision_ledger_last_sequence",
+        "decision_ledger_head_sha256",
+        "prediction_artifact_sha256",
+        "outcome_artifact_sha256",
+        "month_closeout_manifest_sha256"
+      ]
+    },
+    "required_environment_artifacts": [
+      "python_version",
+      "canonical_json_contract",
+      "numpy_version",
+      "pandas_version",
+      "scipy_version",
+      "scikit_learn_version"
+    ],
+    "content_hash_requirements": [
+      "training_row_identity_sha256",
+      "training_bundle_text_sha256",
+      "training_target_sha256",
+      "training_source_payload_sha256",
+      "source_manifest_sha256",
+      "scoring_code_sha256",
+      "vectorizer_vocabulary_sha256",
+      "vectorizer_idf_sha256",
+      "ridge_coef_sha256",
+      "pre_score_fold_manifest_sha256"
+    ],
+    "failure_policy": "Fail closed for the affected month. Do not substitute an earlier fold, partial source window, or retrospectively rebuilt unregistered artifact.",
+    "changes_reset_counter": true
+  },
+  "activation": {
+    "status": "pending_payload_and_receipt",
+    "activation_payload": {
+      "path": "research/model_v11_t02_forward_activation_payload.json",
+      "purpose": "Commit the immutable protocol, code, config, training snapshot, source-registry schema, and a future not-before session without attempting to name the commit that contains this payload.",
+      "required_fields": [
+        "schema_version",
+        "repository_id",
+        "default_branch",
+        "protocol_path",
+        "protocol_sha256",
+        "not_before_session",
+        "training_snapshot_path",
+        "training_snapshot_sha256",
+        "source_registry_schema_path",
+        "source_registry_schema_sha256",
+        "scoring_code_path",
+        "scoring_code_sha256",
+        "universe_config_path",
+        "universe_config_sha256",
+        "eligibility_code_path",
+        "eligibility_code_sha256",
+        "activation_approved_by",
+        "python_version",
+        "canonical_json_contract",
+        "payload_sha256"
+      ],
+      "self_reference_rule": "The payload must not contain its own Git commit SHA. payload_sha256 is computed with project_canonical_json_v1 and payload_sha256 explicitly omitted."
+    },
+    "activation_receipt": {
+      "path": "research/model_v11_t02_forward_activation_receipt.json",
+      "authority": "An independently timestamped append-only activation service or attestation store. A later repository mirror is documentary and its Git commit timestamp is not the activation clock.",
+      "required_fields": [
+        "schema_version",
+        "repository_id",
+        "default_branch",
+        "payload_path",
+        "payload_sha256",
+        "payload_default_branch_commit_sha",
+        "default_branch_ref_observed_at",
+        "default_branch_tip_sha_when_observed",
+        "receipt_issued_at",
+        "receipt_issuer",
+        "canonical_json_contract",
+        "canonicalizer_implementation",
+        "canonicalizer_version",
+        "not_before_session",
+        "earliest_calendar_eligible_session",
+        "receipt_sha256",
+        "receipt_signature"
+      ],
+      "reachability_rule": "payload_default_branch_commit_sha must be an ancestor of default_branch_tip_sha_when_observed in the named repository.",
+      "timestamp_rule": "receipt_issued_at and default_branch_ref_observed_at come from the independent receipt authority, not Git author_date or committer_date.",
+      "self_reference_rule": "The receipt names only the already-observed payload commit. It must not contain the Git commit SHA of a repository mirror that contains the receipt. receipt_sha256 is computed with project_canonical_json_v1 and receipt_sha256 and receipt_signature explicitly omitted."
+    },
+    "earliest_calendar_eligible_session": null,
+    "first_counted_session": null,
+    "eligibility_rule": "earliest_calendar_eligible_session is the later of payload.not_before_session and the first JPX scheduled session whose 08:58:59 JST cutoff is strictly after receipt_issued_at. first_counted_session is separately recorded by the armed pipeline before its cutoff and must equal earliest_calendar_eligible_session. If the pre-score fold or pipeline is not ready, that activation attempt is void and a new payload and receipt are required; a later session may not be substituted. From first_counted_session onward, every scheduled JPX session receives exactly one decision-ledger state.",
+    "pre_activation_sessions": "Never backfill or count them in the forward counter.",
+    "forbidden_shortcuts": [
+      "Use a Git author_date or committer_date as proof of default-branch activation.",
+      "Place the containing commit SHA inside the activation payload or receipt.",
+      "Set first_counted_session after its return is observed.",
+      "Delay first_counted_session beyond earliest_calendar_eligible_session without creating a new payload and receipt.",
+      "Backfill a decision for a session whose cutoff passed before the pipeline was armed."
+    ]
+  },
+  "point_in_time_contract": {
+    "published_at_must_be_at_or_before_cutoff": true,
+    "received_at_must_be_at_or_before_cutoff": true,
+    "computed_at_must_be_at_or_before_cutoff": true,
+    "available_at": "max(received_at, computed_at)",
+    "availability_requirement": "available_at <= target session 08:58:59 JST",
+    "live_cutoff_snapshot": {
+      "purpose": "The only TDnet bytes and records permitted for candidate generation.",
+      "requirements": [
+        "Every required prior calendar-date page is final, parser-valid, and provenance-complete.",
+        "The target-date live page or feed snapshot is received and parsed by 08:58:59 JST.",
+        "The live source provides a registered sequence, watermark, or equivalent coverage marker proving completeness through the snapshot as-of time.",
+        "Raw bytes, source URL, request start, receipt completion, parser SHA-256, parse completion, sequence or watermark, and extracted record identities are hash-bound."
+      ],
+      "finality_semantics": "The target-date live snapshot is never called end-of-day final. It is complete only through its registered live watermark."
+    },
+    "post_close_final_archive_audit": {
+      "purpose": "After the session, independently test the live snapshot against the publisher's final archive without feeding final bytes or later records into the decision.",
+      "requirements": [
+        "Preserve final raw bytes and provenance separately from the live snapshot.",
+        "Verify that every live record identity and byte payload is represented consistently in the final archive.",
+        "Verify the live watermark or sequence prefix and report any record published at or before the live watermark that was absent from the live snapshot.",
+        "Append an audit result; never rewrite the original decision."
+      ],
+      "failure_action": "Mark the session PIT-noncompliant and fail the promotion gate. Do not relabel it as a valid no-event session."
+    },
+    "source_completeness": "Source completeness at decision time is established from the registered live cutoff snapshot and its watermark, not from a post-close final page.",
+    "missing_source_policy": "Fail closed and record decision=fail_closed_source with gross return 0 and cost 0; a missing page is never a no-event day.",
+    "append_only_prediction_log": true
+  },
+  "decision_log_contract": {
+    "canonical_serialization": "project_canonical_json_v1.",
+    "decision_id_rule": "SHA-256 of the project-canonical JSON object {\"activation_receipt_sha256\": value, \"protocol_sha256\": value, \"session_date\": ISO date}. Exactly one decision_id is permitted per activated scheduled session.",
+    "decision_payload_hash_rule": "decision_payload_sha256 is SHA-256 of a project_canonical_json_v1 object containing exactly payload_field_allowlist. Envelope-only and hash fields are never included in this preimage.",
+    "chain_rule": "Each envelope has a zero-based monotonically increasing sequence_number and previous_record_sha256. record_sha256 hashes the project_canonical_json_v1 envelope with record_sha256 explicitly omitted. Sequence 0 uses 64 lowercase zeroes; later records must name the immediately preceding record_sha256.",
+    "payload_field_allowlist": [
+      "schema_version",
+      "session_date",
+      "decision_id",
+      "candidate_id",
+      "python_version",
+      "canonical_json_contract",
+      "protocol_sha256",
+      "activation_payload_sha256",
+      "activation_receipt_sha256",
+      "default_branch_tip_sha_at_decision",
+      "pre_score_fold_manifest_sha256",
+      "source_manifest_sha256",
+      "live_source_snapshot_sha256",
+      "price_eligibility_sha256",
+      "candidate_generation_started_at",
+      "decision_at",
+      "published_at_max",
+      "received_at_max",
+      "computed_at",
+      "source_complete",
+      "qualifying_event_count",
+      "selected_code",
+      "selected_score",
+      "decision",
+      "failure_reason"
+    ],
+    "envelope_only_fields": [
+      "decision_payload_sha256",
+      "sequence_number",
+      "previous_record_sha256",
+      "record_sha256"
+    ],
+    "required_fields": [
+      "schema_version",
+      "session_date",
+      "decision_id",
+      "candidate_id",
+      "python_version",
+      "canonical_json_contract",
+      "protocol_sha256",
+      "activation_payload_sha256",
+      "activation_receipt_sha256",
+      "default_branch_tip_sha_at_decision",
+      "pre_score_fold_manifest_sha256",
+      "source_manifest_sha256",
+      "live_source_snapshot_sha256",
+      "price_eligibility_sha256",
+      "candidate_generation_started_at",
+      "decision_at",
+      "published_at_max",
+      "received_at_max",
+      "computed_at",
+      "source_complete",
+      "qualifying_event_count",
+      "selected_code",
+      "selected_score",
+      "decision",
+      "failure_reason",
+      "decision_payload_sha256",
+      "sequence_number",
+      "previous_record_sha256",
+      "record_sha256"
+    ],
+    "decision_values": [
+      "selected",
+      "cash_no_event",
+      "fail_closed_source",
+      "fail_closed_model"
+    ],
+    "state_field_rules": {
+      "selected": "schema_version is 1; candidate_id is v10_t02_char_value_event_top1; source_complete is true; source_manifest_sha256, price_eligibility_sha256, selected_code, and selected_score are non-null; failure_reason is null.",
+      "cash_no_event": "schema_version is 1; candidate_id is v10_t02_char_value_event_top1; source_complete is true; source_manifest_sha256 and price_eligibility_sha256 are non-null; qualifying_event_count is 0; selected_code, selected_score, and failure_reason are null.",
+      "fail_closed_source": "schema_version is 1; candidate_id is v10_t02_char_value_event_top1; source_complete is false; selected_code and selected_score are null; failure_reason is non-empty; source_manifest_sha256 is nullable only when no valid snapshot manifest was available; price_eligibility_sha256 is null because eligibility is not evaluated after source failure.",
+      "fail_closed_model": "schema_version is 1; candidate_id is v10_t02_char_value_event_top1; selected_code and selected_score are null; failure_reason is non-empty; source_manifest_sha256 is non-null after a valid source snapshot; price_eligibility_sha256 is null only when the price-eligibility mask itself is missing or invalid, otherwise it is non-null."
+    },
+    "preopen_only_rule": "Open, close, outcome, realized cost, and any post-cutoff value are forbidden in the decision payload. They are appended later in the linked post-close outcome log.",
+    "immutability": "Conflicting or duplicate records for the same protocol and session, sequence gaps, chain breaks, deletion, truncation, or replacement of an existing ledger prefix are rejected. Corrections are new linked audit records and never overwrite a decision."
+  },
+  "post_close_outcome_log_contract": {
+    "link_rule": "Each outcome record names the immutable decision_payload_sha256 and session_date. It never modifies the pre-open decision ledger.",
+    "required_fields": [
+      "session_date",
+      "decision_payload_sha256",
+      "python_version",
+      "canonical_json_contract",
+      "outcome_source_sha256",
+      "outcome_received_at",
+      "official_open",
+      "official_close",
+      "open_to_close_return_pct",
+      "net_return_pct_at_20bps",
+      "net_return_pct_at_40bps",
+      "net_return_pct_at_60bps",
+      "outcome_payload_sha256"
+    ],
+    "state_accounting": "selected uses the observed open-to-close return and the registered cost scenario. cash_no_event, fail_closed_source, and fail_closed_model use gross return 0 and cost 0.",
+    "state_field_rules": {
+      "selected": "outcome_source_sha256, official_open, official_close, and open_to_close_return_pct are non-null; each net return equals gross return minus its registered cost.",
+      "cash_no_event": "official_open, official_close, and open_to_close_return_pct are null; all three net return fields are 0.",
+      "fail_closed_source": "official_open, official_close, and open_to_close_return_pct are null; all three net return fields are 0.",
+      "fail_closed_model": "official_open, official_close, and open_to_close_return_pct are null; all three net return fields are 0."
+    },
+    "hash_rule": "outcome_payload_sha256 is computed with project_canonical_json_v1 and outcome_payload_sha256 explicitly omitted."
+  },
+  "evaluation": {
+    "outcome": "target-session open-to-close return",
+    "outcome_field": "open_to_close_return_pct",
+    "scheduled_day_denominator": "Every activated scheduled JPX session from first_counted_session onward. cash_no_event, fail_closed_source, and fail_closed_model remain in the primary denominator with gross return 0 and cost 0.",
+    "source_complete_subset": "Report source-complete sessions separately as a diagnostic subset only; never use that subset as the prospective primary P&L denominator.",
+    "round_trip_cost_bps": [
+      20,
+      40,
+      60
+    ],
+    "primary_metric": "Mean daily net return at 40 bps over every activated scheduled JPX session from first_counted_session onward.",
+    "comparators": [
+      "frozen L4 price control top1 evaluated on the identical activated scheduled sessions with the same fail-closed accounting",
+      "cash",
+      "equal-weight qualifying-event mean as a selection-skill diagnostic"
+    ],
+    "required_reports": [
+      "gross and net mean, median, win rate, and profit factor",
+      "calendar-month results",
+      "chronological first-half and second-half net40",
+      "non-overlapping 20-session blocks",
+      "best 20 winning days removed net20",
+      "top 10 profit-contributing codes replaced by cash net20",
+      "maximum single-day and single-code profit contribution",
+      "paired block-bootstrap difference versus frozen L4",
+      "candidate-generation, source-completeness, and PIT-compliance rates",
+      "all-scheduled-session primary P&L and source-complete diagnostic-subset P&L side by side",
+      "realized spread, slippage, turnover, minimum-lot, and capacity diagnostics when registered evidence is available"
+    ]
+  },
+  "promotion_gate_after_window": {
+    "all_required": true,
+    "historical_oot_prerequisite": {
+      "required": true,
+      "protocol_path": "research/model_v11_t02_oot_protocol.json",
+      "protocol_sha256": "5eceb8bf396a703a6a3bf217837331f6af95a7b303c91c79e639d132f575024d",
+      "required_status": "all statistical_promotion_gate requirements passed without tuning",
+      "required_evidence": [
+        "historical_oot_result_path",
+        "historical_oot_result_sha256",
+        "historical_oot_independent_audit_path",
+        "historical_oot_independent_audit_sha256"
+      ],
+      "failure_action": "The prospective window may remain research evidence but cannot support production promotion."
+    },
+    "requirements": [
+      "The hash-bound historical OOT prerequisite passed before any production-promotion review.",
+      "At least 120 activated scheduled sessions spanning at least 4 calendar months.",
+      "Net40 is positive in both chronological halves.",
+      "The one-sided paired 90% lower bound versus frozen L4 is at least zero.",
+      "Best-20-winning-days-removed net20 is positive.",
+      "Top-10-profit-codes-cash net20 is positive.",
+      "Source completeness, candidate generation, and PIT compliance are each at least 98%.",
+      "Minimum-lot, spread, slippage, turnover, and intended-capital checks show the strategy is executable."
+    ],
+    "failure_action": "Retain as research or reject. Do not tune on the same forward window.",
+    "production_action": "A passing result is still not an order authorization; independent audit and explicit human approval remain required."
+  }
+}

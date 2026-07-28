@@ -199,8 +199,28 @@ def test_verifier_recomputes_the_core_result_without_network_code() -> None:
     verifier = load_verifier()
     fresh = verifier.build_readiness(PROTOCOL, PARSER_AUDIT)
     stored = load_result()
-    for section in ("window", "candidate_freeze", "jpx", "tdnet", "readiness"):
+    for section in ("window", "candidate_freeze", "tdnet", "readiness"):
         assert fresh[section] == stored[section]
+
+    # ``matching_paths`` is a diagnostic inventory, not readiness evidence.
+    # The immutable v1.1 artifact was generated in a workspace that also
+    # contained a setuptools ``build/lib`` copy of the canonical JPX parser.
+    # A clean checkout correctly finds only the source copy.  Compare the
+    # semantic JPX result exactly while allowing that environment-dependent
+    # inventory to differ.
+    fresh_jpx = dict(fresh["jpx"])
+    stored_jpx = dict(stored["jpx"])
+    fresh_parser = dict(fresh_jpx["parser"])
+    stored_parser = dict(stored_jpx["parser"])
+    fresh_matching_paths = set(fresh_parser.pop("matching_paths"))
+    stored_matching_paths = set(stored_parser.pop("matching_paths"))
+    fresh_jpx["parser"] = fresh_parser
+    stored_jpx["parser"] = stored_parser
+    assert fresh_jpx == stored_jpx
+    canonical_parser_path = fresh_parser["canonical_path"]
+    assert canonical_parser_path in fresh_matching_paths
+    assert canonical_parser_path in stored_matching_paths
+
     assert fresh["blockers"] == stored["blockers"]
 
     report = REPORT.read_text(encoding="utf-8")

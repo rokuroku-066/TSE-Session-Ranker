@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "registration_id": "v12_t02_forward_protocol_v2_pr4_20260727",
+  "registered_on": "2026-07-27",
+  "repository": "rokuroku-066/TSE-Session-Ranker",
+  "target_branch": "main",
+  "base_commit_sha": "998e2c0a3f93fe751e85dddfb168344f7c32298e",
+  "authority": {
+    "scope": "Protocol correction, fail-closed Phase-0 runtime, and synthetic fixture validation only.",
+    "historical_artifacts_immutable": true,
+    "retrospective_or_forward_performance_claimed": false,
+    "production_model_changed": false,
+    "orders_allowed": false
+  },
+  "bound_artifacts": {
+    "readme": {
+      "path": "README.md",
+      "sha256": "1bee9edb6f6ffc922ce4f468711404719d20271a4042a8fadbcffbb3ad568140"
+    },
+    "forward_protocol": {
+      "path": "research/model_v11_t02_forward_protocol_v2.json",
+      "sha256": "06c581939b23f8d42c4aa36fcd290bbe3da22ef40da0bf8b52d21ab0c70d9169"
+    },
+    "next_validation_plan": {
+      "path": "research/model_v11_t02_next_validation.md",
+      "sha256": "de35af50476fd5198560e5020785ec0492d989b6fd8b9a1402792fab9838fa21"
+    },
+    "phase0_runtime": {
+      "path": "src/tse_session_ranker/t02_forward.py",
+      "sha256": "973e0d2dd9454c85db8a98d8717c2e44c47fa243c65098c2390be6f4a242d803"
+    },
+    "protocol_tests": {
+      "path": "tests/test_model_v11_t02_forward_protocol_v2.py",
+      "sha256": "0ac6d9a4e4f448480d0f4d3db2a4415ab7c219c71f3cc3278b058fd7e52e1384"
+    },
+    "phase0_runtime_tests": {
+      "path": "tests/test_model_v11_t02_forward_runtime.py",
+      "sha256": "11b2ffb3d90f9d2a7192c5a476bc017a84d822b3119f5108593debed2e66699d"
+    },
+    "readiness_recomputation_tests": {
+      "path": "tests/test_model_v11_production_readiness.py",
+      "sha256": "68b89cbe45d5e5ef4a5f2b2878854837a473018aecee17122d9b8de8d47ad369"
+    },
+    "pull_request_ci": {
+      "path": ".github/workflows/tests.yml",
+      "sha256": "7c9811768511bacb889e0f7bfa9508c2d2212079e8857db3b152d75868c232c7"
+    }
+  },
+  "phase0_evidence": {
+    "runtime_test_count": 18,
+    "uses_synthetic_fixtures_only": true,
+    "external_market_data_used": false,
+    "market_return_observations": 0,
+    "covered_contracts": [
+      "strict 08:58:59 JST cutoff and provenance ordering",
+      "live TDnet snapshot versus later final-archive prefix audit",
+      "price_training_eligible and price_eligible masks",
+      "monthly expanding T02 fit and pre-score fold manifest",
+      "selected, cash_no_event, fail_closed_source, and fail_closed_model",
+      "activation-bound canonical decision IDs and payload hashes",
+      "append-only sequence and record hash chain"
+    ],
+    "not_covered": [
+      "external source authenticity or live source completeness",
+      "historical OOT performance",
+      "prospective market performance",
+      "execution, capacity, or order authorization",
+      "durable external ledger persistence"
+    ]
+  },
+  "activation_state": {
+    "payload_present": false,
+    "receipt_present": false,
+    "earliest_calendar_eligible_session": null,
+    "first_counted_session": null,
+    "forward_counter": 0
+  },
+  "known_data_blockers": {
+    "jpx_historical_raw_present": 0,
+    "jpx_historical_raw_required": 160,
+    "tdnet_historical_pages_present": 0,
+    "tdnet_historical_pages_required": 243,
+    "joint_provenance_complete_score_sessions": 0,
+    "joint_provenance_complete_minimum": 120,
+    "registered_live_cutoff_source_present": false,
+    "registered_execution_evidence_present": false
+  },
+  "decision": {
+    "phase0_runtime": "PASS_SYNTHETIC_ONLY",
+    "activation": "NOT_STARTED",
+    "historical_oot": "BLOCKED_INPUT_MISSING",
+    "prospective_shadow": "NOT_STARTED",
+    "production_candidate": false,
+    "orders_allowed": false
+  }
+}
