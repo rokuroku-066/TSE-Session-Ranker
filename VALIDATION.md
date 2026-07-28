@@ -3496,3 +3496,168 @@ orders allowed:            false
 再調整しない。次の試行には新しい未観測期間または異なる情報源を必要とする。
 
 </details>
+
+---
+
+## Entry 020 — 研究プロトコルv1.5：実データ境界と取得不能候補の棄却
+
+| 項目 | 内容 |
+|---|---|
+| 実施日 | 2026-07-28 |
+| 親Entry | Entry 019 |
+| 基準コミット | `22c1cb9a9880e6e6af2562911a8d484b0effb3e4` |
+| 目的 | 異機構案を「実データ取得を実証する」か「候補ごと棄却する」かに二分 |
+| 実取得 | TDnet公式index 2ページ、165開示、業績予想修正PDF 9本、全2ページ安定性再取得 |
+| 厳格抽出 | 1本成功、unsupported/ambiguous 8本はfail-closed |
+| 市場評価 | 未実施。score 0、outcome参照0、gate未実行 |
+| 最終判断 | Aはcollectorだけ実装。B・ABと他の入力不足案は棄却。新規model候補0 |
+| production | 変更なし |
+| orders | `false` |
+
+> **一行結論:** 公式TDnet本文のfresh実取得と数値再計算は1つの対応table schemaで
+> 成功したが、同日cutoff後のsource probeに過ぎない。08:58板・PTS・約定証拠は取得経路を実証できず、
+> 代替値を作らずB/ABを候補ごと閉じた。性能がないという反証ではなく、実行可能な
+> 入力がないという棄却である。
+
+<details>
+<summary><strong>実取得、抽出、候補境界</strong></summary>
+
+### 「collect or reject」契約
+
+v1.1ではTDnet本文/XBRL、08:58先物・板・PTS、execution証拠をblockedとして
+登録していた。v1.5ではblockedのまま数式・synthetic testだけを追加する案を
+採用しなかった。
+
+```text
+real raw + receipt + strict parse:
+  collector implementation may proceed
+
+missing entitlement / raw / receipt:
+  whole approach = REJECTED_INPUT_UNAVAILABLE
+
+forbidden:
+  title or URL as body
+  same-day open as indicative-open proxy
+  daily futures OHLC as 08:58 proxy
+  missing source as zero/no-event
+```
+
+### 公式TDnet live probe
+
+新しい`probe-tdnet-material`を実際に公式current indexへ接続した。
+
+```text
+index page 1:
+  requested  2026-07-28T16:51:32.330007+09:00
+  received   2026-07-28T16:51:37.257144+09:00
+  HTTP       200
+  bytes      63,941
+  SHA-256    7f6ecc8d464182defe3a2884234bcd73df800b07eb9c14b487042b518a66dbd3
+
+index page 2:
+  requested  2026-07-28T16:51:37.271596+09:00
+  received   2026-07-28T16:51:42.428360+09:00
+  HTTP       200
+  bytes      43,979
+  SHA-256    1050dcae2eaa2f6f9a96fe58f84bda055a74a3eeb9199a5a1fe5cd426756706e
+
+Last-Modified header concordance:
+  Tue, 28 Jul 2026 07:44:00 GMT
+
+all-page stability re-request:
+  page 001 requested  2026-07-28T16:52:34.676202+09:00
+           received   2026-07-28T16:52:39.858895+09:00
+           bytes      63,941
+           SHA-256    7f6ecc8d464182defe3a2884234bcd73df800b07eb9c14b487042b518a66dbd3
+  page 002 requested  2026-07-28T16:52:39.859655+09:00
+           received   2026-07-28T16:52:47.533544+09:00
+           bytes      43,979
+           SHA-256    1050dcae2eaa2f6f9a96fe58f84bda055a74a3eeb9199a5a1fe5cd426756706e
+  各URLでinitial responseとbyte/Last-Modified/parsed contentが一致
+```
+
+165開示のうちタイトルfilterに一致した9 PDFをbodyとして取得した。strict v1
+parserは単一の通期・期待5列・単位/増減額/増減率を再計算可能なtable schemaだけを受理し、1本を抽出した。
+sector固有、複数期間、表header不足など8本はタイトル値で補わず拒否した。
+
+受理したテセック（6337）のPDF receipt:
+
+```text
+published  2026-07-28T15:30:00+09:00
+requested  2026-07-28T16:51:47.965250+09:00
+received   2026-07-28T16:51:54.715386+09:00
+HTTP       200 application/pdf
+bytes      77,140
+SHA-256    b06e03d459f54da7fb84236cc0daa245de208fb53de583149528cfb8598cd772
+```
+
+| 百万円 | 前回 | 今回 | 公表増減率 |
+|---|---:|---:|---:|
+| 売上高 | 6,300 | 7,000 | +11.1% |
+| 営業利益 | 450 | 1,100 | +144.4% |
+| 経常利益 | 590 | 1,300 | +120.3% |
+| 純利益 | 540 | 1,040 | +92.6% |
+
+4増減額と4比率を金額から再計算し、比率は差0.11 percentage point以内を確認した。
+Aの実装値は営業利益growthを符号付き30%でcapして`+0.30`となる。このcapは将来
+protocol用に固定したが、source probe前の事前登録値ではない。
+
+ただし公開・取得・計算はすべて2026-07-28の08:58:59後である。同日特徴には
+不適格で、次営業日についてもsealed source-complete snapshotと営業日calendarを
+まだ証明していない。抽出は`candidate_records`から物理的に隔離し、
+scoreもoutcomeも作っていない。
+
+JPX Listed Company Searchについても63370をlive確認し、過去PDF/XBRL linkへ
+到達できた。公式仕様上の掲載期間は121か月であり、「公開履歴本文が一律取得不能」
+という前提は撤回した。ただし全issuerのgap-free bulk export、当時cutoff receipt、
+完全なsecurity-session joinは未取得であるため、履歴を使うmodel案は候補に残さない。
+
+### armと他アプローチの決定
+
+| arm | source | decision |
+|---|---|---|
+| C0 frozen T02 | 既存 | controlのみ、再実行なし |
+| A quantitative material | current bodyを実取得 | collector実装、model候補なし |
+| B 08:58 price absorption | 契約/rawなし | `REJECTED_INPUT_UNAVAILABLE` |
+| AB interaction | Bが欠落 | `REJECTED_INPUT_UNAVAILABLE` |
+
+D+1/D+3、auction path、execution-first、09:05/09:15 sequential、
+exposure graph、event/issuer hierarchy、hedged portfolioも、各々に必要な
+PIT raw joinをこのrunで実証できないため候補として棄却した。
+
+### 再現
+
+```bash
+tse-session-ranker probe-tdnet-material \
+  --index-url https://www.release.tdnet.info/inbs/I_list_001_YYYYMMDD.html \
+  --destination var/tdnet-official \
+  --manifest var/tdnet-material-probe.json
+
+python -m pytest -q tests/test_tdnet_material.py \
+  tests/test_model_v15_data_boundary_artifacts.py
+```
+
+```text
+targeted tests:              23 passed
+full tests:                 396 passed
+subtests:                   192 passed
+model scores:                0
+market outcomes inspected:   0
+new shadow candidates:       0
+production changed:          false
+orders allowed:              false
+```
+
+Decision artifact SHA-256:
+
+```text
+751f2e7c1828c80debd69d231fde4c55a89e2b21ce05addd89576a38a69b3538
+```
+
+Full live-probe manifest SHA-256:
+
+```text
+25faff2a287d761492c7af336e6eb30bd53e373f35d66436bcc862380cd6a870
+```
+
+</details>

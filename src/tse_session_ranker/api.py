@@ -24,6 +24,10 @@ from .data.tdnet import (
     require_production_tdnet_provenance,
     tdnet_dataset_digest,
 )
+from .data.tdnet_material import (
+    collect_official_forecast_revisions,
+    download_official_tdnet_urls,
+)
 from .exceptions import ArtifactError, DataValidationError
 from .inference import PredictionResult, predict_candidates
 from .io import read_frame, write_frame, write_json
@@ -211,6 +215,39 @@ class SessionRanker:
             destination,
             overwrite=overwrite,
             max_workers=max_workers,
+        )
+
+    def download_official_tdnet(
+        self,
+        urls: Iterable[str] | str,
+        destination: str | Path,
+        *,
+        overwrite: bool = False,
+    ) -> list[dict[str, object]]:
+        """Download explicit official TDnet index/PDF URLs with receipts."""
+
+        return [
+            receipt.to_dict()
+            for receipt in download_official_tdnet_urls(
+                urls,
+                destination,
+                overwrite=overwrite,
+            )
+        ]
+
+    def probe_tdnet_material(
+        self,
+        index_url: str,
+        destination: str | Path,
+        *,
+        overwrite: bool = False,
+    ) -> dict[str, object]:
+        """Acquire and strictly parse current official forecast revisions."""
+
+        return collect_official_forecast_revisions(
+            index_url,
+            destination,
+            overwrite=overwrite,
         )
 
     def collect_tdnet(
