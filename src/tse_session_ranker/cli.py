@@ -72,6 +72,44 @@ def build_parser() -> argparse.ArgumentParser:
     download_tdnet.add_argument("--workers", type=int, default=4)
     download_tdnet.add_argument("--overwrite", action="store_true")
 
+    download_official_tdnet = subparsers.add_parser(
+        "download-tdnet-official",
+        help="download explicit official TDnet index/PDF URLs with receipts",
+    )
+    download_official_tdnet.add_argument(
+        "--url",
+        action="append",
+        required=True,
+        help="official release.tdnet.info URL; repeat as needed",
+    )
+    download_official_tdnet.add_argument(
+        "--destination",
+        required=True,
+        help="raw download directory",
+    )
+    download_official_tdnet.add_argument("--overwrite", action="store_true")
+
+    probe_tdnet_material = subparsers.add_parser(
+        "probe-tdnet-material",
+        help="acquire and strictly parse current official forecast revisions",
+    )
+    probe_tdnet_material.add_argument(
+        "--index-url",
+        required=True,
+        help="official page-001 TDnet index URL",
+    )
+    probe_tdnet_material.add_argument(
+        "--destination",
+        required=True,
+        help="raw download directory",
+    )
+    probe_tdnet_material.add_argument(
+        "--manifest",
+        required=True,
+        help="collectibility manifest JSON",
+    )
+    probe_tdnet_material.add_argument("--overwrite", action="store_true")
+
     collect_tdnet = subparsers.add_parser(
         "collect-tdnet", help="parse cached TDnet date-index pages"
     )
@@ -202,6 +240,51 @@ def _run(argv: Sequence[str] | None = None) -> None:
                 "finalized": sum(bool(row["finalized"]) for row in report),
                 "provisional": sum(not bool(row["finalized"]) for row in report),
                 "destination": args.destination,
+            }
+        )
+        return
+    if args.command == "download-tdnet-official":
+        report = SessionRanker().download_official_tdnet(
+            args.url,
+            args.destination,
+            overwrite=args.overwrite,
+        )
+        _print_json(
+            {
+                "files": len(report),
+                "bytes": sum(int(row["bytes"]) for row in report),
+                "destination": args.destination,
+                "receipts": report,
+            }
+        )
+        return
+    if args.command == "probe-tdnet-material":
+        report = SessionRanker().probe_tdnet_material(
+            args.index_url,
+            args.destination,
+            overwrite=args.overwrite,
+        )
+        write_json(report, args.manifest)
+        _print_json(
+            {
+                "index_date": report["index_date"],
+                "index_disclosures": report["coverage"][
+                    "index_disclosures"
+                ],
+                "forecast_revision_documents": report["coverage"][
+                    "forecast_revision_documents"
+                ],
+                "strict_extractions": report["coverage"][
+                    "strict_extractions"
+                ],
+                "strict_rejections": report["coverage"][
+                    "strict_rejections"
+                ],
+                "historical_validation_ready": report["readiness"][
+                    "historical_validation_ready"
+                ],
+                "orders_allowed": report["integrity"]["orders_allowed"],
+                "manifest": args.manifest,
             }
         )
         return

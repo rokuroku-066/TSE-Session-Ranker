@@ -1,0 +1,311 @@
+{
+  "schema_version": 2,
+  "decision_id": "model_v15_zero_base_data_boundary_20260728",
+  "recorded_at": "2026-07-28T16:52:47.585638+09:00",
+  "base_commit_sha": "22c1cb9a9880e6e6af2562911a8d484b0effb3e4",
+  "scope": {
+    "question": "Can materially different model-improvement approaches be executed with real, point-in-time data now?",
+    "rule": "Implement a demonstrated acquisition path or reject the entire approach. Do not keep an unscored placeholder candidate.",
+    "decision_cutoff": "08:58:59+09:00",
+    "same_day_ohlc_predictors_allowed": false,
+    "proxy_values_allowed": false
+  },
+  "prior_evidence_bindings": {
+    "production_readiness": {
+      "path": "research/model_v11_production_readiness.json",
+      "sha256": "6bf6c1d80bdaa6b9abe047b2d0b6817f89618c5dbdf043fe0c7aa235049b4fd6"
+    },
+    "data_evidence_registry": {
+      "path": "research/model_v11_data_evidence_registry.json",
+      "sha256": "742224f1b1d85bbfa5142d86346594f6b54d2719d39531257c2a3a9b392ba9e3"
+    },
+    "new_data_inventory": {
+      "path": "research/model_v11_new_data_inventory.json",
+      "sha256": "897a6a905a6dc5cf4ca620baeaccc973e3428dfa5d9c576306a0f4a7c18f7044"
+    }
+  },
+  "bound_artifacts": {
+    "live_probe_manifest": {
+      "path": "research/model_v15_tdnet_live_probe.json",
+      "sha256": "25faff2a287d761492c7af336e6eb30bd53e373f35d66436bcc862380cd6a870"
+    },
+    "collector": {
+      "path": "src/tse_session_ranker/data/tdnet_material.py",
+      "sha256": "8482dfd5e14ac84ca271eabdd61f26d364947f046091fdb7fbe32c19309d6471"
+    },
+    "api": {
+      "path": "src/tse_session_ranker/api.py",
+      "sha256": "84d0ca16a229d7e46d907f44f80d33c705cd62d0a8cca479a6fb83fa3726c008"
+    },
+    "cli": {
+      "path": "src/tse_session_ranker/cli.py",
+      "sha256": "d1de096c7af839758ff834bf3b48a1fae87de99d4196a7e34041e54bcda3427b"
+    },
+    "data_exports": {
+      "path": "src/tse_session_ranker/data/__init__.py",
+      "sha256": "c734c8cd87a50a2b96a5eee0857e8829211a4b4745212785391fec6ebf557108"
+    },
+    "collector_tests": {
+      "path": "tests/test_tdnet_material.py",
+      "sha256": "cca6b48e13af0b28261f4e9d3e4f142f28565a00e09c2445c2b58041e4e2df70"
+    },
+    "decision_tests": {
+      "path": "tests/test_model_v15_data_boundary_artifacts.py",
+      "sha256": "ec81e7324a38365df608101a80282fef3e717f2e34a128ba427691cb65b5ea40"
+    },
+    "report": {
+      "path": "research/model_v15_data_boundary_report.md",
+      "sha256": "2596dbb6e34b41ce676edf9f84421b9132043bd0e815caa969a59b8db189f8fa"
+    },
+    "production_features": {
+      "path": "src/tse_session_ranker/features.py",
+      "sha256": "aafeeae021d3917bbe5dd9c36acf1993b8b2e24130cc630b7f67c9a46d622e92"
+    },
+    "production_inference": {
+      "path": "src/tse_session_ranker/inference.py",
+      "sha256": "adcc46936928cf9a1311199ee84986177bc70e3e9df74469d3470fbc51bc54b8"
+    },
+    "production_training": {
+      "path": "src/tse_session_ranker/training.py",
+      "sha256": "bdeb2e459a491986630907570d9855fcfd45bb773b2dd3d242153f59a0f03072"
+    },
+    "frozen_t02_runtime": {
+      "path": "src/tse_session_ranker/t02_forward.py",
+      "sha256": "973e0d2dd9454c85db8a98d8717c2e44c47fa243c65098c2390be6f4a242d803"
+    },
+    "pull_request_ci": {
+      "path": ".github/workflows/tests.yml",
+      "sha256": "7c9811768511bacb889e0f7bfa9508c2d2212079e8857db3b152d75868c232c7"
+    }
+  },
+  "live_source_probe": {
+    "manifest_path": "research/model_v15_tdnet_live_probe.json",
+    "manifest_sha256": "25faff2a287d761492c7af336e6eb30bd53e373f35d66436bcc862380cd6a870",
+    "evidence_class": "hash_bound_network_run_manifest_without_committed_raw_or_independent_attestation",
+    "network_accessed": true,
+    "credentials_used": false,
+    "raw_files_committed": false,
+    "index_date": "2026-07-28",
+    "decision_cutoff": "2026-07-28T08:58:59+09:00",
+    "coverage": {
+      "official_index_disclosures": 165,
+      "forecast_revision_documents_downloaded": 9,
+      "strict_pdf_extractions": 1,
+      "strict_pdf_rejections": 8,
+      "same_day_pit_complete_sessions": 0,
+      "historical_validation_sessions": 0
+    },
+    "index_stability_check": {
+      "page_count": 2,
+      "all_pages_fresh": true,
+      "all_pages_byte_identical": true,
+      "all_pages_parsed_content_identical": true,
+      "last_modified_header_concordant": true,
+      "last_modified": "Tue, 28 Jul 2026 07:44:00 GMT",
+      "pages": [
+        {
+          "url": "https://www.release.tdnet.info/inbs/I_list_001_20260728.html",
+          "initial_requested_at": "2026-07-28T16:51:32.330007+09:00",
+          "initial_received_at": "2026-07-28T16:51:37.257144+09:00",
+          "confirmation_requested_at": "2026-07-28T16:52:34.676202+09:00",
+          "confirmation_received_at": "2026-07-28T16:52:39.858895+09:00",
+          "bytes": 63941,
+          "sha256": "7f6ecc8d464182defe3a2884234bcd73df800b07eb9c14b487042b518a66dbd3"
+        },
+        {
+          "url": "https://www.release.tdnet.info/inbs/I_list_002_20260728.html",
+          "initial_requested_at": "2026-07-28T16:51:37.271596+09:00",
+          "initial_received_at": "2026-07-28T16:51:42.428360+09:00",
+          "confirmation_requested_at": "2026-07-28T16:52:39.859655+09:00",
+          "confirmation_received_at": "2026-07-28T16:52:47.533544+09:00",
+          "bytes": 43979,
+          "sha256": "1050dcae2eaa2f6f9a96fe58f84bda055a74a3eeb9199a5a1fe5cd426756706e"
+        }
+      ],
+      "atomic_watermark_claimed": false
+    },
+    "verified_extraction": {
+      "index": {
+        "published_at": "2026-07-28T15:30:00+09:00",
+        "code": "6337",
+        "name": "テセック",
+        "title": "業績予想の修正に関するお知らせ",
+        "document_id": "140120260728500719"
+      },
+      "document_receipt": {
+        "url": "https://www.release.tdnet.info/inbs/140120260728500719.pdf",
+        "requested_at": "2026-07-28T16:51:47.965250+09:00",
+        "received_at": "2026-07-28T16:51:54.715386+09:00",
+        "http_status": 200,
+        "content_type": "application/pdf",
+        "last_modified": "Tue, 28 Jul 2026 06:29:01 GMT",
+        "bytes": 77140,
+        "sha256": "b06e03d459f54da7fb84236cc0daa245de208fb53de583149528cfb8598cd772",
+        "provenance": "network_request_start_recorded",
+        "downloaded_in_run": true
+      },
+      "parser_version": "tdnet_forecast_revision_table_v1",
+      "scope": "consolidated",
+      "unit": "JPY_million",
+      "prior": {
+        "sales": 6300.0,
+        "operating_profit": 450.0,
+        "ordinary_profit": 590.0,
+        "net_profit": 540.0,
+        "eps": 104.67
+      },
+      "current": {
+        "sales": 7000.0,
+        "operating_profit": 1100.0,
+        "ordinary_profit": 1300.0,
+        "net_profit": 1040.0,
+        "eps": 203.13
+      },
+      "reported_delta": {
+        "sales": 700.0,
+        "operating_profit": 650.0,
+        "ordinary_profit": 710.0,
+        "net_profit": 500.0
+      },
+      "reported_revision_pct": {
+        "sales": 11.1,
+        "operating_profit": 144.4,
+        "ordinary_profit": 120.3,
+        "net_profit": 92.6
+      },
+      "implemented_material_strength_cap": 0.3,
+      "material_strength": 0.3,
+      "computed_at": "2026-07-28T16:52:47.585638+09:00",
+      "record_timestamp_cutoff_check": false,
+      "candidate_eligible": false,
+      "interpretation": "One real current-source body and one supported numeric table shape were demonstrated. The extraction is quarantined and is not a scored observation."
+    }
+  },
+  "source_access_findings": {
+    "official_tdnet_current_index_and_pdf": {
+      "state": "SUPPORTED_SAMPLE_COLLECTIBILITY_VERIFIED",
+      "evidence": "Fresh HTTP 200 receipts, bit-identical all-index-page stability rechecks, and one strict numeric extraction"
+    },
+    "listed_company_search_history": {
+      "state": "SAMPLE_ACCESS_VERIFIED_NOT_VALIDATION_READY",
+      "official_entry_url": "https://www2.jpx.co.jp/tseHpFront/JJK020010Action.do?Show=Show",
+      "sample_code": "63370",
+      "public_retention_months": 121,
+      "pdf_links_observed": true,
+      "xbrl_links_observed": true,
+      "bulk_gap_free_export_verified": false,
+      "contemporaneous_pit_receipts_verified": false,
+      "reason": "The public per-issuer history is browseable, but this run did not acquire a gap-free all-issuer cohort or reconstruct contemporaneous cutoff receipts."
+    },
+    "exact_0858_tse_auction_and_quotes": {
+      "state": "NOT_ACQUIRED_IN_THIS_RUN",
+      "reason": "JPX distributes pre-open quotes and sizes through dedicated real-time and historical market-data services; no entitlement, feed, or raw snapshot was configured."
+    },
+    "historical_pts_ticks": {
+      "state": "NOT_ACQUIRED_IN_THIS_RUN",
+      "reason": "Japannext describes historical tick access for members and potential trading clients; no entitlement or raw snapshot was configured."
+    },
+    "execution_fill_and_slippage_ledger": {
+      "state": "NOT_ACQUIRED_IN_THIS_RUN",
+      "reason": "No broker execution receipt, order lifecycle, fill, spread, slippage, or impact ledger existed in the repository or environment."
+    }
+  },
+  "arm_decisions": [
+    {
+      "id": "C0_FROZEN_T02",
+      "role": "existing control",
+      "source_state": "UNCHANGED",
+      "experiment_status": "NOT_RERUN",
+      "market_metrics": null,
+      "gate_status": "NOT_RUN",
+      "decision": "CONTROL_ONLY"
+    },
+    {
+      "id": "A_QUANTITATIVE_MATERIAL",
+      "role": "new information arm",
+      "source_state": "SUPPORTED_CURRENT_SAMPLE_NOT_SOURCE_COMPLETE",
+      "experiment_status": "NOT_RUN",
+      "market_metrics": null,
+      "gate_status": "NOT_RUN",
+      "decision": "COLLECTOR_IMPLEMENTED_NO_MODEL_CANDIDATE",
+      "reason": "One fresh post-cutoff extraction proves a supported acquisition path, not a complete historical or prospective cohort or performance."
+    },
+    {
+      "id": "B_0858_PRICE_ABSORPTION",
+      "role": "new microstructure arm",
+      "source_state": "NOT_ACQUIRED",
+      "experiment_status": "NOT_RUN",
+      "market_metrics": null,
+      "gate_status": "NOT_RUN",
+      "decision": "REJECTED_INPUT_UNAVAILABLE"
+    },
+    {
+      "id": "AB_MATERIAL_X_ABSORPTION",
+      "role": "interaction arm",
+      "source_state": "NOT_ACQUIRED",
+      "experiment_status": "NOT_RUN",
+      "market_metrics": null,
+      "gate_status": "NOT_RUN",
+      "decision": "REJECTED_INPUT_UNAVAILABLE"
+    }
+  ],
+  "other_approach_decisions": [
+    {
+      "id": "D1_D3_EVENT_DRIFT_TARGET",
+      "decision": "REJECTED_INPUT_UNAVAILABLE",
+      "missing_real_input": "gap-free security-session price panel, exchange calendar, and source-complete quantitative event cohort"
+    },
+    {
+      "id": "AUCTION_PATH_0850_0858",
+      "decision": "REJECTED_INPUT_UNAVAILABLE",
+      "missing_real_input": "timestamped auction snapshots"
+    },
+    {
+      "id": "EXECUTION_FIRST_RESERVATION_PRICE",
+      "decision": "REJECTED_INPUT_UNAVAILABLE",
+      "missing_real_input": "quote, lot, tick, order, fill, spread, slippage, and impact ledger"
+    },
+    {
+      "id": "POST_OPEN_SEQUENTIAL_0905_0915",
+      "decision": "REJECTED_INPUT_UNAVAILABLE",
+      "missing_real_input": "timestamped intraday quote and execution snapshots"
+    },
+    {
+      "id": "STRUCTURAL_EXPOSURE_GRAPH",
+      "decision": "REJECTED_INPUT_UNAVAILABLE",
+      "missing_real_input": "point-in-time issuer exposure edges with source receipts"
+    },
+    {
+      "id": "EVENT_ISSUER_HIERARCHY",
+      "decision": "REJECTED_INPUT_UNAVAILABLE",
+      "missing_real_input": "gap-free repeated-issuer quantitative event cohort with contemporaneous provenance"
+    },
+    {
+      "id": "HEDGED_EVENT_PORTFOLIO",
+      "decision": "REJECTED_INPUT_UNAVAILABLE",
+      "missing_real_input": "pre-decision hedge price and executable hedge cost evidence"
+    }
+  ],
+  "integrity": {
+    "synthetic_fixture_counted_as_source_evidence": false,
+    "title_used_as_document_body": false,
+    "proxy_values_used": false,
+    "model_scores_computed": 0,
+    "market_outcomes_inspected_by_this_protocol": false,
+    "same_day_ohlc_predictors_used": false,
+    "pending_unavailable_candidates": 0
+  },
+  "family_decision": {
+    "open_model_candidates": [],
+    "forward_shadow_candidates_added": [],
+    "production_candidates": [],
+    "future_retry_requires_new_protocol": true,
+    "conclusion": "A supported current TDnet table sample is collectible, but no new model can be evaluated. Every approach requiring a real input cohort not acquired by this protocol is rejected rather than left pending."
+  },
+  "authority": {
+    "performance_claimed": false,
+    "production_model_changed": false,
+    "production_promotion_allowed": false,
+    "orders_allowed": false
+  }
+}

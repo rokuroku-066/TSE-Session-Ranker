@@ -1,0 +1,483 @@
+{
+  "schema_version": 1,
+  "probe_type": "official_tdnet_current_collectibility",
+  "index_date": "2026-07-28",
+  "decision_cutoff": "2026-07-28T08:58:59+09:00",
+  "source": {
+    "provider": "Tokyo Stock Exchange TDnet",
+    "official_host": "www.release.tdnet.info",
+    "first_index_url": "https://www.release.tdnet.info/inbs/I_list_001_20260728.html",
+    "last_modified_header_concordance": "Tue, 28 Jul 2026 07:44:00 GMT",
+    "page_receipts": [
+      {
+        "url": "https://www.release.tdnet.info/inbs/I_list_001_20260728.html",
+        "path": "I_list_001_20260728.html",
+        "requested_at": "2026-07-28T16:51:32.330007+09:00",
+        "received_at": "2026-07-28T16:51:37.257144+09:00",
+        "http_status": 200,
+        "content_type": "text/html",
+        "last_modified": "Tue, 28 Jul 2026 07:44:00 GMT",
+        "bytes": 63941,
+        "sha256": "7f6ecc8d464182defe3a2884234bcd73df800b07eb9c14b487042b518a66dbd3",
+        "provenance": "network_request_start_recorded",
+        "downloaded_in_run": true
+      },
+      {
+        "url": "https://www.release.tdnet.info/inbs/I_list_002_20260728.html",
+        "path": "I_list_002_20260728.html",
+        "requested_at": "2026-07-28T16:51:37.271596+09:00",
+        "received_at": "2026-07-28T16:51:42.428360+09:00",
+        "http_status": 200,
+        "content_type": "text/html",
+        "last_modified": "Tue, 28 Jul 2026 07:44:00 GMT",
+        "bytes": 43979,
+        "sha256": "1050dcae2eaa2f6f9a96fe58f84bda055a74a3eeb9199a5a1fe5cd426756706e",
+        "provenance": "network_request_start_recorded",
+        "downloaded_in_run": true
+      }
+    ],
+    "stability_receipts": [
+      {
+        "url": "https://www.release.tdnet.info/inbs/I_list_001_20260728.html",
+        "path": "stability/I_list_001_20260728.html",
+        "requested_at": "2026-07-28T16:52:34.676202+09:00",
+        "received_at": "2026-07-28T16:52:39.858895+09:00",
+        "http_status": 200,
+        "content_type": "text/html",
+        "last_modified": "Tue, 28 Jul 2026 07:44:00 GMT",
+        "bytes": 63941,
+        "sha256": "7f6ecc8d464182defe3a2884234bcd73df800b07eb9c14b487042b518a66dbd3",
+        "provenance": "network_request_start_recorded",
+        "downloaded_in_run": true
+      },
+      {
+        "url": "https://www.release.tdnet.info/inbs/I_list_002_20260728.html",
+        "path": "stability/I_list_002_20260728.html",
+        "requested_at": "2026-07-28T16:52:39.859655+09:00",
+        "received_at": "2026-07-28T16:52:47.533544+09:00",
+        "http_status": 200,
+        "content_type": "text/html",
+        "last_modified": "Tue, 28 Jul 2026 07:44:00 GMT",
+        "bytes": 43979,
+        "sha256": "1050dcae2eaa2f6f9a96fe58f84bda055a74a3eeb9199a5a1fe5cd426756706e",
+        "provenance": "network_request_start_recorded",
+        "downloaded_in_run": true
+      }
+    ],
+    "document_receipts": [
+      {
+        "url": "https://www.release.tdnet.info/inbs/140120260728500963.pdf",
+        "path": "140120260728500963.pdf",
+        "requested_at": "2026-07-28T16:51:42.438388+09:00",
+        "received_at": "2026-07-28T16:51:47.964519+09:00",
+        "http_status": 200,
+        "content_type": "application/pdf",
+        "last_modified": "Tue, 28 Jul 2026 07:44:00 GMT",
+        "bytes": 133119,
+        "sha256": "90c62ecc5ac07eae8c6e5afc4b47bad9c8e4ed8568de8c4947d8cb1c8a646e3d",
+        "provenance": "network_request_start_recorded",
+        "downloaded_in_run": true
+      },
+      {
+        "url": "https://www.release.tdnet.info/inbs/140120260728500719.pdf",
+        "path": "140120260728500719.pdf",
+        "requested_at": "2026-07-28T16:51:47.965250+09:00",
+        "received_at": "2026-07-28T16:51:54.715386+09:00",
+        "http_status": 200,
+        "content_type": "application/pdf",
+        "last_modified": "Tue, 28 Jul 2026 06:29:01 GMT",
+        "bytes": 77140,
+        "sha256": "b06e03d459f54da7fb84236cc0daa245de208fb53de583149528cfb8598cd772",
+        "provenance": "network_request_start_recorded",
+        "downloaded_in_run": true
+      },
+      {
+        "url": "https://www.release.tdnet.info/inbs/140120260722597679.pdf",
+        "path": "140120260722597679.pdf",
+        "requested_at": "2026-07-28T16:51:54.716179+09:00",
+        "received_at": "2026-07-28T16:51:59.923194+09:00",
+        "http_status": 200,
+        "content_type": "application/pdf",
+        "last_modified": "Tue, 28 Jul 2026 04:59:00 GMT",
+        "bytes": 114963,
+        "sha256": "0218d59725a454ae29651c5807985824aabf97eae00162277a5546693b0478f9",
+        "provenance": "network_request_start_recorded",
+        "downloaded_in_run": true
+      },
+      {
+        "url": "https://www.release.tdnet.info/inbs/140120260727500116.pdf",
+        "path": "140120260727500116.pdf",
+        "requested_at": "2026-07-28T16:51:59.923974+09:00",
+        "received_at": "2026-07-28T16:52:05.426265+09:00",
+        "http_status": 200,
+        "content_type": "application/pdf",
+        "last_modified": "Tue, 28 Jul 2026 03:54:00 GMT",
+        "bytes": 158631,
+        "sha256": "0c4f3aed6a70e17eafa6859e94cb2ccb9c10eb299962d0b1ee16bd9e16590619",
+        "provenance": "network_request_start_recorded",
+        "downloaded_in_run": true
+      },
+      {
+        "url": "https://www.release.tdnet.info/inbs/140120260728500705.pdf",
+        "path": "140120260728500705.pdf",
+        "requested_at": "2026-07-28T16:52:05.427111+09:00",
+        "received_at": "2026-07-28T16:52:11.831950+09:00",
+        "http_status": 200,
+        "content_type": "application/pdf",
+        "last_modified": "Tue, 28 Jul 2026 03:29:00 GMT",
+        "bytes": 251246,
+        "sha256": "005c0759a86d07fce08fcbeed5df6bed95c6a05db724b33210e68d073ecd3584",
+        "provenance": "network_request_start_recorded",
+        "downloaded_in_run": true
+      },
+      {
+        "url": "https://www.release.tdnet.info/inbs/140120260727500243.pdf",
+        "path": "140120260727500243.pdf",
+        "requested_at": "2026-07-28T16:52:11.832826+09:00",
+        "received_at": "2026-07-28T16:52:17.115586+09:00",
+        "http_status": 200,
+        "content_type": "application/pdf",
+        "last_modified": "Tue, 28 Jul 2026 02:59:00 GMT",
+        "bytes": 128410,
+        "sha256": "2b2052852172e33b223853f3f6ae105f91be7148df4d99704d093357292a797e",
+        "provenance": "network_request_start_recorded",
+        "downloaded_in_run": true
+      },
+      {
+        "url": "https://www.release.tdnet.info/inbs/140120260727500154.pdf",
+        "path": "140120260727500154.pdf",
+        "requested_at": "2026-07-28T16:52:17.116465+09:00",
+        "received_at": "2026-07-28T16:52:22.383519+09:00",
+        "http_status": 200,
+        "content_type": "application/pdf",
+        "last_modified": "Tue, 28 Jul 2026 02:59:00 GMT",
+        "bytes": 191885,
+        "sha256": "f6778df9c90573cac708cc96d06bfb29643181ff0eb690b3e8fce8a714b67b92",
+        "provenance": "network_request_start_recorded",
+        "downloaded_in_run": true
+      },
+      {
+        "url": "https://www.release.tdnet.info/inbs/140120260724598890.pdf",
+        "path": "140120260724598890.pdf",
+        "requested_at": "2026-07-28T16:52:22.384273+09:00",
+        "received_at": "2026-07-28T16:52:28.588056+09:00",
+        "http_status": 200,
+        "content_type": "application/pdf",
+        "last_modified": "Tue, 28 Jul 2026 01:59:00 GMT",
+        "bytes": 244855,
+        "sha256": "092da9c68b650f734c8be670c62d6a247a1399851479d91c2d9fb2e6805269dd",
+        "provenance": "network_request_start_recorded",
+        "downloaded_in_run": true
+      },
+      {
+        "url": "https://www.release.tdnet.info/inbs/140120260727500394.pdf",
+        "path": "140120260727500394.pdf",
+        "requested_at": "2026-07-28T16:52:28.589038+09:00",
+        "received_at": "2026-07-28T16:52:34.675311+09:00",
+        "http_status": 200,
+        "content_type": "application/pdf",
+        "last_modified": "Mon, 27 Jul 2026 23:29:00 GMT",
+        "bytes": 222378,
+        "sha256": "70ba12611776b7cb47af132da401637602dce5943ada7822c06a54b98bdbf296",
+        "provenance": "network_request_start_recorded",
+        "downloaded_in_run": true
+      }
+    ]
+  },
+  "coverage": {
+    "index_pages": 2,
+    "index_disclosures": 165,
+    "forecast_revision_documents": 9,
+    "strict_extractions": 1,
+    "strict_rejections": 8,
+    "historical_validation_sessions": 0
+  },
+  "candidate_records": [],
+  "quarantined_extractions": [
+    {
+      "disclosure": {
+        "published_at": "2026-07-28T15:30:00+09:00",
+        "code": "6337",
+        "name": "テセック",
+        "title": "業績予想の修正に関するお知らせ",
+        "document_url": "https://www.release.tdnet.info/inbs/140120260728500719.pdf",
+        "xbrl_url": null,
+        "exchange": "東",
+        "document_id": "140120260728500719"
+      },
+      "document_receipt": {
+        "url": "https://www.release.tdnet.info/inbs/140120260728500719.pdf",
+        "path": "140120260728500719.pdf",
+        "requested_at": "2026-07-28T16:51:47.965250+09:00",
+        "received_at": "2026-07-28T16:51:54.715386+09:00",
+        "http_status": 200,
+        "content_type": "application/pdf",
+        "last_modified": "Tue, 28 Jul 2026 06:29:01 GMT",
+        "bytes": 77140,
+        "sha256": "b06e03d459f54da7fb84236cc0daa245de208fb53de583149528cfb8598cd772",
+        "provenance": "network_request_start_recorded",
+        "downloaded_in_run": true
+      },
+      "computed_at": "2026-07-28T16:52:47.585638+09:00",
+      "available_at": "2026-07-28T16:52:47.585638+09:00",
+      "revision": {
+        "company": "株式会社 テセック",
+        "code": "6337",
+        "period": "2027年3月期通期連結業績予想数値の修正(2026年4月1日〜2027年3月31日)",
+        "scope": "consolidated",
+        "unit": "JPY_million",
+        "prior_sales": 6300.0,
+        "prior_operating_profit": 450.0,
+        "prior_ordinary_profit": 590.0,
+        "prior_net_profit": 540.0,
+        "prior_eps": 104.67,
+        "current_sales": 7000.0,
+        "current_operating_profit": 1100.0,
+        "current_ordinary_profit": 1300.0,
+        "current_net_profit": 1040.0,
+        "current_eps": 203.13,
+        "reported_sales_revision_pct": 11.1,
+        "reported_operating_revision_pct": 144.4,
+        "reported_ordinary_revision_pct": 120.3,
+        "reported_net_revision_pct": 92.6,
+        "reported_sales_delta": 700.0,
+        "reported_operating_delta": 650.0,
+        "reported_ordinary_delta": 710.0,
+        "reported_net_delta": 500.0,
+        "parser_version": "tdnet_forecast_revision_table_v1"
+      },
+      "material_strength": 0.3,
+      "record_timestamp_cutoff_check": false,
+      "candidate_eligible": false,
+      "quarantine_reason": "sample_source_probe_is_not_a_source-complete_historical_or_prospective_cohort"
+    }
+  ],
+  "rejected_documents": [
+    {
+      "disclosure": {
+        "published_at": "2026-07-28T16:45:00+09:00",
+        "code": "4894",
+        "name": "Ｇ－クオリプス",
+        "title": "通期連結業績予想の上方修正に関するお知らせ",
+        "document_url": "https://www.release.tdnet.info/inbs/140120260728500963.pdf",
+        "xbrl_url": "https://www.release.tdnet.info/inbs/091220260728500963.zip",
+        "exchange": "東",
+        "document_id": "140120260728500963"
+      },
+      "document_receipt": {
+        "url": "https://www.release.tdnet.info/inbs/140120260728500963.pdf",
+        "path": "140120260728500963.pdf",
+        "requested_at": "2026-07-28T16:51:42.438388+09:00",
+        "received_at": "2026-07-28T16:51:47.964519+09:00",
+        "http_status": 200,
+        "content_type": "application/pdf",
+        "last_modified": "Tue, 28 Jul 2026 07:44:00 GMT",
+        "bytes": 133119,
+        "sha256": "90c62ecc5ac07eae8c6e5afc4b47bad9c8e4ed8568de8c4947d8cb1c8a646e3d",
+        "provenance": "network_request_start_recorded",
+        "downloaded_in_run": true
+      },
+      "reason": "TDnetMaterialError:forecast revision requires exactly one company row"
+    },
+    {
+      "disclosure": {
+        "published_at": "2026-07-28T14:00:00+09:00",
+        "code": "8388",
+        "name": "阿波銀",
+        "title": "業績予想の修正に関するお知らせ",
+        "document_url": "https://www.release.tdnet.info/inbs/140120260722597679.pdf",
+        "xbrl_url": "https://www.release.tdnet.info/inbs/091220260722597679.zip",
+        "exchange": "東",
+        "document_id": "140120260722597679"
+      },
+      "document_receipt": {
+        "url": "https://www.release.tdnet.info/inbs/140120260722597679.pdf",
+        "path": "140120260722597679.pdf",
+        "requested_at": "2026-07-28T16:51:54.716179+09:00",
+        "received_at": "2026-07-28T16:51:59.923194+09:00",
+        "http_status": 200,
+        "content_type": "application/pdf",
+        "last_modified": "Tue, 28 Jul 2026 04:59:00 GMT",
+        "bytes": 114963,
+        "sha256": "0218d59725a454ae29651c5807985824aabf97eae00162277a5546693b0478f9",
+        "provenance": "network_request_start_recorded",
+        "downloaded_in_run": true
+      },
+      "reason": "TDnetMaterialError:forecast revision table headers are incomplete"
+    },
+    {
+      "disclosure": {
+        "published_at": "2026-07-28T12:55:00+09:00",
+        "code": "3054",
+        "name": "ハイパー",
+        "title": "2026年12月期第２四半期（中間期）および通期連結業績予想の修正に関するお知らせ",
+        "document_url": "https://www.release.tdnet.info/inbs/140120260727500116.pdf",
+        "xbrl_url": "https://www.release.tdnet.info/inbs/091220260727500116.zip",
+        "exchange": "東",
+        "document_id": "140120260727500116"
+      },
+      "document_receipt": {
+        "url": "https://www.release.tdnet.info/inbs/140120260727500116.pdf",
+        "path": "140120260727500116.pdf",
+        "requested_at": "2026-07-28T16:51:59.923974+09:00",
+        "received_at": "2026-07-28T16:52:05.426265+09:00",
+        "http_status": 200,
+        "content_type": "application/pdf",
+        "last_modified": "Tue, 28 Jul 2026 03:54:00 GMT",
+        "bytes": 158631,
+        "sha256": "0c4f3aed6a70e17eafa6859e94cb2ccb9c10eb299962d0b1ee16bd9e16590619",
+        "provenance": "network_request_start_recorded",
+        "downloaded_in_run": true
+      },
+      "reason": "TDnetMaterialError:forecast revision requires exactly one company row"
+    },
+    {
+      "disclosure": {
+        "published_at": "2026-07-28T12:30:00+09:00",
+        "code": "3778",
+        "name": "さくらインターネット",
+        "title": "業績予想の修正に関するお知らせ",
+        "document_url": "https://www.release.tdnet.info/inbs/140120260728500705.pdf",
+        "xbrl_url": null,
+        "exchange": "東",
+        "document_id": "140120260728500705"
+      },
+      "document_receipt": {
+        "url": "https://www.release.tdnet.info/inbs/140120260728500705.pdf",
+        "path": "140120260728500705.pdf",
+        "requested_at": "2026-07-28T16:52:05.427111+09:00",
+        "received_at": "2026-07-28T16:52:11.831950+09:00",
+        "http_status": 200,
+        "content_type": "application/pdf",
+        "last_modified": "Tue, 28 Jul 2026 03:29:00 GMT",
+        "bytes": 251246,
+        "sha256": "005c0759a86d07fce08fcbeed5df6bed95c6a05db724b33210e68d073ecd3584",
+        "provenance": "network_request_start_recorded",
+        "downloaded_in_run": true
+      },
+      "reason": "TDnetMaterialError:forecast revision requires exactly one full-year period row"
+    },
+    {
+      "disclosure": {
+        "published_at": "2026-07-28T12:00:00+09:00",
+        "code": "8697",
+        "name": "ＪＰＸ",
+        "title": "業績予想及び配当予想の修正に関するお知らせ",
+        "document_url": "https://www.release.tdnet.info/inbs/140120260727500243.pdf",
+        "xbrl_url": null,
+        "exchange": "東",
+        "document_id": "140120260727500243"
+      },
+      "document_receipt": {
+        "url": "https://www.release.tdnet.info/inbs/140120260727500243.pdf",
+        "path": "140120260727500243.pdf",
+        "requested_at": "2026-07-28T16:52:11.832826+09:00",
+        "received_at": "2026-07-28T16:52:17.115586+09:00",
+        "http_status": 200,
+        "content_type": "application/pdf",
+        "last_modified": "Tue, 28 Jul 2026 02:59:00 GMT",
+        "bytes": 128410,
+        "sha256": "2b2052852172e33b223853f3f6ae105f91be7148df4d99704d093357292a797e",
+        "provenance": "network_request_start_recorded",
+        "downloaded_in_run": true
+      },
+      "reason": "TDnetMaterialError:forecast revision table headers are incomplete"
+    },
+    {
+      "disclosure": {
+        "published_at": "2026-07-28T12:00:00+09:00",
+        "code": "9441",
+        "name": "ベルパーク",
+        "title": "2026年12月期 第２四半期(中間期)及び通期連結業績予想並びに 期末配当予想の修正（増配）に関するお知らせ",
+        "document_url": "https://www.release.tdnet.info/inbs/140120260727500154.pdf",
+        "xbrl_url": "https://www.release.tdnet.info/inbs/091220260727500154.zip",
+        "exchange": "東",
+        "document_id": "140120260727500154"
+      },
+      "document_receipt": {
+        "url": "https://www.release.tdnet.info/inbs/140120260727500154.pdf",
+        "path": "140120260727500154.pdf",
+        "requested_at": "2026-07-28T16:52:17.116465+09:00",
+        "received_at": "2026-07-28T16:52:22.383519+09:00",
+        "http_status": 200,
+        "content_type": "application/pdf",
+        "last_modified": "Tue, 28 Jul 2026 02:59:00 GMT",
+        "bytes": 191885,
+        "sha256": "f6778df9c90573cac708cc96d06bfb29643181ff0eb690b3e8fce8a714b67b92",
+        "provenance": "network_request_start_recorded",
+        "downloaded_in_run": true
+      },
+      "reason": "TDnetMaterialError:forecast revision requires exactly one company row"
+    },
+    {
+      "disclosure": {
+        "published_at": "2026-07-28T11:00:00+09:00",
+        "code": "8084",
+        "name": "ＲＹＯＤＥＮ",
+        "title": "2027年３月期第２四半期（中間期）及び通期連結業績予想の上方修正及び配当予想の修正（増配）に関するお知らせ",
+        "document_url": "https://www.release.tdnet.info/inbs/140120260724598890.pdf",
+        "xbrl_url": "https://www.release.tdnet.info/inbs/091220260724598890.zip",
+        "exchange": "東",
+        "document_id": "140120260724598890"
+      },
+      "document_receipt": {
+        "url": "https://www.release.tdnet.info/inbs/140120260724598890.pdf",
+        "path": "140120260724598890.pdf",
+        "requested_at": "2026-07-28T16:52:22.384273+09:00",
+        "received_at": "2026-07-28T16:52:28.588056+09:00",
+        "http_status": 200,
+        "content_type": "application/pdf",
+        "last_modified": "Tue, 28 Jul 2026 01:59:00 GMT",
+        "bytes": 244855,
+        "sha256": "092da9c68b650f734c8be670c62d6a247a1399851479d91c2d9fb2e6805269dd",
+        "provenance": "network_request_start_recorded",
+        "downloaded_in_run": true
+      },
+      "reason": "TDnetMaterialError:forecast revision table headers are incomplete"
+    },
+    {
+      "disclosure": {
+        "published_at": "2026-07-28T08:30:00+09:00",
+        "code": "4578",
+        "name": "大塚ＨＤ",
+        "title": "業績予想の修正に関するお知らせ",
+        "document_url": "https://www.release.tdnet.info/inbs/140120260727500394.pdf",
+        "xbrl_url": "https://www.release.tdnet.info/inbs/091220260727500394.zip",
+        "exchange": "東",
+        "document_id": "140120260727500394"
+      },
+      "document_receipt": {
+        "url": "https://www.release.tdnet.info/inbs/140120260727500394.pdf",
+        "path": "140120260727500394.pdf",
+        "requested_at": "2026-07-28T16:52:28.589038+09:00",
+        "received_at": "2026-07-28T16:52:34.675311+09:00",
+        "http_status": 200,
+        "content_type": "application/pdf",
+        "last_modified": "Mon, 27 Jul 2026 23:29:00 GMT",
+        "bytes": 222378,
+        "sha256": "70ba12611776b7cb47af132da401637602dce5943ada7822c06a54b98bdbf296",
+        "provenance": "network_request_start_recorded",
+        "downloaded_in_run": true
+      },
+      "reason": "TDnetMaterialError:forecast revision table headers are incomplete"
+    }
+  ],
+  "readiness": {
+    "supported_table_shape_sample_verified": true,
+    "source_complete": false,
+    "same_day_pit_complete_sessions": 0,
+    "historical_validation_ready": false,
+    "performance_evaluation_allowed": false,
+    "reason": "Current-source acquisition does not establish a sealed 08:58 snapshot or historical coverage."
+  },
+  "integrity": {
+    "fresh_network_acquisition": true,
+    "clock_sync_evidence_present": false,
+    "title_used_as_document_body": false,
+    "proxy_values_used": false,
+    "model_scores_computed": 0,
+    "market_outcomes_inspected_by_probe": false,
+    "same_day_ohlc_predictors_used": false,
+    "orders_allowed": false
+  }
+}
