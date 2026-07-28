@@ -3221,3 +3221,278 @@ orders allowed:            false
 新しい試行は、別protocolと未観測期間または異なる情報源を必要とする。
 
 </details>
+
+
+---
+
+## Entry 019 — 研究プロトコルv1.4：陽線・非陽線の特徴差から作る異機構モデルの反証
+
+| 項目 | 内容 |
+|---|---|
+| 検証日 | 2026-07-27 |
+| 親Entry | Entry 018 |
+| Stage A | `close > open`と`close <= open`を、D-1以前の53特徴で比較 |
+| discovery | 2024-07-01～2024-10-31、84 scheduled sessions、244,704行 |
+| stable signal | 21 / 53 |
+| Stage B候補 | OC DMD、session-component DMD、spectral MLP、complexity GaussianNB |
+| variant | 4 candidate × top1/top2 = 8 |
+| confirmation | 2024-11-01～2025-07-31、182 scheduled sessions |
+| 対照 | v1.3と同一の`C00_DAILY_RANK_RIDGE` |
+| 最良点推定 | `DMD01__top2`、net20 `-0.063783%/日`、net40 `-0.263783%/日` |
+| gate | `0/8` |
+| 最終判断 | 全件棄却。forward shadow追加なし、production変更なし、orders不許可 |
+
+> **一行結論:** 53特徴を陽線・非陽線で日付等重み比較すると21特徴に小さいが安定した差が見えた。しかし、その差から事前固定した低rank動学、周波数MLP、複雑度生成分類の4仮説は、未使用confirmationの全8 variantで20 bp後から負となり、3期間・tail・銘柄・familywise対照の全条件を通過しなかった。
+
+<details>
+<summary><strong>特徴比較、仮説固定、confirmation、独立監査</strong></summary>
+
+### 従来検証から変えた点
+
+v1.1の7機構family・118 variant、v1.3のsymbolic context tree・8 variantは
+いずれもgateを通過しなかった。今回は既存rankerのfeature追加やcontext treeの
+parameter変更を行わず、最初に目的変数の2群を記述比較した。
+
+```text
+positive:     close > open
+nonpositive:  close <= open
+
+feature cutoff:
+  target sessionのD-1以前に完了した公式sessionのみ
+
+new representations:
+  AM / lunch gap / PM decomposition       10
+  32-session frequency-domain summaries   20
+  path complexity summaries                8
+  frozen G0                                15
+  total                                    53
+```
+
+各featureをその日のeligible銘柄内percentile rankへ変換し、
+`mean(rank | positive) - mean(rank | nonpositive)`を日ごとに計算した。
+84日の等重み平均を主effectとし、53特徴全体のBenjamini-Hochberg q値、
+欠損率、3固定sliceの符号を事前登録した。
+
+```text
+stable:
+  q <= 0.05
+  absolute mean daily rank gap >= 0.005
+  missing rate <= 10%
+  all 3 discovery slices have the aggregate sign
+```
+
+### Stage Aの比較結果
+
+```text
+rows:                 244,704
+scheduled sessions:          84
+close > open:           105,753  (43.2167%)
+close <= open:          138,951  (56.7833%)
+stable signals:              21 / 53
+```
+
+| group | stable / total | 主な方向 |
+|---|---:|---|
+| frozen G0 | 8 / 15 | OC 20～60日の継続は正、overnight 20～60日は負 |
+| session decomposition | 6 / 10 | AM・rangeは正、lunch・前日PMは負 |
+| spectrum | 3 / 20 | lunch低周波、overnight高周波・dominant frequencyは正 |
+| path complexity | 4 / 8 | component entropy、AM/PM相関、OC符号遷移率は負 |
+
+| feature | daily rank gap | BH q | raw Cohen's d |
+|---|---:|---:|---:|
+| `oc_mean_60` | +0.022588 | 0.00000668 | +0.032375 |
+| `oc_win_20` | +0.022530 | 0.0000000000400 | +0.052149 |
+| `overnight_mean_20` | -0.018511 | 0.00000000000501 | -0.089495 |
+| `component_sign_entropy_20` | -0.017627 | 0.000204 | -0.054928 |
+| `overnight_mean_60` | -0.017074 | 0.00000000000848 | -0.043925 |
+| `overnight_last` | -0.016852 | 0.0000206 | +0.003097 |
+| `lunch_mean_5` | -0.016427 | 0.000000000188 | -0.055012 |
+| `oc_mean_20` | +0.015184 | 0.001615 | -0.017142 |
+
+最大rank gapは約2.26 percentile point、最大絶対Cohen's dも約0.09であり、
+効果は大きくない。`overnight_last`、`oc_mean_20`、`xrank_atr14_pct`、
+`range_abs_oc_ratio_20`は、日付内rank gapと全行pooled raw mean差の符号が
+逆転した。仮説方向は事前登録した日付内rank gapへ限定した。
+
+### Stage A input erratumと公式PDF replay
+
+Stage A protocolのparser名に表記ずれがあり、実行cache SHAも元protocolには
+含まれていなかった。元protocol/resultを変更せず、input metadata限定の
+append-only erratumを追加した。
+
+```text
+incorrect parser label:
+  jpx-stock-prices-v6
+
+canonical parser:
+  jpx_daily_text_v6_special_quote_marker
+
+panel cache SHA-256:
+  abcc6de28217f721358278c17039a60e4542361a60e2b1ac929325ab1a97516f
+
+input erratum SHA-256:
+  656be1249bc8d4f9fa8ce2f22bb6ab3c14450a16cf15c7c86f3e6492cf77c90f
+```
+
+hash固定済みJPX公式PDF 19本から再parse・再構築したreplayは、
+244,704行、84日、53特徴、21 stable signalを再現した。
+
+```text
+cache contrast canonical SHA-256:
+  b09156d385da821fd450269d57e513d6c8911d9528ad048e4f2c4a4d18025ec5
+
+official-PDF contrast canonical SHA-256:
+  b09156d385da821fd450269d57e513d6c8911d9528ad048e4f2c4a4d18025ec5
+
+exact contrast match: PASS
+confirmation rows used by Stage A feature/contrast: 0
+```
+
+### Stage Bで固定した4仮説
+
+| candidate | 仮説 | 固定実装 |
+|---|---|---|
+| `DMD01` | 全銘柄OC rank場の低rank発展に翌日情報がある | 直前60 state、exact DMD rank 8、月内operator固定 |
+| `DMD02` | AM・lunch・PM rank場の共同回転が翌日OC順序を予測する | 3場stack、直前32 state、exact DMD rank 12 |
+| `SP01` | stableなlunch/overnight周波数特徴が非線形に相互作用する | 3 rank入力、tanh MLP hidden 6、月次expanding |
+| `GN01` | path complexityのクラス条件付き分布が異なる | 4 rank入力、GaussianNB、方向固定、月次expanding |
+
+Stage A結果を見た後、feature、方向、DMD lookback/rank、classifier parameter、
+4 candidate × top1/top2、cost、期間、12 gateを別protocolへ固定した。
+protocol、runner、合成testをGitHub remote commit
+`f03134b0ccd9b686259dcd0d09941e1349bd8370`へ登録した後にだけ、
+confirmationを1回実行した。
+
+```text
+Stage B protocol SHA-256:
+ddc635c986dcb56072beda4889bfbf319019db31dfe3f74eedec24e51d8276af
+
+Stage B runner SHA-256:
+affd37391f4e399a173f2180e52127e25c78a1a33c508141ec5c3654321f25fa
+```
+
+### Confirmation設計
+
+```text
+score:                  2024-11-01 .. 2025-07-31
+scheduled sessions:     182
+months:                   9
+slices:                   3
+candidate variants:       8
+costs:                20 / 40 / 60 bp
+primary cost:             40 bp
+bootstrap:                 5-session moving block
+resamples:            10,000
+familywise confidence:    one-sided 90%, Bonferroni over 8
+```
+
+全条件を必須とした。
+
+```text
+net40 > 0
+net60 > 0
+3 confirmation slicesのnet40がすべて > 0
+上位10日除外後net40 > 0
+利益上位10 code現金化後net40 > 0
+正の月 >= 6 / 9
+same-capacity C00差のfamilywise L90 >= 0
+unique code >= 100
+最大code比率 <= 5%
+top10 code比率 <= 25%
+traded days >= 150
+executed slot fraction >= 80%
+```
+
+### 全variant結果
+
+| variant | net20 | net40 | net60 | 正の月 | familywise L90 vs C00 | gate |
+|---|---:|---:|---:|---:|---:|---|
+| `DMD01__top1` | -0.075290 | -0.275290 | -0.475290 | 2/9 | -0.521562 | FAIL |
+| **`DMD01__top2`** | **-0.063783** | **-0.263783** | **-0.463783** | **1/9** | **-0.630936** | **FAIL** |
+| `DMD02__top1` | -0.371816 | -0.571816 | -0.771816 | 0/9 | -0.940859 | FAIL |
+| `DMD02__top2` | -0.350941 | -0.550941 | -0.750941 | 0/9 | -0.928263 | FAIL |
+| `SP01__top1` | -0.113622 | -0.311424 | -0.509226 | 0/9 | -0.594375 | FAIL |
+| `SP01__top2` | -0.185446 | -0.383797 | -0.582149 | 0/9 | -0.705908 | FAIL |
+| `GN01__top1` | -0.133762 | -0.333762 | -0.533762 | 3/9 | -0.692147 | FAIL |
+| `GN01__top2` | -0.226527 | -0.426527 | -0.626527 | 1/9 | -0.746468 | FAIL |
+
+8 variantすべてが20 bp後から負で、3固定sliceのnet40も全件・全sliceで負だった。
+上位10日除外、利益上位10 code現金化、familywise C00比較も全件負である。
+DMDは全182日を約定し、数値rank failureは0だったため、fail-closed cashが
+成績を下げたわけではない。
+
+`SP01__top1`はunique code 93、top10 code比率31.32%、
+`GN01__top1`はunique code 84、最大code比率7.14%、top10比率33.52%であり、
+経済成績に加えて集中条件も外した。
+
+### 対照C00
+
+| control | net20 | net40 | net60 |
+|---|---:|---:|---:|
+| C00 top1 | +0.073172 | -0.124631 | -0.322433 |
+| C00 top2 | +0.226207 | +0.028955 | -0.168298 |
+
+v1.4 C00のconfirmation 364行・全8列は、v1.3 picksの同期間と完全一致した。
+全候補のnet40点推定は同capacity C00を下回った。
+
+### 独立監査
+
+confirmation runnerをimportしない別scriptで、picksからすべて再計算した。
+
+```text
+artifact binding:                         PASS
+5 models x 182 sessions x 2 slots:        PASS
+label / return sign:                      PASS
+v1.3 C00 364 rows / 8 columns exact:      PASS
+cost / slices / tail-code removal:        PASS
+concentration / execution:                PASS
+familywise bootstrap:                     PASS
+12 gates x 8 variants:                    PASS
+decision / production / order boundary:   PASS
+mismatch:                                    0
+```
+
+```text
+confirmation result SHA-256:
+de6b5e27e07def3524361f129a89d2e58da916c19c6c8e7f49219eb27305cba2
+
+confirmation picks SHA-256:
+97aaeeb09d5590c8250a5c8989197744aa4e7c4844eeda6eef369b8dcdaf90ee
+
+audit runner SHA-256:
+33d514678ba6b100dd074bfd07bc0b291b8cb8ddbadf3fb6445319e1bc33321d
+
+audit result SHA-256:
+ed302c5369d00ec5c0464fc69a90f4ab6532bf0b134c40c1c6eb99ec54778f27
+```
+
+### 再現と最終状態
+
+```bash
+PYTHONPATH=src:. python research/model_v14_feature_contrast_runner.py \
+  --panel-cache /tmp/tse_v14_panel.joblib
+
+PYTHONPATH=src:. python research/model_v14_confirmation_runner.py \
+  --panel-cache /tmp/tse_v14_panel.joblib
+
+PYTHONPATH=src:. python research/model_v14_confirmation_audit.py
+
+python -m pytest -q
+```
+
+```text
+373 passed
+192 subtests passed
+
+registered variants:       8
+gate passers:              0
+forward shadow candidate:  none
+production candidate:      none
+production model changed:  false
+orders allowed:            false
+```
+
+同じconfirmation期間でfeature方向、DMD rank/lookback、MLP/GNB parameterを
+再調整しない。次の試行には新しい未観測期間または異なる情報源を必要とする。
+
+</details>

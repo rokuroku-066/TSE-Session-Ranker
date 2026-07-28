@@ -1,0 +1,94 @@
+{
+  "schema_version": "1.0",
+  "erratum_id": "model_v14_feature_contrast_input_erratum_20260727",
+  "registered_at": "2026-07-27",
+  "base_protocol": {
+    "path": "research/model_v14_feature_contrast_protocol.json",
+    "sha256": "8b2fcca037d36776a7803e066396e9cc711a47f1f67a57df5e117b653fd45f28"
+  },
+  "base_result": {
+    "path": "research/model_v14_feature_contrast_result.json",
+    "sha256": "6cd878eca0392f87a781a3a4b6c3d38dd9948ba071ebc9f8f92f58557705eb31"
+  },
+  "authority": {
+    "created_after_discovery_result_was_viewed": true,
+    "input_metadata_only": true,
+    "changes_dates_features_comparison_or_stability_rules": false,
+    "changes_discovery_findings_or_hypotheses": false,
+    "confirmation_scoring_allowed": false,
+    "production_promotion_allowed": false,
+    "orders_allowed": false,
+    "reason": "Preserve the immutable Stage A protocol and result while correcting parser metadata, binding the actual execution cache, and recording an independent replay from the already hash-locked official JPX PDFs."
+  },
+  "metadata_correction": {
+    "field": "frozen_input.parser_version",
+    "incorrect_value": "jpx-stock-prices-v6",
+    "correct_value": "jpx_daily_text_v6_special_quote_marker",
+    "evidence": [
+      {
+        "path": "research/model_v05_input_lock.json",
+        "sha256": "02370bda9c5fe73b166c557bcdc837d363f5deafbe91baa2d450b33dfcd45272"
+      },
+      {
+        "path": "research/model_v13_symbolic_context_input_erratum_v2.json",
+        "sha256": "991ef4dfd20171d9be371d1b8d69d4074fe6536339bb7ff264f9708758c67853"
+      },
+      {
+        "path": "research/model_v13_symbolic_context_runner.py",
+        "sha256": "2607dc11b5dc4ea83294361170e01a18632840c8e5922dfc52dd3b97d30c4b41"
+      }
+    ]
+  },
+  "actual_stage_a_execution_input": {
+    "format": "joblib dictionary containing panel, sessions, and locked source checks",
+    "sha256": "abcc6de28217f721358278c17039a60e4542361a60e2b1ac929325ab1a97516f",
+    "panel_rows": 1524104,
+    "panel_codes": 4124,
+    "sessions": 386,
+    "date_bounds": [
+      "2024-01-04",
+      "2025-07-31"
+    ],
+    "embedded_source_files": 19,
+    "embedded_source_hashes_match_model_v05_input_lock": true,
+    "limitation": "The cache SHA was recorded by the generated Stage A result rather than the original preregistration. The official-source replay below is therefore the authoritative equivalence check."
+  },
+  "official_source_replay": {
+    "source": "19 official JPX monthly stock-price-table PDFs",
+    "source_files_hash_locked_by": {
+      "path": "research/model_v05_input_lock.json",
+      "sha256": "02370bda9c5fe73b166c557bcdc837d363f5deafbe91baa2d450b33dfcd45272"
+    },
+    "command": "python research/model_v14_feature_contrast_runner.py --jpx-directory research/.cache/model_v05_jpx --output /tmp/model_v14_feature_contrast_official_replay.json",
+    "replay_result_sha256": "dc9580b6359ca033f458d5faeeb44be09fba8bdd46f4f360a9c14ef47252932b",
+    "canonical_contrast_sha256": "b09156d385da821fd450269d57e513d6c8911d9528ad048e4f2c4a4d18025ec5",
+    "cache_result_canonical_contrast_sha256": "b09156d385da821fd450269d57e513d6c8911d9528ad048e4f2c4a4d18025ec5",
+    "contrast_object_exact_match": true,
+    "rows": 244704,
+    "scheduled_sessions": 84,
+    "positive_rows": 105753,
+    "nonpositive_rows": 138951,
+    "features": 53,
+    "stable_signals": 21,
+    "runtime_seconds": 522.5972981080013
+  },
+  "confirmation_boundary_disclosure": {
+    "full_locked_input_loaded_for_immutable_source_validation_and_upstream_panel_construction": true,
+    "stage_a_feature_engine_max_date": "2024-10-31",
+    "stage_a_contrast_max_date": "2024-10-31",
+    "confirmation_rows_used_by_feature_engine_or_contrast": 0,
+    "confirmation_candidate_models_fit_or_scored": false,
+    "clarification": "The original docstring phrase that Stage A does not read confirmation outcomes is too broad: the shared upstream loader constructs the locked full panel. Stage A truncates before its own feature engine and contrast, and no 2024-11-01-or-later row is analyzed or scored."
+  },
+  "interpretation_limits": [
+    "The 21 stable signals are discovery-only and are not evidence of economic profitability.",
+    "The largest equal-date rank gap is 0.022588114296404987 and pooled raw effect sizes are modest.",
+    "Hypothesis directions must follow the registered equal-date rank-gap scale, not pooled raw means, because four stable features have opposite signs on those two scales.",
+    "The normal approximation and Benjamini-Hochberg adjustment do not remove dependence among correlated features."
+  ],
+  "resolution": {
+    "strict_input_integrity_after_official_replay": "PASS_WITH_APPEND_ONLY_ERRATUM",
+    "original_protocol_and_result_immutable": true,
+    "required_before_confirmation_registration": "Bind this erratum by exact SHA-256 in the separate Stage B protocol and runner."
+  }
+}

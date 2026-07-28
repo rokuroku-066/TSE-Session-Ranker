@@ -1,0 +1,1890 @@
+{
+  "authority": {
+    "analysis_type": "retrospective_discovery_only",
+    "confirmation_outcomes_scored": false,
+    "orders_allowed": false,
+    "production_model_changed": false
+  },
+  "contrast": {
+    "date_bounds": [
+      "2024-07-01",
+      "2024-10-31"
+    ],
+    "feature_count": 53,
+    "features": [
+      {
+        "available_rows": 244704,
+        "bh_q": 6.684678837351362e-06,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": 0.022588114296404987,
+          "median": 0.02392286794415549,
+          "normal_p_two_sided": 7.567560947944938e-07,
+          "slices": {
+            "discovery_a": 0.02070750976898458,
+            "discovery_b": 0.02738431181826731,
+            "discovery_c": 0.022121670740209216
+          },
+          "standard_error": 0.004566759786282981,
+          "t_statistic": 4.946201541901138
+        },
+        "feature": "oc_mean_60",
+        "group": "existing_g0",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": 0.032375274065713125,
+          "nonpositive_mean": -0.07011778913229538,
+          "nonpositive_median": -0.07695020436871149,
+          "positive_mean": -0.06272209853138531,
+          "positive_median": -0.06922342199183013
+        },
+        "rows": 244704,
+        "stable_signal": true
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 4.0036337758103745e-11,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": 0.022530445230991465,
+          "median": 0.023981498640352317,
+          "normal_p_two_sided": 2.2662077976285142e-12,
+          "slices": {
+            "discovery_a": 0.020388471310788844,
+            "discovery_b": 0.02705361092136485,
+            "discovery_c": 0.022810660251519566
+          },
+          "standard_error": 0.0032108198375805372,
+          "t_statistic": 7.017038130662892
+        },
+        "feature": "oc_win_20",
+        "group": "existing_g0",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": 0.05214941437854448,
+          "nonpositive_mean": 0.44972840572940365,
+          "nonpositive_median": 0.45,
+          "positive_mean": 0.4558437437609574,
+          "positive_median": 0.45
+        },
+        "rows": 244704,
+        "stable_signal": true
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 5.00758368623729e-12,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": -0.018511186588291272,
+          "median": -0.020124913353327223,
+          "normal_p_two_sided": 9.448271106108095e-14,
+          "slices": {
+            "discovery_a": -0.020501679314184583,
+            "discovery_b": -0.01595335929776831,
+            "discovery_c": -0.01682971073858784
+          },
+          "standard_error": 0.002485258506905052,
+          "t_statistic": -7.448394819637361
+        },
+        "feature": "overnight_mean_20",
+        "group": "existing_g0",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": -0.08949539834435735,
+          "nonpositive_mean": 0.08801067808020044,
+          "nonpositive_median": 0.08250657887119761,
+          "positive_mean": 0.06117608613739728,
+          "positive_median": 0.060524943947600794
+        },
+        "rows": 244704,
+        "stable_signal": true
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 0.00020405755213757384,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": -0.017627217541639394,
+          "median": -0.018105198014740115,
+          "normal_p_two_sided": 3.080113994529416e-05,
+          "slices": {
+            "discovery_a": -0.019372963769154993,
+            "discovery_b": -0.021185175679513033,
+            "discovery_c": -0.01114229515969531
+          },
+          "standard_error": 0.00422972601322297,
+          "t_statistic": -4.167460844161816
+        },
+        "feature": "component_sign_entropy_20",
+        "group": "lagged_path_complexity",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": -0.054928437514099246,
+          "nonpositive_mean": 0.6873610102078193,
+          "nonpositive_median": 0.6906964083345586,
+          "positive_mean": 0.684194565359619,
+          "positive_median": 0.6827583919059893
+        },
+        "rows": 244704,
+        "stable_signal": true
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 8.482309807624374e-12,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": -0.01707362510754746,
+          "median": -0.01792859577427583,
+          "normal_p_two_sided": 3.2008716255186315e-13,
+          "slices": {
+            "discovery_a": -0.021555939302321026,
+            "discovery_b": -0.011118891235947092,
+            "discovery_c": -0.013455462979599443
+          },
+          "standard_error": 0.0023434545538373046,
+          "t_statistic": -7.2856651218561685
+        },
+        "feature": "overnight_mean_60",
+        "group": "existing_g0",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": -0.04392532390251878,
+          "nonpositive_mean": 0.051320639983396886,
+          "nonpositive_median": 0.04987155100770095,
+          "positive_mean": 0.042671422448413564,
+          "positive_median": 0.042408734586420194
+        },
+        "rows": 244704,
+        "stable_signal": true
+      },
+      {
+        "available_rows": 244336,
+        "bh_q": 2.0601788709982058e-05,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": -0.0168518521534667,
+          "median": -0.014077872423905624,
+          "normal_p_two_sided": 2.7209909616957436e-06,
+          "slices": {
+            "discovery_a": -0.014999493504185269,
+            "discovery_b": -0.02062214299665686,
+            "discovery_c": -0.01721621105794344
+          },
+          "standard_error": 0.0035925097385212917,
+          "t_statistic": -4.690829915579594
+        },
+        "feature": "overnight_last",
+        "group": "existing_g0",
+        "missing_rate": 0.0015038577219824768,
+        "nonpositive_rows": 138716,
+        "positive_rows": 105620,
+        "raw": {
+          "cohen_d": 0.003096630389252066,
+          "nonpositive_mean": 0.03376571854318065,
+          "nonpositive_median": 0.0,
+          "positive_mean": 0.038220392461614794,
+          "positive_median": 0.0
+        },
+        "rows": 244704,
+        "stable_signal": true
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 1.878679724597397e-10,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": -0.016426658801204135,
+          "median": -0.017450484243704767,
+          "normal_p_two_sided": 1.4178714902621865e-11,
+          "slices": {
+            "discovery_a": -0.017178222179961847,
+            "discovery_b": -0.02350045148707832,
+            "discovery_c": -0.008848509423104505
+          },
+          "standard_error": 0.002431393443100743,
+          "t_statistic": -6.7560677387758785
+        },
+        "feature": "lunch_mean_5",
+        "group": "lagged_session_decomposition",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": -0.05501181135142585,
+          "nonpositive_mean": 0.003932265585125642,
+          "nonpositive_median": 0.00014420285388894172,
+          "positive_mean": -0.008062772997847202,
+          "positive_median": -0.0012348782470983366
+        },
+        "rows": 244704,
+        "stable_signal": true
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 0.00161468785732212,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": 0.015184307904842547,
+          "median": 0.02399535531329089,
+          "normal_p_two_sided": 0.0003046580862871925,
+          "slices": {
+            "discovery_a": 0.015007767264191866,
+            "discovery_b": 0.022444808003421007,
+            "discovery_c": 0.009258932708251124
+          },
+          "standard_error": 0.004204657499364587,
+          "t_statistic": 3.6113067252534172
+        },
+        "feature": "oc_mean_20",
+        "group": "existing_g0",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": -0.01714211420280033,
+          "nonpositive_mean": -0.05196617578882898,
+          "nonpositive_median": -0.06495162753903938,
+          "positive_mean": -0.058461030145578664,
+          "positive_median": -0.06664497625774868
+        },
+        "rows": 244704,
+        "stable_signal": true
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 0.010782414374309143,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": -0.014129723861323025,
+          "median": -0.008800659777023379,
+          "normal_p_two_sided": 0.00345851027100482,
+          "slices": {
+            "discovery_a": -0.01788485934047479,
+            "discovery_b": -0.0014851908250915582,
+            "discovery_c": -0.017710419410635395
+          },
+          "standard_error": 0.004832752956586023,
+          "t_statistic": -2.923742220687526
+        },
+        "feature": "xrank_close_momentum_5",
+        "group": "existing_g0",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": -0.03545453608797052,
+          "nonpositive_mean": 0.019859011017614576,
+          "nonpositive_median": 0.02456348016858101,
+          "positive_mean": 0.0001449590788187438,
+          "positive_median": -0.004139562603086233
+        },
+        "rows": 244704,
+        "stable_signal": true
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 0.009322938986785344,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": 0.014009284472145495,
+          "median": 0.013239508166985214,
+          "normal_p_two_sided": 0.0028144721469540663,
+          "slices": {
+            "discovery_a": 0.014294383938530516,
+            "discovery_b": 0.0021625650849874957,
+            "discovery_c": 0.023683302258574866
+          },
+          "standard_error": 0.004689603672987178,
+          "t_statistic": 2.987306699890458
+        },
+        "feature": "xrank_atr14_pct",
+        "group": "existing_g0",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": -0.009180345180884592,
+          "nonpositive_mean": -0.10257618436058817,
+          "nonpositive_median": -0.12973932921886444,
+          "positive_mean": -0.10752138907441176,
+          "positive_median": -0.14538198709487915
+        },
+        "rows": 244704,
+        "stable_signal": true
+      },
+      {
+        "available_rows": 244336,
+        "bh_q": 0.004213503277742342,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": 0.01237378214955951,
+          "median": 0.011064545073268262,
+          "normal_p_two_sided": 0.0010335008039745366,
+          "slices": {
+            "discovery_a": 0.010034379964246004,
+            "discovery_b": 0.004571250363178394,
+            "discovery_c": 0.023684800236365048
+          },
+          "standard_error": 0.003771063638215065,
+          "t_statistic": 3.281244586849857
+        },
+        "feature": "prior_range_pct",
+        "group": "lagged_session_decomposition",
+        "missing_rate": 0.0015038577219824768,
+        "nonpositive_rows": 138716,
+        "positive_rows": 105620,
+        "raw": {
+          "cohen_d": 0.08719853216867517,
+          "nonpositive_mean": 2.2554933651384808,
+          "nonpositive_median": 1.8832391713747645,
+          "positive_mean": 2.409255329048892,
+          "positive_median": 1.9444444444444444
+        },
+        "rows": 244704,
+        "stable_signal": true
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 0.003144599795003982,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": 0.0114652098468554,
+          "median": 0.006183034383442282,
+          "normal_p_two_sided": 0.0007119848592461845,
+          "slices": {
+            "discovery_a": 0.013186221720258575,
+            "discovery_b": 0.009882643718590661,
+            "discovery_c": 0.009468175568705096
+          },
+          "standard_error": 0.0033871415296807656,
+          "t_statistic": 3.3849219899399907
+        },
+        "feature": "range_abs_oc_ratio_20",
+        "group": "lagged_path_complexity",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": -0.005782746746727031,
+          "nonpositive_mean": 2.0113723132901526,
+          "nonpositive_median": 1.968985964854251,
+          "positive_mean": 2.009335176078557,
+          "positive_median": 1.9681082748619303
+        },
+        "rows": 244704,
+        "stable_signal": true
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 1.2567699184239273e-08,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": 0.010608940292912952,
+          "median": 0.0074605186951538505,
+          "normal_p_two_sided": 1.185631998513139e-09,
+          "slices": {
+            "discovery_a": 0.01007625849402024,
+            "discovery_b": 0.012027755401160009,
+            "discovery_c": 0.01042475076089897
+          },
+          "standard_error": 0.0017442675742060459,
+          "t_statistic": 6.082174804941793
+        },
+        "feature": "lunch_spectral_low_energy_ratio_32",
+        "group": "lagged_spectrum",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": 0.035853107818362796,
+          "nonpositive_mean": 0.24937921166509364,
+          "nonpositive_median": 0.24777348568549343,
+          "positive_mean": 0.25389862297949983,
+          "positive_median": 0.25142716452837965
+        },
+        "rows": 244704,
+        "stable_signal": true
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 0.006579153201283794,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": -0.010416167874709257,
+          "median": -0.006907883016528088,
+          "normal_p_two_sided": 0.0017378895248674174,
+          "slices": {
+            "discovery_a": -0.013872318734360444,
+            "discovery_b": -0.011375725265666478,
+            "discovery_c": -0.0028322552659279725
+          },
+          "standard_error": 0.0033260275877109663,
+          "t_statistic": -3.131714214637004
+        },
+        "feature": "am_pm_return_corr_20",
+        "group": "lagged_path_complexity",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": -0.02573304360380514,
+          "nonpositive_mean": -0.018256644662502167,
+          "nonpositive_median": -0.022974260939854847,
+          "positive_mean": -0.02530942001293036,
+          "positive_median": -0.030380507033776396
+        },
+        "rows": 244704,
+        "stable_signal": true
+      },
+      {
+        "available_rows": 241164,
+        "bh_q": 0.01201675141075996,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": -0.010163406388009187,
+          "median": -0.013253220652744618,
+          "normal_p_two_sided": 0.004081160856484515,
+          "slices": {
+            "discovery_a": -0.010842312350636553,
+            "discovery_b": -0.006595124938521955,
+            "discovery_c": -0.01191815144015831
+          },
+          "standard_error": 0.003539013027880577,
+          "t_statistic": -2.8718194332547533
+        },
+        "feature": "prior_pm_return_pct",
+        "group": "lagged_session_decomposition",
+        "missing_rate": 0.014466457434287957,
+        "nonpositive_rows": 136776,
+        "positive_rows": 104388,
+        "raw": {
+          "cohen_d": -0.08265105654096659,
+          "nonpositive_mean": -0.07197600971595552,
+          "nonpositive_median": 0.0,
+          "positive_mean": -0.16939142890746559,
+          "positive_median": -0.02956393264895163
+        },
+        "rows": 244704,
+        "stable_signal": true
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 0.018052773070523477,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": 0.009647854409735526,
+          "median": 0.011336436709428799,
+          "normal_p_two_sided": 0.006812367196423953,
+          "slices": {
+            "discovery_a": 0.006806202300247889,
+            "discovery_b": 0.02262838489938922,
+            "discovery_c": 0.003991534473578629
+          },
+          "standard_error": 0.0035655146033272897,
+          "t_statistic": 2.7058799312537607
+        },
+        "feature": "am_mean_5",
+        "group": "lagged_session_decomposition",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": 0.025387365571725235,
+          "nonpositive_mean": -0.004138128854881386,
+          "nonpositive_median": -0.038590217074945254,
+          "positive_mean": 0.011784564976249029,
+          "positive_median": -0.026109660574411553
+        },
+        "rows": 244704,
+        "stable_signal": true
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 0.03788509858911086,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": 0.009084670656693175,
+          "median": 0.007136856033671035,
+          "normal_p_two_sided": 0.015846262125756207,
+          "slices": {
+            "discovery_a": 0.011536785024623162,
+            "discovery_b": 0.00616878652554345,
+            "discovery_c": 0.006810165232641153
+          },
+          "standard_error": 0.003765764443218048,
+          "t_statistic": 2.4124373135059494
+        },
+        "feature": "overnight_spectral_high_energy_ratio_32",
+        "group": "lagged_spectrum",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": 0.05573460750151658,
+          "nonpositive_mean": 0.5101265714008297,
+          "nonpositive_median": 0.5081765692378442,
+          "positive_mean": 0.5180686601321625,
+          "positive_median": 0.5165668844704062
+        },
+        "rows": 244704,
+        "stable_signal": true
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 0.04048225189978902,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": 0.00899162970397212,
+          "median": 0.0061491768690842,
+          "normal_p_two_sided": 0.018331585765942196,
+          "slices": {
+            "discovery_a": 0.007719893109394053,
+            "discovery_b": 0.000833071420786325,
+            "discovery_c": 0.01852332429248971
+          },
+          "standard_error": 0.0038118675088855704,
+          "t_statistic": 2.358851582068993
+        },
+        "feature": "am_std_20",
+        "group": "lagged_session_decomposition",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": 0.06698250957398004,
+          "nonpositive_mean": 1.2634199386259428,
+          "nonpositive_median": 1.146430004466827,
+          "positive_mean": 1.304242042252437,
+          "positive_median": 1.1921497874237488
+        },
+        "rows": 244704,
+        "stable_signal": true
+      },
+      {
+        "available_rows": 241164,
+        "bh_q": 0.00027046094568916276,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": -0.008755153555087922,
+          "median": -0.008398977304481081,
+          "normal_p_two_sided": 4.592733040004651e-05,
+          "slices": {
+            "discovery_a": -0.007925497089698537,
+            "discovery_b": -0.01596620879405124,
+            "discovery_c": -0.004149025303789764
+          },
+          "standard_error": 0.0021482717307618766,
+          "t_statistic": -4.075440471389036
+        },
+        "feature": "prior_lunch_gap_pct",
+        "group": "lagged_session_decomposition",
+        "missing_rate": 0.014466457434287957,
+        "nonpositive_rows": 136776,
+        "positive_rows": 104388,
+        "raw": {
+          "cohen_d": -0.03129964481504038,
+          "nonpositive_mean": 0.0048809367580846886,
+          "nonpositive_median": 0.0,
+          "positive_mean": -0.009935299707522473,
+          "positive_median": 0.0
+        },
+        "rows": 244704,
+        "stable_signal": true
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 0.0019753463893599273,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": -0.008636333043233801,
+          "median": -0.009730929137681615,
+          "normal_p_two_sided": 0.00040997755250866415,
+          "slices": {
+            "discovery_a": -0.005531702784170403,
+            "discovery_b": -0.014455533383449041,
+            "discovery_c": -0.009678800983035458
+          },
+          "standard_error": 0.0024440770548235266,
+          "t_statistic": -3.533576417400385
+        },
+        "feature": "oc_sign_transition_rate_20",
+        "group": "lagged_path_complexity",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": -0.030483381685279927,
+          "nonpositive_mean": 0.5472326670249906,
+          "nonpositive_median": 0.5263157894736842,
+          "positive_mean": 0.5435471035536132,
+          "positive_median": 0.5263157894736842
+        },
+        "rows": 244704,
+        "stable_signal": true
+      },
+      {
+        "available_rows": 244690,
+        "bh_q": 0.1928877294114737,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": 0.007905242334258674,
+          "median": 0.0038761657602044697,
+          "normal_p_two_sided": 0.12373929811302085,
+          "slices": {
+            "discovery_a": 0.00254903231735849,
+            "discovery_b": 0.02098836206425835,
+            "discovery_c": 0.007075140327745677
+          },
+          "standard_error": 0.0051357210545450015,
+          "t_statistic": 1.53926629781863
+        },
+        "feature": "xrank_close_momentum_60",
+        "group": "existing_g0",
+        "missing_rate": 5.721197855368118e-05,
+        "nonpositive_rows": 138944,
+        "positive_rows": 105746,
+        "raw": {
+          "cohen_d": 0.03878234026840732,
+          "nonpositive_mean": 6.486998253196114e-06,
+          "nonpositive_median": 0.00334753782954067,
+          "positive_mean": 0.021552954481138017,
+          "positive_median": 0.03298618458211422
+        },
+        "rows": 244704,
+        "stable_signal": false
+      },
+      {
+        "available_rows": 243190,
+        "bh_q": 0.0708003289389512,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": -0.007620640502183791,
+          "median": -0.007870586728413814,
+          "normal_p_two_sided": 0.03740394736397422,
+          "slices": {
+            "discovery_a": -0.01299026411998956,
+            "discovery_b": 0.0019624985960159293,
+            "discovery_c": -0.0054018144703722815
+          },
+          "standard_error": 0.003661432815878393,
+          "t_statistic": -2.0813274161786217
+        },
+        "feature": "prior_close_location",
+        "group": "lagged_session_decomposition",
+        "missing_rate": 0.00618706682359095,
+        "nonpositive_rows": 138008,
+        "positive_rows": 105182,
+        "raw": {
+          "cohen_d": -0.011939596654811488,
+          "nonpositive_mean": 0.475660831057515,
+          "nonpositive_median": 0.4594594594594595,
+          "positive_mean": 0.4716911349890003,
+          "positive_median": 0.45454545454545453
+        },
+        "rows": 244704,
+        "stable_signal": false
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 0.017435559771894486,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": 0.007322410680198782,
+          "median": 0.005734806482935617,
+          "normal_p_two_sided": 0.006250483691811231,
+          "slices": {
+            "discovery_a": 0.0061360467583191575,
+            "discovery_b": 0.008558303284801722,
+            "discovery_c": 0.008573851096260965
+          },
+          "standard_error": 0.0026779412295174047,
+          "t_statistic": 2.7343433080188855
+        },
+        "feature": "overnight_spectral_dominant_frequency_32",
+        "group": "lagged_spectrum",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": 0.020390318402616018,
+          "nonpositive_mean": 0.5526548027722002,
+          "nonpositive_median": 0.5625,
+          "positive_mean": 0.5587430143825707,
+          "positive_median": 0.5625
+        },
+        "rows": 244704,
+        "stable_signal": true
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 0.03788509858911086,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": 0.00724551601340152,
+          "median": 0.005023235593734243,
+          "normal_p_two_sided": 0.01644070316131226,
+          "slices": {
+            "discovery_a": 0.012360498835401574,
+            "discovery_b": 0.0064337083896736065,
+            "discovery_c": -0.002050843827288116
+          },
+          "standard_error": 0.003020245541237843,
+          "t_statistic": 2.3989824385046377
+        },
+        "feature": "pm_spectral_low_energy_ratio_32",
+        "group": "lagged_spectrum",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": 0.052863561728340676,
+          "nonpositive_mean": 0.27151400710790763,
+          "nonpositive_median": 0.26114357216762324,
+          "positive_mean": 0.27793515637706406,
+          "positive_median": 0.2678279069608913
+        },
+        "rows": 244704,
+        "stable_signal": false
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 0.06980356151682632,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": -0.006851860702161354,
+          "median": -0.004231501086777806,
+          "normal_p_two_sided": 0.03556030492366624,
+          "slices": {
+            "discovery_a": -0.00972972671796407,
+            "discovery_b": -0.00403840440399365,
+            "discovery_c": -0.0036567439287827
+          },
+          "standard_error": 0.003259810778241953,
+          "t_statistic": -2.101919764145521
+        },
+        "feature": "overnight_spectral_low_energy_ratio_32",
+        "group": "lagged_spectrum",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": -0.030774969443026334,
+          "nonpositive_mean": 0.25176873658512317,
+          "nonpositive_median": 0.2434831140741601,
+          "positive_mean": 0.24820926220375836,
+          "positive_median": 0.23835343108907917
+        },
+        "rows": 244704,
+        "stable_signal": false
+      },
+      {
+        "available_rows": 241164,
+        "bh_q": 0.15829107583432514,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": 0.0060622402358979114,
+          "median": 0.0018066608816774132,
+          "normal_p_two_sided": 0.09855859438740999,
+          "slices": {
+            "discovery_a": 0.005221094713777134,
+            "discovery_b": 0.003932777288593581,
+            "discovery_c": 0.009545379029078626
+          },
+          "standard_error": 0.0036698989323186854,
+          "t_statistic": 1.6518820675172428
+        },
+        "feature": "prior_am_return_pct",
+        "group": "lagged_session_decomposition",
+        "missing_rate": 0.014466457434287957,
+        "nonpositive_rows": 136776,
+        "positive_rows": 104388,
+        "raw": {
+          "cohen_d": 0.04491091611506565,
+          "nonpositive_mean": -0.025823228716065866,
+          "nonpositive_median": 0.0,
+          "positive_mean": 0.03884329073293656,
+          "positive_median": 0.0
+        },
+        "rows": 244704,
+        "stable_signal": false
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 0.29674477805971616,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": 0.0051592251896058336,
+          "median": 0.0031179144818211657,
+          "normal_p_two_sided": 0.2239583230639367,
+          "slices": {
+            "discovery_a": 0.0034795656418428384,
+            "discovery_b": -0.006007259567943968,
+            "discovery_c": 0.018085978414481063
+          },
+          "standard_error": 0.004242540248353785,
+          "t_statistic": 1.2160698278838358
+        },
+        "feature": "oc_std_20",
+        "group": "existing_g0",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": 0.08655107518278196,
+          "nonpositive_mean": 1.6100666485086768,
+          "nonpositive_median": 1.4182283767564494,
+          "positive_mean": 1.6835744211447514,
+          "positive_median": 1.4856571419120501
+        },
+        "rows": 244704,
+        "stable_signal": false
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 0.006683609281286573,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": 0.004971139651499806,
+          "median": 0.0030297225832426333,
+          "normal_p_two_sided": 0.0018915875324395962,
+          "slices": {
+            "discovery_a": 0.007144167914209238,
+            "discovery_b": 7.21664430575694e-05,
+            "discovery_c": 0.004954788545313302
+          },
+          "standard_error": 0.0016001113085965433,
+          "t_statistic": 3.106746152466099
+        },
+        "feature": "lunch_spectral_high_energy_ratio_32",
+        "group": "lagged_spectrum",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": 0.038472966445320035,
+          "nonpositive_mean": 0.4543468130200066,
+          "nonpositive_median": 0.4763274309603679,
+          "positive_mean": 0.46093158108221427,
+          "positive_median": 0.47884688317703844
+        },
+        "rows": 244704,
+        "stable_signal": false
+      },
+      {
+        "available_rows": 244336,
+        "bh_q": 0.27612598728511034,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": -0.004853510619510231,
+          "median": -0.003983829375160203,
+          "normal_p_two_sided": 0.20318704724753403,
+          "slices": {
+            "discovery_a": -0.004623942634090843,
+            "discovery_b": -0.006162212137794528,
+            "discovery_c": -0.004171969461584418
+          },
+          "standard_error": 0.0038140821719082154,
+          "t_statistic": -1.2725238735698192
+        },
+        "feature": "oc_last",
+        "group": "existing_g0",
+        "missing_rate": 0.0015038577219824768,
+        "nonpositive_rows": 138716,
+        "positive_rows": 105620,
+        "raw": {
+          "cohen_d": -0.026450913903664566,
+          "nonpositive_mean": -0.09190966542472519,
+          "nonpositive_median": -0.09797678161943546,
+          "positive_mean": -0.14044866610703036,
+          "positive_median": -0.11600928074245731
+        },
+        "rows": 244704,
+        "stable_signal": false
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 0.029713211899714563,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": -0.004696028022513113,
+          "median": -0.0018205781870073157,
+          "normal_p_two_sided": 0.011773159431962374,
+          "slices": {
+            "discovery_a": -0.0034956612678908104,
+            "discovery_b": -0.007269037448557593,
+            "discovery_c": -0.004820054902236473
+          },
+          "standard_error": 0.0018643380233406138,
+          "t_statistic": -2.5188715585484527
+        },
+        "feature": "oc_spectral_entropy_32",
+        "group": "lagged_spectrum",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": 0.027447258747202316,
+          "nonpositive_mean": 0.866322620258963,
+          "nonpositive_median": 0.8706657581227804,
+          "positive_mean": 0.8675856738348238,
+          "positive_median": 0.8718935924412893
+        },
+        "rows": 244704,
+        "stable_signal": false
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 0.09162326517577858,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": 0.004471612181780673,
+          "median": 0.004865463084609722,
+          "normal_p_two_sided": 0.050133484718822244,
+          "slices": {
+            "discovery_a": 0.006166713614344688,
+            "discovery_b": 0.0019779057337663657,
+            "discovery_c": 0.003312114950508818
+          },
+          "standard_error": 0.002282805293170861,
+          "t_statistic": 1.9588232930586542
+        },
+        "feature": "oc_turning_rate_20",
+        "group": "lagged_path_complexity",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": 0.015429975088517208,
+          "nonpositive_mean": 0.6644152734896953,
+          "nonpositive_median": 0.6666666666666666,
+          "positive_mean": 0.6660010695782731,
+          "positive_median": 0.6666666666666666
+        },
+        "rows": 244704,
+        "stable_signal": false
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 0.13434537761485438,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": -0.004073719049904773,
+          "median": -0.0027642024567118006,
+          "normal_p_two_sided": 0.0760445533668987,
+          "slices": {
+            "discovery_a": -0.0055500786375132435,
+            "discovery_b": -6.178898341652195e-05,
+            "discovery_c": -0.004652955822455343
+          },
+          "standard_error": 0.0022962011631013825,
+          "t_statistic": -1.7741124407421567
+        },
+        "feature": "oc_abs_autocorr_20",
+        "group": "lagged_path_complexity",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": 0.057660259552070825,
+          "nonpositive_mean": 0.0402617656276882,
+          "nonpositive_median": 0.023577214133201723,
+          "positive_mean": 0.055021941199741756,
+          "positive_median": 0.03579266527341449
+        },
+        "rows": 244704,
+        "stable_signal": false
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 0.06980356151682632,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": 0.00393674952172157,
+          "median": 0.0026243339524365805,
+          "normal_p_two_sided": 0.0354493588347388,
+          "slices": {
+            "discovery_a": 0.0014097060298045609,
+            "discovery_b": 0.007290139788107281,
+            "discovery_c": 0.005979861116771704
+          },
+          "standard_error": 0.0018718012607523511,
+          "t_statistic": 2.1031877711949156
+        },
+        "feature": "lunch_spectral_entropy_32",
+        "group": "lagged_spectrum",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": 0.05337213981793444,
+          "nonpositive_mean": 0.8043848008960744,
+          "nonpositive_median": 0.8640918087152065,
+          "positive_mean": 0.8158633034508566,
+          "positive_median": 0.8648914098486198
+        },
+        "rows": 244704,
+        "stable_signal": false
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 0.14577496225860853,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": -0.0038834040576077866,
+          "median": -0.004605731585511558,
+          "normal_p_two_sided": 0.08526460056635594,
+          "slices": {
+            "discovery_a": -0.003764247364675705,
+            "discovery_b": -0.005839261436568181,
+            "discovery_c": -0.0024271516756001503
+          },
+          "standard_error": 0.002256580690011032,
+          "t_statistic": -1.72092408430066
+        },
+        "feature": "oc_spectral_high_energy_ratio_32",
+        "group": "lagged_spectrum",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": -0.045205405298539544,
+          "nonpositive_mean": 0.505526131265115,
+          "nonpositive_median": 0.5067849831164745,
+          "positive_mean": 0.4993556776574824,
+          "positive_median": 0.5003007332587024
+        },
+        "rows": 244704,
+        "stable_signal": false
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 0.4915460222080661,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": 0.0038528918846362946,
+          "median": 0.0012870008710184344,
+          "normal_p_two_sided": 0.38952703646676934,
+          "slices": {
+            "discovery_a": 0.004207475027608075,
+            "discovery_b": -0.013703101526706904,
+            "discovery_c": 0.018321837324078757
+          },
+          "standard_error": 0.004477631632662979,
+          "t_statistic": 0.8604754032311647
+        },
+        "feature": "pm_std_20",
+        "group": "lagged_session_decomposition",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": 0.11023948657640067,
+          "nonpositive_mean": 0.9592758210595324,
+          "nonpositive_median": 0.8095962533409201,
+          "positive_mean": 1.024057052772084,
+          "positive_median": 0.8482076229800273
+        },
+        "rows": 244704,
+        "stable_signal": false
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 0.1505156636822891,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": 0.0037983345311381487,
+          "median": 0.005051101633758326,
+          "normal_p_two_sided": 0.0908773818459104,
+          "slices": {
+            "discovery_a": 0.002784079384844602,
+            "discovery_b": 0.005289632850034867,
+            "discovery_c": 0.0044928028598465505
+          },
+          "standard_error": 0.002246488320735363,
+          "t_statistic": 1.6907875710187563
+        },
+        "feature": "am_pm_sign_agreement_20",
+        "group": "lagged_path_complexity",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": 0.013501848408721252,
+          "nonpositive_mean": 0.44262042014810976,
+          "nonpositive_median": 0.45,
+          "positive_mean": 0.44418598053955916,
+          "positive_median": 0.45
+        },
+        "rows": 244704,
+        "stable_signal": false
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 0.0502196901470112,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": 0.0037733007981975,
+          "median": 0.006329306586838862,
+          "normal_p_two_sided": 0.023688533088212827,
+          "slices": {
+            "discovery_a": 0.003237355131410956,
+            "discovery_b": 0.0009554604138075278,
+            "discovery_c": 0.007254420387980722
+          },
+          "standard_error": 0.0016680200195872596,
+          "t_statistic": 2.2621435917364936
+        },
+        "feature": "lunch_spectral_dominant_frequency_32",
+        "group": "lagged_spectrum",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": 0.014712507973411495,
+          "nonpositive_mean": 0.4835063259710258,
+          "nonpositive_median": 0.4375,
+          "positive_mean": 0.4882798833130029,
+          "positive_median": 0.4375
+        },
+        "rows": 244704,
+        "stable_signal": false
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 0.2276555288276077,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": 0.003496122486026693,
+          "median": 0.004260512551996637,
+          "normal_p_two_sided": 0.15033855677294847,
+          "slices": {
+            "discovery_a": 0.0025149696846585713,
+            "discovery_b": 0.0037132897786726496,
+            "discovery_c": 0.005226276663233786
+          },
+          "standard_error": 0.002430670509289337,
+          "t_statistic": 1.4383366534729816
+        },
+        "feature": "am_spectral_dominant_frequency_32",
+        "group": "lagged_spectrum",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": -0.005334125010587438,
+          "nonpositive_mean": 0.5167392642010493,
+          "nonpositive_median": 0.5,
+          "positive_mean": 0.5151242754342666,
+          "positive_median": 0.5
+        },
+        "rows": 244704,
+        "stable_signal": false
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 0.254236997959996,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": -0.0034653521426767733,
+          "median": -0.0024831586174099696,
+          "normal_p_two_sided": 0.17268928163320482,
+          "slices": {
+            "discovery_a": -0.0055651526812841344,
+            "discovery_b": -0.004491547861914659,
+            "discovery_c": 0.0015250633948521517
+          },
+          "standard_error": 0.002541301087713784,
+          "t_statistic": -1.3636133708950986
+        },
+        "feature": "pm_spectral_high_energy_ratio_32",
+        "group": "lagged_spectrum",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": -0.043882272944723445,
+          "nonpositive_mean": 0.45641716816404854,
+          "nonpositive_median": 0.45543655496732566,
+          "positive_mean": 0.45043622648022186,
+          "positive_median": 0.44800896571956245
+        },
+        "rows": 244704,
+        "stable_signal": false
+      },
+      {
+        "available_rows": 243068,
+        "bh_q": 0.5703503353547533,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": 0.0031882542262593396,
+          "median": 0.008266523865950115,
+          "normal_p_two_sided": 0.4627370645331018,
+          "slices": {
+            "discovery_a": -0.0016653423157306805,
+            "discovery_b": 0.01461586173566809,
+            "discovery_c": 0.002805531891114094
+          },
+          "standard_error": 0.004341616011062637,
+          "t_statistic": 0.7343473531826678
+        },
+        "feature": "oc_mean_5",
+        "group": "existing_g0",
+        "missing_rate": 0.0066856283509873155,
+        "nonpositive_rows": 137967,
+        "positive_rows": 105101,
+        "raw": {
+          "cohen_d": -0.06027693105479798,
+          "nonpositive_mean": -0.07914157492555389,
+          "nonpositive_median": -0.09096103229225383,
+          "positive_mean": -0.12368812343162768,
+          "positive_median": -0.1010970831287203
+        },
+        "rows": 244704,
+        "stable_signal": false
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 0.5917950236601538,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": 0.003163038345353062,
+          "median": 0.00421228099410248,
+          "normal_p_two_sided": 0.5024674729189985,
+          "slices": {
+            "discovery_a": 0.008144113439832866,
+            "discovery_b": -0.0009172681738800102,
+            "discovery_c": -0.0030487982545198107
+          },
+          "standard_error": 0.00471664151332627,
+          "t_statistic": 0.6706124127551988
+        },
+        "feature": "night_day_corr_60",
+        "group": "existing_g0",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": 0.07267442028725367,
+          "nonpositive_mean": 0.054342848961672,
+          "nonpositive_median": 0.059683456038694516,
+          "positive_mean": 0.07277729409634658,
+          "positive_median": 0.07958163476270266
+        },
+        "rows": 244704,
+        "stable_signal": false
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 0.2551477986255966,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": 0.003151728863957937,
+          "median": 0.0038341134567398405,
+          "normal_p_two_sided": 0.17864900237085293,
+          "slices": {
+            "discovery_a": 0.003511089411046007,
+            "discovery_b": 0.004751893604732344,
+            "discovery_c": 0.0010673818821624478
+          },
+          "standard_error": 0.002343421062898265,
+          "t_statistic": 1.3449264043312743
+        },
+        "feature": "oc_spectral_low_energy_ratio_32",
+        "group": "lagged_spectrum",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": 0.02516474932054758,
+          "nonpositive_mean": 0.2298508257122307,
+          "nonpositive_median": 0.2168573580262722,
+          "positive_mean": 0.23250031478808209,
+          "positive_median": 0.21966901141128964
+        },
+        "rows": 244704,
+        "stable_signal": false
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 0.3016648562916599,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": -0.002821023551857625,
+          "median": -0.005670346122946118,
+          "normal_p_two_sided": 0.233363379395435,
+          "slices": {
+            "discovery_a": -0.005795968980260431,
+            "discovery_b": -0.0014692096250936383,
+            "discovery_c": 0.0018261668487244169
+          },
+          "standard_error": 0.002367147685432965,
+          "t_statistic": -1.1917395645475508
+        },
+        "feature": "pm_spectral_dominant_frequency_32",
+        "group": "lagged_spectrum",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": -0.0298876561150762,
+          "nonpositive_mean": 0.48808797705666024,
+          "nonpositive_median": 0.4375,
+          "positive_mean": 0.47895036074626723,
+          "positive_median": 0.4375
+        },
+        "rows": 244704,
+        "stable_signal": false
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 0.2551477986255966,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": -0.00265251428644037,
+          "median": -0.0025683884109824473,
+          "normal_p_two_sided": 0.18293615750514472,
+          "slices": {
+            "discovery_a": -0.0033559808408779356,
+            "discovery_b": -0.0019510704601775912,
+            "discovery_c": -0.0018833493254484372
+          },
+          "standard_error": 0.001991722730277612,
+          "t_statistic": -1.3317688482024077
+        },
+        "feature": "am_spectral_entropy_32",
+        "group": "lagged_spectrum",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": 0.01676907875446856,
+          "nonpositive_mean": 0.853119167851219,
+          "nonpositive_median": 0.8645389964854461,
+          "positive_mean": 0.8546123668185114,
+          "positive_median": 0.8646921933697169
+        },
+        "rows": 244704,
+        "stable_signal": false
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 0.5730565445376127,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": 0.002061144873031735,
+          "median": 0.0041761467858321966,
+          "normal_p_two_sided": 0.47574505584254645,
+          "slices": {
+            "discovery_a": 0.0044213138764827966,
+            "discovery_b": -0.0008889017099164214,
+            "discovery_c": -4.145221167385764e-06
+          },
+          "standard_error": 0.0028901465811785546,
+          "t_statistic": 0.7131627462961528
+        },
+        "feature": "am_spectral_low_energy_ratio_32",
+        "group": "lagged_spectrum",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": 0.021992064407016433,
+          "nonpositive_mean": 0.26918767864151016,
+          "nonpositive_median": 0.2566409935393721,
+          "positive_mean": 0.2719170901311834,
+          "positive_median": 0.25941163079917307
+        },
+        "rows": 244704,
+        "stable_signal": false
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 0.764868242062953,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": -0.0016015757390400018,
+          "median": 0.002666952291061342,
+          "normal_p_two_sided": 0.7215738132669368,
+          "slices": {
+            "discovery_a": -0.005670171826107415,
+            "discovery_b": 0.0064530896301565315,
+            "discovery_c": -0.0006056216604416086
+          },
+          "standard_error": 0.004494311197156201,
+          "t_statistic": -0.3563562176231604
+        },
+        "feature": "xrank_prior_close_location_20",
+        "group": "existing_g0",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": 0.0033893203766644886,
+          "nonpositive_mean": 0.021028560721503817,
+          "nonpositive_median": 0.031750742346048355,
+          "positive_mean": 0.022977571033421004,
+          "positive_median": 0.02945551835000515
+        },
+        "rows": 244704,
+        "stable_signal": false
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 0.6338747095370666,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": 0.0015934151543711213,
+          "median": -0.0031190825551089263,
+          "normal_p_two_sided": 0.550155408277454,
+          "slices": {
+            "discovery_a": 0.0006628909178258592,
+            "discovery_b": 0.0013349910844117688,
+            "discovery_c": 0.003635351495310847
+          },
+          "standard_error": 0.0026666819140775447,
+          "t_statistic": 0.5975272663602675
+        },
+        "feature": "am_spectral_high_energy_ratio_32",
+        "group": "lagged_spectrum",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": -0.015325611507346978,
+          "nonpositive_mean": 0.4786894835131812,
+          "nonpositive_median": 0.48543755334006405,
+          "positive_mean": 0.4764005143046587,
+          "positive_median": 0.4837720285078176
+        },
+        "rows": 244704,
+        "stable_signal": false
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 0.8610372917879588,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": -0.0009773168500941233,
+          "median": 0.0028423198409289196,
+          "normal_p_two_sided": 0.8285453185129416,
+          "slices": {
+            "discovery_a": -0.0031036827166331885,
+            "discovery_b": 0.008784892857216856,
+            "discovery_c": -0.00525223740362725
+          },
+          "standard_error": 0.004512756006407587,
+          "t_statistic": -0.21656762490736203
+        },
+        "feature": "xrank_close_momentum_20",
+        "group": "existing_g0",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": 0.02021233872461888,
+          "nonpositive_mean": 0.01518153094691273,
+          "nonpositive_median": 0.024695031344890594,
+          "positive_mean": 0.02640642839269679,
+          "positive_median": 0.040071237832307816
+        },
+        "rows": 244704,
+        "stable_signal": false
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 0.688614038977183,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": -0.0009535841190645546,
+          "median": -0.001486604748097392,
+          "normal_p_two_sided": 0.6236504503944298,
+          "slices": {
+            "discovery_a": 0.0002872538290750453,
+            "discovery_b": -0.0031831303533068505,
+            "discovery_c": -0.0014533410881281531
+          },
+          "standard_error": 0.0019433799625160483,
+          "t_statistic": -0.490683313328996
+        },
+        "feature": "oc_spectral_dominant_frequency_32",
+        "group": "lagged_spectrum",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": -0.015529243727862444,
+          "nonpositive_mean": 0.5737661117948054,
+          "nonpositive_median": 0.5625,
+          "positive_mean": 0.5693083174945391,
+          "positive_median": 0.5625
+        },
+        "rows": 244704,
+        "stable_signal": false
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 0.688614038977183,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": 0.0008907554947110998,
+          "median": 0.00047892639227933853,
+          "normal_p_two_sided": 0.619699189769907,
+          "slices": {
+            "discovery_a": 0.002940515143276401,
+            "discovery_b": -0.006292925655152273,
+            "discovery_c": 0.0030884953564881967
+          },
+          "standard_error": 0.0017948766510887336,
+          "t_statistic": 0.49627671860948586
+        },
+        "feature": "pm_spectral_entropy_32",
+        "group": "lagged_spectrum",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": 0.04504964013893909,
+          "nonpositive_mean": 0.8592037030405522,
+          "nonpositive_median": 0.8736155909795028,
+          "positive_mean": 0.8639826368933199,
+          "positive_median": 0.8761622813247786
+        },
+        "rows": 244704,
+        "stable_signal": false
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 0.764868242062953,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": -0.0006977370158288355,
+          "median": 0.002028210346792819,
+          "normal_p_two_sided": 0.7124868825081083,
+          "slices": {
+            "discovery_a": 0.0034204147270983924,
+            "discovery_b": -0.0021137322534344897,
+            "discovery_c": -0.0075239468081635345
+          },
+          "standard_error": 0.0018933584013849998,
+          "t_statistic": -0.3685181924977531
+        },
+        "feature": "overnight_spectral_entropy_32",
+        "group": "lagged_spectrum",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": 0.019406376571701522,
+          "nonpositive_mean": 0.8695136973447967,
+          "nonpositive_median": 0.87702903363708,
+          "positive_mean": 0.8709556984150026,
+          "positive_median": 0.8777522145024286
+        },
+        "rows": 244704,
+        "stable_signal": false
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 0.9202399303008276,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": 0.000561626004082443,
+          "median": 0.0020609020334278194,
+          "normal_p_two_sided": 0.9028769127479818,
+          "slices": {
+            "discovery_a": -0.0017831538731152776,
+            "discovery_b": 0.0035867333666115392,
+            "discovery_c": 0.0025320121327846775
+          },
+          "standard_error": 0.004602438852944356,
+          "t_statistic": 0.12202791216295017
+        },
+        "feature": "pm_mean_5",
+        "group": "lagged_session_decomposition",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": -0.09441245279270027,
+          "nonpositive_mean": -0.07753618211932846,
+          "nonpositive_median": -0.05434177570416088,
+          "positive_mean": -0.12612755555665614,
+          "positive_median": -0.06482356831009284
+        },
+        "rows": 244704,
+        "stable_signal": false
+      },
+      {
+        "available_rows": 244704,
+        "bh_q": 0.964232999199855,
+        "daily_rank_gap": {
+          "dates": 84,
+          "mean": 7.036839957728318e-05,
+          "median": 0.00017375955873594195,
+          "normal_p_two_sided": 0.964232999199855,
+          "slices": {
+            "discovery_a": 0.0031631285185790463,
+            "discovery_b": -0.0016694171306621658,
+            "discovery_c": -0.004472029784173911
+          },
+          "standard_error": 0.0015692411259726714,
+          "t_statistic": 0.04484231161967945
+        },
+        "feature": "oc_permutation_entropy_20",
+        "group": "lagged_path_complexity",
+        "missing_rate": 0.0,
+        "nonpositive_rows": 138951,
+        "positive_rows": 105753,
+        "raw": {
+          "cohen_d": -0.003109191401343756,
+          "nonpositive_mean": 0.9381705016392715,
+          "nonpositive_median": 0.952168605743544,
+          "positive_mean": 0.9380140155989466,
+          "positive_median": 0.952168605743544
+        },
+        "rows": 244704,
+        "stable_signal": false
+      }
+    ],
+    "nonpositive_rows": 138951,
+    "positive_rows": 105753,
+    "rows": 244704,
+    "scheduled_sessions": 84,
+    "stable_signals": [
+      "oc_mean_60",
+      "oc_win_20",
+      "overnight_mean_20",
+      "component_sign_entropy_20",
+      "overnight_mean_60",
+      "overnight_last",
+      "lunch_mean_5",
+      "oc_mean_20",
+      "xrank_close_momentum_5",
+      "xrank_atr14_pct",
+      "prior_range_pct",
+      "range_abs_oc_ratio_20",
+      "lunch_spectral_low_energy_ratio_32",
+      "am_pm_return_corr_20",
+      "prior_pm_return_pct",
+      "am_mean_5",
+      "overnight_spectral_high_energy_ratio_32",
+      "am_std_20",
+      "prior_lunch_gap_pct",
+      "oc_sign_transition_rate_20",
+      "overnight_spectral_dominant_frequency_32"
+    ]
+  },
+  "feature_catalog": {
+    "groups": {
+      "existing_g0": [
+        "oc_last",
+        "oc_mean_5",
+        "oc_mean_20",
+        "oc_mean_60",
+        "oc_win_20",
+        "oc_std_20",
+        "overnight_last",
+        "overnight_mean_20",
+        "overnight_mean_60",
+        "night_day_corr_60",
+        "xrank_atr14_pct",
+        "xrank_close_momentum_5",
+        "xrank_close_momentum_20",
+        "xrank_close_momentum_60",
+        "xrank_prior_close_location_20"
+      ],
+      "lagged_path_complexity": [
+        "oc_sign_transition_rate_20",
+        "oc_turning_rate_20",
+        "oc_permutation_entropy_20",
+        "oc_abs_autocorr_20",
+        "am_pm_sign_agreement_20",
+        "am_pm_return_corr_20",
+        "component_sign_entropy_20",
+        "range_abs_oc_ratio_20"
+      ],
+      "lagged_session_decomposition": [
+        "prior_am_return_pct",
+        "prior_lunch_gap_pct",
+        "prior_pm_return_pct",
+        "prior_range_pct",
+        "prior_close_location",
+        "am_mean_5",
+        "lunch_mean_5",
+        "pm_mean_5",
+        "am_std_20",
+        "pm_std_20"
+      ],
+      "lagged_spectrum": [
+        "oc_spectral_low_energy_ratio_32",
+        "oc_spectral_high_energy_ratio_32",
+        "oc_spectral_entropy_32",
+        "oc_spectral_dominant_frequency_32",
+        "overnight_spectral_low_energy_ratio_32",
+        "overnight_spectral_high_energy_ratio_32",
+        "overnight_spectral_entropy_32",
+        "overnight_spectral_dominant_frequency_32",
+        "am_spectral_low_energy_ratio_32",
+        "am_spectral_high_energy_ratio_32",
+        "am_spectral_entropy_32",
+        "am_spectral_dominant_frequency_32",
+        "lunch_spectral_low_energy_ratio_32",
+        "lunch_spectral_high_energy_ratio_32",
+        "lunch_spectral_entropy_32",
+        "lunch_spectral_dominant_frequency_32",
+        "pm_spectral_low_energy_ratio_32",
+        "pm_spectral_high_energy_ratio_32",
+        "pm_spectral_entropy_32",
+        "pm_spectral_dominant_frequency_32"
+      ]
+    },
+    "total_features": 53
+  },
+  "input": {
+    "calendar_sha256": "966f4a416d0929487d850b16be87c9c1cd69cd9f8c0447a3e76214a5715c489e",
+    "codes": 4124,
+    "confirmation_rows_used": 0,
+    "date_bounds": [
+      "2024-01-04",
+      "2025-07-31"
+    ],
+    "frozen_panel_dimensions_verified": true,
+    "input_erratum_sha256": "991ef4dfd20171d9be371d1b8d69d4074fe6536339bb7ff264f9708758c67853",
+    "input_manifest_sha256": "02370bda9c5fe73b166c557bcdc837d363f5deafbe91baa2d450b33dfcd45272",
+    "modeling_codes": 4124,
+    "modeling_rows": 1524104,
+    "no_trade_rows": 57465,
+    "panel_cache_sha256": "abcc6de28217f721358278c17039a60e4542361a60e2b1ac929325ab1a97516f",
+    "panel_codes": 4124,
+    "panel_rows": 1524104,
+    "parser_version": "jpx_daily_text_v6_special_quote_marker",
+    "partial_session_rows": 34495,
+    "rejected_rows": 0,
+    "rows": 1523928,
+    "score_sessions": 266,
+    "sessions": 386,
+    "source": "joblib_panel_cache",
+    "source_files": [
+      {
+        "bytes": 6896205,
+        "filename": "202401.pdf",
+        "sha256": "abd8ebcc372e9106959760b2261b6c31b3f85c3bcec3fa55cfced0f09ca58adf"
+      },
+      {
+        "bytes": 6929868,
+        "filename": "202402.pdf",
+        "sha256": "4555d22ca6e4e3d2bff8cfefa50ea916fc91902b7f9a0003bcc9c6d8b9be420e"
+      },
+      {
+        "bytes": 7134622,
+        "filename": "202403.pdf",
+        "sha256": "c4a68e659b9b2d467a7407a24c313933a982397080f9e08239fc55041032512f"
+      },
+      {
+        "bytes": 7619767,
+        "filename": "202404.pdf",
+        "sha256": "980c244b7201fac1cbbac29aa27b0259ec41d10f9b862caa6e162d845d8a3b5f"
+      },
+      {
+        "bytes": 7596453,
+        "filename": "202405.pdf",
+        "sha256": "add66c6a71a15dc6c443e44a4757a876e5b9f6172c1d015503b687db974df2d4"
+      },
+      {
+        "bytes": 7084185,
+        "filename": "202406.pdf",
+        "sha256": "c40aed603a133e606872e425565875ad80ceb20a1b8828d7189953285a401f59"
+      },
+      {
+        "bytes": 7965007,
+        "filename": "202407.pdf",
+        "sha256": "3d13373b661d5c0199ac680ec7363cbca33b3ee1973d44120ff3267e9de6e200"
+      },
+      {
+        "bytes": 7864138,
+        "filename": "202408.pdf",
+        "sha256": "dab2fdeb803a25f3c09e0806e68e21341308a51bc21930e0c43a7e57abddd4ba"
+      },
+      {
+        "bytes": 6950605,
+        "filename": "202409.pdf",
+        "sha256": "bb6e34a3a75053653b0fd12bb5a658d98dd18f7d2c3d7fa71a87c5500ffe10f7"
+      },
+      {
+        "bytes": 8113389,
+        "filename": "202410.pdf",
+        "sha256": "f2c7dff6b1e8f170cb9e41a88d3e3794ac1d71cdecb2af04247bfc3f8de971f8"
+      },
+      {
+        "bytes": 7422794,
+        "filename": "202411.pdf",
+        "sha256": "1793ded0162036154098bcf0f40546e42815a8a8a7a71203be1b688408301f13"
+      },
+      {
+        "bytes": 7645894,
+        "filename": "202412.pdf",
+        "sha256": "84c9aa0df4a1814022bba922888e3ac9db2dbb5a3b3d4da0f5b1f31b6fcead97"
+      },
+      {
+        "bytes": 6964717,
+        "filename": "202501.pdf",
+        "sha256": "e918777ff55f33a32e1be011fce1f69f49dbc54a92f65238b6cd9eeeb352edaa"
+      },
+      {
+        "bytes": 5193610,
+        "filename": "202502.pdf",
+        "sha256": "bccf7b4b28314525e3a10fde839896d4fc2405789871c3ec4a409469b7f23426"
+      },
+      {
+        "bytes": 5729683,
+        "filename": "202503.pdf",
+        "sha256": "d331046445ec046d80d9d2782efc3f8471443a24ef7821ce240caf47c3983472"
+      },
+      {
+        "bytes": 6070256,
+        "filename": "202504.pdf",
+        "sha256": "661903f05a9b2204dae6f7d6c6c00e961be55e9069253c7d81b1e19dc874408f"
+      },
+      {
+        "bytes": 7521798,
+        "filename": "202505.pdf",
+        "sha256": "64b1c8cb90379a6309ee888a56b0fe21fc05249c91b59b9966cbcbedfcd8e041"
+      },
+      {
+        "bytes": 7833880,
+        "filename": "202506.pdf",
+        "sha256": "d975a35e81740da63a7bf9cd2d550c929552454b2d80c31c188896d4c46a5139"
+      },
+      {
+        "bytes": 8059882,
+        "filename": "202507.pdf",
+        "sha256": "89f3368586c4066c6cd69823d946900424d827dc5d0773efa2baeb2979862d40"
+      }
+    ],
+    "source_incomplete_sessions": 0,
+    "stage_a_max_date": "2024-10-31",
+    "stage_a_rows": 803697,
+    "strictly_prior_context_source_violations": 0
+  },
+  "protocol_id": "model_v14_feature_contrast_discovery_20260727",
+  "protocol_sha256": "8b2fcca037d36776a7803e066396e9cc711a47f1f67a57df5e117b653fd45f28",
+  "runner_sha256": "daba80476e5501f1abf01c55702cd422035dd7acdad462f57d52517417226c93",
+  "runtime": {
+    "numpy": "2.5.1",
+    "pandas": "3.0.3",
+    "python": "3.12.13",
+    "scikit_learn": "1.9.0",
+    "seconds": 18.061726405998343
+  },
+  "schema_version": 1
+}

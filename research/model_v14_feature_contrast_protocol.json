@@ -1,0 +1,216 @@
+{
+  "schema_version": 1,
+  "protocol_id": "model_v14_feature_contrast_discovery_20260727",
+  "registered_at": "2026-07-27T12:02:47+09:00",
+  "research_question": "Which strictly pre-open, D-1-or-earlier features differ between sessions where close exceeds open and sessions where close does not exceed open, and which mechanically distinct model hypotheses should be frozen before reading the later confirmation outcomes?",
+  "authority": {
+    "analysis_type": "retrospective_discovery_only",
+    "all_project_outcomes_previously_available": true,
+    "discovery_result_may_generate_hypotheses": true,
+    "confirmation_scoring_allowed_by_this_protocol": false,
+    "production_promotion_allowed": false,
+    "orders_allowed": false,
+    "reason": "This stage deliberately inspects only the fixed discovery window. A separate remote confirmation protocol must freeze hypotheses, models, gates, and code before any 2024-11-01-or-later candidate outcome is scored."
+  },
+  "frozen_input": {
+    "source": "19 official JPX monthly stock-price-table PDFs already hash-locked by model_v05_input_lock.json",
+    "months": [
+      "202401",
+      "202402",
+      "202403",
+      "202404",
+      "202405",
+      "202406",
+      "202407",
+      "202408",
+      "202409",
+      "202410",
+      "202411",
+      "202412",
+      "202501",
+      "202502",
+      "202503",
+      "202504",
+      "202505",
+      "202506",
+      "202507"
+    ],
+    "input_manifest": {
+      "path": "research/model_v05_input_lock.json",
+      "sha256": "02370bda9c5fe73b166c557bcdc837d363f5deafbe91baa2d450b33dfcd45272"
+    },
+    "input_erratum": {
+      "path": "research/model_v13_symbolic_context_input_erratum_v2.json",
+      "sha256": "991ef4dfd20171d9be371d1b8d69d4074fe6536339bb7ff264f9708758c67853"
+    },
+    "panel_builder": {
+      "path": "research/model_v13_symbolic_context_runner.py",
+      "sha256": "2607dc11b5dc4ea83294361170e01a18632840c8e5922dfc52dd3b97d30c4b41"
+    },
+    "canonical_rows": 1523928,
+    "modeling_rows": 1524104,
+    "codes": 4124,
+    "sessions": 386,
+    "parser_version": "jpx-stock-prices-v6"
+  },
+  "point_in_time_contract": {
+    "decision_time": "08:58:59 Asia/Tokyo",
+    "label": "1 when same-session close > open, otherwise 0 when the outcome is observed",
+    "feature_latest_source": "the immediately preceding completed official session",
+    "same_day_open_high_low_close_in_features": false,
+    "same_day_am_pm_prices_in_features": false,
+    "future_prices_in_features": false,
+    "target_or_future_ohlc_mutation_must_not_change_features": true,
+    "nonconsecutive_history": "window feature is missing rather than bridging a missing official session"
+  },
+  "discovery": {
+    "start": "2024-07-01",
+    "end": "2024-10-31",
+    "scheduled_sessions": 84,
+    "eligible_rows": "price_eligible and outcome observed",
+    "forbidden_confirmation_start": "2024-11-01",
+    "slices": {
+      "discovery_a": [
+        "2024-07-01",
+        "2024-08-30"
+      ],
+      "discovery_b": [
+        "2024-09-02",
+        "2024-09-30"
+      ],
+      "discovery_c": [
+        "2024-10-01",
+        "2024-10-31"
+      ]
+    }
+  },
+  "feature_catalog": {
+    "existing_g0": [
+      "oc_last",
+      "oc_mean_5",
+      "oc_mean_20",
+      "oc_mean_60",
+      "oc_win_20",
+      "oc_std_20",
+      "overnight_last",
+      "overnight_mean_20",
+      "overnight_mean_60",
+      "night_day_corr_60",
+      "xrank_atr14_pct",
+      "xrank_close_momentum_5",
+      "xrank_close_momentum_20",
+      "xrank_close_momentum_60",
+      "xrank_prior_close_location_20"
+    ],
+    "lagged_session_decomposition": [
+      "prior_am_return_pct",
+      "prior_lunch_gap_pct",
+      "prior_pm_return_pct",
+      "prior_range_pct",
+      "prior_close_location",
+      "am_mean_5",
+      "lunch_mean_5",
+      "pm_mean_5",
+      "am_std_20",
+      "pm_std_20"
+    ],
+    "lagged_spectrum": {
+      "channels": [
+        "oc",
+        "overnight",
+        "am",
+        "lunch",
+        "pm"
+      ],
+      "window_sessions": 32,
+      "missing_completed_value_inside_window": 0.0,
+      "normalization": "subtract the 32-value median and divide by 1.4826 times median absolute deviation; use an all-zero normalized path when scale is zero",
+      "transform": "real FFT after normalization, discard the DC bin, and use squared magnitude as energy",
+      "bin_contract": {
+        "available_non_dc_bins": "1 through 16",
+        "low_energy_ratio": "energy in bins 1 through 4 divided by total non-DC energy",
+        "high_energy_ratio": "energy in bins 9 through 16 divided by total non-DC energy",
+        "spectral_entropy": "entropy of the 16 normalised energies divided by log(16)",
+        "dominant_frequency": "largest-energy bin index divided by 16; zero when total energy is zero"
+      },
+      "features_per_channel": [
+        "spectral_low_energy_ratio_32",
+        "spectral_high_energy_ratio_32",
+        "spectral_entropy_32",
+        "spectral_dominant_frequency_32"
+      ]
+    },
+    "lagged_path_complexity": {
+      "window_sessions": 20,
+      "features": [
+        "oc_sign_transition_rate_20",
+        "oc_turning_rate_20",
+        "oc_permutation_entropy_20",
+        "oc_abs_autocorr_20",
+        "am_pm_sign_agreement_20",
+        "am_pm_return_corr_20",
+        "component_sign_entropy_20",
+        "range_abs_oc_ratio_20"
+      ],
+      "definitions": {
+        "oc_sign_transition_rate_20": "mean of sign(oc[t]) != sign(oc[t-1]) over 19 adjacent pairs",
+        "oc_turning_rate_20": "fraction of 18 interior points whose adjacent first differences have a negative product",
+        "oc_permutation_entropy_20": "normalised entropy over the six stable-sort ordinal patterns of every consecutive length-3 OC tuple",
+        "oc_abs_autocorr_20": "Pearson correlation of adjacent absolute OC returns; zero when either side has zero variance",
+        "am_pm_sign_agreement_20": "mean of sign(AM return) == sign(PM return)",
+        "am_pm_return_corr_20": "Pearson correlation of AM and PM returns; zero when either channel has zero variance",
+        "component_sign_entropy_20": "entropy divided by log(27) over the 27 exact sign patterns of AM, lunch, and PM returns",
+        "range_abs_oc_ratio_20": "sum(range percent) divided by sum(abs(OC return)); zero when the denominator is zero"
+      }
+    },
+    "total_features": 53
+  },
+  "comparison": {
+    "primary_scale": "within-date percentile rank among valid eligible rows",
+    "primary_effect": "equal-date mean of mean(feature rank | close > open) minus mean(feature rank | close <= open)",
+    "raw_descriptives": [
+      "class rows",
+      "feature missing rate",
+      "class mean",
+      "class median",
+      "pooled Cohen d"
+    ],
+    "uncertainty": "two-sided normal approximation from the standard error of daily rank gaps",
+    "multiple_testing": "Benjamini-Hochberg across all 53 registered features",
+    "stable_signal_rule": {
+      "bh_q_at_most": 0.05,
+      "absolute_rank_gap_at_least": 0.005,
+      "maximum_missing_rate": 0.1,
+      "slice_sign": "all three fixed discovery slices must have the same non-zero sign as the aggregate"
+    },
+    "ordering": "absolute primary rank gap descending, then feature name ascending"
+  },
+  "allowed_hypothesis_families_after_discovery": [
+    {
+      "id": "DMD",
+      "mechanism": "low-rank Dynamic Mode Decomposition of completed cross-stock price states"
+    },
+    {
+      "id": "SPECTRAL_MLP",
+      "mechanism": "frequency-domain path representation with a small deterministic neural readout"
+    },
+    {
+      "id": "COMPLEXITY_GNB",
+      "mechanism": "path-complexity representation with a class-conditional Gaussian generative model"
+    }
+  ],
+  "required_next_registration": {
+    "must_be_remote_before_confirmation_outcomes": true,
+    "must_include": [
+      "feature selection rule applied to this discovery result",
+      "directional hypotheses",
+      "exact candidate implementations and parameters",
+      "confirmation dates and control",
+      "family size and multiplicity correction",
+      "cost, temporal, tail, code concentration, and execution gates",
+      "runner and synthetic leakage tests"
+    ],
+    "confirmation_result_tuning_after_registration": false
+  },
+  "stop_rule": "Run the 53-feature discovery contrast once. Do not add, remove, redefine, or reorder features after viewing the result. Do not read or score any 2024-11-01-or-later candidate outcome until a separate confirmation protocol and implementation are committed remotely."
+}

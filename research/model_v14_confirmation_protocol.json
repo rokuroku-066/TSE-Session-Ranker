@@ -1,0 +1,392 @@
+{
+  "schema_version": 1,
+  "protocol_id": "model_v14_feature_contrast_confirmation_20260727",
+  "registered_at": "2026-07-27T14:30:00+09:00",
+  "research_question": "Do four mechanically distinct models, frozen from the discovery-only comparison of close-above-open versus nonpositive sessions, produce robust net open-to-close returns in the untouched 2024-11-01 through 2025-07-31 confirmation window?",
+  "authority": {
+    "analysis_type": "retrospective_confirmation",
+    "prior_project_outcomes_already_viewed": true,
+    "stage_a_confirmation_outcomes_scored": false,
+    "candidate_confirmation_outcomes_viewed_before_registration": false,
+    "confirmation_scoring_allowed_after_remote_registration": true,
+    "production_promotion_allowed": false,
+    "orders_allowed": false,
+    "reason": "The confirmation window is historically available and earlier project generations have inspected related outcomes. This locked run can reject a candidate family or nominate one unique variant for a future forward shadow only; it cannot establish production performance."
+  },
+  "stage_a_binding": {
+    "protocol": {
+      "path": "research/model_v14_feature_contrast_protocol.json",
+      "sha256": "8b2fcca037d36776a7803e066396e9cc711a47f1f67a57df5e117b653fd45f28"
+    },
+    "result": {
+      "path": "research/model_v14_feature_contrast_result.json",
+      "sha256": "6cd878eca0392f87a781a3a4b6c3d38dd9948ba071ebc9f8f92f58557705eb31",
+      "discovery_dates": [
+        "2024-07-01",
+        "2024-10-31"
+      ],
+      "confirmation_outcomes_scored": false
+    },
+    "stable_signal_rule": {
+      "bh_q_at_most": 0.05,
+      "absolute_rank_gap_at_least": 0.005,
+      "maximum_missing_rate": 0.1,
+      "slice_sign": "all three discovery slices have the same non-zero sign as the aggregate"
+    },
+    "all_stable_features_in_discovery_order": [
+      {
+        "feature": "oc_mean_60",
+        "direction": 1,
+        "daily_rank_gap": 0.022588114296404987
+      },
+      {
+        "feature": "oc_win_20",
+        "direction": 1,
+        "daily_rank_gap": 0.022530445230991465
+      },
+      {
+        "feature": "overnight_mean_20",
+        "direction": -1,
+        "daily_rank_gap": -0.018511186588291272
+      },
+      {
+        "feature": "component_sign_entropy_20",
+        "direction": -1,
+        "daily_rank_gap": -0.017627217541639394
+      },
+      {
+        "feature": "overnight_mean_60",
+        "direction": -1,
+        "daily_rank_gap": -0.01707362510754746
+      },
+      {
+        "feature": "overnight_last",
+        "direction": -1,
+        "daily_rank_gap": -0.0168518521534667
+      },
+      {
+        "feature": "lunch_mean_5",
+        "direction": -1,
+        "daily_rank_gap": -0.016426658801204135
+      },
+      {
+        "feature": "oc_mean_20",
+        "direction": 1,
+        "daily_rank_gap": 0.015184307904842547
+      },
+      {
+        "feature": "xrank_close_momentum_5",
+        "direction": -1,
+        "daily_rank_gap": -0.014129723861323025
+      },
+      {
+        "feature": "xrank_atr14_pct",
+        "direction": 1,
+        "daily_rank_gap": 0.014009284472145495
+      },
+      {
+        "feature": "prior_range_pct",
+        "direction": 1,
+        "daily_rank_gap": 0.01237378214955951
+      },
+      {
+        "feature": "range_abs_oc_ratio_20",
+        "direction": 1,
+        "daily_rank_gap": 0.0114652098468554
+      },
+      {
+        "feature": "lunch_spectral_low_energy_ratio_32",
+        "direction": 1,
+        "daily_rank_gap": 0.010608940292912952
+      },
+      {
+        "feature": "am_pm_return_corr_20",
+        "direction": -1,
+        "daily_rank_gap": -0.010416167874709257
+      },
+      {
+        "feature": "prior_pm_return_pct",
+        "direction": -1,
+        "daily_rank_gap": -0.010163406388009187
+      },
+      {
+        "feature": "am_mean_5",
+        "direction": 1,
+        "daily_rank_gap": 0.009647854409735526
+      },
+      {
+        "feature": "overnight_spectral_high_energy_ratio_32",
+        "direction": 1,
+        "daily_rank_gap": 0.009084670656693175
+      },
+      {
+        "feature": "am_std_20",
+        "direction": 1,
+        "daily_rank_gap": 0.00899162970397212
+      },
+      {
+        "feature": "prior_lunch_gap_pct",
+        "direction": -1,
+        "daily_rank_gap": -0.008755153555087922
+      },
+      {
+        "feature": "oc_sign_transition_rate_20",
+        "direction": -1,
+        "daily_rank_gap": -0.008636333043233801
+      },
+      {
+        "feature": "overnight_spectral_dominant_frequency_32",
+        "direction": 1,
+        "daily_rank_gap": 0.007322410680198782
+      }
+    ],
+    "candidate_feature_selections": {
+      "SP01": [
+        {
+          "feature": "lunch_spectral_low_energy_ratio_32",
+          "direction": 1
+        },
+        {
+          "feature": "overnight_spectral_high_energy_ratio_32",
+          "direction": 1
+        },
+        {
+          "feature": "overnight_spectral_dominant_frequency_32",
+          "direction": 1
+        }
+      ],
+      "GN01": [
+        {
+          "feature": "component_sign_entropy_20",
+          "direction": -1
+        },
+        {
+          "feature": "range_abs_oc_ratio_20",
+          "direction": 1
+        },
+        {
+          "feature": "am_pm_return_corr_20",
+          "direction": -1
+        },
+        {
+          "feature": "oc_sign_transition_rate_20",
+          "direction": -1
+        }
+      ]
+    }
+  },
+  "frozen_input": {
+    "source": "19 official JPX monthly stock-price-table PDFs",
+    "input_manifest": {
+      "path": "research/model_v05_input_lock.json",
+      "sha256": "02370bda9c5fe73b166c557bcdc837d363f5deafbe91baa2d450b33dfcd45272"
+    },
+    "v13_input_erratum": {
+      "path": "research/model_v13_symbolic_context_input_erratum_v2.json",
+      "sha256": "991ef4dfd20171d9be371d1b8d69d4074fe6536339bb7ff264f9708758c67853"
+    },
+    "v14_input_erratum": {
+      "path": "research/model_v14_feature_contrast_input_erratum.json",
+      "sha256": "656be1249bc8d4f9fa8ce2f22bb6ab3c14450a16cf15c7c86f3e6492cf77c90f",
+      "required_before_execution": true
+    },
+    "panel_cache_sha256": "abcc6de28217f721358278c17039a60e4542361a60e2b1ac929325ab1a97516f",
+    "canonical_rows": 1523928,
+    "modeling_rows": 1524104,
+    "codes": 4124,
+    "sessions": 386,
+    "date_bounds": [
+      "2024-01-04",
+      "2025-07-31"
+    ]
+  },
+  "point_in_time_contract": {
+    "decision_time": "08:58:59 Asia/Tokyo",
+    "label": "1 only when same-session close is strictly greater than open; close equal to open is class 0",
+    "feature_latest_source": "the immediately preceding completed official session",
+    "same_day_or_future_ohlc_in_scores": false,
+    "monthly_fit_rule": "For a score month, training labels end on the last scheduled session of the preceding calendar month. No outcome from the score month can enter that month's fit.",
+    "dmd_fit_rule": "At the first scheduled session of each score month, fit one operator from the fixed number of completed official states immediately before that month. Freeze that operator and code mapping for the entire month. Each target date applies it to the immediately preceding completed actual state, so same-month completed states can update the input state but never refit the operator.",
+    "missing_history": "Do not bridge a missing official state. A missing or non-traded completed-state coordinate is the registered neutral rank 0. A current-date code must still satisfy price eligibility. A month with inadequate numerical rank remains cash.",
+    "tie_break": "Higher score, then security code ascending."
+  },
+  "hypotheses": [
+    {
+      "id": "H_DMD01",
+      "claim": "A low-rank linear evolution of the completed cross-stock open-to-close rank field contains next-session directional structure that is not represented by row-wise rolling aggregates."
+    },
+    {
+      "id": "H_DMD02",
+      "claim": "Joint low-rank evolution of completed morning, lunch-gap, and afternoon rank fields captures intraday component rotation that predicts the next open-to-close ordering."
+    },
+    {
+      "id": "H_SP01",
+      "claim": "The discovery-stable lunch low-frequency energy and overnight high-frequency/dominant-frequency signals interact nonlinearly, so a small deterministic neural readout can improve selection."
+    },
+    {
+      "id": "H_GN01",
+      "claim": "The discovery-stable path-complexity ranks have distinct class-conditional distributions, so a Gaussian generative classifier can rank the close-above-open probability."
+    }
+  ],
+  "rank_transform": {
+    "scope": "within each official date among finite eligible rows",
+    "method": "average",
+    "mapping": "2 * (average_rank - 1) / (valid_count - 1) - 1; use 0 when valid_count is one",
+    "range": [
+      -1.0,
+      1.0
+    ]
+  },
+  "registered_candidates": [
+    {
+      "id": "DMD01",
+      "family": "exact_truncated_dynamic_mode_decomposition",
+      "state": "cross-stock within-date rank of completed open-to-close return",
+      "state_lookback_sessions": 60,
+      "fixed_rank": 8,
+      "fit_schedule": "month-fixed",
+      "matrix": "At month start m, X=[state(m-60),...,state(m-2)] and Y=[state(m-59),...,state(m-1)] over the immediately preceding 60 official states.",
+      "operator": "Y V_r diag(1/s_r) U_r^T from the exact thin SVD of X, frozen for every score date in month m",
+      "score": "frozen monthly operator applied to the immediately preceding completed actual state",
+      "code_mapping": "security codes with at least one observed completed OC state in the pre-month fit window, sorted ascending and frozen for the month",
+      "missing_completed_state_coordinate": 0.0,
+      "numerical_failure": "If fewer than 60 consecutive pre-month states, fewer than 8 singular values, or numerical rank below 8, leave both slots as cash for the entire month.",
+      "randomness": "none"
+    },
+    {
+      "id": "DMD02",
+      "family": "exact_truncated_dynamic_mode_decomposition",
+      "state": "vertical stack, in AM/lunch/PM order, of cross-stock within-date ranks for completed AM return, lunch gap, and PM return",
+      "state_lookback_sessions": 32,
+      "fixed_rank": 12,
+      "fit_schedule": "month-fixed",
+      "matrix": "At month start m, X=[state(m-32),...,state(m-2)] and Y=[state(m-31),...,state(m-1)] over the immediately preceding 32 official states.",
+      "operator": "Y V_r diag(1/s_r) U_r^T from the exact thin SVD of X, frozen for every score date in month m",
+      "score": "arithmetic mean of the AM, lunch, and PM components predicted by the frozen monthly operator from the immediately preceding completed actual stacked state",
+      "code_mapping": "security codes with at least one observed completed state in each of AM, lunch, and PM during the pre-month fit window, sorted ascending and frozen for the month",
+      "missing_completed_state_coordinate": 0.0,
+      "numerical_failure": "If fewer than 32 consecutive pre-month states, fewer than 12 singular values, or numerical rank below 12, leave both slots as cash for the entire month.",
+      "randomness": "none"
+    },
+    {
+      "id": "SP01",
+      "family": "spectral_feature_mlp_classifier",
+      "features": [
+        "lunch_spectral_low_energy_ratio_32",
+        "overnight_spectral_high_energy_ratio_32",
+        "overnight_spectral_dominant_frequency_32"
+      ],
+      "input": "within-date ranks mapped to [-1,1]",
+      "target": "close > open",
+      "hidden_layer_sizes": [
+        6
+      ],
+      "activation": "tanh",
+      "solver": "lbfgs",
+      "alpha": 0.05,
+      "max_iter": 500,
+      "tol": 1e-07,
+      "random_state": 20260727,
+      "sample_weight": "each training date has total weight one",
+      "fit_schedule": "calendar-month expanding"
+    },
+    {
+      "id": "GN01",
+      "family": "gaussian_naive_bayes",
+      "features_and_directions": {
+        "component_sign_entropy_20": -1,
+        "range_abs_oc_ratio_20": 1,
+        "am_pm_return_corr_20": -1,
+        "oc_sign_transition_rate_20": -1
+      },
+      "input": "within-date ranks mapped to [-1,1], multiplied by the frozen discovery direction",
+      "target": "close > open",
+      "priors": [
+        0.5,
+        0.5
+      ],
+      "var_smoothing": 1e-06,
+      "sample_weight": "each training date has total weight one",
+      "fit_schedule": "calendar-month expanding"
+    }
+  ],
+  "control": {
+    "id": "C00_DAILY_RANK_RIDGE",
+    "features": "Frozen v1.3 G0 15-feature set",
+    "target": "same-session open-to-close percentile mapped to [-1,1]",
+    "model": "Ridge(alpha=1)",
+    "fit_schedule": "calendar-month expanding",
+    "purpose": "Same source, universe, confirmation schedule, costs, and capacity comparator; not part of the candidate family."
+  },
+  "confirmation": {
+    "training_start": "2024-01-04",
+    "score_start": "2024-11-01",
+    "score_end": "2025-07-31",
+    "scheduled_sessions": 182,
+    "slices": {
+      "confirmation_a": [
+        "2024-11-01",
+        "2025-01-31"
+      ],
+      "confirmation_b": [
+        "2025-02-03",
+        "2025-04-30"
+      ],
+      "confirmation_c": [
+        "2025-05-01",
+        "2025-07-31"
+      ]
+    },
+    "months": 9,
+    "capacities": [
+      1,
+      2
+    ],
+    "candidate_count": 4,
+    "family_size": 8,
+    "cost_bps": [
+      20.0,
+      40.0,
+      60.0
+    ],
+    "primary_cost_bps": 40.0,
+    "cash_rule": "Every scheduled session has exactly capacity slots. Missing selections and unexecuted slots remain cash and incur no cost.",
+    "bootstrap": {
+      "unit": "scheduled daily portfolio return",
+      "method": "paired moving block",
+      "block_length": 5,
+      "samples": 10000,
+      "random_state": 20260727,
+      "familywise_one_sided_confidence": 0.9,
+      "multiplicity_adjustment": "Bonferroni across all 8 candidate/capacity variants"
+    }
+  },
+  "qualification_gate": {
+    "all_required": true,
+    "checks": [
+      "overall mean net return at 40 bp is strictly positive",
+      "overall mean net return at 60 bp is strictly positive",
+      "mean net return at 40 bp is strictly positive in each of the three fixed confirmation slices",
+      "mean net return at 40 bp remains strictly positive after removing the 10 best scheduled days",
+      "mean net return at 40 bp remains strictly positive after replacing every selection from the 10 most profitable security codes with cash",
+      "at least 6 of 9 calendar months have a strictly positive mean net return at 40 bp",
+      "the Bonferroni-adjusted one-sided 90% paired moving-block lower bound against the same-capacity C00 control is non-negative",
+      "at least 100 unique security codes are selected",
+      "no single security code exceeds 5% of selected non-cash slots",
+      "the 10 most selected security codes together do not exceed 25% of selected non-cash slots",
+      "at least 150 scheduled sessions contain an executed slot",
+      "at least 80% of scheduled capacity slots are executed"
+    ],
+    "result_authority": "A unique passer may only be frozen for a new forward shadow. No passer or multiple passers produce no nomination. Production and order permissions remain unchanged."
+  },
+  "anti_leakage_tests": [
+    "close equal to open is class 0",
+    "mutating target-session or future OHLC cannot change a target-session DMD state or score",
+    "DMD state columns map back to security codes exactly; operators are fit once from pre-month consecutive states and each score uses only the immediately preceding completed state",
+    "every monthly classifier/control training date is strictly before the first date of its score month",
+    "same-month outcome mutation cannot change any score from that month",
+    "equal scores are ordered by security code ascending",
+    "metric and gate calculations preserve all 182 scheduled sessions and fixed cash slots"
+  ],
+  "stop_rule": "Run all 8 registered candidate/capacity variants once after this protocol, its runner, its tests, and the v1.4 input erratum are committed remotely. Do not alter features, directions, DMD ranks or lookbacks, classifier parameters, capacities, costs, gates, dates, or multiplicity after reading a confirmation result."
+}
