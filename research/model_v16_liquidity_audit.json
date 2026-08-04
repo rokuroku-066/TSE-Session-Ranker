@@ -1,0 +1,163 @@
+{
+  "artifact_hashes": {
+    "audit_runner": "45e2bf0a696197a1d7a0206def38d2517292ec35740c0a1df5e4c50d1fd26063",
+    "parser_audit": "317d5cde9741429263cc91c11575300660f94f62123725fc8ce2d76cdee02eeb",
+    "parser_source": "1bd2e74acced608eb36c3606b593ea407d2d1e5f54b3283790ef8fd0fb1041f7",
+    "picks": "65fb583501e30658273cb3d98725e2e4d142fa5681d3ed82023da597ddaf4b71",
+    "price_manifest": "02370bda9c5fe73b166c557bcdc837d363f5deafbe91baa2d450b33dfcd45272",
+    "protocol": "f7b1329959b237323d6aa08d87494c9523bb5bdd4e29ee8c30cd04ece9e4387e",
+    "result": "7f8aff8b1e86240c00de3b124e9564ff5b3a0277f91a2cb9b27ef859207f4008",
+    "runner": "de5b0a6382f53ce4d513a187b4d2243149e60b8b9a7a69043e9b74d12171a537"
+  },
+  "audit_id": "model_v16_liquidity_independent_audit_20260728",
+  "authority": {
+    "locked_replay_input_opened": false,
+    "orders_allowed": false,
+    "production_model_changed": false,
+    "production_promotion_allowed": false,
+    "project_level_untouched": false
+  },
+  "checks": {
+    "all_folds_use_strictly_prior_training": true,
+    "authority_remains_research_only": true,
+    "candidate_family_size_exact": true,
+    "control_metrics_recomputed": true,
+    "daily_source_contract_matches_result": true,
+    "decision_recomputed": true,
+    "gate_passer_count_recomputed": true,
+    "locked_replay_not_opened": true,
+    "outcome_label_matches_return_sign": true,
+    "parser_audit_hash_matches_protocol": true,
+    "parser_source_hash_matches_protocol": true,
+    "picks_fixed_slots_complete": true,
+    "picks_hash_matches_result": true,
+    "picks_model_registry_exact": true,
+    "protocol_hash_matches_result": true,
+    "protocol_id_matches": true,
+    "runner_hash_matches_result": true,
+    "score_ledger_declares_no_outcomes": true,
+    "score_ledger_semantic_hash_matches": true,
+    "selection_calendar_complete": true,
+    "status_recomputed": true,
+    "variant_metrics_and_gates_recomputed": true,
+    "vetoed_slots_are_cash_without_replacement": true,
+    "warmup_source_hashes_match_price_manifest": true,
+    "winner_rule_recomputed": true
+  },
+  "discrepancies": [],
+  "generated_at_utc": "2026-07-28T09:17:11.824294+00:00",
+  "independence": {
+    "project_bootstrap_helpers_imported": false,
+    "project_profit_helpers_imported": false,
+    "recomputed_from": [
+      "research/model_v16_liquidity_protocol.json",
+      "research/model_v16_liquidity_result.json",
+      "research/model_v16_liquidity_picks.csv"
+    ],
+    "selection_runner_imported": false
+  },
+  "integrity": {
+    "models": [
+      "C00_PRICE_RIDGE",
+      "LQ01_ACTIVITY_VETO",
+      "LQ02_EXACT_LIQUIDITY_RIDGE",
+      "LQ03_VWAP_FLOW_REVERSAL"
+    ],
+    "observed_outcome_slots": 332,
+    "picks_rows": 640,
+    "scheduled_sessions": 80,
+    "score_ledger_semantic_sha256": "32c0e9a363000f7b37fd445541177d2add8d039d6beb26234b478977663cba20",
+    "vetoed_slots": 286
+  },
+  "recomputed": {
+    "decision": {
+      "candidate_family_rejected": true,
+      "forward_shadow_nominee": null,
+      "orders_allowed": false,
+      "production_model_changed": false
+    },
+    "gate_passers": 0,
+    "maximum_absolute_numeric_difference": 0.0,
+    "numeric_tolerance": 1e-12,
+    "status": "selection_rejected_all_candidates",
+    "variant_summaries": [
+      {
+        "failed_gate_count": 13,
+        "gate_passed": false,
+        "net20_mean_pct": -0.06628588049353955,
+        "net40_mean_pct": -0.08628588049353954,
+        "net60_mean_pct": -0.10628588049353956,
+        "paired_lower_vs_control_net40": -0.07985818376591869,
+        "variant_id": "LQ01_ACTIVITY_VETO__top1"
+      },
+      {
+        "failed_gate_count": 13,
+        "gate_passed": false,
+        "net20_mean_pct": -0.00752245934175263,
+        "net40_mean_pct": -0.031272459341752615,
+        "net60_mean_pct": -0.05502245934175263,
+        "paired_lower_vs_control_net40": -0.2975931020258882,
+        "variant_id": "LQ01_ACTIVITY_VETO__top2"
+      },
+      {
+        "failed_gate_count": 10,
+        "gate_passed": false,
+        "net20_mean_pct": -0.17092931828368077,
+        "net40_mean_pct": -0.36342931828368086,
+        "net60_mean_pct": -0.5559293182836808,
+        "paired_lower_vs_control_net40": -0.2127090446830631,
+        "variant_id": "LQ02_EXACT_LIQUIDITY_RIDGE__top1"
+      },
+      {
+        "failed_gate_count": 10,
+        "gate_passed": false,
+        "net20_mean_pct": -0.19294379902282027,
+        "net40_mean_pct": -0.38419379902282025,
+        "net60_mean_pct": -0.5754437990228203,
+        "paired_lower_vs_control_net40": -0.49676978025113866,
+        "variant_id": "LQ02_EXACT_LIQUIDITY_RIDGE__top2"
+      },
+      {
+        "failed_gate_count": 13,
+        "gate_passed": false,
+        "net20_mean_pct": -0.035695169712793705,
+        "net40_mean_pct": -0.0406951697127937,
+        "net60_mean_pct": -0.04569516971279371,
+        "paired_lower_vs_control_net40": -0.008732108390388243,
+        "variant_id": "LQ03_VWAP_FLOW_REVERSAL__top1"
+      },
+      {
+        "failed_gate_count": 13,
+        "gate_passed": false,
+        "net20_mean_pct": 0.004771493635502899,
+        "net40_mean_pct": -0.003978506364497097,
+        "net60_mean_pct": -0.01272850636449709,
+        "paired_lower_vs_control_net40": -0.2711135857579294,
+        "variant_id": "LQ03_VWAP_FLOW_REVERSAL__top2"
+      }
+    ],
+    "winner": null
+  },
+  "schema_version": 1,
+  "scope": {
+    "all_selection_gate_checks": true,
+    "authority_and_no_locked_replay": true,
+    "candidate_metrics": true,
+    "concentration_and_execution": true,
+    "control_metrics": true,
+    "costs_bps": [
+      20.0,
+      40.0,
+      60.0
+    ],
+    "daily_fixed_slot_returns": true,
+    "feature_reconstruction": false,
+    "paired_moving_block_bootstrap": true,
+    "profit_code_cash_stress": true,
+    "raw_pdf_reparse": false,
+    "same_day_mutation_tests_reexecuted": false,
+    "tail_day_stress": true,
+    "winner_and_decision": true
+  },
+  "status": "pass"
+}

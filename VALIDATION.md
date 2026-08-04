@@ -3661,3 +3661,517 @@ Full live-probe manifest SHA-256:
 ```
 
 </details>
+
+---
+
+## Entry 021 — 研究プロトコルv1.6：JPX実流動性3機構のretrospective反証
+
+| 項目 | 内容 |
+|---|---|
+| 実施日 | 2026-07-28 |
+| 親Entry | Entry 020 |
+| 事前登録コミット | `917a82352c27996ad4853c226a05f8eccab90d8e` |
+| authority | `retrospective_candidate_specific_selection`、`project_level_untouched=false` |
+| 実入力 | 公式JPX daily PDF 160本、2025-08-01～2026-03-31 |
+| parser | 622,724行、rejected row 0 |
+| 実測channel | volume、turnover、VWAP、trading unit |
+| selection | 2025-12-01～2026-03-31、80 scheduled sessions、panel source-coverage 78/80 |
+| candidates | LQ01 activity veto、LQ02 exact-liquidity Ridge、LQ03 VWAP-flow reversal |
+| variants | 3候補 × top1/top2 = 6 |
+| gate | `0/6` |
+| 最終判断 | 全件棄却、winnerなし、この実験によるcandidate-specific replay未開封 |
+| production | 変更なし |
+| orders | `false` |
+
+> **一行結論:** 実JPX D-1 activity channelは取得・hash固定・PIT化できたが、
+> 6 variantすべてでnet40平均とfamilywise対照下限が負だった。低損失に見える
+> veto/reversalも2～17/80日の低稼働によるcash中心であり、forward候補にしない。
+
+<details>
+<summary><strong>実データ、固定候補、評価結果</strong></summary>
+
+### 入力可用性の解消
+
+Entry 020の`collect or reject`契約に従い、以前
+`blocked_local_archive_ohlc_only`だった
+`ND11_pit_liquidity_and_unit_cost`を再確認した。公式JPX日次相場表から、
+出来高を実株数、売買代金を円、VWAPを円/株、売買単元を株数として取得できた。
+
+```text
+official daily PDFs:       160
+date bounds:               2025-08-01 .. 2026-03-31
+raw hashes vs parser audit: 160 / 160 exact
+parsed rows:               622,724
+rejected rows:             0
+parser:                    jpx_daily_text_v6_special_quote_marker
+price warm-up PDFs:        3 / 3 input-lock exact
+panel:                     878,736 rows / 4,060 codes
+liquidity-ready rows:      427,721
+```
+
+`actual_volume=true`などの記録は実測channelが存在することを表し、全行が完全という
+意味ではない。銘柄ごとにD-1まで20営業日連続で正のvolume、turnover、VWAP、
+trading unit、closeを要求し、期間中の売買単元変更もfail-closedにした。
+欠測を0や価格proxyで補っていない。
+
+通常約3,900行のところ、2025-09-29は1,563行、2025-12-29は3,161行、
+2026-03-30は1,489行だったため、既存source coverage判定で不完備になった。
+selection内の既存price-panel source-coverage判定は78/80 completeだが、
+80予定日を損益分母から除いていない。不完備日自身はD-1情報でscoreを固定した。
+欠けたtarget outcomeのslotだけをcash、gross 0、cost 0とし、直前universeが
+不完備になる翌sessionはfail-closedで全slotをcashにした。
+
+### 事前固定した3機構
+
+| ID | 機構 | 固定仕様 |
+|---|---|---|
+| `LQ01_ACTIVITY_VETO` | hard activity veto | C00 top2を先に固定し、20日売買代金中央値1億円以上、出来高中央値5万株以上、最低単元比率1%以下だけを残す。下位置換なし |
+| `LQ02_EXACT_LIQUIDITY_RIDGE` | supervised additive | G0価格15特徴へD-1実流動性7特徴の横断rankを追加し、return-rank Ridge `alpha=10` |
+| `LQ03_VWAP_FLOW_REVERSAL` | deterministic mechanism | `-rank(close/VWAP-1) * (1+rank(turnover shock))/2`へLQ01と同じveto。学習なし、逆符号版なし |
+
+すべて対象日のOHLC、volume、turnover、VWAP、trading unit、source finalityを
+禁止した。月次expanding fitはscore月の前月末までのlabelだけを使い、
+月中再学習はしていない。outcome列なしのscore ledgerを先に意味的hashへ固定し、
+その後にdate/codeで始値→終値returnをjoinした。固定slotがveto・欠測ならcashで、
+rank 3以降へ置換していない。
+
+### selection gate
+
+主判定は40bp、感応度は20/60bpとした。これは実spread/slippageではなく固定
+haircutである。3候補 × top1/top2の6 variantを同一familyとし、
+5-session moving-block bootstrap 20,000回、Bonferroni個別confidence
+98.3333%で同capacityの価格C00とpaired比較した。
+
+全条件ANDで、net40平均・中央値、net60平均、前後半固定slice、正の月3/4、
+上位4利益日除外、利益上位5 code現金化、familywise対照下限、unique code、
+単一・top10 code集中、実行日数・slot率を要求した。
+
+### selection結果
+
+単位は1 scheduled sessionあたりのpercentage pointである。L90はC00との差の
+Bonferroni補正済み片側下限、実行日は非cash outcomeが1つ以上ある日数である。
+
+| variant | net20 | net40 | net60 | 実行日 | L90 vs C00 | gate |
+|---|---:|---:|---:|---:|---:|:---:|
+| `LQ01_ACTIVITY_VETO__top1` | -0.066286% | -0.086286% | -0.106286% | 8/80 | -0.079858pt | FAIL |
+| `LQ01_ACTIVITY_VETO__top2` | -0.007522% | -0.031272% | -0.055022% | 17/80 | -0.297593pt | FAIL |
+| `LQ02_EXACT_LIQUIDITY_RIDGE__top1` | -0.170929% | -0.363429% | -0.555929% | 77/80 | -0.212709pt | FAIL |
+| `LQ02_EXACT_LIQUIDITY_RIDGE__top2` | -0.192944% | -0.384194% | -0.575444% | 78/80 | -0.496770pt | FAIL |
+| `LQ03_VWAP_FLOW_REVERSAL__top1` | -0.035695% | -0.040695% | -0.045695% | 2/80 | -0.008732pt | FAIL |
+| `LQ03_VWAP_FLOW_REVERSAL__top2` | +0.004771% | -0.003979% | -0.012729% | 7/80 | -0.271114pt | FAIL |
+
+capacity別C00は次のとおりだった。
+
+| control | net20 | net40 | net60 |
+|---|---:|---:|---:|
+| `C00_PRICE_RIDGE__top1` | -0.391755% | -0.584255% | -0.776755% |
+| `C00_PRICE_RIDGE__top2` | -0.009063% | -0.200313% | -0.391563% |
+
+LQ01/LQ03はnet40中央値が0だが、予測の安定性ではなく大半がcashだからである。
+`LQ03__top2`のnet20微益も7/80日しか実行しておらず、coverage・分散・集中・
+tail・familywise条件を通らない。LQ02 top1はC00 top1より点推定で
+`+0.220826pt/日`だが、絶対net40、両固定slice、familywise下限が負だった。
+LQ02 top2は実行率95.625%、88 codeとcoverageがある一方、C00 top2より点推定でも
+`-0.183881pt/日`悪化した。
+
+### replay停止とauthority
+
+事前登録winner ruleはpasserが0なら候補全件を棄却し、2026-04-01～07-27の
+candidate-specific replay PDFを開かないと定めた。今回のgate passerは0なので、
+別winner lockを作らずreplay inputをこの実験では取得・閲覧していない。
+
+ただしEntry 004によりproject outcomesは以前に閲覧済みであり、これは
+genuinely untouchedなholdoutではない。`locked_replay_input_opened=false`は
+この実験の入力境界だけを表し、project全体の未見性を意味しない。仮にpasserが
+あってもproduction昇格権限はなかった。
+
+### artifactと再現
+
+```text
+protocol SHA-256:
+f7b1329959b237323d6aa08d87494c9523bb5bdd4e29ee8c30cd04ece9e4387e
+
+runner SHA-256:
+de5b0a6382f53ce4d513a187b4d2243149e60b8b9a7a69043e9b74d12171a537
+
+selection result SHA-256:
+7f8aff8b1e86240c00de3b124e9564ff5b3a0277f91a2cb9b27ef859207f4008
+
+selection picks SHA-256:
+65fb583501e30658273cb3d98725e2e4d142fa5681d3ed82023da597ddaf4b71
+
+daily source-set SHA-256:
+c20e57b1eb56013d7c92977dc187e1746123c7d5d7995d2a8d6c6cd3864bd94e
+
+score-ledger semantic SHA-256:
+32c0e9a363000f7b37fd445541177d2add8d039d6beb26234b478977663cba20
+
+pdftotext:
+24.02.0
+
+pdftotext executable SHA-256:
+0fb98ea179e19154a90202608c164f2a319b79f16576fa6534b2d601033565e7
+
+independent audit runner SHA-256:
+45e2bf0a696197a1d7a0206def38d2517292ec35740c0a1df5e4c50d1fd26063
+
+independent audit result SHA-256:
+60cf81b6cf91fc1820ab5fa7d35587bea6ded91036018139aadb0882c4b6d5ed
+```
+
+selection runnerとprojectの損益・bootstrap helperをimportしない別監査は、
+640固定slotから20/40/60bp損益、tail・code cash stress、集中・実行率、
+paired moving-block bootstrap、6 × 13 gate、winner・authorityを再計算した。
+25/25 checkがPASS、discrepancy 0、最大数値差0.0だった。raw PDF再parseと特徴再構築は
+監査範囲外とし、source hash検査とmutation testから分離している。
+
+```bash
+PYTHONPATH=src:. python research/model_v16_liquidity_runner.py \
+  --price-warmup-directory /path/to/locked-monthly-pdfs \
+  --daily-directory /path/to/locked-daily-pdfs
+
+python -m pytest -q tests/test_model_v16_liquidity.py \
+  tests/test_model_v16_liquidity_artifacts.py
+python -m pytest -q
+```
+
+```text
+targeted v1.6 tests:       17 passed
+full tests:               413 passed
+subtests:                 192 passed
+gate passers:              0 / 6
+locked replay opened:      false
+forward shadow candidate:  none
+production candidate:      none
+production model changed:  false
+orders allowed:            false
+```
+
+同じselection outcomeへveto閾値、Ridge alpha、特徴方向、capacityを合わせ直さない。
+次の試行には新しい未観測期間、または08:58 auction/order-book、実spread/slippage、
+source-complete material cohortのような異なる実情報を必要とする。取得経路とPIT
+証拠を成立させられない系統は、Entry 020どおり候補ごと棄却する。
+
+</details>
+
+## Entry 022 — 研究プロトコルv1.7：実流動性を信頼性・状態として使う10機構の反証
+
+| 項目 | 内容 |
+|---|---|
+| 実施日 | 2026-08-04 |
+| 親Entry | Entry 021 |
+| 事前登録コミット | `78743a825d3c214f05c5f92f34206aa9a7a33731` |
+| authority | `retrospective_candidate_specific_selection`、`project_level_untouched=false` |
+| 実入力 | 公式JPX daily PDF 239本、2025-08-01～2026-07-27 |
+| parser | 930,286行、rejected row 0 |
+| selection | 2026-04-01～07-27、79 scheduled sessions、source-complete 78/79 |
+| family | liquidity-as-reliability/state/regime 10候補、1 fixed slot、gridなし |
+| controls | C00 top1、PAIR00 price-only top2 reranker、C02 C00 rank2 diagnostic |
+| gate | `0/10` |
+| 最終判断 | 全候補棄却、winner・research nomineeなし |
+| production | 変更なし |
+| orders | `false` |
+
+> **一行結論:** v1.6の閾値やalphaを調整せず、流動性を相対信頼性・issuer状態・
+> 時間記憶・学習weight・market regimeとして使う10機構へ組み替えたが、全候補が
+> late slice、familywise下限、中央値、tail、code集中を落とした。点推定の改善は
+> 少数日・少数銘柄・前半へ集中し、production改善を確認できない。
+
+<details>
+<summary><strong>新仮説、one-shot評価、次のshoulder-state仮説</strong></summary>
+
+### 評価結果からの仮説生成
+
+Entry 021が反証したのは、hard veto、実流動性7特徴のglobal additive Ridge、
+固定VWAP-flow reversalの3機構である。保存済みv1.6 picksではC00 rank1がgross
+`-0.1993%/day`、rank2が`+0.5636%/day`で、LQ02はrank1を弱めてもrank2の利益を
+消していた。そこで実流動性を平均alphaとして足さず、価格signalの信頼性・
+状態・tail・学習weightとして使う次の10候補を事前固定した。
+
+```text
+PAIR01  frozen C00 top2内のexact-liquidity binary rerank
+TW02    turnover-weighted price memory
+VW03    aggregate VWAP cost basis
+RPY04   return-per-turnover deterministic reversal
+AR05    issuer activity-regime price experts
+PS06    persistent vs isolated activity
+VP07    VWAP-range pressure memory
+RW08    exact traded-lot reliability weight
+MR09    turnover-weighted market regime
+AT10    attention migration
+```
+
+全候補1 fixed slotで、capacity・alpha・閾値gridはない。PAIR01は同じfrozen top2と
+pair学習集合のPAIR00、残り9候補はC00 top1とpaired比較した。主コスト40bp、
+感応度20/60bp、moving-block bootstrap 20,000回、block 5、family size 10に対する
+個別片側confidence 99%を固定した。
+
+### inputとPIT
+
+新79 daily PDFはoutcome parse前にname・bytes・SHA-256を固定した。旧160本と合わせ、
+公式239本を固定parserで930,286行へ復元し、rejectは0だった。
+
+```text
+daily date bounds:                2025-08-01 .. 2026-07-27
+legacy / extension daily:         160 / 79
+daily parsed / rejected rows:     930,286 / 0
+panel rows / codes:               1,187,484 / 4,096
+selection source complete:        78 / 79
+score / picks fixed rows:         1,027 / 1,027
+observed outcome slots:           993
+same-day finality used in score:  false
+maximum liquidity source < target:true
+strictly-prior registered folds:  48 / 48
+```
+
+2026-06-30はfrozen C00 top2が完全でないため、全モデルを登録済みcash ruleで処理した。
+予定日の分母から除外せず、下位順位へ置換していない。outcome列なしのscore ledgerを
+先に意味的hashへ固定してからreturnをjoinした。
+
+### one-shot結果
+
+単位は1 scheduled sessionあたりのpercentage pointである。`LB99`は登録対照との差の
+Bonferroni補正済み片側99%下限、`late`は固定後半40 sessionsである。
+
+| candidate | net20 | net40 | net60 | LB99 | late | tail4 | gate |
+|---|---:|---:|---:|---:|---:|---:|:---:|
+| `PAIR01` | +0.203884% | +0.006415% | -0.191053% | -0.064551pt | -0.192338% | -0.399748% | FAIL |
+| `TW02` | +0.194632% | +0.002227% | -0.190178% | -0.157715pt | -0.287655% | -0.352167% | FAIL |
+| `VW03` | +0.338163% | +0.145758% | -0.046647% | -0.149557pt | -0.185668% | -0.210817% | FAIL |
+| `RPY04` | +0.327041% | +0.134636% | -0.057769% | -0.648966pt | -0.286746% | -0.446152% | FAIL |
+| `AR05` | +0.385187% | +0.192782% | +0.000377% | -0.224118pt | -0.025370% | -0.210179% | FAIL |
+| `PS06` | +0.355611% | +0.163206% | -0.029199% | -0.181725pt | -0.158666% | -0.192438% | FAIL |
+| `VP07` | +0.345347% | +0.152942% | -0.039463% | -0.038969pt | -0.106835% | -0.195245% | FAIL |
+| `RW08` | +0.000890% | -0.191515% | -0.383920% | -0.611633pt | -0.178283% | -0.490320% | FAIL |
+| `MR09` | +0.116340% | -0.076065% | -0.268470% | -0.148198pt | -0.164293% | -0.434635% | FAIL |
+| `AT10` | +0.170980% | -0.023956% | -0.218893% | -0.471729pt | -0.252633% | -0.455960% | FAIL |
+
+C00 top1はgross`+0.374650%`、net40`-0.010160%`だった。C02 rank2とPAIR00は
+79日すべて同じfixed slotでnet40`-0.477644%`となり、Entry 021で観測したrank2
+shoulder優位は再現しなかった。
+
+全10候補が両slice、FWER下限、net40中央値、上位4利益日除外、上位5利益code cash、
+最大code share、top10 code shareを不合格とした。一方で10候補すべてが実行日数・
+slot率を通過しており、failureはcash sparsityではない。AR05の絶対net40とVP07の
+FWER下限は候補中最良でも、late・tail・diversityが負で採用できない。
+
+### pair診断と次の仮説
+
+保存済みpicksの事後診断では、PAIR00はcompleteな78日すべてでrank2を選んだ。
+PAIR01はrank1を40日、rank2を38日、cashを1日選び、PAIR00比では
+`+0.484059pt/session`改善した。しかし登録対照でないC00 top1との事後差は全79日で
+`+0.0166pt/session`にすぎず、exact liquidity固有の優位は未証明である。
+
+Entry 021のrank2優位からEntry 022のrank2 net40`-0.477644%`への反転に基づき、
+次の中心仮説を次のように限定する。
+
+> **rank1–rank2 shoulder polarityは固定premiumではなく、strictly lagged OOFの
+> rank別実現差で観測できるslow stateとして持続・反転する。**
+
+v1.8ではv1.7をdevelopment扱いし、v1.7特徴・係数・windowをこの79日に合わせ直さない。
+前月までのOOF rank1-minus-rank2実現差だけでfrozen top2のrank positionまたはcashを
+選ぶ新機序をfresh期間へ事前登録する。tail・code cash・集中度gateは緩めない。
+
+### 独立監査とartifact
+
+selection runnerとproject損益・bootstrap helperをimportしない別監査が、
+全metric、20,000-sample paired bootstrap、gate、winner、authorityを再計算した。
+29/29 checkがPASS、discrepancy 0、最大数値差0.0だった。raw PDF再parseと特徴再構築は
+監査範囲外で、source/parser hashとPIT mutation testから分離している。
+
+```text
+hypothesis registry SHA-256: 6e52ae3d6362583225496c4685fc1d601d0567753facb3eb24a5430cffa10c12
+protocol SHA-256:            f7d2efa30c5f6ca03a95e1f6e84e0fb6de3f68e8f0d520183877e2f0ab4a416f
+replay input lock SHA-256:   1d9a391c8e6b8d2003498c18ba09dac904e672e1f17c05516998ffb71e11c475
+parser source SHA-256:       1bd2e74acced608eb36c3606b593ea407d2d1e5f54b3283790ef8fd0fb1041f7
+runner SHA-256:              6394161d70d8ca76862ee34bdaa3a0aeb95adf57c3dd3e6685fc65d456980807
+scores / semantic SHA-256:   8e2e8d0fc4fcdbb716ec1de0cafba2b6300015b93f93020d6309987018e18244
+picks SHA-256:               32de442e2012d901963399f9fd91fc69fb3082e93f0cfa7981c279b2b7467273
+result SHA-256:              1463ae399c5de8ca33e762303d1ba3322ce21a383d2ad81f202a063bb8c148dd
+audit runner SHA-256:        ba31df20eff03a8b4c776e2b1fe7136317651beb8c47341aec4ec7f3d64f7f8c
+audit JSON SHA-256:          41a626f96dff850aec581838cd698695d541e6bb4e9882b5f1ce27fc68218dec
+tests SHA-256:               6dbc0b61d8ddcfd6311d7ac104d4fad27b1af4d9298a949ae98ad137daa5981c
+```
+
+```text
+runtime:                    978.260319 seconds
+Python / NumPy:             3.12.13 / 2.3.5
+pandas / scikit-learn:      2.2.3 / 1.8.0
+targeted v1.7 tests:        16 passed
+full tests:                429 passed
+subtests:                  192 passed
+gate passers:                0 / 10
+winner / nominee:            none / none
+production model changed:   false
+orders allowed:             false
+```
+
+</details>
+
+## Entry 023 — 研究プロトコルv1.8：lagged monthly shoulder-stateのfresh-forward事前登録
+
+| 項目 | 内容 |
+|---|---|
+| 実施日 | 2026-08-04 |
+| 親Entry | Entry 022 |
+| status | `implementation_complete_activation_pending` |
+| authority | `genuinely_later_forward_shadow_development` |
+| candidate | `SH01_LAGGED_MONTHLY_SHOULDER_STATE`、family size 1 |
+| controls | `C00_PRICE_RIDGE_TOP1`、`C02_C00_RANK2` |
+| fresh期間 | 2026-08-05以後、120 scheduled sessions以上、6 calendar months以上、最初の適格月末まで |
+| activation | 3 direct commits A/B/C。本Entryを含むcommit Aのみを作り、payload B・receipt Cは未作成 |
+| evaluation | 未開封。score、decision、outcome、picks、resultは未生成 |
+| production | 変更なし |
+| orders | `false` |
+
+> **一行結論:** v1.6で観測したrank2優位がv1.7で反転したため、固定rank2 premiumや
+> v1.7流動性特徴の再調整をやめ、前3完了月のstrictly lagged rank1-minus-rank2
+> 実現差だけでC00 frozen top2の順位を月次選択する1機構を、未観測のforward期間へ
+> 固定した。実装は完了したが、合格・性能改善・production昇格はまだ主張しない。
+
+<details>
+<summary><strong>仮説、fresh-forward契約、PIT証拠、合格条件</strong></summary>
+
+### 評価結果から立てた新仮説
+
+Entry 022ではC00 rank2/PAIR00がnet40 `-0.477644%`となり、Entry 021のrank2
+shoulder優位が反転した。PAIR01はPAIR00を救済しても、未登録のC00 top1との事後差は
+全79日で約`+0.0166pt/session`にすぎず、exact liquidity固有の優位は確認できない。
+
+したがってv1.8の仮説を次の1点へ限定する。
+
+> **C00 rank1–rank2 shoulder polarityは固定premiumではなく、前月までのOOF
+> rank別実現差が示すslow stateとして持続・反転する。**
+
+不足していたのは、平均alphaを増やす別特徴や閾値の微調整ではない。合格には、
+未観測期間でも状態方向が持続し、利益が少数日・少数codeへ集中せず、40/60bp、
+両時系列slice、中央値、tail除去、code-cash stress、familywise対照下限を同時に
+通ることが必要である。v1.8はこの不足を検証するが、通過を保証しない。
+
+### SH01の固定式
+
+各counted sessionで、v1.7と同じG0価格Ridge `alpha=1`を前月末までのデータだけで
+月次fitし、outcomeなしでC00 top2を固定する。complete pairの日だけ次を作る。
+
+```text
+d_t = C00 rank1 open-to-close return pct
+    - C00 rank2 open-to-close return pct
+```
+
+各完了月はcomplete pairが10日以上なら`d_t`の通常中央値、未満ならunavailableとする。
+対象月Mのstateは、飛ばしなしでM-3、M-2、M-1の3月中央値の通常中央値とする。
+
+```text
+state > 0 : frozen C00 rank1を1 slot選択
+state < 0 : frozen C00 rank2を1 slot選択
+state = 0 : cash
+必要月unavailable : cash
+```
+
+対象月の途中ではstateを更新しない。target-month outcome、partial month aggregate、
+target-date price、後日revisionは入れない。rank3以下への置換、window・sign・alpha・
+capacity search、v1.7の79日に対する再調整はない。
+
+固定済みseedは次のとおりで、2026-07だけはv1.7が07-27で終了したため、そのbytesへ
+事前にbindされた透明なpartial historical exceptionである。forward月には再利用しない。
+
+| completed month | complete pairs | median rank1-rank2 |
+|---|---:|---:|
+| 2026-05 | 17 | +0.4532617412224217pt |
+| 2026-06 | 19 | +0.5353494177210093pt |
+| 2026-07（01–27） | 18 | +0.09214571919513584pt |
+
+条件どおり2026-08の初期stateは`+0.4532617412224217pt`、選択順位はrank1である。
+
+### genuinely-later forwardと停止境界
+
+登録calendarはJPX営業日343本、2026-08-05～2027-12-30を固定した。最初のcounted
+sessionはreceipt commit Cのsuccessful pull-request workflowが持つGitHub server
+`updated_at`だけから、08:58:59 Asia/Tokyo cutoffより前の最初の登録sessionへ機械的に
+決める。観測がその既決定cutoffに間に合わなければactivation全体を失敗させ、後ろへ
+ずらしたりbackfillしたりしない。
+
+仮にfirst counted sessionが2026-08-05なら、120本目は2027-02-02、terminalは
+2027-02-26、N=136、7 calendar months、前後半68/68となる。実際のterminalは
+activationで確定したfirst sessionから同じ規則で再計算する。
+
+このcommit Aではactivation payload/receiptを作らず、forward source archive、exact
+hash、parser、runtimeを揃えた後に、payloadだけのdirect child B、receiptだけのdirect
+child Cを作る。A/B/Cそれぞれの最初のattempt-1 pull-request workflow成功を要求する。
+現時点ではcounted session、performance、nomineeは存在しない。
+
+### 日次PIT checkpoint
+
+日次のprimaryとhistorical名`safety_cash`は、同じdecision coreを別nonceの固定
+16,384-byte envelopeへ封印する。`safety_cash`は公開順序の証拠だけで、cashやfallbackの
+選択権限を持たない。primaryの最初のattempt-1 workflow `created_at < cutoff`だけが
+日次の選択権威で、status、conclusion、`run_started_at`、`updated_at`は順位やcashを
+変えない。primaryがmissing、late-created、ambiguous、改変ならsession cashではなく
+実験全体をintegrity abortする。
+
+公開は固定12-step GitHub Git Data API契約でsafety→primaryのsole-parent chainを作る。
+terminal監査はlocal Gitを信頼せず、remote ref、全path history、commit/tree/blob、
+compare、Actions全pagination、両coreを独立再構築する。外部predictor/outcome/core証拠は
+repo外append-only storeへ置き、dirfd、`O_NOFOLLOW`、single-link、inode uniquenessで
+symlink・hardlink・TOCTOUを拒否する。
+
+runtime lockはPython/package tree、startup hook、live module origin、ELF root/shared
+object、Git、pdftotext、CA bundle、critical environmentをexact bytesへ固定する。
+completed-month ledgerのterminal-inclusive schema/hash/chronologyをoutcome-blindに
+検証するまで、runnerと独立auditはoutcome ledgerをopen・parseしない。
+
+### 合格gateと権限
+
+主コスト40bp、感応度20/60bp、paired moving-block bootstrapはblock 20、20,000回、
+seed 20260805、family size 1、片側90%下限である。次をすべてANDで要求する。
+
+```text
+net40 mean > 0
+net40 median > 0
+net60 mean > 0
+early / late両sliceのnet40 > 0
+ceil(75% × represented months)以上の月でnet40 > 0
+上位4利益日を除いてnet40 > 0
+利益上位5 codeをcashにしてnet40 > 0
+paired point delta vs C00 top1 > 0
+paired one-sided lower bound >= 0
+unique code >= 40
+maximum code share <= 0.05
+top10 code share <= 0.25
+executed days >= ceil(90% × N)
+executed slot fraction >= 0.80
+```
+
+通過しても変更なしのSH01をv1.9 sealed confirmationへ1件nominateできるだけで、
+production promotion、注文、v1.8 outcomeに合わせた係数・window変更は禁止する。
+
+### artifactと事前検証
+
+```text
+hypothesis SHA-256:          d92dfea8b02d2e10516e4c98fae7219e8b8cdc91967d57df1c5f546ef55111d6
+protocol SHA-256:            c623fabfa8e94381bce27d359cefc6e51a9a80f1c18f62f6098cfdfc8e9f6112
+runtime-lock file SHA-256:   95a867e2f8f187528a7ba3d24f4db4f1bf0964531b6e0e2b85d88d0c758f1e32
+runtime-lock self SHA-256:   fcb453b3532625e2eefad679972389bd80cb7ee7685a40610d5aa858d7a32c2b
+calendar SHA-256:            c5c5908b0e26ebd57eb2e473b9d4ce7f92a7c8b336f6ad70596152de971b77a7
+runner SHA-256:              ac9a8311799d18288499004771b99eb4d22734d40641bcf2e1af39b0a97e64e9
+independent audit SHA-256:   4fa58c8ef35ca5c784ec93708bb8a0d6458236c023501f7cc9649a28e6dd87ec
+tests SHA-256:               aa0f1f24a2461993526dc9678eccf265cdc85c241cbfa18a3f993b5eedf5c99d
+workflow SHA-256:            7c9811768511bacb889e0f7bfa9508c2d2212079e8857db3b152d75868c232c7
+```
+
+```text
+py_compile:                  PASS
+protocol validation:        PASS
+strict runtime validation:  PASS
+targeted v1.8 tests:        53 passed (231.90s)
+full tests:                 482 passed (246.60s)
+subtests:                   192 passed
+warnings:                    27
+read-only material blockers: 0
+activation payload/receipt: absent / absent
+outcomes / result:          unopened / absent
+production model changed:   false
+orders allowed:             false
+```
+
+</details>

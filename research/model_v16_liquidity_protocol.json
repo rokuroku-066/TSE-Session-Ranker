@@ -1,0 +1,271 @@
+{
+  "schema_version": 1,
+  "protocol_id": "model_v16_exact_liquidity_selection_20260728",
+  "registered_at": "2026-07-28T12:30:00+09:00",
+  "research_question": "Does previously blocked, directly observed JPX D-1 activity information improve a leakage-safe pre-open stock ranker or a fixed cash veto relative to a price-only daily-rank Ridge control?",
+  "authority": {
+    "analysis_type": "retrospective_candidate_specific_selection",
+    "project_level_untouched": false,
+    "project_outcomes_previously_viewed": true,
+    "selection_result_may_reject_candidates": true,
+    "selection_result_may_nominate_one_locked_replay_candidate": true,
+    "production_promotion_allowed": false,
+    "production_model_changed": false,
+    "orders_allowed": false,
+    "reason": "VALIDATION Entry 004 records 2025-08-04 through 2026-07-21 as already consumed or previously viewed. This experiment can test whether the newly available exact activity channel deserves a separately locked forward shadow, but it cannot establish production performance."
+  },
+  "prior_work_binding": {
+    "unblocked_hypothesis": "ND11_pit_liquidity_and_unit_cost",
+    "previous_status": "blocked because the historical monthly JPX source had no usable volume, turnover, VWAP, or trading-unit fields",
+    "new_source": "official JPX daily stock quotation PDFs parsed by jpx_daily_text_v6_special_quote_marker",
+    "not_claimed": [
+      "measured bid-ask spread",
+      "measured slippage",
+      "actual fill probability",
+      "target-date trading-unit validity",
+      "production capacity"
+    ],
+    "fixed_cost_interpretation": "20, 40, and 60 basis points are sensitivity haircuts, not measured execution costs"
+  },
+  "source_contract": {
+    "price_warmup": {
+      "months": [
+        "202505",
+        "202506",
+        "202507"
+      ],
+      "manifest": "research/model_v05_input_lock.json",
+      "purpose": "D-1-or-earlier price history only; monthly rows have no liquidity values and are never filled"
+    },
+    "selection_daily": {
+      "first_file": "stq_20250801.pdf",
+      "last_file": "stq_20260331.pdf",
+      "files": 160,
+      "sessions": 160,
+      "parser_audit": "research/model_v04_parser_recovery_audit.json",
+      "parser_audit_sha256": "317d5cde9741429263cc91c11575300660f94f62123725fc8ce2d76cdee02eeb",
+      "required_parser_version": "jpx_daily_text_v6_special_quote_marker",
+      "required_parser_sha256": "1bd2e74acced608eb36c3606b593ea407d2d1e5f54b3283790ef8fd0fb1041f7",
+      "required_rejected_rows": 0,
+      "required_rows": 622724,
+      "failure_rule": "A missing file, unexpected file, hash mismatch, non-daily source format, parser rejection, or date-set mismatch aborts the whole three-candidate family. Missing data are never replaced with price proxies."
+    },
+    "locked_replay_daily": {
+      "start": "2026-04-01",
+      "end": "2026-07-27",
+      "sessions": 79,
+      "status_before_selection": "not_opened_by_this_experiment",
+      "execution_rule": "Only one selection-gate passer and its capacity-matched control may be replayed after a separate remote winner lock. If no variant passes, these PDFs are not opened by this experiment."
+    }
+  },
+  "periods": {
+    "liquidity_warmup": [
+      "2025-08-01",
+      "2025-08-29"
+    ],
+    "initial_fit": [
+      "2025-09-01",
+      "2025-11-28"
+    ],
+    "locked_selection": [
+      "2025-12-01",
+      "2026-03-31"
+    ],
+    "locked_selection_sessions": 80,
+    "candidate_specific_locked_replay": [
+      "2026-04-01",
+      "2026-07-27"
+    ],
+    "candidate_specific_locked_replay_sessions": 79
+  },
+  "point_in_time_contract": {
+    "decision_time": "08:58:59 Asia/Tokyo",
+    "latest_predictor_source": "the immediately preceding completed official session",
+    "forbidden_target_date_inputs": [
+      "open",
+      "high",
+      "low",
+      "close",
+      "traded",
+      "volume",
+      "turnover",
+      "vwap",
+      "trading_unit",
+      "label",
+      "oc_return_pct",
+      "overnight",
+      "AM prices",
+      "PM prices",
+      "target-date source finality"
+    ],
+    "target_outcome_use": "Labels and open-to-close returns are joined to an already hashed score ledger by date and code.",
+    "missing_source_rule": "Missing is not zero and does not become no-event. A source-contract failure aborts the family; an individual security without 20 consecutive valid daily observations is ineligible.",
+    "official_no_trade_rule": "An official zero-volume or zero-turnover observation is real data, not missing, but fails the positive-activity candidate eligibility rule.",
+    "cash_rule": "A fixed top-one or top-two slot that is ineligible or lacks an observed target outcome stays cash with zero gross return and zero cost. No lower-ranked replacement is allowed.",
+    "tie_break": "Higher score, then security code ascending."
+  },
+  "common_price_features": [
+    "oc_last",
+    "oc_mean_5",
+    "oc_mean_20",
+    "oc_mean_60",
+    "oc_win_20",
+    "oc_std_20",
+    "overnight_last",
+    "overnight_mean_20",
+    "overnight_mean_60",
+    "night_day_corr_60",
+    "xrank_atr14_pct",
+    "xrank_close_momentum_5",
+    "xrank_close_momentum_20",
+    "xrank_close_momentum_60",
+    "xrank_prior_close_location_20"
+  ],
+  "exact_liquidity_features": {
+    "raw_fields": [
+      "volume in actual shares",
+      "turnover in actual JPY",
+      "VWAP in JPY per share",
+      "trading unit in shares",
+      "close in JPY per share"
+    ],
+    "history_rule": "Twenty consecutive official daily rows ending D-1; every row must have strictly positive volume, turnover, VWAP, trading unit, and close, and trading unit must be unchanged across the window.",
+    "features": [
+      {
+        "name": "liq_turnover_med20",
+        "formula": "median turnover over D-20 through D-1"
+      },
+      {
+        "name": "liq_volume_med20",
+        "formula": "median volume over D-20 through D-1"
+      },
+      {
+        "name": "liq_turnover_shock1",
+        "formula": "clip(log(turnover[D-1] / median(turnover[D-20:D-2])), -3, 3)"
+      },
+      {
+        "name": "liq_turnover_log_iqr20",
+        "formula": "IQR of log1p(turnover) over D-20 through D-1"
+      },
+      {
+        "name": "liq_lot_fraction20",
+        "formula": "trading_unit[D-1] * close[D-1] / median_turnover[D-20:D-1]"
+      },
+      {
+        "name": "liq_close_vwap_dev1",
+        "formula": "clip(close[D-1] / vwap[D-1] - 1, -0.20, 0.20)"
+      },
+      {
+        "name": "liq_close_vwap_abs_med20",
+        "formula": "median(abs(close / vwap - 1)) over D-20 through D-1"
+      }
+    ],
+    "model_transform": "For every score date and feature, average-tie percentile rank across the strictly prior, history-complete universe, mapped to [-1, 1].",
+    "vwap_limit": "Close relative to actual VWAP is an observed location statistic and is not described as spread or slippage."
+  },
+  "control": {
+    "id": "C00_PRICE_RIDGE",
+    "model": "daily cross-sectional return-rank Ridge",
+    "objective": "2 * same-date percentile rank of realised training open-to-close return - 1",
+    "features": "common_price_features",
+    "matched_universe": "The control and all three candidates require the same price eligibility and complete 20-session exact-activity history. C00 uses activity availability only, never an activity value. LQ01 and LQ03 apply their additional fixed veto after their top-two slots are fixed.",
+    "alpha": 1.0,
+    "date_equal_weight": true,
+    "missing_value_rule": "Price-feature missing values use the existing training-fold median plus missing indicator. Exact-liquidity fields are never imputed; incomplete 20-session activity history is ineligible.",
+    "fit_schedule": "monthly expanding; labels end at the last official session of the preceding month; no mid-month refit"
+  },
+  "candidates": [
+    {
+      "id": "LQ01_ACTIVITY_VETO",
+      "mechanism": "Apply a hard, directly observed D-1 activity veto to the already fixed C00 top-two slots.",
+      "base_scores": "C00_PRICE_RIDGE",
+      "thresholds": {
+        "liq_turnover_med20_min_jpy": 100000000,
+        "liq_volume_med20_min_shares": 50000,
+        "liq_lot_fraction20_max": 0.01
+      },
+      "replacement": false
+    },
+    {
+      "id": "LQ02_EXACT_LIQUIDITY_RIDGE",
+      "mechanism": "Test the incremental predictive value of seven directly observed activity features.",
+      "model": "daily cross-sectional return-rank Ridge",
+      "features": "common_price_features plus seven exact-liquidity percentile-rank features",
+      "alpha": 10.0,
+      "date_equal_weight": true,
+      "missing_value_rule": "Price-feature missing values use the existing training-fold median plus missing indicator. Every exact-liquidity feature must be observed after the 20-session fail-closed rule.",
+      "fit_schedule": "monthly expanding; labels end at the last official session of the preceding month; no mid-month refit"
+    },
+    {
+      "id": "LQ03_VWAP_FLOW_REVERSAL",
+      "mechanism": "Test a deterministic D-1 close-versus-VWAP reversal strengthened by actual turnover shock.",
+      "formula": "-rank(liq_close_vwap_dev1) * (1 + rank(liq_turnover_shock1)) / 2",
+      "activity_veto": "same three fixed thresholds as LQ01",
+      "fit": "none",
+      "direction_variants": 1,
+      "replacement": false
+    }
+  ],
+  "evaluation": {
+    "capacities": [
+      1,
+      2
+    ],
+    "candidate_variants": 6,
+    "family_member_rule": "Every candidate-capacity pair remains in the family even if all-cash, failed, or sequence-identical.",
+    "costs_bps": [
+      20,
+      40,
+      60
+    ],
+    "primary_cost_bps": 40,
+    "selection_slices": {
+      "selection_a": [
+        "2025-12-01",
+        "2026-01-30"
+      ],
+      "selection_b": [
+        "2026-02-02",
+        "2026-03-31"
+      ]
+    },
+    "bootstrap": {
+      "method": "paired moving block",
+      "block_length": 5,
+      "samples": 20000,
+      "random_state": 20260728,
+      "familywise_one_sided_confidence": 0.9,
+      "bonferroni_individual_confidence": 0.9833333333333333
+    },
+    "selection_gate_all_required": {
+      "net40_mean_positive": true,
+      "net40_median_positive": true,
+      "net60_mean_positive": true,
+      "both_fixed_slices_net40_positive": true,
+      "positive_months_net40_at_least": 3,
+      "top4_days_removed_net40_positive": true,
+      "top5_profit_codes_cash_net40_positive": true,
+      "familywise_paired_lower_vs_control_nonnegative": true,
+      "unique_codes_at_least": 40,
+      "maximum_code_share_at_most": 0.05,
+      "top10_code_share_at_most": 0.25,
+      "executed_days_at_least": 72,
+      "executed_slot_fraction_at_least": 0.8
+    },
+    "winner_rule": "If no variant passes every gate, reject all candidates and do not open the replay PDFs. Otherwise choose maximum familywise paired lower bound, then maximum top-four-days-removed net40, then variant id ascending.",
+    "locked_replay_rule": "A separate remote lock must bind the one winner recipe and capacity before replay input is opened. Replay performance cannot change the selected family, capacity, features, thresholds, or parameters."
+  },
+  "required_tests": [
+    "same-day OHLC, volume, turnover, VWAP, and trading-unit mutation leaves same-day predictors, eligibility, scores, and codes unchanged",
+    "future-row mutation leaves all earlier scores unchanged",
+    "row shuffle leaves semantic score output unchanged",
+    "duplicate date-code rows fail closed",
+    "a nonconsecutive or nonpositive 20-day activity history fails closed",
+    "trading-unit change fails closed for 20 sessions",
+    "vetoed and missing-outcome slots stay cash without replacement",
+    "score ledger contains no outcome and is hashed before outcome join",
+    "monthly training maximum date precedes every score month",
+    "production and order authority remain false"
+  ],
+  "stop_rule": "Run the six registered selection variants once after this protocol, runner, and tests are remotely committed. Do not add variants or change any source, feature, threshold, parameter, cost, capacity, gate, or tie-break after reading selection returns."
+}

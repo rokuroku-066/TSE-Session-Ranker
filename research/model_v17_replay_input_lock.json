@@ -1,0 +1,657 @@
+{
+  "acquired_at_utc": "2026-08-04T01:48:17.406764+00:00",
+  "authority": {
+    "project_level_untouched": false,
+    "raw_market_outcomes_parsed_before_lock": false,
+    "retrospective_acquisition": true
+  },
+  "files": [
+    {
+      "bytes": 5143004,
+      "date": "2026-04-01",
+      "name": "stq_20260401.pdf",
+      "sha256": "32994efb11cad57087e91c083c7a0e24c12b7516e54f71769155c844c3cf7736",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000000swcd-att/stq_20260401.pdf"
+    },
+    {
+      "bytes": 5243851,
+      "date": "2026-04-02",
+      "name": "stq_20260402.pdf",
+      "sha256": "d6d6d1f38866d81c0c4c268523fbd53d1c8b5fa142710aa57f4da32200a8ca51",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000000t0ia-att/stq_20260402.pdf"
+    },
+    {
+      "bytes": 5046252,
+      "date": "2026-04-03",
+      "name": "stq_20260403.pdf",
+      "sha256": "fe22bcccd2a49f4ad98be7299ef0250b0f9027edda4e19baaf9ac2a57510d474",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000000t41e-att/stq_20260403.pdf"
+    },
+    {
+      "bytes": 4978366,
+      "date": "2026-04-06",
+      "name": "stq_20260406.pdf",
+      "sha256": "76e376491f6663c3bca6507ea802bcdb2efbde68bc471d671e7c19374d7fe5c1",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000000ve7q-att/stq_20260406.pdf"
+    },
+    {
+      "bytes": 5028021,
+      "date": "2026-04-07",
+      "name": "stq_20260407.pdf",
+      "sha256": "0228915749fc9041679027ca58e5ea13c1658cdaa6164709d2c1ffaa6a2a022d",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000000xm88-att/stq_20260407.pdf"
+    },
+    {
+      "bytes": 5151015,
+      "date": "2026-04-08",
+      "name": "stq_20260408.pdf",
+      "sha256": "405d1070a12b0e96853539530be04467d8cf03be68ca9f821a59c69f68a8063c",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000000xp0h-att/stq_20260408.pdf"
+    },
+    {
+      "bytes": 4977063,
+      "date": "2026-04-09",
+      "name": "stq_20260409.pdf",
+      "sha256": "95b85ffd94590297f95308a0b698fd63b3b57c38e84b48cc8dc9602f890ddbed",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000000xsj0-att/stq_20260409.pdf"
+    },
+    {
+      "bytes": 5027135,
+      "date": "2026-04-10",
+      "name": "stq_20260410.pdf",
+      "sha256": "953ebd7be2413f724ccf356a59cbd4d9697d548abaa8254ba3bb43c16be7cdd6",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000000ybdq-att/stq_20260410.pdf"
+    },
+    {
+      "bytes": 4972716,
+      "date": "2026-04-13",
+      "name": "stq_20260413.pdf",
+      "sha256": "c65788117222833bec32805674b9fdeb8f51ad49074c7aae433850712cc7740b",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt0000010mci-att/stq_20260413.pdf"
+    },
+    {
+      "bytes": 4991851,
+      "date": "2026-04-14",
+      "name": "stq_20260414.pdf",
+      "sha256": "8ac07f0b5d7413b9da260102c217d32c14cb6ebb2f004deaa011fca14f9505bb",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt0000010pcc-att/stq_20260414.pdf"
+    },
+    {
+      "bytes": 5053822,
+      "date": "2026-04-15",
+      "name": "stq_20260415.pdf",
+      "sha256": "a8e2b62574bcc6647937fcb8b151851c6111707985137182da7113a38929fa80",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt0000010rks-att/stq_20260415.pdf"
+    },
+    {
+      "bytes": 5017430,
+      "date": "2026-04-16",
+      "name": "stq_20260416.pdf",
+      "sha256": "fa4563d1ecbb64c4c77b6399a2e71441513138493bae26c4748f76852eda9bbf",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt0000010uhy-att/stq_20260416.pdf"
+    },
+    {
+      "bytes": 4966477,
+      "date": "2026-04-17",
+      "name": "stq_20260417.pdf",
+      "sha256": "99042a388137e494a85f508dd114733ed644de2e99761cc867f5616501dfbbf5",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt0000010whn-att/stq_20260417.pdf"
+    },
+    {
+      "bytes": 4893364,
+      "date": "2026-04-20",
+      "name": "stq_20260420.pdf",
+      "sha256": "e2d8b96e0e8b45fc995a46c110e0ea5681286d63565cf1afbf0689923f82fc1d",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001395l-att/stq_20260420.pdf"
+    },
+    {
+      "bytes": 4959336,
+      "date": "2026-04-21",
+      "name": "stq_20260421.pdf",
+      "sha256": "16946e69699db1e3c3acb14d33e71afd625fd92293ea15d2e29096358c250274",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt0000013bln-att/stq_20260421.pdf"
+    },
+    {
+      "bytes": 5101783,
+      "date": "2026-04-22",
+      "name": "stq_20260422.pdf",
+      "sha256": "7ff0f01baa2e746ca52117f21d96204d8970fc9f4bb4daa78f0f5afd5605119f",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt0000013g5j-att/stq_20260422.pdf"
+    },
+    {
+      "bytes": 5102370,
+      "date": "2026-04-23",
+      "name": "stq_20260423.pdf",
+      "sha256": "ce495df03838472b2b2c6ab8e93c0b7c9d54530394f6460c58b643ebfa2019d9",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt0000013iyz-att/stq_20260423.pdf"
+    },
+    {
+      "bytes": 4994883,
+      "date": "2026-04-24",
+      "name": "stq_20260424.pdf",
+      "sha256": "7f4db8a4e81c1314d4de5f124a1dfac6404e24f761a70a52b6a7879ed882e4b3",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt0000013mft-att/stq_20260424.pdf"
+    },
+    {
+      "bytes": 4896445,
+      "date": "2026-04-27",
+      "name": "stq_20260427.pdf",
+      "sha256": "f74fab4e643e1d787fc24d53f470a17b776ca5d393ce0e261f46765c66fa7e31",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt0000013q6i-att/stq_20260427.pdf"
+    },
+    {
+      "bytes": 5104360,
+      "date": "2026-04-28",
+      "name": "stq_20260428.pdf",
+      "sha256": "d6985505042746ef045ea8a0eed20f5e09704db5464edf8bb8fecfb02f82d038",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt0000013u7w-att/stq_20260428.pdf"
+    },
+    {
+      "bytes": 5031207,
+      "date": "2026-04-30",
+      "name": "stq_20260430.pdf",
+      "sha256": "95c0132b0e8ceec22d3cccb2d9fd5fe517941a78e77e18452f668d59426e1be5",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt00000140ik-att/stq_20260430.pdf"
+    },
+    {
+      "bytes": 4900544,
+      "date": "2026-05-01",
+      "name": "stq_20260501.pdf",
+      "sha256": "1109e0ec39508644cf838358b170ad5891437d3cf8f0b57ebb31c9f9f1366759",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt00000142oz-att/stq_20260501.pdf"
+    },
+    {
+      "bytes": 5077668,
+      "date": "2026-05-07",
+      "name": "stq_20260507.pdf",
+      "sha256": "be5a7be1902a550511365a30421979baa977f61616ec16c5b6fc2ec75541735a",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt00000149ji-att/stq_20260507.pdf"
+    },
+    {
+      "bytes": 5136693,
+      "date": "2026-05-08",
+      "name": "stq_20260508.pdf",
+      "sha256": "dd9025e798cecf3ca726c2bd928119e2fad486514c953ce53a57cc84b4f6e3b7",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt0000014c8g-att/stq_20260508.pdf"
+    },
+    {
+      "bytes": 5130152,
+      "date": "2026-05-11",
+      "name": "stq_20260511.pdf",
+      "sha256": "f48191a83c7c7be4dd0d0fa11ff2705d7fad47775e2eae1352245487d2e5dcf7",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt0000014cdl-att/stq_20260511.pdf"
+    },
+    {
+      "bytes": 5070419,
+      "date": "2026-05-12",
+      "name": "stq_20260512.pdf",
+      "sha256": "b21f777cbe6a3d8af7a08b71ebe6836e9aec6cf2f41ca7269406c68999a9b619",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt0000016non-att/stq_20260512.pdf"
+    },
+    {
+      "bytes": 5264092,
+      "date": "2026-05-13",
+      "name": "stq_20260513.pdf",
+      "sha256": "c2e237e0618f2babc3150fcc38fd83cbd4e427672141cf3c320e4f14db6a9277",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt0000016qv2-att/stq_20260513.pdf"
+    },
+    {
+      "bytes": 5757638,
+      "date": "2026-05-14",
+      "name": "stq_20260514.pdf",
+      "sha256": "41c6e25a08a3e036206cfa758edfcc7e566bb3d1d26b80f0d9b9d291d8933c02",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt0000016xcs-att/stq_20260514.pdf"
+    },
+    {
+      "bytes": 5098019,
+      "date": "2026-05-15",
+      "name": "stq_20260515.pdf",
+      "sha256": "7718d7b29d4afe6a9a2c47b223d9beba67b22d828ddfef9dbc55e76a8940434f",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt0000016zwj-att/stq_20260515.pdf"
+    },
+    {
+      "bytes": 4985065,
+      "date": "2026-05-18",
+      "name": "stq_20260518.pdf",
+      "sha256": "cc1a555fb6db6581c8d21977154b2297adc36c692c82e5126fa1a78c84790b77",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001729o-att/stq_20260518.pdf"
+    },
+    {
+      "bytes": 4664639,
+      "date": "2026-05-19",
+      "name": "stq_20260519.pdf",
+      "sha256": "586597ac9abbbca9e93de3de195c3e03d161b74d302eb68087b0d046461c5f2a",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt00000175e8-att/stq_20260519.pdf"
+    },
+    {
+      "bytes": 4954667,
+      "date": "2026-05-20",
+      "name": "stq_20260520.pdf",
+      "sha256": "cb3622f21a72f05d9354705013ba84eb659c2ff7b24c666ca37dc27344c3e92b",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt0000019fve-att/stq_20260520.pdf"
+    },
+    {
+      "bytes": 4984889,
+      "date": "2026-05-21",
+      "name": "stq_20260521.pdf",
+      "sha256": "17ff8d9a8c6297f80447b2299ae968530e215037d57459d22c6310ba45d07f9f",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt0000019jcp-att/stq_20260521.pdf"
+    },
+    {
+      "bytes": 5090660,
+      "date": "2026-05-22",
+      "name": "stq_20260522.pdf",
+      "sha256": "6d2bba8ca4abd5015afb40fcf52d214910aaf9cce9ea87de51558896050a03ba",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt0000019np9-att/stq_20260522.pdf"
+    },
+    {
+      "bytes": 5039742,
+      "date": "2026-05-25",
+      "name": "stq_20260525.pdf",
+      "sha256": "d778c4334da11aa0ed8573c1fa268f84fdd70968fecf8d57c392b8c0508c3fd4",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001e66t-att/stq_20260525.pdf"
+    },
+    {
+      "bytes": 4927518,
+      "date": "2026-05-26",
+      "name": "stq_20260526.pdf",
+      "sha256": "67c63ef9be687b03fea3dccae6f5b0793e1606ba9f35c270c69fa83262e3a4eb",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001ebgf-att/stq_20260526.pdf"
+    },
+    {
+      "bytes": 5019897,
+      "date": "2026-05-27",
+      "name": "stq_20260527.pdf",
+      "sha256": "d23c9f192773f54b7ea0f912749961e24ee438add7b327ef55c85f9ee9757588",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001eefz-att/stq_20260527.pdf"
+    },
+    {
+      "bytes": 5037443,
+      "date": "2026-05-28",
+      "name": "stq_20260528.pdf",
+      "sha256": "81ee6e8a2042b1cd68d18fb642ec4bfaeeb20308a01e022d5a328afe807ddf50",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001ehzv-att/stq_20260528.pdf"
+    },
+    {
+      "bytes": 5021312,
+      "date": "2026-05-29",
+      "name": "stq_20260529.pdf",
+      "sha256": "c52ad5067c505db51a8ccc4d980e6682b60b8ae9cb7730ff069cc57e40e3cf0d",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001ekjg-att/stq_20260529.pdf"
+    },
+    {
+      "bytes": 4960603,
+      "date": "2026-06-01",
+      "name": "stq_20260601.pdf",
+      "sha256": "df5ba3fb2b080bc2bb4e2c49f78ec127b0decb7da2e1825b4d7eeccc309198cf",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001eofo-att/stq_20260601.pdf"
+    },
+    {
+      "bytes": 4950004,
+      "date": "2026-06-02",
+      "name": "stq_20260602.pdf",
+      "sha256": "f751df55db6ad9d403c5079794445e1d3267da31022c6e81624b0dafa33e913f",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001etnb-att/stq_20260602.pdf"
+    },
+    {
+      "bytes": 5079682,
+      "date": "2026-06-03",
+      "name": "stq_20260603.pdf",
+      "sha256": "02561f190e34de00b75e8e0f85de2061d78642c63441b6f5c1834a01e238e347",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001etye-att/stq_20260603.pdf"
+    },
+    {
+      "bytes": 5055340,
+      "date": "2026-06-04",
+      "name": "stq_20260604.pdf",
+      "sha256": "5c84e86103299e0c23bd25f8f5500a5a2b1c43eec9acccd131023bce48ef21f8",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001exav-att/stq_20260604.pdf"
+    },
+    {
+      "bytes": 5011134,
+      "date": "2026-06-05",
+      "name": "stq_20260605.pdf",
+      "sha256": "8791d5ca9187d5bc2e1bdefa45f8a689e47be54c5117773ce254a4fbf9ac0a4d",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001f0kc-att/stq_20260605.pdf"
+    },
+    {
+      "bytes": 4950297,
+      "date": "2026-06-08",
+      "name": "stq_20260608.pdf",
+      "sha256": "5c52ddd0f5a4889cf1c9e1901b770c72c2ba9f2d0b22241a2df30226e91addaa",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001f42w-att/stq_20260608.pdf"
+    },
+    {
+      "bytes": 4889081,
+      "date": "2026-06-09",
+      "name": "stq_20260609.pdf",
+      "sha256": "7018824a4f0f650c590c9a0c8b456c3de4bb66ad64b64577ab48b4099d3e40df",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001f5w7-att/stq_20260609.pdf"
+    },
+    {
+      "bytes": 4916902,
+      "date": "2026-06-10",
+      "name": "stq_20260610.pdf",
+      "sha256": "e76f4df9a6f31abefbc90627b3cb1e2f2d2a062e12b3376b01cc6ee68dab5cc4",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001f90x-att/stq_20260610.pdf"
+    },
+    {
+      "bytes": 5091203,
+      "date": "2026-06-11",
+      "name": "stq_20260611.pdf",
+      "sha256": "db4aef54e89102e632e2f77bd33777b38313fa5283b39e781483c4a80220014b",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001fbr3-att/stq_20260611.pdf"
+    },
+    {
+      "bytes": 4914023,
+      "date": "2026-06-12",
+      "name": "stq_20260612.pdf",
+      "sha256": "44b9e0d98dca164713d437c0d9260f26ad96b0e0e98ec47e6267f1567f235678",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001fdwx-att/stq_20260612.pdf"
+    },
+    {
+      "bytes": 5011614,
+      "date": "2026-06-15",
+      "name": "stq_20260615.pdf",
+      "sha256": "d31074896f01d58fd05b6aa5a6cb6c9b5b31f844233f7a93109f1c14ae7338cb",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001fg48-att/stq_20260615.pdf"
+    },
+    {
+      "bytes": 4787766,
+      "date": "2026-06-16",
+      "name": "stq_20260616.pdf",
+      "sha256": "85e581e99ebd43db076a2f51770bef9df77623e3a57880c3dd2da0eb039dd57f",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001fji3-att/stq_20260616.pdf"
+    },
+    {
+      "bytes": 4857898,
+      "date": "2026-06-17",
+      "name": "stq_20260617.pdf",
+      "sha256": "092e2ad2cfac28e3f5d67b874b9a88b8bef544059b3bf358a45621335ed2a01a",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001fjth-att/stq_20260617.pdf"
+    },
+    {
+      "bytes": 4919289,
+      "date": "2026-06-18",
+      "name": "stq_20260618.pdf",
+      "sha256": "909e4da4487112dd4fc4d2b08028c6b331ea869d97caedfe9229c7eeeb207a54",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001hwhg-att/stq_20260618.pdf"
+    },
+    {
+      "bytes": 4964969,
+      "date": "2026-06-19",
+      "name": "stq_20260619.pdf",
+      "sha256": "2715f974e5cf26eaec364c0fe3d3d1d766fc2fc501df58876dee41b46051bb71",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001hykf-att/stq_20260619.pdf"
+    },
+    {
+      "bytes": 4941844,
+      "date": "2026-06-22",
+      "name": "stq_20260622.pdf",
+      "sha256": "7d499905704fe9c6b3060a088e7164a6657f9cb0927c222b29ac02519c20241b",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001i1rt-att/stq_20260622.pdf"
+    },
+    {
+      "bytes": 4985553,
+      "date": "2026-06-23",
+      "name": "stq_20260623.pdf",
+      "sha256": "239766a2ea5a9dc5e40a81b2c398cab84011a9b022ad78b18eb9f822f48df5af",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001i45i-att/stq_20260623.pdf"
+    },
+    {
+      "bytes": 4929615,
+      "date": "2026-06-24",
+      "name": "stq_20260624.pdf",
+      "sha256": "eecc5192f8d2f630699b26fad46949b4979ec76ffdde628b3ff0e664617fe079",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001i82q-att/stq_20260624.pdf"
+    },
+    {
+      "bytes": 4907301,
+      "date": "2026-06-25",
+      "name": "stq_20260625.pdf",
+      "sha256": "cbeb64f2a3c7366e78612c2c5c93ba8c398ad0eb869de5d850cf832d2a585563",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001ib2q-att/stq_20260625.pdf"
+    },
+    {
+      "bytes": 5034737,
+      "date": "2026-06-26",
+      "name": "stq_20260626.pdf",
+      "sha256": "815a7bdd3a333649f4132ca654ec1574d334002f7a3c32e2189657a15633f499",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001iehh-att/stq_20260626.pdf"
+    },
+    {
+      "bytes": 4904330,
+      "date": "2026-06-29",
+      "name": "stq_20260629.pdf",
+      "sha256": "51dbf392609a8b1bffe29f85c0df6d0422a4b158d4d53193a96f3e1834f1401d",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001iixd-att/stq_20260629.pdf"
+    },
+    {
+      "bytes": 5069179,
+      "date": "2026-06-30",
+      "name": "stq_20260630.pdf",
+      "sha256": "57e739d3a36be065e9a435d3fcce12ce0bd077e52261d9f76706a33ad8f61b7b",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001ildm-att/stq_20260630.pdf"
+    },
+    {
+      "bytes": 4998360,
+      "date": "2026-07-01",
+      "name": "stq_20260701.pdf",
+      "sha256": "99d6d341b839c13eb54eec4dbe0bf907f14b08edba68128e18cc1c0abc41fe16",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001iqq4-att/stq_20260701.pdf"
+    },
+    {
+      "bytes": 4992614,
+      "date": "2026-07-02",
+      "name": "stq_20260702.pdf",
+      "sha256": "c536bfcbf9c724193bfcba760ec71adfb05757ffa1a02c478bd9149c2369a926",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001isfg-att/stq_20260702.pdf"
+    },
+    {
+      "bytes": 4784517,
+      "date": "2026-07-03",
+      "name": "stq_20260703.pdf",
+      "sha256": "5b0dc5834d67e2be812bb32dafba42a73f106228e6b7edb797b0f5a38ceaf121",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001iuw3-att/stq_20260703.pdf"
+    },
+    {
+      "bytes": 4965809,
+      "date": "2026-07-06",
+      "name": "stq_20260706.pdf",
+      "sha256": "ff15eb6d0de6770b03adc4033b8d4c67a5196d1e1f465137bebd69588013bd98",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001iwfw-att/stq_20260706.pdf"
+    },
+    {
+      "bytes": 4858217,
+      "date": "2026-07-07",
+      "name": "stq_20260707.pdf",
+      "sha256": "bee63667560b62da050f987ca544a922e33bd0e9ac388cce4dc40f35ae704b0e",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001iycp-att/stq_20260707.pdf"
+    },
+    {
+      "bytes": 4961998,
+      "date": "2026-07-08",
+      "name": "stq_20260708.pdf",
+      "sha256": "be9e13b05133c8809f672ebfd3801f32f67466d498e9f6b79a22b8218f13d4f8",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001j17c-att/stq_20260708.pdf"
+    },
+    {
+      "bytes": 4929283,
+      "date": "2026-07-09",
+      "name": "stq_20260709.pdf",
+      "sha256": "e75c588170ff0d9b319a14a686b0cabf3f284215760e232c1624e31f41ea833b",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001j3fw-att/stq_20260709.pdf"
+    },
+    {
+      "bytes": 4876254,
+      "date": "2026-07-10",
+      "name": "stq_20260710.pdf",
+      "sha256": "8ce8ae580ca168159bc311c32cb9f5ba6bb775ca7b34ce64fd0fcbbbeb28b85d",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001j677-att/stq_20260710.pdf"
+    },
+    {
+      "bytes": 5080128,
+      "date": "2026-07-13",
+      "name": "stq_20260713.pdf",
+      "sha256": "9c8bd262c8cbb2a111d10c034622928b64601f294b2a2398bc4cead24341011c",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001j9j3-att/stq_20260713.pdf"
+    },
+    {
+      "bytes": 5087987,
+      "date": "2026-07-14",
+      "name": "stq_20260714.pdf",
+      "sha256": "8049c7a90fd50d578763c7ba2fed506e3b94728494dfa5db379c140db5e38b96",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001jbpa-att/stq_20260714.pdf"
+    },
+    {
+      "bytes": 4891919,
+      "date": "2026-07-15",
+      "name": "stq_20260715.pdf",
+      "sha256": "ebe3a76e5f391bef91182b598b24b92e2ff6b8b1b9d44debdc422401bac08038",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001jgvq-att/stq_20260715.pdf"
+    },
+    {
+      "bytes": 4919715,
+      "date": "2026-07-16",
+      "name": "stq_20260716.pdf",
+      "sha256": "cc279780ddd23860d1a52766d3b1a8ff04d29f2759222a70c4a109dc917ddd9e",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001jk4t-att/stq_20260716.pdf"
+    },
+    {
+      "bytes": 4826540,
+      "date": "2026-07-17",
+      "name": "stq_20260717.pdf",
+      "sha256": "d0f64b248c412fc2d5a99dac5d96273446b1685238396a915bc2938bfffcfda6",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001jlhd-att/stq_20260717.pdf"
+    },
+    {
+      "bytes": 4855803,
+      "date": "2026-07-21",
+      "name": "stq_20260721.pdf",
+      "sha256": "b7775826960cf3047b145e565276dcf8b042dfa8c69ce385e9ef1799cee5d4c3",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001joaw-att/stq_20260721.pdf"
+    },
+    {
+      "bytes": 4937856,
+      "date": "2026-07-22",
+      "name": "stq_20260722.pdf",
+      "sha256": "74e8ef47d858e10549e473de16fbc50030d2a81657976d032bbb0d2457ed94e8",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001jum5-att/stq_20260722.pdf"
+    },
+    {
+      "bytes": 4873200,
+      "date": "2026-07-23",
+      "name": "stq_20260723.pdf",
+      "sha256": "90cb5741f666a38dc46b34da6dc4119eb6f5326a77a60baec14832760b02ec60",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001jxfy-att/stq_20260723.pdf"
+    },
+    {
+      "bytes": 4689585,
+      "date": "2026-07-24",
+      "name": "stq_20260724.pdf",
+      "sha256": "d940a61f33430725088bc3c9a5d412c837a8b763ae41a186cc48d08d42c4ef5b",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001k0hk-att/stq_20260724.pdf"
+    },
+    {
+      "bytes": 4956816,
+      "date": "2026-07-27",
+      "name": "stq_20260727.pdf",
+      "sha256": "db12d26f552a5a4aacc76ab9074a11c642300acf5a16aab99a73f38adade8b29",
+      "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/t13vrt000001omtz-att/stq_20260727.pdf"
+    }
+  ],
+  "lock_id": "model_v17_replay_inputs_20260804",
+  "parser_contract": {
+    "source_path": "src/tse_session_ranker/data/jpx.py",
+    "source_sha256": "1bd2e74acced608eb36c3606b593ea407d2d1e5f54b3283790ef8fd0fb1041f7",
+    "version": "jpx_daily_text_v6_special_quote_marker"
+  },
+  "period": {
+    "end": "2026-07-27",
+    "sessions": 79,
+    "start": "2026-04-01"
+  },
+  "schema_version": 1,
+  "source": {
+    "archive_pages": [
+      {
+        "bytes": 46986,
+        "name": "01.html",
+        "sha256": "7115e3317554f6de22c43146b041a3b6727a7c5abf76e84f59f4bda498e9479a",
+        "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/00-archives-01.html"
+      },
+      {
+        "bytes": 46986,
+        "name": "02.html",
+        "sha256": "bf858769c87de16903026915b3c3646aac7e6c2a476e19e836c214ccee849a8d",
+        "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/00-archives-02.html"
+      },
+      {
+        "bytes": 43490,
+        "name": "03.html",
+        "sha256": "b2301ff75eba5878039776fdbe7d4c3084dcd9614eefbc7bcf6ee3fecb680ecd",
+        "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/00-archives-03.html"
+      },
+      {
+        "bytes": 46112,
+        "name": "04.html",
+        "sha256": "a060ccfbdb3b71d3023b166a0b03cb078828fb0136c9104e10fddb5287d7c113",
+        "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/00-archives-04.html"
+      },
+      {
+        "bytes": 46112,
+        "name": "05.html",
+        "sha256": "6969ca3331a1fee690144b99a50cabe6b805916fc3b31e3388a05123a3e7a15e",
+        "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/00-archives-05.html"
+      },
+      {
+        "bytes": 43490,
+        "name": "06.html",
+        "sha256": "66d0e91d8055190a001ab952ddd48f11c32bd0acf0ba08e17118d879b8ab5711",
+        "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/00-archives-06.html"
+      },
+      {
+        "bytes": 44364,
+        "name": "07.html",
+        "sha256": "398f11d899baf50cf89be476d5fc2d47b38de6ec3868f686fcdd1cbb23207ace",
+        "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/00-archives-07.html"
+      },
+      {
+        "bytes": 46986,
+        "name": "08.html",
+        "sha256": "c81ad2d5c21deb19f482eb0129ffbd7b243a692bee311d7c99361e4ae3eee68a",
+        "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/00-archives-08.html"
+      },
+      {
+        "bytes": 43490,
+        "name": "09.html",
+        "sha256": "61e1f27ae62e274d62ea5831c7df490216ef4a884101ecdb613b69cd87d40a29",
+        "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/00-archives-09.html"
+      },
+      {
+        "bytes": 46986,
+        "name": "10.html",
+        "sha256": "0198fbbfbe2829abd6b01926e324ccb41946af148e52e00274de0c174567e16c",
+        "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/00-archives-10.html"
+      },
+      {
+        "bytes": 45238,
+        "name": "11.html",
+        "sha256": "96c6807519fd3c76150f40d744d5e50de49d145d8f92d86ffe96846f8cd9bd78",
+        "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/00-archives-11.html"
+      },
+      {
+        "bytes": 45238,
+        "name": "12.html",
+        "sha256": "502086c9b6d6bcd68d93bc3334b39bab90aa0c2efdbb59e10e6dd8d2de0e0084",
+        "source_url": "https://www.jpx.co.jp/markets/statistics-equities/daily/00-archives-12.html"
+      }
+    ],
+    "host": "www.jpx.co.jp"
+  },
+  "source_set_sha256": "a0fdea19f9e7c771d2e0450720eb551917d9c8b9cfade75260d5cc43adb3a43f",
+  "status": "source_locked_before_outcome_parse"
+}
+
+
+
