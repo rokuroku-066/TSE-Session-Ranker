@@ -1002,9 +1002,24 @@ def validate_tls_ca_trust(
         "SSL_CERT_DIR": None,
     }:
         raise AuditError("TLS CA trust-store identity changed")
-    if strict_environment and any(name in os.environ for name in value["environment"]):
-        raise AuditError("TLS CA environment overrides are forbidden")
     path = Path(str(value["cafile_path"]))
+    size = value["cafile_size_bytes"]
+    if (
+        not path.is_absolute()
+        or path.name != value["cafile_basename"]
+        or isinstance(size, bool)
+        or not isinstance(size, int)
+        or size <= 0
+        or re.fullmatch(r"[0-9a-f]{64}", str(value["cafile_sha256"])) is None
+    ):
+        raise AuditError("registered TLS CA trust-store pin changed")
+    if not strict_environment:
+        # Pure protocol/runtime-lock validation is intentionally host agnostic.
+        # The immutable runtime-lock file hash and canonical self-hash bind this
+        # declaration; only an operational validation may inspect host bytes.
+        return path
+    if any(name in os.environ for name in value["environment"]):
+        raise AuditError("TLS CA environment overrides are forbidden")
     try:
         observed_stat = path.stat()
     except OSError as exc:
@@ -1015,10 +1030,7 @@ def validate_tls_ca_trust(
         or not stat.S_ISREG(observed_stat.st_mode)
         or path.resolve() != path
         or path.name != value["cafile_basename"]
-        or isinstance(value["cafile_size_bytes"], bool)
-        or not isinstance(value["cafile_size_bytes"], int)
-        or observed_stat.st_size != value["cafile_size_bytes"]
-        or re.fullmatch(r"[0-9a-f]{64}", str(value["cafile_sha256"])) is None
+        or observed_stat.st_size != size
         or sha256_file(path) != value["cafile_sha256"]
     ):
         raise AuditError("registered TLS CA trust-store bytes changed")

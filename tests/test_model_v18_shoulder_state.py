@@ -32,6 +32,51 @@ EXPECTED_PROTOCOL_SHA256 = (
 )
 
 
+def _install_virtual_registered_ca(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    module: object,
+    contract: dict[str, object],
+) -> Path:
+    """Expose only the preregistered CA path to a foreign-host unit test."""
+
+    registered = Path(str(contract["cafile_path"]))
+    backing = tmp_path / f"{getattr(module, '__name__').rsplit('.', 1)[-1]}-ca.pem"
+    backing.write_bytes(b"x" * int(contract["cafile_size_bytes"]))
+    backing_stat = backing.stat()
+    real_stat = Path.stat
+
+    def registered_stat(self: Path, *args: object, **kwargs: object):
+        if self == registered:
+            return backing_stat
+        return real_stat(self, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "stat", registered_stat)
+    real_sha256_file = getattr(module, "sha256_file")
+
+    def registered_sha256(path: str | Path) -> str:
+        if Path(path) == registered:
+            return str(contract["cafile_sha256"])
+        return real_sha256_file(path)
+
+    monkeypatch.setattr(module, "sha256_file", registered_sha256)
+    return registered
+
+
+def _assert_foreign_runtime_rejection(stderr: str) -> None:
+    assert any(
+        fragment in stderr
+        for fragment in (
+            "registered TLS CA file is unavailable",
+            "registered TLS CA trust-store bytes changed",
+            "registered ELF object is missing or symlinked",
+            "registered ELF object bytes changed",
+            "operational platform differs from runtime lock",
+            "operational Python differs from runtime lock",
+        )
+    ), stderr
+
+
 def _wide_history(
     monthly_differences: dict[str, float] | None = None,
     *,
@@ -1374,7 +1419,11 @@ def test_runtime_lock_closure_strict_host_and_one_byte_mutation(
         capture_output=True,
         text=True,
     )
-    assert strict.returncode == 0, strict.stderr
+    strict_host_matches = strict.returncode == 0
+    if not strict_host_matches:
+        # A generic CI runner is not the preregistered operational host.  It
+        # must fail closed, while pure lock validation above remains portable.
+        _assert_foreign_runtime_rejection(strict.stderr)
 
     copied_root = tmp_path / "runtime-project"
     for record in lock["project_files"]:
@@ -1391,11 +1440,12 @@ def test_runtime_lock_closure_strict_host_and_one_byte_mutation(
             strict_environment=False,
         )
 
-    monkeypatch.setattr(audit.platform, "python_version", lambda: "0.0.0")
-    for name in lock["elf_closure"]["loader_environment"]:
-        monkeypatch.delenv(name, raising=False)
-    with pytest.raises(audit.AuditError, match="Python differs"):
-        audit.validate_runtime_lock(strict_environment=True)
+    if strict_host_matches:
+        monkeypatch.setattr(audit.platform, "python_version", lambda: "0.0.0")
+        for name in lock["elf_closure"]["loader_environment"]:
+            monkeypatch.delenv(name, raising=False)
+        with pytest.raises(audit.AuditError, match="Python differs"):
+            audit.validate_runtime_lock(strict_environment=True)
 
 
 def test_runtime_lock_rejects_stdlib_and_git_byte_mutation(tmp_path: Path) -> None:
@@ -1407,6 +1457,22 @@ def test_runtime_lock_rejects_stdlib_and_git_byte_mutation(tmp_path: Path) -> No
     environment = os.environ.copy()
     for name in lock["elf_closure"]["loader_environment"]:
         environment.pop(name, None)
+
+    baseline_script = (
+        "import sys; from research import model_v18_shoulder_state_audit as a; "
+        "sys.modules['__main__'].__file__=a.__file__; "
+        "a.validate_runtime_lock(strict_environment=True)"
+    )
+    baseline = subprocess.run(
+        [system_python, "-c", baseline_script],
+        cwd=ROOT,
+        env=environment,
+        capture_output=True,
+        text=True,
+    )
+    if baseline.returncode != 0:
+        _assert_foreign_runtime_rejection(baseline.stderr)
+        return
 
     mutated_stdlib = tmp_path / "mutated-stdlib"
     mutated_stdlib.mkdir()
@@ -1482,7 +1548,8 @@ def test_live_module_origin_closure_rechecks_lazy_import_phases() -> None:
         capture_output=True,
         text=True,
     )
-    assert completed.returncode == 0, completed.stderr
+    if completed.returncode != 0:
+        _assert_foreign_runtime_rejection(completed.stderr)
 
     source = (RESEARCH / "model_v18_shoulder_state_audit.py").read_text(
         encoding="utf-8"
@@ -1520,6 +1587,36 @@ def test_elf_closure_and_loader_environment_mutations_fail_without_linkage_probe
         monkeypatch.delenv(name, raising=False)
     changed_cache = copy.deepcopy(closure)
     changed_cache["loader_cache"]["sha256"] = "1" * 64
+    registered_rows = [
+        *closure["root_objects"],
+        *closure["shared_objects"],
+        closure["dynamic_loader"],
+        closure["loader_cache"],
+    ]
+    registered_hashes = {
+        Path(str(item["path"])): str(item["sha256"]) for item in registered_rows
+    }
+    real_is_file = Path.is_file
+    real_is_symlink = Path.is_symlink
+    real_sha256_file = audit.sha256_file
+    monkeypatch.setattr(
+        Path,
+        "is_file",
+        lambda path: True if path in registered_hashes else real_is_file(path),
+    )
+    monkeypatch.setattr(
+        Path,
+        "is_symlink",
+        lambda path: False if path in registered_hashes else real_is_symlink(path),
+    )
+
+    def registered_sha256(path: str | Path) -> str:
+        registered_hash = registered_hashes.get(Path(path))
+        if registered_hash is not None:
+            return registered_hash
+        return real_sha256_file(path)
+
+    monkeypatch.setattr(audit, "sha256_file", registered_sha256)
     with pytest.raises(audit.AuditError, match="registered ELF object bytes changed"):
         audit.validate_elf_closure(changed_cache, strict_environment=True)
 
@@ -1537,6 +1634,7 @@ def test_elf_closure_and_loader_environment_mutations_fail_without_linkage_probe
 
 def test_tls_ca_registry_rejects_schema_path_size_and_hash_drift(
     monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
 ) -> None:
     lock = json.loads(
         (RESEARCH / "model_v18_runtime_lock.json").read_text(encoding="utf-8")
@@ -1545,31 +1643,65 @@ def test_tls_ca_registry_rejects_schema_path_size_and_hash_drift(
     for name in contract["environment"]:
         monkeypatch.delenv(name, raising=False)
     registered = Path(contract["cafile_path"])
+    # Pure validation binds the declaration through the runtime-lock file/self
+    # hashes and therefore must not require the preregistered host filesystem.
+    assert audit.validate_tls_ca_trust(contract) == registered
+
+    ca_bytes = b"portable strict CA fixture\n"
+    portable = copy.deepcopy(contract)
+    portable_path = tmp_path / "registered-ca.pem"
+    portable_path.write_bytes(ca_bytes)
+    portable.update(
+        {
+            "cafile_path": str(portable_path),
+            "cafile_basename": portable_path.name,
+            "cafile_size_bytes": len(ca_bytes),
+            "cafile_sha256": hashlib.sha256(ca_bytes).hexdigest(),
+        }
+    )
     assert audit.validate_tls_ca_trust(
-        contract, strict_environment=True
-    ) == registered
+        portable, strict_environment=True
+    ) == portable_path
+
+    missing = copy.deepcopy(portable)
+    missing_path = tmp_path / "missing-ca.pem"
+    missing["cafile_path"] = str(missing_path)
+    missing["cafile_basename"] = missing_path.name
+    assert audit.validate_tls_ca_trust(missing) == missing_path
+    with pytest.raises(audit.AuditError, match="CA file is unavailable"):
+        audit.validate_tls_ca_trust(missing, strict_environment=True)
 
     schema_drift = copy.deepcopy(contract)
     schema_drift["unregistered_field"] = None
     with pytest.raises(audit.AuditError, match="schema changed"):
         audit.validate_tls_ca_trust(schema_drift)
 
-    mutations = {
-        "cafile_path": "/etc/hosts",
+    invalid_pins = {
+        "cafile_path": "relative/ca.pem",
         "cafile_basename": "different-ca.pem",
-        "cafile_size_bytes": int(contract["cafile_size_bytes"]) + 1,
-        "cafile_sha256": "0" * 64,
+        "cafile_size_bytes": 0,
+        "cafile_sha256": "not-a-sha256",
     }
-    for field, replacement in mutations.items():
+    for field, replacement in invalid_pins.items():
         changed = copy.deepcopy(contract)
         changed[field] = replacement
-        with pytest.raises(audit.AuditError, match="CA trust-store bytes changed"):
+        with pytest.raises(audit.AuditError, match="CA trust-store pin changed"):
             audit.validate_tls_ca_trust(changed)
 
-    for variable in contract["environment"]:
-        monkeypatch.setenv(variable, str(registered))
+    byte_mutations = {
+        "cafile_size_bytes": len(ca_bytes) + 1,
+        "cafile_sha256": "0" * 64,
+    }
+    for field, replacement in byte_mutations.items():
+        changed = copy.deepcopy(portable)
+        changed[field] = replacement
+        with pytest.raises(audit.AuditError, match="CA trust-store bytes changed"):
+            audit.validate_tls_ca_trust(changed, strict_environment=True)
+
+    for variable in portable["environment"]:
+        monkeypatch.setenv(variable, str(portable_path))
         with pytest.raises(audit.AuditError, match="environment overrides"):
-            audit.validate_tls_ca_trust(contract, strict_environment=True)
+            audit.validate_tls_ca_trust(portable, strict_environment=True)
         monkeypatch.delenv(variable)
 
 
@@ -3075,6 +3207,7 @@ def test_decision_rejects_nonprimary_branch_tip_and_nonsole_parent() -> None:
 
 def test_audit_github_refetch_uses_locked_urllib_transport(
     monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
 ) -> None:
     lock = json.loads(
         (RESEARCH / "model_v18_runtime_lock.json").read_text(encoding="utf-8")
@@ -3083,6 +3216,10 @@ def test_audit_github_refetch_uses_locked_urllib_transport(
     ca_path = Path(ca_contract["cafile_path"])
     for name in ca_contract["environment"]:
         monkeypatch.delenv(name, raising=False)
+    assert (
+        _install_virtual_registered_ca(monkeypatch, tmp_path, audit, ca_contract)
+        == ca_path
+    )
     response_body = {
         "sha": "d" * 40,
         "html_url": (
@@ -3204,6 +3341,7 @@ def test_audit_github_refetch_uses_locked_urllib_transport(
 
 def test_runner_github_transport_requires_exact_ca_before_network(
     monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
 ) -> None:
     lock = json.loads(
         (RESEARCH / "model_v18_runtime_lock.json").read_text(encoding="utf-8")
@@ -3212,6 +3350,10 @@ def test_runner_github_transport_requires_exact_ca_before_network(
     ca_path = Path(ca_contract["cafile_path"])
     for name in ca_contract["environment"]:
         monkeypatch.delenv(name, raising=False)
+    assert (
+        _install_virtual_registered_ca(monkeypatch, tmp_path, runner, ca_contract)
+        == ca_path
+    )
     monkeypatch.setattr(runner, "_STRICT_RUNTIME_ACTIVE", True)
     monkeypatch.setattr(runner, "_LOCKED_TLS_CAFILE", ca_path)
 
