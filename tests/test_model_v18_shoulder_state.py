@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ast
+from collections.abc import Mapping
 from concurrent.futures import ThreadPoolExecutor
 import copy
 from datetime import datetime, timedelta, timezone
@@ -3468,10 +3469,28 @@ def test_activation_payload_receipt_and_first_terminal_bindings_use_real_git(
     # independently, so use the executable available on the test host here.
     fixture_git = shutil.which("git")
     assert fixture_git is not None
+    fixture_git_path = Path(fixture_git).resolve()
     monkeypatch.setattr(
         runner,
         "_LOCKED_GIT_EXECUTABLE",
-        Path(fixture_git).resolve(),
+        fixture_git_path,
+    )
+
+    def fixture_external_process(
+        role: str,
+        *,
+        extra_environment_key: str,
+        lock: Mapping[str, object] | None = None,
+    ) -> tuple[Path, dict[str, str]]:
+        assert role == "git_executable"
+        assert extra_environment_key == "git_exact_extra"
+        assert lock is None
+        return fixture_git_path, runner._git_environment()
+
+    monkeypatch.setattr(
+        audit,
+        "_locked_external_process",
+        fixture_external_process,
     )
 
     git_root = tmp_path / "activation-git"
