@@ -3463,6 +3463,17 @@ def test_activation_payload_receipt_and_first_terminal_bindings_use_real_git(
             preregistration_commit_sha="1" * 40,
         )
 
+    # This isolated integration fixture exercises Git object/ancestry semantics,
+    # not the canonical host lock.  Strict runtime/Git-byte validation is covered
+    # independently, so use the executable available on the test host here.
+    fixture_git = shutil.which("git")
+    assert fixture_git is not None
+    monkeypatch.setattr(
+        runner,
+        "_LOCKED_GIT_EXECUTABLE",
+        Path(fixture_git).resolve(),
+    )
+
     git_root = tmp_path / "activation-git"
     git_root.mkdir()
 
