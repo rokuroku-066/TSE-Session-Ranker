@@ -1,0 +1,351 @@
+{
+  "schema_version": 1,
+  "protocol_id": "model_v17_liquidity_reliability_selection_20260804",
+  "registered_at": "2026-08-04T11:08:00+09:00",
+  "research_question": "Can exact completed-session activity improve the reliability, persistence, or regime interpretation of the price-only ranker, after v1.6 rejected hard vetoes, global additive liquidity, and a fixed high-turnover VWAP reversal?",
+  "authority": {
+    "analysis_type": "retrospective_candidate_specific_selection",
+    "project_level_untouched": false,
+    "project_outcomes_previously_viewed": true,
+    "replay_pdf_bytes_acquired_and_hashed_before_registration": true,
+    "replay_market_outcomes_parsed_before_source_lock": false,
+    "selection_result_may_reject_all_candidates": true,
+    "selection_result_may_nominate_at_most_one_research_candidate": true,
+    "production_promotion_allowed": false,
+    "production_model_changed": false,
+    "orders_allowed": false,
+    "reason": "The repository already contains project-level work through 2026-07-27, so this is a preregistered candidate-specific retrospective comparison, not untouched production evidence."
+  },
+  "prior_result_binding": {
+    "control_diagnosis": {
+      "C00_rank1_gross_mean_pct_per_day": -0.1993,
+      "C00_rank2_gross_mean_pct_per_day": 0.5636,
+      "C00_rank1_hit_rate": 0.416,
+      "C00_rank2_hit_rate": 0.658
+    },
+    "v16_rejected_mechanisms": [
+      "a fixed hard activity veto",
+      "a global additive Ridge containing all seven exact-liquidity ranks",
+      "a fixed rule that strengthens close-versus-VWAP reversal as turnover shock rises"
+    ],
+    "not_inferred": "v1.6 does not establish that exact activity is useless as pairwise reliability, price-memory weighting, regime state, or training-label reliability.",
+    "v17_family_hypothesis": "Exact D-1 activity is more useful as reliability, persistence, and regime context for a price signal than as unconditional mean alpha or a hard cash veto."
+  },
+  "source_contract": {
+    "price_warmup": {
+      "months": [
+        "202505",
+        "202506",
+        "202507"
+      ],
+      "manifest": "research/model_v05_input_lock.json",
+      "purpose": "price history only; monthly rows never receive synthetic liquidity"
+    },
+    "legacy_daily": {
+      "first_file": "stq_20250801.pdf",
+      "last_file": "stq_20260331.pdf",
+      "files": 160,
+      "sessions": 160,
+      "hash_authority": "research/model_v04_parser_recovery_audit.json"
+    },
+    "replay_daily": {
+      "start": "2026-04-01",
+      "end": "2026-07-27",
+      "files": 79,
+      "sessions": 79,
+      "input_lock": "research/model_v17_replay_input_lock.json",
+      "input_lock_sha256": "1d9a391c8e6b8d2003498c18ba09dac904e672e1f17c05516998ffb71e11c475",
+      "source_set_sha256": "a0fdea19f9e7c771d2e0450720eb551917d9c8b9cfade75260d5cc43adb3a43f"
+    },
+    "parser": {
+      "path": "src/tse_session_ranker/data/jpx.py",
+      "version": "jpx_daily_text_v6_special_quote_marker",
+      "sha256": "1bd2e74acced608eb36c3606b593ea407d2d1e5f54b3283790ef8fd0fb1041f7",
+      "required_rejected_rows": 0
+    },
+    "failure_rule": "A missing or extra source, filename/date mismatch, byte-count mismatch, SHA-256 mismatch, parser-version mismatch, parser rejection, duplicate date-code row, or schedule mismatch aborts the complete family. No proxy, stub, or price-derived replacement is permitted for unavailable activity."
+  },
+  "periods": {
+    "liquidity_warmup": [
+      "2025-08-01",
+      "2025-08-29"
+    ],
+    "initial_training_start": "2025-09-01",
+    "pair_crossfit_start": "2025-12-01",
+    "selection": [
+      "2026-04-01",
+      "2026-07-27"
+    ],
+    "selection_sessions": 79,
+    "fit_schedule": "monthly expanding; every model and OOF score for a month uses labels ending no later than the preceding month"
+  },
+  "point_in_time_contract": {
+    "decision_time": "08:58:59 Asia/Tokyo",
+    "latest_predictor_source": "the immediately preceding completed official session",
+    "all_rolling_windows_end": "D-1",
+    "forbidden_target_date_inputs": [
+      "open",
+      "high",
+      "low",
+      "close",
+      "volume",
+      "turnover",
+      "vwap",
+      "trading_unit",
+      "label",
+      "oc_return_pct",
+      "overnight",
+      "target-date source finality"
+    ],
+    "target_outcome_use": "The outcome-free one-slot score ledger is canonicalised and hashed before selection-date open-to-close outcomes are joined by date and code.",
+    "cash_rule": "A date with no common eligible score row, no complete frozen C00 top-two pair, a missing selected code, or a missing observed target outcome is cash with zero gross return and zero cost; no lower-ranked or replacement-model substitution is allowed.",
+    "tie_break": "higher score, then security code ascending"
+  },
+  "common_price_features": [
+    "oc_last",
+    "oc_mean_5",
+    "oc_mean_20",
+    "oc_mean_60",
+    "oc_win_20",
+    "oc_std_20",
+    "overnight_last",
+    "overnight_mean_20",
+    "overnight_mean_60",
+    "night_day_corr_60",
+    "xrank_atr14_pct",
+    "xrank_close_momentum_5",
+    "xrank_close_momentum_20",
+    "xrank_close_momentum_60",
+    "xrank_prior_close_location_20"
+  ],
+  "exact_liquidity_rank_features": [
+    "xrank_liq_turnover_med20",
+    "xrank_liq_volume_med20",
+    "xrank_liq_turnover_shock1",
+    "xrank_liq_turnover_log_iqr20",
+    "xrank_liq_lot_fraction20",
+    "xrank_liq_close_vwap_dev1",
+    "xrank_liq_close_vwap_abs_med20"
+  ],
+  "common_universe": {
+    "price_rule": "the v1.6 price-score eligibility rule using only D-1-known membership, coverage, and continuous history",
+    "activity_rule": "20 consecutive completed daily rows through D-1 with positive close, volume, turnover, VWAP, and trading unit and a stable trading unit",
+    "rank_transform": "average-tie cross-sectional rank mapped to [-1, 1] on the registered eligible source-date cross-section",
+    "missing_value_rule": "G0 price features use the frozen fold-median plus missing indicator. Registered exact-activity features must be finite. VP07's explicit invalid zero-range row and AT10 rows lacking all four required prior turnover ranks are excluded from that candidate only and are never replaced by a proxy."
+  },
+  "controls": [
+    {
+      "id": "C00_PRICE_RIDGE_TOP1",
+      "role": "matched control for every candidate except PAIR01",
+      "model": "daily cross-sectional return-rank Ridge",
+      "features": "common_price_features",
+      "alpha": 1.0,
+      "date_equal_weight": true,
+      "slot": "top one"
+    },
+    {
+      "id": "PAIR00_PRICE_ONLY_TOP2_RERANK",
+      "role": "matched control for PAIR01",
+      "top_set": "the frozen monthly C00 top two",
+      "training_pairs": "one OOF C00 top-two pair per prior date with two observed unequal returns, represented in both orientations with total date weight one; an equal-return date has no binary preference and is excluded identically from PAIR00 and PAIR01",
+      "features": [
+        "C00 model-score difference"
+      ],
+      "preprocess": "fold median with missing indicator, then StandardScaler",
+      "model": "LogisticRegression",
+      "C": 1.0,
+      "fit_intercept": false,
+      "max_iter": 1000,
+      "random_state": 20260804,
+      "slot": "one of the frozen two; no outsider"
+    },
+    {
+      "id": "C02_C00_RANK2",
+      "role": "diagnostic only; excluded from the family and winner rule",
+      "slot": "the frozen C00 second-ranked security"
+    }
+  ],
+  "candidates": [
+    {
+      "id": "PAIR01_TOP2_EXACT_LIQ_RERANK",
+      "hypothesis": "Exact activity can resolve which of C00's two strongest price candidates is more reliable without globally disturbing the profitable shoulder.",
+      "top_set": "freeze the monthly C00 top two before any activity value is consulted",
+      "training_pairs": "expanding-month OOF C00 top-two pairs; each historical month's C00 is trained only through the preceding month; one pair per date with two observed unequal returns, in both orientations; equal-return dates are excluded identically from PAIR00 and PAIR01",
+      "features": "C00 model-score difference plus differences of all seven exact_liquidity_rank_features",
+      "preprocess": "fold median with missing indicator, then StandardScaler",
+      "model": "LogisticRegression",
+      "C": 1.0,
+      "fit_intercept": false,
+      "max_iter": 1000,
+      "random_state": 20260805,
+      "matched_control": "PAIR00_PRICE_ONLY_TOP2_RERANK",
+      "slot": 1
+    },
+    {
+      "id": "TW02_TURNOVER_WEIGHTED_PRICE_MEMORY",
+      "hypothesis": "Price moves supported by more traded value carry different information from equal-day price averages.",
+      "features": [
+        "tw_mean_k = sum(turnover[t] * OC_return_pct[t]) / sum(turnover[t]) for k in {5,20}",
+        "tw_minus_equal_k = tw_mean_k - mean(OC_return_pct[t]) for k in {5,20}"
+      ],
+      "model": "G0 plus four registered features; daily-rank Ridge alpha=1; date-equal weight",
+      "matched_control": "C00_PRICE_RIDGE_TOP1",
+      "slot": 1
+    },
+    {
+      "id": "VW03_AGGREGATE_COST_BASIS",
+      "hypothesis": "The market's turnover-weighted multi-day cost basis and its migration contain state information absent from one-day VWAP deviation.",
+      "features": [
+        "AVWAP_k = sum(turnover[t]) / sum(volume[t]) for k in {5,20}",
+        "xrank_basis_gap20 = xrank(close[D-1] / AVWAP_20 - 1)",
+        "xrank_basis_migration5_20 = xrank(AVWAP_5 / AVWAP_20 - 1)"
+      ],
+      "model": "G0 plus two registered features; daily-rank Ridge alpha=1; date-equal weight",
+      "matched_control": "C00_PRICE_RIDGE_TOP1",
+      "slot": 1
+    },
+    {
+      "id": "RPY04_RETURN_PER_TURNOVER_REVERSAL",
+      "hypothesis": "A large price move per yen of turnover is fragile price impact and should reverse.",
+      "formula": "-xrank(sum(OC_return_pct[t] / turnover[t]) over D-5 through D-1)",
+      "model": "deterministic; no fit and no direction search",
+      "matched_control": "C00_PRICE_RIDGE_TOP1",
+      "slot": 1
+    },
+    {
+      "id": "AR05_SECURITY_ACTIVITY_REGIME_EXPERTS",
+      "hypothesis": "The mapping from price history to return rank differs between positive and nonpositive issuer activity shocks.",
+      "state": "xrank_liq_turnover_shock1 > 0 versus <= 0",
+      "model": "two separate G0 daily-rank Ridge experts, alpha=1 and date-equal weight; route each score row by its D-1 state",
+      "matched_control": "C00_PRICE_RIDGE_TOP1",
+      "slot": 1
+    },
+    {
+      "id": "PS06_PERSISTENT_VS_ISOLATED_ACTIVITY",
+      "hypothesis": "A persistent activity regime and an isolated one-day shock change the meaning of close-versus-VWAP pressure in different ways.",
+      "features": [
+        "sustained = clip(log(median(turnover[D-3:D-1]) / median(turnover[D-20:D-4])), -3, 3)",
+        "isolated = clip(log(turnover[D-1] / median(turnover[D-20:D-2])) - sustained, -3, 3)",
+        "cross-sectional xrank of sustained and isolated",
+        "each xrank multiplied by xrank_liq_close_vwap_dev1"
+      ],
+      "model": "G0 plus four registered features; daily-rank Ridge alpha=1; date-equal weight",
+      "matched_control": "C00_PRICE_RIDGE_TOP1",
+      "slot": 1
+    },
+    {
+      "id": "VP07_VWAP_RANGE_PRESSURE_MEMORY",
+      "hypothesis": "The persistence of close location relative to VWAP and daily range separates durable demand from a one-day deviation.",
+      "features": [
+        "p[t] = clip((close[t] - vwap[t]) / (high[t] - low[t]), -1, 1)",
+        "turnover-weighted p over trailing 5 and 20 sessions, then xrank each"
+      ],
+      "zero_range_rule": "p=0 only when high=low and close is numerically equal to VWAP; any other zero-range row is invalid and removed for VP07, never proxied or imputed",
+      "model": "G0 plus two registered features; daily-rank Ridge alpha=1; date-equal weight",
+      "matched_control": "C00_PRICE_RIDGE_TOP1",
+      "slot": 1
+    },
+    {
+      "id": "RW08_EXACT_LOT_RELIABILITY_WEIGHT",
+      "hypothesis": "Labels from sessions with more repeatedly traded lots are more reliable training observations, even when the score universe is unchanged.",
+      "reliability": "median(volume / trading_unit) over D-20:D-1, ranked to a strictly positive within-date percentile",
+      "weight": "normalise reliability percentiles so every training date has total weight one",
+      "model": "G0 daily-rank Ridge alpha=1; no activity feature in the predictor",
+      "score_universe": "identical to C00_PRICE_RIDGE_TOP1",
+      "matched_control": "C00_PRICE_RIDGE_TOP1",
+      "slot": 1
+    },
+    {
+      "id": "MR09_TURNOVER_WEIGHTED_MARKET_REGIME",
+      "hypothesis": "Market-wide concentration and VWAP-pressure breadth change how issuer momentum should be interpreted.",
+      "aggregates": [
+        "pressure_breadth[D-1] = sum(turnover_i * sign(close_i - vwap_i)) / sum(turnover_i)",
+        "turnover_HHI[D-1] = sum((turnover_i / sum(turnover_i))^2)"
+      ],
+      "aggregate_universe": "the D-1 common eligible cross-section",
+      "features": "pressure_breadth and turnover_HHI each multiplied by signed xrank_close_momentum_5 and signed xrank_close_momentum_20",
+      "model": "G0 plus four registered interactions; daily-rank Ridge alpha=1; date-equal weight",
+      "matched_control": "C00_PRICE_RIDGE_TOP1",
+      "slot": 1
+    },
+    {
+      "id": "AT10_ATTENTION_MIGRATION",
+      "hypothesis": "A security gaining market attention relative to its own recent cross-sectional activity rank changes the meaning of VWAP pressure.",
+      "features": [
+        "migration = turnover_xrank[D-1] - median(turnover_xrank[D-5:D-2])",
+        "xrank_attention_migration = cross-sectional xrank(migration)",
+        "xrank_attention_migration * xrank_liq_close_vwap_dev1"
+      ],
+      "availability_rule": "All four issuer turnover ranks for D-5 through D-2 must be observed in addition to D-1. A row lacking that history is ineligible for AT10 only and is never imputed or proxied.",
+      "model": "G0 plus two registered features; daily-rank Ridge alpha=1; date-equal weight",
+      "matched_control": "C00_PRICE_RIDGE_TOP1",
+      "slot": 1
+    }
+  ],
+  "evaluation": {
+    "fixed_slots_per_model_date": 1,
+    "candidate_variants": 10,
+    "no_capacity_grid": true,
+    "family_member_rule": "All ten candidates remain in the family even if failed, cash, or sequence-identical. Controls and C02 are not family members.",
+    "costs_bps": [
+      20,
+      40,
+      60
+    ],
+    "primary_cost_bps": 40,
+    "cost_interpretation": "fixed sensitivity haircuts, not measured spread, slippage, or fill cost",
+    "selection_slices": {
+      "replay_a": [
+        "2026-04-01",
+        "2026-05-29"
+      ],
+      "replay_b": [
+        "2026-06-01",
+        "2026-07-27"
+      ]
+    },
+    "bootstrap": {
+      "method": "paired moving block",
+      "block_length": 5,
+      "samples": 20000,
+      "random_state": 20260804,
+      "candidate_seed_rule": "random_state + zero-based candidate order index, yielding 20260804 through 20260813",
+      "familywise_one_sided_confidence": 0.9,
+      "bonferroni_individual_confidence": 0.99
+    },
+    "selection_gate_all_required": {
+      "net40_mean_positive": true,
+      "net40_median_positive": true,
+      "net60_mean_positive": true,
+      "both_fixed_slices_net40_positive": true,
+      "positive_months_net40_at_least": 3,
+      "top4_days_removed_net40_positive": true,
+      "top5_profit_codes_cash_net40_positive": true,
+      "familywise_paired_lower_vs_control_nonnegative": true,
+      "unique_codes_at_least": 40,
+      "maximum_code_share_at_most": 0.05,
+      "top10_code_share_at_most": 0.25,
+      "executed_days_at_least": 72,
+      "executed_slot_fraction_at_least": 0.8
+    },
+    "winner_rule": "If no candidate passes every gate, reject all. Otherwise choose the highest Bonferroni paired lower bound, then highest top-four-days-removed net40, then candidate id ascending. Nominate at most one retrospective research candidate; never promote production or enable orders."
+  },
+  "required_tests": [
+    "exact ordered ten-candidate and matched-control registry",
+    "protocol, input-lock, and parser hashes fail closed",
+    "same-day source mutation cannot change the same target-date features or score ledger",
+    "future mutation cannot change any earlier feature or score",
+    "row order leaves semantic scores unchanged",
+    "duplicate date-code rows fail closed",
+    "nonconsecutive history, nonpositive activity, and trading-unit changes fail closed",
+    "PAIR01 and PAIR00 can choose only from the frozen C00 top two",
+    "every pair-training score is expanding-month OOF and every label precedes the score month",
+    "equal-return historical top-two pairs are excluded identically from PAIR00 and PAIR01",
+    "VP07 zero-range behavior matches the registered rule",
+    "AT10 requires four observed prior turnover ranks and never proxies a missing rank",
+    "RW08 scoring universe equals C00",
+    "outcome-free score ledger is hashed before selection outcomes are joined",
+    "production promotion, production model change, and orders remain false"
+  ],
+  "stop_rule": "After this protocol, source lock, runner, audit, and tests are remotely committed together, parse the 79 replay outcomes and run the ten candidates exactly once. Do not add, remove, or alter candidates, formulas, universes, parameters, costs, gates, controls, or winner rules after any replay outcome is parsed."
+}
