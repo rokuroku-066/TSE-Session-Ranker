@@ -3455,7 +3455,10 @@ def test_activation_payload_receipt_and_first_terminal_bindings_use_real_git(
     tmp_path: Path,
 ) -> None:
     protocol, _ = audit.validate_protocol_contract()
-    with pytest.raises(runner.V18Error, match="Git evidence|commit"):
+    with pytest.raises(
+        runner.V18Error,
+        match="Git evidence|commit|Git executable is missing or symlinked",
+    ):
         runner.create_activation_payload(
             preregistration_commit_sha="1" * 40,
         )
