@@ -1,0 +1,208 @@
+{
+  "artifact_hashes": {
+    "audit_runner": "ba31df20eff03a8b4c776e2b1fe7136317651beb8c47341aec4ec7f3d64f7f8c",
+    "input_lock": "1d9a391c8e6b8d2003498c18ba09dac904e672e1f17c05516998ffb71e11c475",
+    "legacy_parser_audit": "317d5cde9741429263cc91c11575300660f94f62123725fc8ce2d76cdee02eeb",
+    "parser_source": "1bd2e74acced608eb36c3606b593ea407d2d1e5f54b3283790ef8fd0fb1041f7",
+    "picks": "32de442e2012d901963399f9fd91fc69fb3082e93f0cfa7981c279b2b7467273",
+    "price_manifest": "02370bda9c5fe73b166c557bcdc837d363f5deafbe91baa2d450b33dfcd45272",
+    "protocol": "f7d2efa30c5f6ca03a95e1f6e84e0fb6de3f68e8f0d520183877e2f0ab4a416f",
+    "result": "1463ae399c5de8ca33e762303d1ba3322ce21a383d2ad81f202a063bb8c148dd",
+    "runner": "6394161d70d8ca76862ee34bdaa3a0aeb95adf57c3dd3e6685fc65d456980807",
+    "scores": "8e2e8d0fc4fcdbb716ec1de0cafba2b6300015b93f93020d6309987018e18244"
+  },
+  "audit_id": "model_v17_liquidity_reliability_independent_audit_20260804",
+  "authority": {
+    "orders_allowed": false,
+    "production_model_changed": false,
+    "production_promotion_allowed": false,
+    "project_level_untouched": false
+  },
+  "checks": {
+    "all_folds_strictly_prior_and_registered": true,
+    "authority_remains_research_only": true,
+    "candidate_family_size_exact": true,
+    "control_metrics_recomputed": true,
+    "decision_recomputed": true,
+    "diagnostic_metrics_recomputed": true,
+    "fixed_slot_cash_and_no_veto_contract": true,
+    "gate_passer_count_recomputed": true,
+    "input_lock_contract_and_source_set_exact": true,
+    "input_lock_hash_frozen": true,
+    "outcome_label_matches_return_sign": true,
+    "pairwise_models_restricted_to_frozen_top2": true,
+    "parser_source_hash_frozen": true,
+    "picks_hash_matches_result": true,
+    "protocol_contract_exact": true,
+    "protocol_hash_frozen": true,
+    "protocol_hash_matches_result": true,
+    "protocol_id_matches_result": true,
+    "result_source_bindings_recomputed": true,
+    "runner_hash_matches_result": true,
+    "score_and_picks_ledgers_identical_before_outcomes": true,
+    "score_file_hash_matches_result": true,
+    "score_ledger_outcome_free_before_join": true,
+    "score_semantic_hash_matches_result": true,
+    "selection_calendar_and_fixed_slots_complete": true,
+    "status_recomputed": true,
+    "variant_metrics_bootstrap_and_gates_recomputed": true,
+    "warmup_sources_match_manifest": true,
+    "winner_rule_recomputed": true
+  },
+  "discrepancies": [],
+  "generated_at_utc": "2026-08-04T02:48:33.139730+00:00",
+  "independence": {
+    "project_bootstrap_helpers_imported": false,
+    "project_profit_helpers_imported": false,
+    "recomputed_from": [
+      "research/model_v17_liquidity_reliability_protocol.json",
+      "research/model_v17_liquidity_reliability_result.json",
+      "research/model_v17_liquidity_reliability_scores.csv",
+      "research/model_v17_liquidity_reliability_picks.csv"
+    ],
+    "selection_runner_imported": false
+  },
+  "integrity": {
+    "models": [
+      "C00_PRICE_RIDGE_TOP1",
+      "PAIR00_PRICE_ONLY_TOP2_RERANK",
+      "C02_C00_RANK2",
+      "PAIR01_TOP2_EXACT_LIQ_RERANK",
+      "TW02_TURNOVER_WEIGHTED_PRICE_MEMORY",
+      "VW03_AGGREGATE_COST_BASIS",
+      "RPY04_RETURN_PER_TURNOVER_REVERSAL",
+      "AR05_SECURITY_ACTIVITY_REGIME_EXPERTS",
+      "PS06_PERSISTENT_VS_ISOLATED_ACTIVITY",
+      "VP07_VWAP_RANGE_PRESSURE_MEMORY",
+      "RW08_EXACT_LOT_RELIABILITY_WEIGHT",
+      "MR09_TURNOVER_WEIGHTED_MARKET_REGIME",
+      "AT10_ATTENTION_MIGRATION"
+    ],
+    "observed_outcome_slots": 993,
+    "picks_rows": 1027,
+    "scheduled_sessions": 79,
+    "score_ledger_semantic_sha256": "8e2e8d0fc4fcdbb716ec1de0cafba2b6300015b93f93020d6309987018e18244",
+    "score_rows": 1027,
+    "vetoed_slots": 0
+  },
+  "recomputed": {
+    "decision": {
+      "candidate_family_rejected": true,
+      "orders_allowed": false,
+      "production_model_changed": false,
+      "research_nominee": null
+    },
+    "gate_passers": 0,
+    "maximum_absolute_numeric_difference": 0.0,
+    "numeric_tolerance": 1e-12,
+    "status": "selection_rejected_all_candidates",
+    "variant_summaries": [
+      {
+        "failed_gate_count": 9,
+        "gate_passed": false,
+        "net20_mean_pct": 0.20388364220233557,
+        "net40_mean_pct": 0.006415287771955787,
+        "net60_mean_pct": -0.19105306665842392,
+        "paired_lower_vs_control_net40": -0.06455098859442936,
+        "variant_id": "PAIR01_TOP2_EXACT_LIQ_RERANK"
+      },
+      {
+        "failed_gate_count": 10,
+        "gate_passed": false,
+        "net20_mean_pct": 0.19463190825605745,
+        "net40_mean_pct": 0.002226844964918149,
+        "net60_mean_pct": -0.19017821832622106,
+        "paired_lower_vs_control_net40": -0.1577150850905264,
+        "variant_id": "TW02_TURNOVER_WEIGHTED_PRICE_MEMORY"
+      },
+      {
+        "failed_gate_count": 10,
+        "gate_passed": false,
+        "net20_mean_pct": 0.33816330578517,
+        "net40_mean_pct": 0.14575824249403085,
+        "net60_mean_pct": -0.04664682079710842,
+        "paired_lower_vs_control_net40": -0.14955664771985328,
+        "variant_id": "VW03_AGGREGATE_COST_BASIS"
+      },
+      {
+        "failed_gate_count": 9,
+        "gate_passed": false,
+        "net20_mean_pct": 0.32704102688420933,
+        "net40_mean_pct": 0.1346359635930701,
+        "net60_mean_pct": -0.05776909969806914,
+        "paired_lower_vs_control_net40": -0.6489659234570583,
+        "variant_id": "RPY04_RETURN_PER_TURNOVER_REVERSAL"
+      },
+      {
+        "failed_gate_count": 8,
+        "gate_passed": false,
+        "net20_mean_pct": 0.3851871867756571,
+        "net40_mean_pct": 0.19278212348451793,
+        "net60_mean_pct": 0.00037706019337875124,
+        "paired_lower_vs_control_net40": -0.22411814418351197,
+        "variant_id": "AR05_SECURITY_ACTIVITY_REGIME_EXPERTS"
+      },
+      {
+        "failed_gate_count": 10,
+        "gate_passed": false,
+        "net20_mean_pct": 0.355611058615845,
+        "net40_mean_pct": 0.1632059953247058,
+        "net60_mean_pct": -0.029199067966433366,
+        "paired_lower_vs_control_net40": -0.18172475146631584,
+        "variant_id": "PS06_PERSISTENT_VS_ISOLATED_ACTIVITY"
+      },
+      {
+        "failed_gate_count": 10,
+        "gate_passed": false,
+        "net20_mean_pct": 0.3453471088902301,
+        "net40_mean_pct": 0.15294204559909086,
+        "net60_mean_pct": -0.03946301769204833,
+        "paired_lower_vs_control_net40": -0.038969445754401304,
+        "variant_id": "VP07_VWAP_RANGE_PRESSURE_MEMORY"
+      },
+      {
+        "failed_gate_count": 11,
+        "gate_passed": false,
+        "net20_mean_pct": 0.0008901036310158711,
+        "net40_mean_pct": -0.19151495966012339,
+        "net60_mean_pct": -0.3839200229512626,
+        "paired_lower_vs_control_net40": -0.6116328339021087,
+        "variant_id": "RW08_EXACT_LOT_RELIABILITY_WEIGHT"
+      },
+      {
+        "failed_gate_count": 11,
+        "gate_passed": false,
+        "net20_mean_pct": 0.1163401821982007,
+        "net40_mean_pct": -0.07606488109293871,
+        "net60_mean_pct": -0.26846994438407784,
+        "paired_lower_vs_control_net40": -0.14819754519065587,
+        "variant_id": "MR09_TURNOVER_WEIGHTED_MARKET_REGIME"
+      },
+      {
+        "failed_gate_count": 11,
+        "gate_passed": false,
+        "net20_mean_pct": 0.17098032527988197,
+        "net40_mean_pct": -0.023956383580877514,
+        "net60_mean_pct": -0.2188930924416369,
+        "paired_lower_vs_control_net40": -0.4717294857160051,
+        "variant_id": "AT10_ATTENTION_MIGRATION"
+      }
+    ],
+    "winner": null
+  },
+  "schema_version": 1,
+  "scope": {
+    "all_selection_gates": true,
+    "cost_metrics": true,
+    "daily_fixed_slot_returns": true,
+    "feature_reconstruction": false,
+    "fold_and_pairwise_contracts": true,
+    "paired_moving_block_bootstrap": true,
+    "protocol_input_and_artifact_bindings": true,
+    "raw_pdf_reparse": false,
+    "score_ledger_before_outcome_join": true,
+    "tail_and_code_cash_stress": true,
+    "winner_status_and_decision": true
+  },
+  "status": "pass"
+}

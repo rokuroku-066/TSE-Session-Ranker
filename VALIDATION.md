@@ -43,6 +43,7 @@
 
 
 
+
 ```
 
 </details>
@@ -3851,5 +3852,159 @@ orders allowed:            false
 次の試行には新しい未観測期間、または08:58 auction/order-book、実spread/slippage、
 source-complete material cohortのような異なる実情報を必要とする。取得経路とPIT
 証拠を成立させられない系統は、Entry 020どおり候補ごと棄却する。
+
+</details>
+
+## Entry 022 — 研究プロトコルv1.7：実流動性を信頼性・状態として使う10機構の反証
+
+| 項目 | 内容 |
+|---|---|
+| 実施日 | 2026-08-04 |
+| 親Entry | Entry 021 |
+| 事前登録コミット | `78743a825d3c214f05c5f92f34206aa9a7a33731` |
+| authority | `retrospective_candidate_specific_selection`、`project_level_untouched=false` |
+| 実入力 | 公式JPX daily PDF 239本、2025-08-01～2026-07-27 |
+| parser | 930,286行、rejected row 0 |
+| selection | 2026-04-01～07-27、79 scheduled sessions、source-complete 78/79 |
+| family | liquidity-as-reliability/state/regime 10候補、1 fixed slot、gridなし |
+| controls | C00 top1、PAIR00 price-only top2 reranker、C02 C00 rank2 diagnostic |
+| gate | `0/10` |
+| 最終判断 | 全候補棄却、winner・research nomineeなし |
+| production | 変更なし |
+| orders | `false` |
+
+> **一行結論:** v1.6の閾値やalphaを調整せず、流動性を相対信頼性・issuer状態・
+> 時間記憶・学習weight・market regimeとして使う10機構へ組み替えたが、全候補が
+> late slice、familywise下限、中央値、tail、code集中を落とした。点推定の改善は
+> 少数日・少数銘柄・前半へ集中し、production改善を確認できない。
+
+<details>
+<summary><strong>新仮説、one-shot評価、次のshoulder-state仮説</strong></summary>
+
+### 評価結果からの仮説生成
+
+Entry 021が反証したのは、hard veto、実流動性7特徴のglobal additive Ridge、
+固定VWAP-flow reversalの3機構である。保存済みv1.6 picksではC00 rank1がgross
+`-0.1993%/day`、rank2が`+0.5636%/day`で、LQ02はrank1を弱めてもrank2の利益を
+消していた。そこで実流動性を平均alphaとして足さず、価格signalの信頼性・
+状態・tail・学習weightとして使う次の10候補を事前固定した。
+
+```text
+PAIR01  frozen C00 top2内のexact-liquidity binary rerank
+TW02    turnover-weighted price memory
+VW03    aggregate VWAP cost basis
+RPY04   return-per-turnover deterministic reversal
+AR05    issuer activity-regime price experts
+PS06    persistent vs isolated activity
+VP07    VWAP-range pressure memory
+RW08    exact traded-lot reliability weight
+MR09    turnover-weighted market regime
+AT10    attention migration
+```
+
+全候補1 fixed slotで、capacity・alpha・閾値gridはない。PAIR01は同じfrozen top2と
+pair学習集合のPAIR00、残り9候補はC00 top1とpaired比較した。主コスト40bp、
+感応度20/60bp、moving-block bootstrap 20,000回、block 5、family size 10に対する
+個別片側confidence 99%を固定した。
+
+### inputとPIT
+
+新79 daily PDFはoutcome parse前にname・bytes・SHA-256を固定した。旧160本と合わせ、
+公式239本を固定parserで930,286行へ復元し、rejectは0だった。
+
+```text
+daily date bounds:                2025-08-01 .. 2026-07-27
+legacy / extension daily:         160 / 79
+daily parsed / rejected rows:     930,286 / 0
+panel rows / codes:               1,187,484 / 4,096
+selection source complete:        78 / 79
+score / picks fixed rows:         1,027 / 1,027
+observed outcome slots:           993
+same-day finality used in score:  false
+maximum liquidity source < target:true
+strictly-prior registered folds:  48 / 48
+```
+
+2026-06-30はfrozen C00 top2が完全でないため、全モデルを登録済みcash ruleで処理した。
+予定日の分母から除外せず、下位順位へ置換していない。outcome列なしのscore ledgerを
+先に意味的hashへ固定してからreturnをjoinした。
+
+### one-shot結果
+
+単位は1 scheduled sessionあたりのpercentage pointである。`LB99`は登録対照との差の
+Bonferroni補正済み片側99%下限、`late`は固定後半40 sessionsである。
+
+| candidate | net20 | net40 | net60 | LB99 | late | tail4 | gate |
+|---|---:|---:|---:|---:|---:|---:|:---:|
+| `PAIR01` | +0.203884% | +0.006415% | -0.191053% | -0.064551pt | -0.192338% | -0.399748% | FAIL |
+| `TW02` | +0.194632% | +0.002227% | -0.190178% | -0.157715pt | -0.287655% | -0.352167% | FAIL |
+| `VW03` | +0.338163% | +0.145758% | -0.046647% | -0.149557pt | -0.185668% | -0.210817% | FAIL |
+| `RPY04` | +0.327041% | +0.134636% | -0.057769% | -0.648966pt | -0.286746% | -0.446152% | FAIL |
+| `AR05` | +0.385187% | +0.192782% | +0.000377% | -0.224118pt | -0.025370% | -0.210179% | FAIL |
+| `PS06` | +0.355611% | +0.163206% | -0.029199% | -0.181725pt | -0.158666% | -0.192438% | FAIL |
+| `VP07` | +0.345347% | +0.152942% | -0.039463% | -0.038969pt | -0.106835% | -0.195245% | FAIL |
+| `RW08` | +0.000890% | -0.191515% | -0.383920% | -0.611633pt | -0.178283% | -0.490320% | FAIL |
+| `MR09` | +0.116340% | -0.076065% | -0.268470% | -0.148198pt | -0.164293% | -0.434635% | FAIL |
+| `AT10` | +0.170980% | -0.023956% | -0.218893% | -0.471729pt | -0.252633% | -0.455960% | FAIL |
+
+C00 top1はgross`+0.374650%`、net40`-0.010160%`だった。C02 rank2とPAIR00は
+79日すべて同じfixed slotでnet40`-0.477644%`となり、Entry 021で観測したrank2
+shoulder優位は再現しなかった。
+
+全10候補が両slice、FWER下限、net40中央値、上位4利益日除外、上位5利益code cash、
+最大code share、top10 code shareを不合格とした。一方で10候補すべてが実行日数・
+slot率を通過しており、failureはcash sparsityではない。AR05の絶対net40とVP07の
+FWER下限は候補中最良でも、late・tail・diversityが負で採用できない。
+
+### pair診断と次の仮説
+
+保存済みpicksの事後診断では、PAIR00はcompleteな78日すべてでrank2を選んだ。
+PAIR01はrank1を40日、rank2を38日、cashを1日選び、PAIR00比では
+`+0.484059pt/session`改善した。しかし登録対照でないC00 top1との事後差は全79日で
+`+0.0166pt/session`にすぎず、exact liquidity固有の優位は未証明である。
+
+Entry 021のrank2優位からEntry 022のrank2 net40`-0.477644%`への反転に基づき、
+次の中心仮説を次のように限定する。
+
+> **rank1–rank2 shoulder polarityは固定premiumではなく、strictly lagged OOFの
+> rank別実現差で観測できるslow stateとして持続・反転する。**
+
+v1.8ではv1.7をdevelopment扱いし、v1.7特徴・係数・windowをこの79日に合わせ直さない。
+前月までのOOF rank1-minus-rank2実現差だけでfrozen top2のrank positionまたはcashを
+選ぶ新機序をfresh期間へ事前登録する。tail・code cash・集中度gateは緩めない。
+
+### 独立監査とartifact
+
+selection runnerとproject損益・bootstrap helperをimportしない別監査が、
+全metric、20,000-sample paired bootstrap、gate、winner、authorityを再計算した。
+29/29 checkがPASS、discrepancy 0、最大数値差0.0だった。raw PDF再parseと特徴再構築は
+監査範囲外で、source/parser hashとPIT mutation testから分離している。
+
+```text
+hypothesis registry SHA-256: 6e52ae3d6362583225496c4685fc1d601d0567753facb3eb24a5430cffa10c12
+protocol SHA-256:            f7d2efa30c5f6ca03a95e1f6e84e0fb6de3f68e8f0d520183877e2f0ab4a416f
+replay input lock SHA-256:   1d9a391c8e6b8d2003498c18ba09dac904e672e1f17c05516998ffb71e11c475
+parser source SHA-256:       1bd2e74acced608eb36c3606b593ea407d2d1e5f54b3283790ef8fd0fb1041f7
+runner SHA-256:              6394161d70d8ca76862ee34bdaa3a0aeb95adf57c3dd3e6685fc65d456980807
+scores / semantic SHA-256:   8e2e8d0fc4fcdbb716ec1de0cafba2b6300015b93f93020d6309987018e18244
+picks SHA-256:               32de442e2012d901963399f9fd91fc69fb3082e93f0cfa7981c279b2b7467273
+result SHA-256:              1463ae399c5de8ca33e762303d1ba3322ce21a383d2ad81f202a063bb8c148dd
+audit runner SHA-256:        ba31df20eff03a8b4c776e2b1fe7136317651beb8c47341aec4ec7f3d64f7f8c
+audit JSON SHA-256:          41a626f96dff850aec581838cd698695d541e6bb4e9882b5f1ce27fc68218dec
+tests SHA-256:               6dbc0b61d8ddcfd6311d7ac104d4fad27b1af4d9298a949ae98ad137daa5981c
+```
+
+```text
+runtime:                    978.260319 seconds
+Python / NumPy:             3.12.13 / 2.3.5
+pandas / scikit-learn:      2.2.3 / 1.8.0
+targeted v1.7 tests:        16 passed
+full tests:                429 passed
+subtests:                  192 passed
+gate passers:                0 / 10
+winner / nominee:            none / none
+production model changed:   false
+orders allowed:             false
+```
 
 </details>
