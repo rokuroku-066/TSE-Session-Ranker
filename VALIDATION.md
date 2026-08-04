@@ -4007,3 +4007,171 @@ orders allowed:             false
 ```
 
 </details>
+
+## Entry 023 — 研究プロトコルv1.8：lagged monthly shoulder-stateのfresh-forward事前登録
+
+| 項目 | 内容 |
+|---|---|
+| 実施日 | 2026-08-04 |
+| 親Entry | Entry 022 |
+| status | `implementation_complete_activation_pending` |
+| authority | `genuinely_later_forward_shadow_development` |
+| candidate | `SH01_LAGGED_MONTHLY_SHOULDER_STATE`、family size 1 |
+| controls | `C00_PRICE_RIDGE_TOP1`、`C02_C00_RANK2` |
+| fresh期間 | 2026-08-05以後、120 scheduled sessions以上、6 calendar months以上、最初の適格月末まで |
+| activation | 3 direct commits A/B/C。本Entryを含むcommit Aのみを作り、payload B・receipt Cは未作成 |
+| evaluation | 未開封。score、decision、outcome、picks、resultは未生成 |
+| production | 変更なし |
+| orders | `false` |
+
+> **一行結論:** v1.6で観測したrank2優位がv1.7で反転したため、固定rank2 premiumや
+> v1.7流動性特徴の再調整をやめ、前3完了月のstrictly lagged rank1-minus-rank2
+> 実現差だけでC00 frozen top2の順位を月次選択する1機構を、未観測のforward期間へ
+> 固定した。実装は完了したが、合格・性能改善・production昇格はまだ主張しない。
+
+<details>
+<summary><strong>仮説、fresh-forward契約、PIT証拠、合格条件</strong></summary>
+
+### 評価結果から立てた新仮説
+
+Entry 022ではC00 rank2/PAIR00がnet40 `-0.477644%`となり、Entry 021のrank2
+shoulder優位が反転した。PAIR01はPAIR00を救済しても、未登録のC00 top1との事後差は
+全79日で約`+0.0166pt/session`にすぎず、exact liquidity固有の優位は確認できない。
+
+したがってv1.8の仮説を次の1点へ限定する。
+
+> **C00 rank1–rank2 shoulder polarityは固定premiumではなく、前月までのOOF
+> rank別実現差が示すslow stateとして持続・反転する。**
+
+不足していたのは、平均alphaを増やす別特徴や閾値の微調整ではない。合格には、
+未観測期間でも状態方向が持続し、利益が少数日・少数codeへ集中せず、40/60bp、
+両時系列slice、中央値、tail除去、code-cash stress、familywise対照下限を同時に
+通ることが必要である。v1.8はこの不足を検証するが、通過を保証しない。
+
+### SH01の固定式
+
+各counted sessionで、v1.7と同じG0価格Ridge `alpha=1`を前月末までのデータだけで
+月次fitし、outcomeなしでC00 top2を固定する。complete pairの日だけ次を作る。
+
+```text
+d_t = C00 rank1 open-to-close return pct
+    - C00 rank2 open-to-close return pct
+```
+
+各完了月はcomplete pairが10日以上なら`d_t`の通常中央値、未満ならunavailableとする。
+対象月Mのstateは、飛ばしなしでM-3、M-2、M-1の3月中央値の通常中央値とする。
+
+```text
+state > 0 : frozen C00 rank1を1 slot選択
+state < 0 : frozen C00 rank2を1 slot選択
+state = 0 : cash
+必要月unavailable : cash
+```
+
+対象月の途中ではstateを更新しない。target-month outcome、partial month aggregate、
+target-date price、後日revisionは入れない。rank3以下への置換、window・sign・alpha・
+capacity search、v1.7の79日に対する再調整はない。
+
+固定済みseedは次のとおりで、2026-07だけはv1.7が07-27で終了したため、そのbytesへ
+事前にbindされた透明なpartial historical exceptionである。forward月には再利用しない。
+
+| completed month | complete pairs | median rank1-rank2 |
+|---|---:|---:|
+| 2026-05 | 17 | +0.4532617412224217pt |
+| 2026-06 | 19 | +0.5353494177210093pt |
+| 2026-07（01–27） | 18 | +0.09214571919513584pt |
+
+条件どおり2026-08の初期stateは`+0.4532617412224217pt`、選択順位はrank1である。
+
+### genuinely-later forwardと停止境界
+
+登録calendarはJPX営業日343本、2026-08-05～2027-12-30を固定した。最初のcounted
+sessionはreceipt commit Cのsuccessful pull-request workflowが持つGitHub server
+`updated_at`だけから、08:58:59 Asia/Tokyo cutoffより前の最初の登録sessionへ機械的に
+決める。観測がその既決定cutoffに間に合わなければactivation全体を失敗させ、後ろへ
+ずらしたりbackfillしたりしない。
+
+仮にfirst counted sessionが2026-08-05なら、120本目は2027-02-02、terminalは
+2027-02-26、N=136、7 calendar months、前後半68/68となる。実際のterminalは
+activationで確定したfirst sessionから同じ規則で再計算する。
+
+このcommit Aではactivation payload/receiptを作らず、forward source archive、exact
+hash、parser、runtimeを揃えた後に、payloadだけのdirect child B、receiptだけのdirect
+child Cを作る。A/B/Cそれぞれの最初のattempt-1 pull-request workflow成功を要求する。
+現時点ではcounted session、performance、nomineeは存在しない。
+
+### 日次PIT checkpoint
+
+日次のprimaryとhistorical名`safety_cash`は、同じdecision coreを別nonceの固定
+16,384-byte envelopeへ封印する。`safety_cash`は公開順序の証拠だけで、cashやfallbackの
+選択権限を持たない。primaryの最初のattempt-1 workflow `created_at < cutoff`だけが
+日次の選択権威で、status、conclusion、`run_started_at`、`updated_at`は順位やcashを
+変えない。primaryがmissing、late-created、ambiguous、改変ならsession cashではなく
+実験全体をintegrity abortする。
+
+公開は固定12-step GitHub Git Data API契約でsafety→primaryのsole-parent chainを作る。
+terminal監査はlocal Gitを信頼せず、remote ref、全path history、commit/tree/blob、
+compare、Actions全pagination、両coreを独立再構築する。外部predictor/outcome/core証拠は
+repo外append-only storeへ置き、dirfd、`O_NOFOLLOW`、single-link、inode uniquenessで
+symlink・hardlink・TOCTOUを拒否する。
+
+runtime lockはPython/package tree、startup hook、live module origin、ELF root/shared
+object、Git、pdftotext、CA bundle、critical environmentをexact bytesへ固定する。
+completed-month ledgerのterminal-inclusive schema/hash/chronologyをoutcome-blindに
+検証するまで、runnerと独立auditはoutcome ledgerをopen・parseしない。
+
+### 合格gateと権限
+
+主コスト40bp、感応度20/60bp、paired moving-block bootstrapはblock 20、20,000回、
+seed 20260805、family size 1、片側90%下限である。次をすべてANDで要求する。
+
+```text
+net40 mean > 0
+net40 median > 0
+net60 mean > 0
+early / late両sliceのnet40 > 0
+ceil(75% × represented months)以上の月でnet40 > 0
+上位4利益日を除いてnet40 > 0
+利益上位5 codeをcashにしてnet40 > 0
+paired point delta vs C00 top1 > 0
+paired one-sided lower bound >= 0
+unique code >= 40
+maximum code share <= 0.05
+top10 code share <= 0.25
+executed days >= ceil(90% × N)
+executed slot fraction >= 0.80
+```
+
+通過しても変更なしのSH01をv1.9 sealed confirmationへ1件nominateできるだけで、
+production promotion、注文、v1.8 outcomeに合わせた係数・window変更は禁止する。
+
+### artifactと事前検証
+
+```text
+hypothesis SHA-256:          d92dfea8b02d2e10516e4c98fae7219e8b8cdc91967d57df1c5f546ef55111d6
+protocol SHA-256:            c623fabfa8e94381bce27d359cefc6e51a9a80f1c18f62f6098cfdfc8e9f6112
+runtime-lock file SHA-256:   95a867e2f8f187528a7ba3d24f4db4f1bf0964531b6e0e2b85d88d0c758f1e32
+runtime-lock self SHA-256:   fcb453b3532625e2eefad679972389bd80cb7ee7685a40610d5aa858d7a32c2b
+calendar SHA-256:            c5c5908b0e26ebd57eb2e473b9d4ce7f92a7c8b336f6ad70596152de971b77a7
+runner SHA-256:              ac9a8311799d18288499004771b99eb4d22734d40641bcf2e1af39b0a97e64e9
+independent audit SHA-256:   be9ae1a0738b7d7d61d129a7a1c9da9cb2110634a24f7b0f464636da9414c912
+tests SHA-256:               319c50dc88a92c32c961db3ab81d5c820a19c30ee12806b7def1c564cc0d476f
+workflow SHA-256:            7c9811768511bacb889e0f7bfa9508c2d2212079e8857db3b152d75868c232c7
+```
+
+```text
+py_compile:                  PASS
+protocol validation:        PASS
+strict runtime validation:  PASS
+targeted v1.8 tests:        53 passed (226.17s)
+full tests:                 482 passed (244.36s)
+subtests:                   192 passed
+warnings:                    27
+read-only material blockers: 0
+activation payload/receipt: absent / absent
+outcomes / result:          unopened / absent
+production model changed:   false
+orders allowed:             false
+```
+
+</details>
