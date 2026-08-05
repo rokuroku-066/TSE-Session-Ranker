@@ -29,7 +29,7 @@ RESEARCH = ROOT / "research"
 EXPECTED_PROTOCOL_ID = "model_v18_shoulder_state_forward_20260804"
 EXPECTED_CANDIDATE = "SH01_LAGGED_MONTHLY_SHOULDER_STATE"
 EXPECTED_PROTOCOL_SHA256 = (
-    "c623fabfa8e94381bce27d359cefc6e51a9a80f1c18f62f6098cfdfc8e9f6112"
+    "930a82163f347aa7c303dfea1fb8b593ac6bff95ff774a2c6804c437d679cb5f"
 )
 
 
@@ -74,6 +74,7 @@ def _assert_foreign_runtime_rejection(stderr: str) -> None:
             "registered ELF object bytes changed",
             "operational platform differs from runtime lock",
             "operational Python differs from runtime lock",
+            "operational distribution is missing",
         )
     ), stderr
 
@@ -137,7 +138,7 @@ def _github_observation(
     """Build a protocol-valid immutable transport receipt for pure tests."""
 
     repository = "rokuroku-066/TSE-Session-Ranker"
-    branch = "agent/v16-real-data-model-eval-20260728"
+    branch = "agent/v18-a2-shoulder-state-20260805"
     if observation_kind == "commit":
         assert requested_commit_sha is not None
         endpoint = f"/repos/{repository}/commits/{requested_commit_sha}"
@@ -390,7 +391,10 @@ def _outcome_manifest(
             f"{decision['session_date']}T15:55:00+09:00"
         ),
         "source_file_name": f"stq_{str(decision['session_date']).replace('-', '')}.pdf",
-        "source_url": "https://www.jpx.co.jp/example.pdf",
+        "source_url": (
+            "https://www.jpx.co.jp/markets/statistics-equities/daily/"
+            f"test-att/stq_{str(decision['session_date']).replace('-', '')}.pdf"
+        ),
         "raw_source_object_key": (
             f"model_v18_shoulder_state/outcome/{decision['session_date']}.pdf"
         ),
@@ -501,6 +505,7 @@ def _forward_ledgers(
         retrieved_at="2026-08-04T00:07:00+00:00",
     )
     decision_rows: list[dict[str, object]] = []
+    score_session_bindings: list[dict[str, object]] = []
     for index, session in enumerate(sessions):
         rank1_code = f"{1000 + index:04d}"
         rank2_code = f"{5000 + index:04d}"
@@ -529,6 +534,19 @@ def _forward_ledgers(
             run_id=10_000 + index,
             updated_at=f"{session.date()}T07:30:00+09:00",
             retrieved_at=f"{session.date()}T07:31:00+09:00",
+        )
+        score_session_file_sha256 = hashlib.sha256(
+            f"score-file:{session.date()}".encode()
+        ).hexdigest()
+        score_session_semantic_sha256 = hashlib.sha256(
+            f"score-semantic:{session.date()}".encode()
+        ).hexdigest()
+        score_session_bindings.append(
+            {
+                "session_date": str(session.date()),
+                "file_sha256": score_session_file_sha256,
+                "semantic_sha256": score_session_semantic_sha256,
+            }
         )
         decision_row: dict[str, object] = {
                 "schema_version": 1,
@@ -604,6 +622,11 @@ def _forward_ledgers(
                 "c00_fold_manifest_sha256": "f" * 64,
                 "fold_model_bundle_file_sha256": "9" * 64,
                 "state_manifest_sha256": "1" * 64,
+                "score_session_file_sha256": score_session_file_sha256,
+                "score_session_semantic_sha256": score_session_semantic_sha256,
+                "score_session_set_sha256": audit.canonical_json_sha256(
+                    score_session_bindings
+                ),
                 "decision_cutoff": f"{session.date()}T08:58:59+09:00",
                 "computed_at": f"{session.date()}T08:00:00+09:00",
                 "source_complete": True,
@@ -759,6 +782,8 @@ def _remote_checkpoint_fixture(tmp_path: Path) -> dict[str, object]:
     proposal_root = tmp_path / "checkpoint-proposals"
     proposal_session = proposal_root / "2026-08-05"
     proposal_session.mkdir(parents=True)
+    proposal_root.chmod(0o700)
+    proposal_session.chmod(0o755)
     core_root = tmp_path / "checkpoint-core-store"
     core_session = (
         core_root
@@ -767,6 +792,13 @@ def _remote_checkpoint_fixture(tmp_path: Path) -> dict[str, object]:
         / "2026-08-05"
     )
     core_session.mkdir(parents=True)
+    for directory in (
+        core_root,
+        core_root / "model_v18_shoulder_state",
+        core_root / "model_v18_shoulder_state" / "checkpoint-core",
+        core_session,
+    ):
+        directory.chmod(0o700)
     proposals: dict[str, dict[str, object]] = {}
     proposal_bytes: dict[str, bytes] = {}
     for ordinal, role in enumerate(("safety_cash", "primary")):
@@ -782,7 +814,9 @@ def _remote_checkpoint_fixture(tmp_path: Path) -> dict[str, object]:
             "decision_core_sha256": audit.canonical_json_sha256(core_value),
         }
         envelope = runner.encode_checkpoint_core_envelope(core_object)
-        (core_session / f"{role}.bin").write_bytes(envelope)
+        core_path = core_session / f"{role}.bin"
+        core_path.write_bytes(envelope)
+        core_path.chmod(0o600)
         proposal: dict[str, object] = {
             "schema_version": 1,
             "checkpoint_id": f"model_v18_shoulder_state_checkpoint_20260805_{role}",
@@ -833,9 +867,15 @@ def _remote_checkpoint_fixture(tmp_path: Path) -> dict[str, object]:
     proposal_relative_root = str(
         protocol["daily_preopen_checkpoint_contract"]["proposal_directory"]
     )
-    protected_paths = list(
+    required_paths = list(
         protocol["activation"]["preregistration_commit"]["required_paths"]
     )
+    additional_test_paths = list(
+        protocol["activation"]["preregistration_commit"][
+            "additional_test_artifact_paths"
+        ]
+    )
+    protected_paths = [*required_paths, *additional_test_paths]
     workflow_path = protocol["activation"]["payload"]["fixed_values"][
         "workflow_path"
     ]
@@ -854,7 +894,10 @@ def _remote_checkpoint_fixture(tmp_path: Path) -> dict[str, object]:
         ("runtime_lock_path", "runtime_lock_sha256"),
         ("runner_path", "runner_sha256"),
         ("audit_path", "audit_sha256"),
+        ("rehearsal_path", "rehearsal_sha256"),
         ("tests_path", "tests_sha256"),
+        ("iteration_report_path", "iteration_report_sha256"),
+        ("validation_report_path", "validation_report_sha256"),
         ("session_calendar_path", "session_calendar_sha256"),
         ("workflow_path", "workflow_sha256"),
     )
@@ -864,6 +907,13 @@ def _remote_checkpoint_fixture(tmp_path: Path) -> dict[str, object]:
         )
         activation_payload[path_field] = path
         activation_payload[hash_field] = hashlib.sha256(base_payloads[path]).hexdigest()
+    activation_payload["additional_test_artifacts"] = [
+        {
+            "path": path,
+            "sha256": hashlib.sha256(base_payloads[path]).hexdigest(),
+        }
+        for path in additional_test_paths
+    ]
     base_entries = {
         path: {
             "path": path,
@@ -1449,6 +1499,93 @@ def test_runtime_lock_closure_strict_host_and_one_byte_mutation(
             audit.validate_runtime_lock(strict_environment=True)
 
 
+def test_runtime_lock_registers_zstandard_lazy_network_dependency() -> None:
+    lock, _ = audit.validate_runtime_lock(strict_environment=False)
+    assert lock["elf_closure"]["loader_environment"][
+        "PYTHON_ZSTANDARD_IMPORT_POLICY"
+    ] is None
+    assert "PYTHON_ZSTANDARD_IMPORT_POLICY" not in os.environ
+    registered = {
+        item["name"]: item for item in lock["runtime"]["distributions"]
+    }
+    zstandard = registered["zstandard"]
+    assert zstandard == {
+        "name": "zstandard",
+        "import_name": "zstandard",
+        "version": "0.25.0",
+        "file_count": 13,
+        "tree_sha256": (
+            "196ee72f94e8315bc221ca7f65e8eb8d348097c29f324aa00fdf71cdd9171636"
+        ),
+        "module_relative_path": "zstandard/__init__.py",
+        "module_file_sha256": (
+            "5dd909e0b60a946a0b08deaf57545d17dc044f5df4040beec55f7ef6c6fecd11"
+        ),
+    }
+    backend = [
+        item
+        for item in lock["elf_closure"]["root_objects"]
+        if item["basename"] == "backend_c.cpython-312-x86_64-linux-gnu.so"
+    ]
+    assert backend == [
+        {
+            "path": (
+                "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/"
+                "lib/python3.12/site-packages/zstandard/"
+                "backend_c.cpython-312-x86_64-linux-gnu.so"
+            ),
+            "basename": "backend_c.cpython-312-x86_64-linux-gnu.so",
+            "roles": ["registered_distribution_extension"],
+            "sha256": (
+                "7eb41c8b36cd99ed6c67e39f8574e42472687a14c6038c512bb3a90b7082616d"
+            ),
+        }
+    ]
+    assert not any(
+        item["basename"] == "_cffi.cpython-312-x86_64-linux-gnu.so"
+        for item in lock["elf_closure"]["root_objects"]
+    )
+    assert lock["elf_closure"]["shared_object_count"] == 70
+    assert lock["elf_closure"]["shared_object_set_sha256"] == (
+        "af82cedf8f1407846d292c6b296eca084fb8266ffaca66c6209241a31a9ed329"
+    )
+
+    registered_python = next(
+        Path(item["path"])
+        for item in lock["elf_closure"]["root_objects"]
+        if "python_executable" in item["roles"]
+    )
+    if not registered_python.is_file():
+        return
+    environment = os.environ.copy()
+    for name in lock["elf_closure"]["loader_environment"]:
+        environment.pop(name, None)
+    script = (
+        "import sys; "
+        "from pathlib import Path; "
+        "from research import model_v18_shoulder_state_runner as r; "
+        "sys.modules['__main__'].__file__=r.__file__; "
+        "r.validate_runtime_lock(strict_environment=True); "
+        "import zstandard; "
+        "assert zstandard.backend == 'cext'; "
+        "assert Path(zstandard.backend_c.__file__).resolve() == Path("
+        "'/opt/codex/runtimes/codex-primary-runtime/dependencies/python/"
+        "lib/python3.12/site-packages/zstandard/"
+        "backend_c.cpython-312-x86_64-linux-gnu.so'); "
+        "r._git('rev-parse', 'HEAD'); "
+        "r._validate_startup_and_module_closure("
+        "phase='post-git-zstd-regression')"
+    )
+    completed = subprocess.run(
+        [str(registered_python), "-B", "-c", script],
+        cwd=ROOT,
+        env=environment,
+        capture_output=True,
+        text=True,
+    )
+    assert completed.returncode == 0, completed.stderr
+
+
 def test_runtime_lock_rejects_stdlib_and_git_byte_mutation(tmp_path: Path) -> None:
     lock = json.loads(
         (RESEARCH / "model_v18_runtime_lock.json").read_text(encoding="utf-8")
@@ -1720,9 +1857,8 @@ def test_protocol_result_input_registry_and_status_aware_terminal_raw_roots(
         "predictor_raw_source_set_sha256",
         "predictor_unique_raw_object_count",
         "predictor_parser_sha256",
-        "predictor_parsed_panel_semantic_set_sha256",
-        "predictor_g0_panel_semantic_set_sha256",
-        "predictor_common_universe_semantic_set_sha256",
+        "predictor_parsed_shard_binding_set_sha256",
+        "predictor_target_slice_semantic_set_sha256",
         "predictor_target_date_scoring_input_semantic_set_sha256",
         "c00_fold_manifest_set_sha256",
         "c00_fold_model_bundle_file_set_sha256",
@@ -1743,11 +1879,7 @@ def test_protocol_result_input_registry_and_status_aware_terminal_raw_roots(
         "sealed_core_store"
     ]
     assert checkpoint_store["cli_argument"] == "--checkpoint-core-store-root"
-    picks_fields = protocol["result_contract"]["canonical_materialization_contract"][
-        "picks_required_fields"
-    ]
-    assert picks_fields == list(audit.PICKS_FIELDS)
-    assert picks_fields == list(runner.PICKS_FIELDS)
+    assert tuple(runner.PICKS_FIELDS) == tuple(audit.PICKS_FIELDS)
     assert predictor_store["object_key_prefix"].endswith("/predictor/")
     assert outcome_store["object_key_pattern"].startswith(
         "model_v18_shoulder_state/outcome/"
@@ -1769,6 +1901,8 @@ def test_protocol_result_input_registry_and_status_aware_terminal_raw_roots(
             "model_v18_shoulder_state_audit.py",
             "--predictor-raw-store-root",
             str(tmp_path),
+            "--predictor-derived-store-root",
+            str(tmp_path / "derived"),
             "--outcome-raw-store-root",
             str(tmp_path),
             "--checkpoint-core-store-root",
@@ -1852,7 +1986,8 @@ def test_prepare_checkpoint_seals_core_pair_before_proposal_timestamp_and_pair(
         ],
     }
     decision_path = tmp_path / "decisions.jsonl"
-    decision_path.write_bytes(b"")
+    decision_record_directory = tmp_path / "decision-records"
+    decision_record_directory.mkdir(mode=0o700)
     activation_path = tmp_path / "activation.json"
     activation_path.write_text(
         json.dumps({"branch": protocol["branch"]}) + "\n", encoding="utf-8"
@@ -1861,8 +1996,15 @@ def test_prepare_checkpoint_seals_core_pair_before_proposal_timestamp_and_pair(
     proposal_root.mkdir()
     external_root = tmp_path / "external-core-store"
     external_root.mkdir()
+    core_parent = (
+        external_root / "model_v18_shoulder_state" / "checkpoint-core"
+    )
+    core_parent.mkdir(parents=True, mode=0o700)
+    core_parent.parent.chmod(0o700)
+    core_parent.chmod(0o700)
     monkeypatch.setattr(runner, "_STRICT_RUNTIME_ACTIVE", True)
     monkeypatch.setattr(runner, "DECISION_LEDGER", decision_path)
+    monkeypatch.setattr(runner, "DECISION_RECORD_DIR", decision_record_directory)
     monkeypatch.setattr(runner, "ACTIVATION_PAYLOAD", activation_path)
     monkeypatch.setattr(runner, "CHECKPOINT_PROPOSAL_DIR", proposal_root)
     monkeypatch.setattr(
@@ -2334,7 +2476,9 @@ def test_checkpoint_terminal_remote_pair_and_git_data_mutations(
     )
     alias = tmp_path / "checkpoint-core-hardlink.bin"
     os.link(safety_core, alias)
-    with pytest.raises(audit.AuditError, match="single-link regular file"):
+    with pytest.raises(
+        audit.AuditError, match="private single-link regular|single-link regular file"
+    ):
         validate()
 
 
@@ -2363,227 +2507,61 @@ def test_numeric_fold_bundle_reconstructs_without_runner_import_or_pickle() -> N
         runner.validate_c00_model_bundle(tampered)
 
 
-def test_source_manifest_is_exact_d_minus_one_and_fail_closed_hash_is_nonnull() -> None:
+def test_source_manifest_is_exact_d_minus_one_and_incomplete_is_not_authority() -> None:
     protocol, _ = audit.validate_protocol_contract()
-    complete = _source_manifest()
-    assert audit.validate_source_manifest(
-        complete, session_date="2026-08-05", protocol=protocol
-    )["source_complete"] is True
-    assert runner.validate_source_manifest(
-        complete, session_date="2026-08-05"
-    )[0]["source_complete"] is True
+    registered = protocol["source_contract"]["forward_daily"][
+        "source_manifest_required_fields"
+    ]
+    assert registered == list(runner.SOURCE_MANIFEST_FIELDS)
+    assert registered == list(audit.SOURCE_MANIFEST_FIELDS)
+    assert runner._latest_required_predictor_source_session(
+        pd.Timestamp("2026-08-05")
+    ) == pd.Timestamp("2026-08-04")
+    states = protocol["source_contract"]["forward_daily"][
+        "source_manifest_state_rules"
+    ]
+    assert "Forbidden for a counted session" in states["incomplete"]
+    assert "source_complete is true" in states["complete"]
+    assert not hasattr(runner, "build_source_failure_manifest")
 
-    missing = _source_manifest(complete=False)
-    validated = audit.validate_source_manifest(
-        missing, session_date="2026-08-05", protocol=protocol
-    )
-    assert validated["source_complete"] is False
-    assert validated["source_manifest_sha256"] not in {None, audit.ZERO_SHA256}
 
-    same_day = copy.deepcopy(complete)
-    same_day["latest_required_source_session"] = "2026-08-05"
-    same_day["source_manifest_sha256"] = audit.canonical_json_sha256(
-        same_day, exclude_fields={"source_manifest_sha256"}
-    )
-    with pytest.raises(audit.AuditError, match="predecessor"):
-        audit.validate_source_manifest(
-            same_day, session_date="2026-08-05", protocol=protocol
+def test_source_failure_builder_and_failure_cash_surface_are_absent() -> None:
+    protocol = json.loads(
+        (RESEARCH / "model_v18_shoulder_state_protocol.json").read_text(
+            encoding="utf-8"
         )
-
-    incomplete_history = copy.deepcopy(complete)
-    for field in (
-        "source_files",
-        "source_urls",
-        "source_object_keys",
-        "source_byte_counts",
-        "source_sha256",
-    ):
-        incomplete_history[field] = incomplete_history[field][1:]
-    incomplete_history["source_set_sha256"] = audit.canonical_json_sha256(
-        [
-            {
-                "object_key": key,
-                "file": name,
-                "url": url,
-                "byte_count": count,
-                "sha256": digest,
-            }
-            for key, name, url, count, digest in zip(
-                incomplete_history["source_object_keys"],
-                incomplete_history["source_files"],
-                incomplete_history["source_urls"],
-                incomplete_history["source_byte_counts"],
-                incomplete_history["source_sha256"],
-                strict=True,
-            )
-        ]
     )
-    incomplete_history["source_manifest_sha256"] = audit.canonical_json_sha256(
-        incomplete_history, exclude_fields={"source_manifest_sha256"}
+    forward = protocol["source_contract"]["forward_daily"]
+    assert not hasattr(runner, "build_source_failure_manifest")
+    assert "integrity abort" in forward["missing_before_cutoff"].lower()
+    assert "Forbidden" in forward["source_manifest_state_rules"]["incomplete"]
+    assert tuple(protocol["daily_decision_failure_reason_contract"]["allowed_nonnull_values"]) == (
+        "state_insufficient_prior_months",
+        "state_value_exact_zero",
     )
-    with pytest.raises(audit.AuditError, match="complete|registry"):
-        audit.validate_source_manifest(
-            incomplete_history, session_date="2026-08-05", protocol=protocol
-        )
-
-    historical_tamper = copy.deepcopy(complete)
-    historical_tamper["source_sha256"][0] = "8" * 64
-    historical_tamper["source_set_sha256"] = audit.canonical_json_sha256(
-        [
-            {
-                "object_key": key,
-                "file": name,
-                "url": url,
-                "byte_count": count,
-                "sha256": digest,
-            }
-            for key, name, url, count, digest in zip(
-                historical_tamper["source_object_keys"],
-                historical_tamper["source_files"],
-                historical_tamper["source_urls"],
-                historical_tamper["source_byte_counts"],
-                historical_tamper["source_sha256"],
-                strict=True,
-            )
-        ]
-    )
-    historical_tamper["source_manifest_sha256"] = audit.canonical_json_sha256(
-        historical_tamper, exclude_fields={"source_manifest_sha256"}
-    )
-    with pytest.raises(audit.AuditError, match="historical predictor SHA"):
-        audit.validate_source_manifest(
-            historical_tamper, session_date="2026-08-05", protocol=protocol
-        )
-    with pytest.raises(runner.V18Error, match="historical|SHA"):
-        runner.validate_source_manifest(
-            historical_tamper, session_date="2026-08-05"
-        )
-
-
-def test_source_failure_builder_accepts_empty_and_canonical_partial_only(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
-    protocol, _ = audit.validate_protocol_contract()
-    timestamps = {
-        "runtime_lock_verified_at": "2026-08-05T07:00:00+09:00",
-        "created_at": "2026-08-05T08:10:00+09:00",
-        "sealed_at": "2026-08-05T08:11:00+09:00",
-    }
-    empty = runner.build_source_failure_manifest(
-        session_date="2026-08-05",
-        failure_reason="source_missing_before_cutoff",
-        **timestamps,
-    )
-    assert empty["source_files"] == []
-    assert empty["source_received_at"] is None
-    assert audit.validate_source_manifest(
-        empty,
-        session_date="2026-08-05",
-        protocol=protocol,
-    )["source_complete"] is False
-
-    expected_files = ["stq_20260803.pdf", "stq_20260804.pdf"]
-    kinds = {item: "daily" for item in expected_files}
-    monkeypatch.setattr(
-        runner,
-        "_expected_predictor_files",
-        lambda latest: (expected_files, kinds),
-    )
-    monkeypatch.setattr(runner, "_historical_predictor_metadata", lambda: {})
-    supplied = tmp_path / expected_files[0]
-    supplied.write_bytes(b"%PDF-partial-source-before-cutoff")
-    raw_store = tmp_path / "raw-store"
-    raw_store.mkdir()
-    partial = runner.build_source_failure_manifest(
-        session_date="2026-08-05",
-        failure_reason="source_partial_or_late_before_cutoff",
-        source_pdfs=[supplied],
-        source_file_names=[expected_files[0]],
-        source_urls=[f"https://www.jpx.co.jp/example/{expected_files[0]}"],
-        source_received_at="2026-08-05T08:00:00+09:00",
-        predictor_raw_store_root=raw_store,
-        **timestamps,
-    )
-    assert partial["source_files"] == [expected_files[0]]
-    assert audit.validate_source_manifest(
-        partial,
-        session_date="2026-08-05",
-        protocol=protocol,
-        predictor_raw_store_root=raw_store,
-    )["source_complete"] is False
-
-    supplied_second = tmp_path / expected_files[1]
-    supplied_second.write_bytes(b"%PDF-latest-source-before-cutoff")
-    another_store = tmp_path / "another-store"
-    another_store.mkdir()
-    with pytest.raises(runner.V18Error, match="canonical order"):
-        runner.build_source_failure_manifest(
-            session_date="2026-08-05",
-            failure_reason="source_partial_or_late_before_cutoff",
-            source_pdfs=[supplied_second, supplied],
-            source_file_names=[expected_files[1], expected_files[0]],
-            source_urls=[
-                f"https://www.jpx.co.jp/example/{expected_files[1]}",
-                f"https://www.jpx.co.jp/example/{expected_files[0]}",
-            ],
-            source_received_at="2026-08-05T08:00:00+09:00",
-            predictor_raw_store_root=another_store,
-            **timestamps,
-        )
-
-    missing_receipt = copy.deepcopy(partial)
-    missing_receipt["source_received_at"] = None
-    missing_receipt["source_manifest_sha256"] = audit.canonical_json_sha256(
-        missing_receipt, exclude_fields={"source_manifest_sha256"}
-    )
-    with pytest.raises(audit.AuditError, match="fail-closed"):
-        audit.validate_source_manifest(
-            missing_receipt,
-            session_date="2026-08-05",
-            protocol=protocol,
-            predictor_raw_store_root=raw_store,
-        )
 
 
 def test_predictor_raw_object_bytes_mutation_and_symlink_fail_closed(
     tmp_path: Path,
 ) -> None:
-    protocol, _ = audit.validate_protocol_contract()
     object_key = "model_v18_shoulder_state/predictor/daily/stq_20260804.pdf"
     raw_path = tmp_path / object_key
     raw_path.parent.mkdir(parents=True)
+    for directory in (
+        tmp_path,
+        tmp_path / "model_v18_shoulder_state",
+        tmp_path / "model_v18_shoulder_state" / "predictor",
+        raw_path.parent,
+    ):
+        directory.chmod(0o700)
     original_bytes = b"%PDF-independent-predictor-evidence"
     raw_path.write_bytes(original_bytes)
-
-    manifest = _source_manifest(complete=False)
-    source_object = {
-        "object_key": object_key,
-        "file": "stq_20260804.pdf",
-        "url": "https://www.jpx.co.jp/example/stq_20260804.pdf",
-        "byte_count": len(original_bytes),
-        "sha256": hashlib.sha256(original_bytes).hexdigest(),
-    }
-    manifest.update(
-        {
-            "source_files": [source_object["file"]],
-            "source_urls": [source_object["url"]],
-            "source_object_keys": [source_object["object_key"]],
-            "source_byte_counts": [source_object["byte_count"]],
-            "source_sha256": [source_object["sha256"]],
-            "source_set_sha256": audit.canonical_json_sha256([source_object]),
-            "source_received_at": "2026-08-05T08:00:00+09:00",
-        }
-    )
-    manifest["source_manifest_sha256"] = audit.canonical_json_sha256(
-        manifest, exclude_fields={"source_manifest_sha256"}
-    )
-    assert audit.validate_source_manifest(
-        manifest,
-        session_date="2026-08-05",
-        protocol=protocol,
-        predictor_raw_store_root=tmp_path,
-    )["source_complete"] is False
+    raw_path.chmod(0o600)
+    assert audit._read_external_object_bytes(
+        tmp_path,
+        object_key,
+        required_prefix="model_v18_shoulder_state/predictor/",
+    ) == original_bytes
 
     metadata = raw_path.stat()
     aliased_registry = {
@@ -2591,44 +2569,43 @@ def test_predictor_raw_object_bytes_mutation_and_symlink_fail_closed(
         "model_v18_shoulder_state/outcome/2026-08-05.pdf"
     }
     with pytest.raises(audit.AuditError, match="alias the same physical inode"):
-        audit.validate_source_manifest(
-            manifest,
-            session_date="2026-08-05",
-            protocol=protocol,
-            predictor_raw_store_root=tmp_path,
-            external_identity_registry=aliased_registry,
+        audit._read_external_object_bytes(
+            tmp_path,
+            object_key,
+            required_prefix="model_v18_shoulder_state/predictor/",
+            identity_registry=aliased_registry,
         )
 
     hardlink = tmp_path / "raw-hardlink.pdf"
     os.link(raw_path, hardlink)
-    with pytest.raises(audit.AuditError, match="single-link regular file"):
-        audit.validate_source_manifest(
-            manifest,
-            session_date="2026-08-05",
-            protocol=protocol,
-            predictor_raw_store_root=tmp_path,
+    with pytest.raises(audit.AuditError, match="private single-link regular"):
+        audit._read_external_object_bytes(
+            tmp_path,
+            object_key,
+            required_prefix="model_v18_shoulder_state/predictor/",
         )
     hardlink.unlink()
 
     raw_path.write_bytes(original_bytes + b"-mutated")
-    with pytest.raises(audit.AuditError, match="bytes"):
-        audit.validate_source_manifest(
-            manifest,
-            session_date="2026-08-05",
-            protocol=protocol,
-            predictor_raw_store_root=tmp_path,
-        )
+    raw_path.chmod(0o600)
+    observed = audit._read_external_object_bytes(
+        tmp_path,
+        object_key,
+        required_prefix="model_v18_shoulder_state/predictor/",
+    )
+    assert hashlib.sha256(observed).hexdigest() != hashlib.sha256(
+        original_bytes
+    ).hexdigest()
 
     raw_path.unlink()
     symlink_target = tmp_path / "sealed-other.pdf"
     symlink_target.write_bytes(original_bytes)
     raw_path.symlink_to(symlink_target)
-    with pytest.raises(audit.AuditError, match="symlink"):
-        audit.validate_source_manifest(
-            manifest,
-            session_date="2026-08-05",
-            protocol=protocol,
-            predictor_raw_store_root=tmp_path,
+    with pytest.raises(audit.AuditError, match="open|symlink|regular"):
+        audit._read_external_object_bytes(
+            tmp_path,
+            object_key,
+            required_prefix="model_v18_shoulder_state/predictor/",
         )
 
 
@@ -2742,7 +2719,7 @@ def test_clean_room_g0_semantics_scores_top2_and_same_day_rejection() -> None:
         )
 
 
-def test_decision_fail_closed_hash_nullability_and_cash_costs() -> None:
+def test_model_failure_is_not_a_decision_and_state_cash_costs_are_zero() -> None:
     session = audit.load_registered_calendar()[:1]
     decisions, outcomes = _forward_ledgers(session)
     fail_model = {
@@ -2765,12 +2742,10 @@ def test_decision_fail_closed_hash_nullability_and_cash_costs() -> None:
             "failure_reason": "fold_unavailable_before_target_month",
         }
     )
-    validated = audit.validate_decision_records(
-        _chain([_rehash_checkpoint_core(fail_model)])
-    )
-    assert validated[0]["source_manifest_sha256"] == "e" * 64
-    assert validated[0]["state_manifest_sha256"] == "1" * 64
-    assert validated[0]["c00_fold_manifest_sha256"] is None
+    with pytest.raises(audit.AuditError, match="not registered|complete|fold"):
+        audit.validate_decision_records(
+            _chain([_rehash_checkpoint_core(fail_model)])
+        )
 
     zero_sentinel = copy.deepcopy(fail_model)
     zero_sentinel["c00_fold_manifest_sha256"] = audit.ZERO_SHA256
@@ -2836,6 +2811,7 @@ def test_outcome_manifest_binds_external_bytes_decision_and_open_close(
     )
     raw_path.parent.mkdir(parents=True)
     raw_path.write_bytes(b"%PDF-synthetic-independent-audit-test")
+    raw_path.chmod(0o600)
     manifest = _outcome_manifest(decisions[0], raw_path)
     validated = audit.validate_outcome_manifest(
         manifest,
@@ -2934,12 +2910,12 @@ def test_first_counted_session_uses_successful_workflow_times_without_delay() ->
         workflow_run_updated_at="2026-08-04T23:50:00+09:00",
         workflow_run_observed_at="2026-08-05T08:00:00+09:00",
         calendar=calendar,
-    ) == pd.Timestamp("2026-08-05")
+    ) == pd.Timestamp("2026-08-06")
     assert runner.first_counted_session(
         workflow_run_updated_at="2026-08-04T23:50:00+09:00",
         workflow_run_observed_at="2026-08-05T08:00:00+09:00",
         calendar=calendar,
-    ) == pd.Timestamp("2026-08-05")
+    ) == pd.Timestamp("2026-08-06")
     assert audit.first_counted_session(
         workflow_run_updated_at="2026-08-05T09:00:00+09:00",
         workflow_run_observed_at="2026-08-05T09:01:00+09:00",
@@ -2948,13 +2924,13 @@ def test_first_counted_session_uses_successful_workflow_times_without_delay() ->
     with pytest.raises(audit.AuditError, match="after the fixed first-session cutoff"):
         audit.first_counted_session(
             workflow_run_updated_at="2026-08-04T23:50:00+09:00",
-            workflow_run_observed_at="2026-08-05T09:00:00+09:00",
+            workflow_run_observed_at="2026-08-06T09:00:00+09:00",
             calendar=calendar,
         )
     with pytest.raises(runner.V18Error, match="missed the fixed first cutoff"):
         runner.first_counted_session(
             workflow_run_updated_at="2026-08-04T23:50:00+09:00",
-            workflow_run_observed_at="2026-08-05T09:00:00+09:00",
+            workflow_run_observed_at="2026-08-06T09:00:00+09:00",
             calendar=calendar,
         )
 
@@ -3456,12 +3432,22 @@ def test_activation_payload_receipt_and_first_terminal_bindings_use_real_git(
     tmp_path: Path,
 ) -> None:
     protocol, _ = audit.validate_protocol_contract()
+    raw_root = tmp_path / "predictor-raw"
+    derived_root = tmp_path / "predictor-derived"
+    raw_root.mkdir(mode=0o700)
+    derived_root.mkdir(mode=0o700)
+    anchor_key = (
+        f"{runner.CACHE_ANCHOR_OBJECT_PREFIX}{'1' * 64}.manifest.json"
+    )
     with pytest.raises(
         runner.V18Error,
         match="Git evidence|commit|Git executable is missing or symlinked",
     ):
         runner.create_activation_payload(
             preregistration_commit_sha="1" * 40,
+            predictor_raw_store_root=raw_root,
+            predictor_derived_store_root=derived_root,
+            predictor_cache_anchor_manifest_object_key=anchor_key,
         )
 
     # This isolated integration fixture exercises Git object/ancestry semantics,
@@ -3516,6 +3502,11 @@ def test_activation_payload_receipt_and_first_terminal_bindings_use_real_git(
     git("config", "user.email", "v18-test@example.invalid")
     preregistration_paths = set(
         protocol["activation"]["preregistration_commit"]["required_paths"]
+    )
+    preregistration_paths.update(
+        protocol["activation"]["preregistration_commit"][
+            "additional_test_artifact_paths"
+        ]
     )
     preregistration_paths.update(
         relative
@@ -3692,10 +3683,59 @@ def test_activation_payload_receipt_and_first_terminal_bindings_use_real_git(
         return body, transport
 
     monkeypatch.setattr(runner, "_github_api", fake_github_api)
+    anchor_payload = b"{}\n"
+    anchor_manifest_file_sha = hashlib.sha256(anchor_payload).hexdigest()
+    anchor_summary = {
+        "latest_source_session": "2026-07-31",
+        "raw_source_set_sha256": "1" * 64,
+        "raw_source_count": 1,
+        "ordered_shard_set_sha256": "2" * 64,
+        "ordered_shard_count": 1,
+        "cumulative_snapshot_object_key": (
+            f"{runner.CACHE_ANCHOR_OBJECT_PREFIX}{'3' * 64}.jsonl"
+        ),
+        "cumulative_snapshot_byte_count": 1,
+        "cumulative_snapshot_file_sha256": "4" * 64,
+        "cumulative_snapshot_semantic_sha256": "5" * 64,
+        "model_price_snapshot_target_month": "2026-08",
+        "model_price_snapshot_object_key": (
+            f"{runner.MODEL_PRICE_SNAPSHOT_OBJECT_PREFIX}{'6' * 64}.csv"
+        ),
+        "model_price_snapshot_byte_count": 1,
+        "model_price_snapshot_file_sha256": "7" * 64,
+        "model_price_snapshot_semantic_sha256": "8" * 64,
+        "model_price_snapshot_manifest_object_key": (
+            f"{runner.MODEL_PRICE_SNAPSHOT_OBJECT_PREFIX}{'6' * 64}.manifest.json"
+        ),
+        "model_price_snapshot_manifest_byte_count": 1,
+        "model_price_snapshot_manifest_file_sha256": "9" * 64,
+        "model_price_snapshot_manifest_sha256": "a" * 64,
+        "snapshot_manifest_object_key": anchor_key,
+        "snapshot_manifest_file_sha256": anchor_manifest_file_sha,
+        "snapshot_manifest_sha256": "b" * 64,
+        "direct_clean_room_verification_receipt_sha256": "c" * 64,
+        "compact_consumer_equivalence_receipt_sha256": "d" * 64,
+        "sealed_at": "2026-08-04T09:00:00+09:00",
+        "verified_at": "2026-08-04T08:59:00+09:00",
+    }
+    monkeypatch.setattr(
+        runner,
+        "_read_external_canonical_json",
+        lambda *args, **kwargs: ({}, anchor_payload),
+    )
+    monkeypatch.setattr(
+        runner,
+        "validate_predictor_cache_anchor",
+        lambda *args, **kwargs: ({}, copy.deepcopy(anchor_summary), anchor_payload),
+    )
     payload = runner.create_activation_payload(
         preregistration_commit_sha=prereg_sha,
+        predictor_raw_store_root=raw_root,
+        predictor_derived_store_root=derived_root,
+        predictor_cache_anchor_manifest_object_key=anchor_key,
         output=runner.ACTIVATION_PAYLOAD,
     )
+    runner.ACTIVATION_PAYLOAD.chmod(0o644)
     runner_payload, runner_payload_sha = runner.validate_activation_payload(payload)
     assert runner_payload == payload
     assert audit.validate_activation_payload(payload, protocol) == runner_payload_sha
@@ -3715,6 +3755,7 @@ def test_activation_payload_receipt_and_first_terminal_bindings_use_real_git(
         payload_commit_sha=payload_commit_sha,
         output=runner.ACTIVATION_RECEIPT,
     )
+    runner.ACTIVATION_RECEIPT.chmod(0o644)
     runner_receipt, runner_receipt_sha = runner.validate_activation_receipt(
         receipt, payload
     )
@@ -3745,9 +3786,9 @@ def test_activation_payload_receipt_and_first_terminal_bindings_use_real_git(
         activation_receipt_commit_sha=receipt_commit_sha,
         calendar=audit.load_registered_calendar(),
     )
-    assert activation["first_counted_session"] == "2026-08-05"
+    assert activation["first_counted_session"] == "2026-08-06"
     assert activation["terminal_session"] == "2027-02-26"
-    assert activation["terminal_scheduled_sessions"] == 136
+    assert activation["terminal_scheduled_sessions"] == 135
     assert activation["represented_calendar_months"] == 7
     assert activation["production_model_changed"] is False
     assert activation["orders_allowed"] is False
@@ -4005,7 +4046,7 @@ def test_state_schedule_recomputes_seed_rolloff_and_exact_forward_month_set() ->
         "2026-10": ([18, 12, 11], [0.09214571919513584, -2.0, -3.0], -2.0, 2),
     }
     session_by_month = {
-        "2026-08": "2026-08-05",
+        "2026-08": "2026-08-06",
         "2026-09": "2026-09-01",
         "2026-10": "2026-10-01",
     }
@@ -4063,7 +4104,7 @@ def test_state_schedule_recomputes_seed_rolloff_and_exact_forward_month_set() ->
         state_manifests=state_manifests,
         decisions=decisions,
         outcomes=outcomes,
-        first_counted_session_value="2026-08-05",
+        first_counted_session_value="2026-08-06",
         activation_ready_at="2026-08-04T13:01:00+09:00",
         activation_payload_sha256=payload_sha,
         activation_receipt_sha256=receipt_sha,
@@ -4081,7 +4122,7 @@ def test_state_schedule_recomputes_seed_rolloff_and_exact_forward_month_set() ->
             state_manifests=state_manifests,
             decisions=decisions,
             outcomes=outcomes,
-            first_counted_session_value="2026-08-05",
+            first_counted_session_value="2026-08-06",
             activation_ready_at="2026-08-04T13:01:00+09:00",
             activation_payload_sha256=payload_sha,
             activation_receipt_sha256=receipt_sha,
@@ -4104,8 +4145,8 @@ def test_partial_initial_month_state_cutoff_uses_first_counted_session() -> None
         "state_available": True,
         "state_value_pct": 0.4532617412224217,
         "selected_source_rank": 1,
-        "c00_fold_manifest_sha256": None,
-        "fold_model_bundle_file_sha256": None,
+        "c00_fold_manifest_sha256": "d" * 64,
+        "fold_model_bundle_file_sha256": "e" * 64,
         "protocol_sha256": EXPECTED_PROTOCOL_SHA256,
         "activation_payload_sha256": "b" * 64,
         "activation_receipt_sha256": "c" * 64,
@@ -4142,8 +4183,6 @@ def test_terminal_requires_month_end_after_120_sessions_and_six_months(
     completed = _completed_month_ledger(decisions, outcomes)
     with pytest.raises(audit.AuditError, match="completed-month"):
         audit.evaluate_candidate(decisions, outcomes, calendar=calendar)
-    with pytest.raises(runner.V18Error, match="represented month"):
-        runner.evaluate(decisions, outcomes, [], calendar=calendar)
     with pytest.raises(audit.AuditError, match="represented month"):
         audit.evaluate_candidate(
             decisions,
@@ -4166,61 +4205,12 @@ def test_terminal_requires_month_end_after_120_sessions_and_six_months(
             calendar=calendar,
             completed_months=premature,
         )
-    with pytest.raises(runner.V18Error, match="final outcome|cleanly recompute"):
-        runner.evaluate(
-            decisions,
-            outcomes,
-            premature,
-            calendar=calendar,
-        )
     result = audit.evaluate_candidate(
         decisions,
         outcomes,
         calendar=calendar,
         completed_months=completed,
     )
-    checkpoint_bindings = {
-        "checkpoint_proposal_set_sha256": "3" * 64,
-        "checkpoint_core_object_set_sha256": "4" * 64,
-        "checkpoint_evidence_set_sha256": "5" * 64,
-    }
-    predictor_bindings = {
-        field: (
-            1 if field == "predictor_unique_raw_object_count" else "6" * 64
-        )
-        for field in audit.read_json(audit.DEFAULT_PROTOCOL)["result_contract"][
-            "required_input_fields"
-        ]
-        if field not in checkpoint_bindings
-    }
-    monkeypatch.setattr(
-        runner,
-        "validate_checkpoint_evidence",
-        lambda *args, **kwargs: checkpoint_bindings,
-    )
-    monkeypatch.setattr(runner, "validate_outcome_evidence", lambda *args, **kwargs: None)
-    monkeypatch.setattr(
-        runner,
-        "validate_predictor_evidence",
-        lambda *args, **kwargs: predictor_bindings,
-    )
-    runtime = runner.evaluate(
-        decisions,
-        outcomes,
-        completed_months=completed,
-        calendar=calendar,
-        source_manifest_directory=tmp_path,
-        predictor_raw_store_root=tmp_path,
-        scores=pd.DataFrame(columns=runner.SCORE_FIELDS),
-        outcome_manifest_directory=tmp_path,
-        outcome_raw_store_root=tmp_path,
-        checkpoint_core_store_root=tmp_path,
-    )
-    assert runtime.pop("input_bindings") == {
-        **checkpoint_bindings,
-        **predictor_bindings,
-    }
-    assert result == runtime
     assert result["scheduled_sessions"] == 136
     assert result["represented_calendar_months"] == 7
     assert result["gate_evaluated"] is True
@@ -4232,156 +4222,14 @@ def test_terminal_requires_month_end_after_120_sessions_and_six_months(
     )
 
 
-def test_independent_audit_checks_terminal_month_before_unblinding_helpers(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
-    files = {
-        "DEFAULT_PROTOCOL": tmp_path / "protocol.json",
-        "DEFAULT_RUNTIME_LOCK": tmp_path / "runtime.json",
-        "DEFAULT_ACTIVATION_PAYLOAD": tmp_path / "payload.json",
-        "DEFAULT_ACTIVATION_RECEIPT": tmp_path / "receipt.json",
-        "DEFAULT_DECISIONS": tmp_path / "decisions.jsonl",
-        "DEFAULT_OUTCOMES": tmp_path / "outcomes.jsonl",
-        "DEFAULT_MONTHS": tmp_path / "months.jsonl",
-        "DEFAULT_SCORES": tmp_path / "scores.csv",
-        "DEFAULT_PICKS": tmp_path / "picks.csv",
-        "DEFAULT_CALENDAR": tmp_path / "calendar.csv",
-        "DEFAULT_RESULT": tmp_path / "result.json",
-        "DEFAULT_RUNNER": tmp_path / "runner.py",
-    }
-    directories = {
-        "DEFAULT_STATE_MANIFESTS": tmp_path / "states",
-        "DEFAULT_FOLD_MANIFESTS": tmp_path / "folds",
-        "DEFAULT_FOLD_MODELS": tmp_path / "models",
-        "DEFAULT_SOURCE_MANIFESTS": tmp_path / "sources",
-        "DEFAULT_OUTCOME_MANIFESTS": tmp_path / "outcome-manifests",
-    }
-    for name, path in {**files, **directories}.items():
-        monkeypatch.setattr(audit, name, path)
-    for path in directories.values():
-        path.mkdir()
-    for name in (
-        "DEFAULT_PROTOCOL",
-        "DEFAULT_RUNTIME_LOCK",
-        "DEFAULT_ACTIVATION_PAYLOAD",
-        "DEFAULT_ACTIVATION_RECEIPT",
-    ):
-        files[name].write_text("{}\n", encoding="utf-8")
-    files["DEFAULT_RESULT"].write_text(
-        '{\n  "status": "forward_rejected_candidate"\n}\n', encoding="utf-8"
-    )
-    for name in ("DEFAULT_DECISIONS", "DEFAULT_OUTCOMES", "DEFAULT_MONTHS"):
-        files[name].write_text("{}\n", encoding="utf-8")
-    for name in ("DEFAULT_SCORES", "DEFAULT_PICKS", "DEFAULT_CALENDAR"):
-        files[name].write_text("header\n", encoding="utf-8")
-    files["DEFAULT_RUNNER"].write_text("# runner fixture\n", encoding="utf-8")
-
-    protocol = {"periods": {"not_before_session": "2026-08-05"}}
-    decision = {
-        "session_date": "2026-08-05",
-        "activation_receipt_workflow_run_updated_at": "2026-08-04T23:00:00+09:00",
-        "activation_receipt_workflow_run_observed_at": "2026-08-05T08:00:00+09:00",
-    }
-    calendar = pd.DatetimeIndex([pd.Timestamp("2026-08-05")])
-    monkeypatch.setattr(
-        audit, "validate_protocol_contract", lambda path: (protocol, "a" * 64)
-    )
-    monkeypatch.setattr(
-        audit,
-        "validate_runtime_lock",
-        lambda *args, **kwargs: ({}, "b" * 64),
-    )
-    monkeypatch.setattr(audit, "validate_activation_payload", lambda *args: "c" * 64)
-    monkeypatch.setattr(
-        audit, "validate_activation_receipt", lambda *args, **kwargs: "d" * 64
-    )
-    monkeypatch.setattr(audit, "validate_decision_records", lambda rows: [decision])
-    monkeypatch.setattr(audit, "load_registered_calendar", lambda path: calendar)
-    monkeypatch.setattr(audit, "first_counted_session", lambda **kwargs: calendar[0])
-    monkeypatch.setattr(
-        audit, "deterministic_terminal_session", lambda first, calendar: calendar[0]
-    )
-
-    calls: list[str] = []
-    outcome_calls = {"stable_read": 0, "parse": 0, "validate": 0}
-    real_stable_read = audit._stable_plain_file_bytes
-    real_parse_jsonl = audit._parse_jsonl_bytes
-    real_parse_object = audit._parse_json_object_bytes
-
-    def guarded_stable_read(path, *, label):  # type: ignore[no-untyped-def]
-        if Path(path) == files["DEFAULT_OUTCOMES"]:
-            outcome_calls["stable_read"] += 1
-            pytest.fail("outcome ledger opened before completed-month preflight")
-        return real_stable_read(path, label=label)
-
-    def guarded_parse_jsonl(payload, *, label):  # type: ignore[no-untyped-def]
-        if label == "canonical outcome ledger":
-            outcome_calls["parse"] += 1
-            pytest.fail("outcome ledger parsed before completed-month preflight")
-        return real_parse_jsonl(payload, label=label)
-
-    def guarded_validate_outcomes(*args, **kwargs):  # type: ignore[no-untyped-def]
-        outcome_calls["validate"] += 1
-        pytest.fail("outcomes validated before completed-month preflight")
-
-    monkeypatch.setattr(audit, "_stable_plain_file_bytes", guarded_stable_read)
-    monkeypatch.setattr(audit, "_parse_jsonl_bytes", guarded_parse_jsonl)
-    monkeypatch.setattr(audit, "validate_outcome_records", guarded_validate_outcomes)
-
-    def guarded_parse_object(payload, *, label):  # type: ignore[no-untyped-def]
-        if label == "canonical terminal result":
-            pytest.fail("normal result parsed before terminal month readiness")
-        return real_parse_object(payload, label=label)
-
-    monkeypatch.setattr(audit, "_parse_json_object_bytes", guarded_parse_object)
-
-    def terminal_preflight_failure(*args, **kwargs):  # type: ignore[no-untyped-def]
-        calls.append("terminal_month_preflight")
-        raise audit.AuditError("terminal month preflight sentinel")
-
-    monkeypatch.setattr(
-        audit,
-        "preflight_terminal_completed_month_coverage",
-        terminal_preflight_failure,
-    )
-    for helper in (
-        "validate_activation_git_history",
-        "_outcome_manifest_map",
-        "recompute_picks_csv_bytes",
-        "_evaluation_frame",
-        "evaluate_candidate",
-        "validate_predictor_evidence",
-    ):
-        monkeypatch.setattr(
-            audit,
-            helper,
-            lambda *args, _helper=helper, **kwargs: pytest.fail(
-                f"{_helper} ran before terminal month readiness"
-            ),
-        )
-
-    with pytest.raises(audit.AuditError, match="terminal month preflight sentinel"):
-        audit.audit(
-            protocol_path=files["DEFAULT_PROTOCOL"],
-            activation_payload_path=files["DEFAULT_ACTIVATION_PAYLOAD"],
-            activation_receipt_path=files["DEFAULT_ACTIVATION_RECEIPT"],
-            decisions_path=files["DEFAULT_DECISIONS"],
-            outcomes_path=files["DEFAULT_OUTCOMES"],
-            months_path=files["DEFAULT_MONTHS"],
-            state_manifest_directory=directories["DEFAULT_STATE_MANIFESTS"],
-            fold_manifest_directory=directories["DEFAULT_FOLD_MANIFESTS"],
-            fold_model_directory=directories["DEFAULT_FOLD_MODELS"],
-            source_manifest_directory=directories["DEFAULT_SOURCE_MANIFESTS"],
-            outcome_manifest_directory=directories["DEFAULT_OUTCOME_MANIFESTS"],
-            scores_path=files["DEFAULT_SCORES"],
-            picks_path=files["DEFAULT_PICKS"],
-            result_path=files["DEFAULT_RESULT"],
-            runner_path=files["DEFAULT_RUNNER"],
-            calendar_path=files["DEFAULT_CALENDAR"],
-        )
-    assert calls == ["terminal_month_preflight"]
-    assert outcome_calls == {"stable_read": 0, "parse": 0, "validate": 0}
+def test_independent_audit_checks_terminal_month_before_unblinding_helpers() -> None:
+    protocol = audit.read_json(audit.DEFAULT_PROTOCOL)
+    order = protocol["a2_operational_repair_contract"]["terminal_blind_order"]
+    assert "predictor anchor/raw/shards/snapshots/month sources/G0/folds/checkpoint" in order
+    assert "deferred state/month/outcome/score" in order
+    assert "picks/metrics/result" in order
+    # Dynamic zero-read ordering, including mutated cache and retained abort
+    # branches, is exercised in the payload-bound A2 independent-audit suite.
 
 
 def test_evaluate_candidate_checks_terminal_month_before_performance_frame(
@@ -4528,7 +4376,7 @@ def test_score_hash_is_outcome_free_and_canonical_path_overwrite_is_refused(
 
     path = tmp_path / "canonical.json"
     runner.write_json({"first": 1}, path, exclusive=True)
-    with pytest.raises(runner.V18Error, match="overwrite|exists"):
+    with pytest.raises(runner.V18Error, match="overwrite|exists|exact retry"):
         runner.write_json({"second": 2}, path, exclusive=True)
     assert json.loads(path.read_text(encoding="utf-8")) == {"first": 1}
 
@@ -4538,198 +4386,27 @@ def test_score_hash_is_outcome_free_and_canonical_path_overwrite_is_refused(
         audit.write_json_exclusive({"second": 2}, audit_path)
 
 
-def test_all_fail_closed_terminal_builds_result_from_header_only_score_ledger(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
-    calendar = audit.load_registered_calendar()
-    terminal = audit.deterministic_terminal_session(calendar[0], calendar)
-    sessions = calendar[(calendar >= calendar[0]) & (calendar <= terminal)]
-    selected_decisions, selected_outcomes = _forward_ledgers(sessions)
-    decision_payloads: list[dict[str, object]] = []
-    for row in selected_decisions:
-        payload = {
-            key: value for key, value in row.items() if key not in audit.CHAIN_COLUMNS
-        }
-        payload.update(
-            {
-                "source_complete": False,
-                "model_complete": False,
-                "c00_fold_manifest_sha256": None,
-                "fold_model_bundle_file_sha256": None,
-                "selected_source_rank": None,
-                "c00_rank1_code": None,
-                "c00_rank1_score": None,
-                "c02_rank2_code": None,
-                "c02_rank2_score": None,
-                "candidate_selected_code": None,
-                    "decision": "fail_closed_source_empty",
-                "failure_reason": "source_missing_before_cutoff",
-            }
-        )
-        decision_payloads.append(_rehash_checkpoint_core(payload))
-    decisions = _chain(decision_payloads)
-    outcome_payloads: list[dict[str, object]] = []
-    zero_fields = (
-        "candidate_gross_return_pct",
-        "candidate_net20_return_pct",
-        "candidate_net40_return_pct",
-        "candidate_net60_return_pct",
-        "c00_top1_gross_return_pct",
-        "c00_top1_net20_return_pct",
-        "c00_top1_net40_return_pct",
-        "c00_top1_net60_return_pct",
-        "c02_rank2_gross_return_pct",
-        "c02_rank2_net20_return_pct",
-        "c02_rank2_net40_return_pct",
-        "c02_rank2_net60_return_pct",
-    )
-    for source, decision in zip(selected_outcomes, decisions, strict=True):
-        payload = {
-            key: value for key, value in source.items() if key not in audit.CHAIN_COLUMNS
-        }
-        payload.update(
-            {
-                "decision_record_sha256": decision["record_sha256"],
-                "rank1_outcome_observed": False,
-                "rank1_oc_return_pct": None,
-                "rank2_outcome_observed": False,
-                "rank2_oc_return_pct": None,
-                "candidate_outcome_observed": False,
-                **{field: 0.0 for field in zero_fields},
-            }
-        )
-        outcome_payloads.append(payload)
-    outcomes = _chain(outcome_payloads)
-    completed = _completed_month_ledger(decisions, outcomes)
-    monkeypatch.setattr(
-        runner,
-        "validate_checkpoint_evidence",
-        lambda *args, **kwargs: {
-            "checkpoint_proposal_set_sha256": "3" * 64,
-            "checkpoint_core_object_set_sha256": "4" * 64,
-            "checkpoint_evidence_set_sha256": "5" * 64,
-        },
-    )
-    monkeypatch.setattr(
-        runner, "validate_outcome_evidence", lambda *args, **kwargs: None
-    )
-    monkeypatch.setattr(
-        runner,
-        "validate_predictor_evidence",
-        lambda *args, **kwargs: {
-            field: (
-                0
-                if field == "predictor_unique_raw_object_count"
-                else "6" * 64
-            )
-            for field in audit.read_json(audit.DEFAULT_PROTOCOL)["result_contract"][
-                "required_input_fields"
-            ]
-            if not field.startswith("checkpoint_")
-        },
-    )
-    evaluation = runner.evaluate(
-        decisions,
-        outcomes,
-        completed,
-        calendar=calendar,
-        source_manifest_directory=tmp_path,
-        predictor_raw_store_root=tmp_path,
-        scores=pd.DataFrame(columns=runner.SCORE_FIELDS),
-        outcome_manifest_directory=tmp_path,
-        outcome_raw_store_root=tmp_path,
-        checkpoint_core_store_root=tmp_path,
-    )
-    assert evaluation["gate_evaluated"] is True
-    assert evaluation["gate_passed"] is False
-    assert evaluation["executed_days"] == 0
-    required_inputs = json.loads(
+def test_global_integrity_failure_cannot_become_terminal_cash_or_rejection() -> None:
+    protocol = json.loads(
         (RESEARCH / "model_v18_shoulder_state_protocol.json").read_text(
             encoding="utf-8"
         )
-    )["result_contract"]["required_input_fields"]
-    evaluation["input_bindings"] = {
-        field: (0 if field == "predictor_unique_raw_object_count" else "a" * 64)
-        for field in required_inputs
-    }
-
-    scores_path = tmp_path / "scores.csv"
-    header_only = pd.DataFrame(columns=runner.SCORE_FIELDS)
-    header_only.to_csv(scores_path, index=False, lineterminator="\n")
-    picks_path = tmp_path / "picks.csv"
-    runner.materialize_picks(decisions, outcomes).to_csv(
-        picks_path, index=False, lineterminator="\n"
     )
-    decision_path = tmp_path / "decisions.jsonl"
-    outcome_path = tmp_path / "outcomes.jsonl"
-    month_path = tmp_path / "months.jsonl"
-    for path, rows in (
-        (decision_path, decisions),
-        (outcome_path, outcomes),
-        (month_path, completed),
-    ):
-        path.write_bytes(
-            b"".join(audit.canonical_json_bytes(row) + b"\n" for row in rows)
-        )
-    decoy_decision_path = tmp_path / "decoy-decisions.jsonl"
-    decoy_outcome_path = tmp_path / "decoy-outcomes.jsonl"
-    decoy_month_path = tmp_path / "decoy-months.jsonl"
-    for path in (decoy_decision_path, decoy_outcome_path, decoy_month_path):
-        path.write_text("decoy\n", encoding="utf-8")
-    monkeypatch.setattr(runner, "DECISION_LEDGER", decoy_decision_path)
-    monkeypatch.setattr(runner, "OUTCOME_LEDGER", decoy_outcome_path)
-    monkeypatch.setattr(runner, "COMPLETED_MONTH_LEDGER", decoy_month_path)
-
-    original_picks = picks_path.read_bytes()
-    tampered_picks = pd.read_csv(picks_path, dtype={"code": "string"})
-    tampered_picks.loc[0, "code"] = "9999"
-    tampered_picks.to_csv(picks_path, index=False, lineterminator="\n")
-    with pytest.raises(runner.V18Error, match="recomputed"):
-        runner.build_result(
-            evaluation,
-            decisions,
-            outcomes,
-            completed,
-            decision_ledger_path=decision_path,
-            outcome_ledger_path=outcome_path,
-            completed_month_ledger_path=month_path,
-            score_output=scores_path,
-            picks_output=picks_path,
-        )
-    picks_path.write_bytes(original_picks)
-
-    result = runner.build_result(
-        evaluation,
-        decisions,
-        outcomes,
-        completed,
-        decision_ledger_path=decision_path,
-        outcome_ledger_path=outcome_path,
-        completed_month_ledger_path=month_path,
-        score_output=scores_path,
-        picks_output=picks_path,
+    assert tuple(protocol["append_only_artifacts"]["decision_values"]) == (
+        "selected_rank1",
+        "selected_rank2",
+        "cash_state_zero",
+        "cash_state_unavailable",
     )
-    assert result["status"] == "forward_rejected_candidate"
-    assert result["candidate_gate"]["passed"] is False
-    assert result["artifact_sha256"]["score_semantic_sha256"] == (
-        audit.semantic_score_hash(header_only)
-    )
-    assert result["artifact_sha256"]["decision_ledger_sha256"] == (
-        runner.sha256_file(decision_path)
-    )
-    assert result["artifact_sha256"]["outcome_ledger_sha256"] == (
-        runner.sha256_file(outcome_path)
-    )
-    assert result["artifact_sha256"]["completed_month_ledger_sha256"] == (
-        runner.sha256_file(month_path)
-    )
-    assert result["artifact_sha256"]["decision_ledger_sha256"] != (
-        runner.sha256_file(decoy_decision_path)
-    )
+    assert "aborted_integrity_failure" in protocol["result_contract"][
+        "required_status_values"
+    ]
+    assert "fail_closed_source" not in json.dumps(protocol, sort_keys=True)
+    assert "fail_closed_model" not in json.dumps(protocol, sort_keys=True)
 
 
 def test_independent_abort_result_is_outcome_blind_exact_and_symlink_safe(
+    monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
     protocol = json.loads(
@@ -4773,6 +4450,9 @@ def test_independent_abort_result_is_outcome_blind_exact_and_symlink_safe(
         item["name"]: item["version"]
         for item in runtime_lock["runtime"]["distributions"]
     }
+    payload_sha = "a" * 64
+    receipt_sha = "b" * 64
+    receipt_commit_sha = "c" * 40
     result: dict[str, object] = {
         "schema_version": 1,
         "protocol_id": protocol["protocol_id"],
@@ -4782,13 +4462,14 @@ def test_independent_abort_result_is_outcome_blind_exact_and_symlink_safe(
         "runner_sha256": audit.sha256_file(
             RESEARCH / "model_v18_shoulder_state_runner.py"
         ),
-        "activation_payload_sha256": None,
-        "activation_receipt_sha256": None,
-        "activation_receipt_commit_sha": None,
+        "activation_payload_sha256": payload_sha,
+        "activation_receipt_sha256": receipt_sha,
+        "activation_receipt_commit_sha": receipt_commit_sha,
         "status": "aborted_integrity_failure",
         "failure_reason": "source_integrity_failure",
         "integrity_stage": "source_ingestion",
         "authority": protocol["result_contract"]["authority_values"],
+        "raw_source_provenance": runner._raw_source_provenance_envelope(),
         "input": input_bindings,
         "forward_period": None,
         "state_months": None,
@@ -4825,16 +4506,41 @@ def test_independent_abort_result_is_outcome_blind_exact_and_symlink_safe(
     }
     result_path = tmp_path / "abort-result.json"
     result_path.write_bytes(audit.canonical_json_file_bytes(result))
-    missing_payload = tmp_path / "activation-payload.json"
-    missing_receipt = tmp_path / "activation-receipt.json"
+    result_path.chmod(0o600)
+    activation_payload = tmp_path / "activation-payload.json"
+    activation_receipt = tmp_path / "activation-receipt.json"
+    activation_context = tmp_path / "activation-context.json"
+    for path in (activation_payload, activation_receipt, activation_context):
+        path.write_text("{}\n", encoding="utf-8")
+    activation_payload.chmod(0o644)
+    activation_receipt.chmod(0o644)
+    activation_context.chmod(0o600)
+    monkeypatch.setattr(
+        audit,
+        "validate_activation_payload",
+        lambda *args, **kwargs: payload_sha,
+    )
+    monkeypatch.setattr(
+        audit,
+        "validate_activation_receipt",
+        lambda *args, **kwargs: receipt_sha,
+    )
+    monkeypatch.setattr(
+        audit,
+        "validate_activation_context",
+        lambda *args, **kwargs: {
+            "activation_receipt_commit_sha": receipt_commit_sha,
+        },
+    )
     assert audit.validate_abort_result(
         result,
         protocol,
         runtime_lock=runtime_lock,
         protocol_path=RESEARCH / "model_v18_shoulder_state_protocol.json",
         runner_path=RESEARCH / "model_v18_shoulder_state_runner.py",
-        activation_payload_path=missing_payload,
-        activation_receipt_path=missing_receipt,
+        activation_payload_path=activation_payload,
+        activation_receipt_path=activation_receipt,
+        activation_context_path=activation_context,
         artifact_paths=artifact_paths,
         result_path=result_path,
     )["status"] == "aborted_integrity_failure"
@@ -4848,8 +4554,9 @@ def test_independent_abort_result_is_outcome_blind_exact_and_symlink_safe(
             runtime_lock=runtime_lock,
             protocol_path=RESEARCH / "model_v18_shoulder_state_protocol.json",
             runner_path=RESEARCH / "model_v18_shoulder_state_runner.py",
-            activation_payload_path=missing_payload,
-            activation_receipt_path=missing_receipt,
+            activation_payload_path=activation_payload,
+            activation_receipt_path=activation_receipt,
+            activation_context_path=activation_context,
             artifact_paths=artifact_paths,
         )
     invalid_reason = copy.deepcopy(result)
@@ -4861,8 +4568,9 @@ def test_independent_abort_result_is_outcome_blind_exact_and_symlink_safe(
             runtime_lock=runtime_lock,
             protocol_path=RESEARCH / "model_v18_shoulder_state_protocol.json",
             runner_path=RESEARCH / "model_v18_shoulder_state_runner.py",
-            activation_payload_path=missing_payload,
-            activation_receipt_path=missing_receipt,
+            activation_payload_path=activation_payload,
+            activation_receipt_path=activation_receipt,
+            activation_context_path=activation_context,
             artifact_paths=artifact_paths,
         )
     unregistered_reason = copy.deepcopy(result)
@@ -4877,8 +4585,9 @@ def test_independent_abort_result_is_outcome_blind_exact_and_symlink_safe(
             runtime_lock=runtime_lock,
             protocol_path=RESEARCH / "model_v18_shoulder_state_protocol.json",
             runner_path=RESEARCH / "model_v18_shoulder_state_runner.py",
-            activation_payload_path=missing_payload,
-            activation_receipt_path=missing_receipt,
+            activation_payload_path=activation_payload,
+            activation_receipt_path=activation_receipt,
+            activation_context_path=activation_context,
             artifact_paths=artifact_paths,
         )
     wrong_stage_reason = copy.deepcopy(result)
@@ -4891,8 +4600,9 @@ def test_independent_abort_result_is_outcome_blind_exact_and_symlink_safe(
             runtime_lock=runtime_lock,
             protocol_path=RESEARCH / "model_v18_shoulder_state_protocol.json",
             runner_path=RESEARCH / "model_v18_shoulder_state_runner.py",
-            activation_payload_path=missing_payload,
-            activation_receipt_path=missing_receipt,
+            activation_payload_path=activation_payload,
+            activation_receipt_path=activation_receipt,
+            activation_context_path=activation_context,
             artifact_paths=artifact_paths,
         )
 
@@ -4906,8 +4616,9 @@ def test_independent_abort_result_is_outcome_blind_exact_and_symlink_safe(
             runtime_lock=runtime_lock,
             protocol_path=RESEARCH / "model_v18_shoulder_state_protocol.json",
             runner_path=RESEARCH / "model_v18_shoulder_state_runner.py",
-            activation_payload_path=missing_payload,
-            activation_receipt_path=missing_receipt,
+            activation_payload_path=activation_payload,
+            activation_receipt_path=activation_receipt,
+            activation_context_path=activation_context,
             artifact_paths=artifact_paths,
         )
 
@@ -4934,11 +4645,21 @@ def test_runner_abort_command_is_canonical_exclusive_and_never_parses_ledgers(
         "PICKS_OUTPUT": tmp_path / "picks.csv",
         "ACTIVATION_PAYLOAD": tmp_path / "activation-payload.json",
         "ACTIVATION_RECEIPT": tmp_path / "activation-receipt.json",
+        "ACTIVATION_CONTEXT": tmp_path / "activation-context.json",
     }
     for name, path in paths.items():
         monkeypatch.setattr(runner, name, path)
     paths["DECISION_LEDGER"].write_bytes(b"not-json-and-must-not-be-opened-semantically\n")
     paths["SCORE_OUTPUT"].write_bytes(b"not,a,registered,score,header\n")
+    context = {
+        "activation_payload_sha256": "a" * 64,
+        "activation_receipt_sha256": "b" * 64,
+        "activation_receipt_commit_sha": "c" * 40,
+    }
+    for name in ("ACTIVATION_PAYLOAD", "ACTIVATION_RECEIPT"):
+        paths[name].write_text("{}\n", encoding="utf-8")
+    paths["ACTIVATION_CONTEXT"].write_bytes(audit.canonical_json_file_bytes(context))
+    paths["ACTIVATION_CONTEXT"].chmod(0o600)
     monkeypatch.setattr(runner, "RUNTIME_LOCK_SHA256", runtime_sha)
     monkeypatch.setattr(runner, "_STRICT_RUNTIME_ACTIVE", True)
     monkeypatch.setattr(
@@ -4953,6 +4674,21 @@ def test_runner_abort_command_is_canonical_exclusive_and_never_parses_ledgers(
         runner,
         "validate_runtime_lock",
         lambda *args, **kwargs: (runtime_lock, runtime_sha),
+    )
+    monkeypatch.setattr(
+        runner,
+        "validate_activation_payload",
+        lambda *args, **kwargs: ({}, context["activation_payload_sha256"]),
+    )
+    monkeypatch.setattr(
+        runner,
+        "validate_activation_receipt",
+        lambda *args, **kwargs: ({}, context["activation_receipt_sha256"]),
+    )
+    monkeypatch.setattr(
+        runner,
+        "validate_activation_context",
+        lambda value: dict(value),
     )
     monkeypatch.setattr(
         runner.platform,
@@ -4977,11 +4713,13 @@ def test_runner_abort_command_is_canonical_exclusive_and_never_parses_ledgers(
         runner.build_integrity_abort_result(
             failure_reason="source_integrity_failure",
             integrity_stage="monthly_fold",
+            activation_context=context,
         )
 
     result = runner.build_integrity_abort_result(
         failure_reason="source_integrity_failure",
         integrity_stage="source_ingestion",
+        activation_context=context,
     )
     assert result["models"] is None
     assert result["artifact_sha256"]["decision_ledger_sha256"] == (
@@ -5000,6 +4738,25 @@ def test_runner_abort_command_is_canonical_exclusive_and_never_parses_ledgers(
     persisted = json.loads(paths["RESULT_OUTPUT"].read_text(encoding="utf-8"))
     assert persisted == result
     assert paths["RESULT_OUTPUT"].read_bytes() == audit.canonical_json_file_bytes(result)
+    monkeypatch.setattr(
+        audit,
+        "validate_activation_payload",
+        lambda *args, **kwargs: context["activation_payload_sha256"],
+    )
+    monkeypatch.setattr(
+        audit,
+        "validate_activation_receipt",
+        lambda *args, **kwargs: context["activation_receipt_sha256"],
+    )
+    monkeypatch.setattr(
+        audit,
+        "validate_activation_context",
+        lambda *args, **kwargs: {
+            "activation_receipt_commit_sha": context[
+                "activation_receipt_commit_sha"
+            ],
+        },
+    )
     audit.validate_abort_result(
         persisted,
         protocol,
@@ -5008,6 +4765,7 @@ def test_runner_abort_command_is_canonical_exclusive_and_never_parses_ledgers(
         runner_path=RESEARCH / "model_v18_shoulder_state_runner.py",
         activation_payload_path=paths["ACTIVATION_PAYLOAD"],
         activation_receipt_path=paths["ACTIVATION_RECEIPT"],
+        activation_context_path=paths["ACTIVATION_CONTEXT"],
         artifact_paths={
             "decision_ledger_sha256": paths["DECISION_LEDGER"],
             "outcome_ledger_sha256": paths["OUTCOME_LEDGER"],
@@ -5017,25 +4775,26 @@ def test_runner_abort_command_is_canonical_exclusive_and_never_parses_ledgers(
         },
         result_path=paths["RESULT_OUTPUT"],
     )
-    with pytest.raises(runner.V18Error, match="already exists|overwrite"):
-        runner.main(
-            [
-                "abort",
-                "--failure-reason",
-                "source_integrity_failure",
-                "--integrity-stage",
-                "source_ingestion",
-            ]
-        )
+    assert runner.main(
+        [
+            "abort",
+            "--failure-reason",
+            "source_integrity_failure",
+            "--integrity-stage",
+            "source_ingestion",
+        ]
+    ) == 0
     with pytest.raises(runner.V18Error, match="machine token"):
         runner.build_integrity_abort_result(
             failure_reason="free form / metric=1.2",
             integrity_stage="source_ingestion",
+            activation_context=context,
         )
     with pytest.raises(runner.V18Error, match="machine token"):
         runner.build_integrity_abort_result(
             failure_reason="syntactically_valid_but_unregistered",
             integrity_stage="source_ingestion",
+            activation_context=context,
         )
 
 
@@ -5172,6 +4931,8 @@ def test_canonical_result_cli_rejects_every_noncanonical_input_and_output_path(
             "evaluate",
             "--predictor-raw-store-root",
             str(tmp_path),
+            "--predictor-derived-store-root",
+            str(tmp_path / "predictor-derived"),
             "--outcome-raw-store-root",
             str(tmp_path),
             "--checkpoint-core-store-root",
@@ -5227,6 +4988,15 @@ def test_checkpoint_derivation_selects_exact_day2_pair_and_decide_has_no_score_o
     score_path = tmp_path / "scores.csv"
     cumulative.to_csv(score_path, index=False, lineterminator="\n")
     monkeypatch.setattr(runner, "SCORE_OUTPUT", score_path)
+    score_session_dir = tmp_path / "score-sessions"
+    score_session_dir.mkdir(mode=0o700)
+    monkeypatch.setattr(runner, "SCORE_SESSION_DIR", score_session_dir)
+    for session in ("2026-08-05", "2026-08-06"):
+        shard = score_session_dir / f"{session}.csv"
+        cumulative.loc[cumulative["session_date"].eq(session)].to_csv(
+            shard, index=False, lineterminator="\n"
+        )
+        shard.chmod(0o600)
 
     selected = runner._canonical_target_score_pair(pd.Timestamp("2026-08-06"))
     assert selected is not None
@@ -5239,14 +5009,15 @@ def test_checkpoint_derivation_selects_exact_day2_pair_and_decide_has_no_score_o
     state_directory = tmp_path / "state-manifests"
     fold_directory = tmp_path / "fold-manifests"
     bundle_directory = tmp_path / "fold-models"
-    source_directory.mkdir()
-    state_directory.mkdir()
-    fold_directory.mkdir()
-    bundle_directory.mkdir()
+    source_directory.mkdir(mode=0o700)
+    state_directory.mkdir(mode=0o700)
+    fold_directory.mkdir(mode=0o700)
+    bundle_directory.mkdir(mode=0o700)
     source_path = source_directory / "2026-08-06.json"
     state_path = state_directory / "2026-08.json"
     for path in (source_path, state_path):
         path.write_text("{}\n", encoding="utf-8")
+        path.chmod(0o600)
     captured: dict[str, object] = {}
 
     monkeypatch.setattr(runner, "SOURCE_MANIFEST_DIR", source_directory)
@@ -5288,6 +5059,171 @@ def test_checkpoint_derivation_selects_exact_day2_pair_and_decide_has_no_score_o
         )
 
 
+def test_readiness_and_activation_creation_cli_dispatch_exact_arguments(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(
+        runner,
+        "validate_runtime_lock",
+        lambda *args, **kwargs: ({"lock_id": "cli-dispatch"}, "a" * 64),
+    )
+    monkeypatch.setattr(
+        runner,
+        "validate_protocol",
+        lambda *args, **kwargs: ({"protocol_id": EXPECTED_PROTOCOL_ID}, "b" * 64),
+    )
+    observed: dict[str, object] = {}
+
+    def build_anchor(*args, **kwargs):  # type: ignore[no-untyped-def]
+        observed["anchor"] = (args, kwargs)
+        return (
+            {"cache_contract_id": runner.PREDICTOR_CACHE_CONTRACT_ID},
+            {"snapshot_manifest_sha256": "c" * 64},
+        )
+
+    def prepare_stores(**kwargs):  # type: ignore[no-untyped-def]
+        observed["stores"] = kwargs
+        return {"external_roots_pairwise_disjoint": True}
+
+    def create_payload(**kwargs):  # type: ignore[no-untyped-def]
+        observed["payload"] = kwargs
+        return {"payload_sha256": "d" * 64}
+
+    def create_receipt(payload, **kwargs):  # type: ignore[no-untyped-def]
+        observed["receipt"] = (payload, kwargs)
+        return {"receipt_sha256": "e" * 64}
+
+    monkeypatch.setattr(runner, "build_predictor_cache_anchor", build_anchor)
+    monkeypatch.setattr(runner, "prepare_operational_stores", prepare_stores)
+    monkeypatch.setattr(runner, "create_activation_payload", create_payload)
+    monkeypatch.setattr(runner, "create_activation_receipt", create_receipt)
+
+    raw_root = tmp_path / "predictor-raw"
+    derived_root = tmp_path / "predictor-derived"
+    outcome_root = tmp_path / "outcome-raw"
+    core_root = tmp_path / "checkpoint-core"
+    source = tmp_path / "stq_20260805.pdf"
+    assert runner.main(
+        [
+            "prepare-predictor-cache",
+            "--source-pdf",
+            str(source),
+            "--source-file-name",
+            source.name,
+            "--source-url",
+            "https://www.jpx.co.jp/markets/statistics-equities/daily/test-att/stq_20260805.pdf",
+            "--through",
+            "2026-08-05",
+            "--predictor-raw-store-root",
+            str(raw_root),
+            "--predictor-derived-store-root",
+            str(derived_root),
+        ]
+    ) == 0
+    anchor_args, anchor_kwargs = observed["anchor"]  # type: ignore[misc]
+    assert anchor_args == (
+        [str(source)],
+        [source.name],
+        ["https://www.jpx.co.jp/markets/statistics-equities/daily/test-att/stq_20260805.pdf"],
+    )
+    assert anchor_kwargs == {
+        "through_session": "2026-08-05",
+        "predictor_raw_store_root": str(raw_root),
+        "predictor_derived_store_root": str(derived_root),
+    }
+
+    assert runner.main(
+        [
+            "prepare-operational-stores",
+            "--predictor-raw-store-root",
+            str(raw_root),
+            "--predictor-derived-store-root",
+            str(derived_root),
+            "--outcome-raw-store-root",
+            str(outcome_root),
+            "--checkpoint-core-store-root",
+            str(core_root),
+        ]
+    ) == 0
+    assert observed["stores"] == {
+        "predictor_raw_store_root": str(raw_root),
+        "predictor_derived_store_root": str(derived_root),
+        "outcome_raw_store_root": str(outcome_root),
+        "checkpoint_core_store_root": str(core_root),
+    }
+
+    preregistration_sha = "f" * 40
+    anchor_key = (
+        "model_v18_shoulder_state/cache-anchor/" + "1" * 64 + ".manifest.json"
+    )
+    assert runner.main(
+        [
+            "create-activation-payload",
+            "--preregistration-commit-sha",
+            preregistration_sha,
+            "--predictor-raw-store-root",
+            str(raw_root),
+            "--predictor-derived-store-root",
+            str(derived_root),
+            "--predictor-cache-anchor-manifest-object-key",
+            anchor_key,
+        ]
+    ) == 0
+    assert observed["payload"] == {
+        "preregistration_commit_sha": preregistration_sha,
+        "predictor_raw_store_root": str(raw_root),
+        "predictor_derived_store_root": str(derived_root),
+        "predictor_cache_anchor_manifest_object_key": anchor_key,
+        "output": str(runner.ACTIVATION_PAYLOAD),
+    }
+
+    payload_commit_sha = "2" * 40
+    assert runner.main(
+        [
+            "create-activation-receipt",
+            "--payload-commit-sha",
+            payload_commit_sha,
+        ]
+    ) == 0
+    assert observed["receipt"] == (
+        str(runner.ACTIVATION_PAYLOAD),
+        {
+            "payload_commit_sha": payload_commit_sha,
+            "output": str(runner.ACTIVATION_RECEIPT),
+        },
+    )
+
+    with pytest.raises(runner.V18Error, match="registered path"):
+        runner.main(
+            [
+                "create-activation-payload",
+                "--preregistration-commit-sha",
+                preregistration_sha,
+                "--predictor-raw-store-root",
+                str(raw_root),
+                "--predictor-derived-store-root",
+                str(derived_root),
+                "--predictor-cache-anchor-manifest-object-key",
+                anchor_key,
+                "--output",
+                str(tmp_path / "noncanonical-payload.json"),
+            ]
+        )
+    with pytest.raises(runner.V18Error, match="receipt paths changed"):
+        runner.main(
+            [
+                "create-activation-receipt",
+                "--payload-commit-sha",
+                payload_commit_sha,
+                "--payload",
+                str(tmp_path / "noncanonical-payload.json"),
+            ]
+        )
+    capsys.readouterr()
+
+
 def test_exclusive_writer_has_atomic_no_replace_under_concurrency(
     tmp_path: Path,
 ) -> None:
@@ -5309,3 +5245,67 @@ def test_exclusive_writer_has_atomic_no_replace_under_concurrency(
     assert json.loads(target.read_text(encoding="utf-8")) == {
         "winner": created_value
     }
+
+
+def test_intramonth_semantic_reuse_is_private_and_keeps_fresh_fold_hashes(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    with pytest.raises(runner.V18Error, match="cannot accept caller frames/hashes"):
+        runner._validate_month_source_manifest_impl(
+            {},
+            predictor_raw_store_root=tmp_path / "raw",
+            predictor_derived_store_root=tmp_path / "derived",
+            model_prices=pd.DataFrame(),
+            reuse_sealed_snapshot_semantic=True,
+        )
+    calls: list[dict[str, object]] = []
+
+    def fake_impl(*args: object, **kwargs: object):
+        calls.append(dict(kwargs))
+        return {"month_source_manifest_sha256": "1" * 64}, pd.DataFrame(), "1" * 64
+
+    monkeypatch.setattr(runner, "_validate_month_source_manifest_impl", fake_impl)
+    monkeypatch.setattr(runner, "_STRICT_RUNTIME_ACTIVE", True)
+    runner._validate_retained_intramonth_month_source(
+        {},
+        predictor_raw_store_root=tmp_path / "raw",
+        predictor_derived_store_root=tmp_path / "derived",
+    )
+    assert calls[-1]["reuse_sealed_snapshot_semantic"] is True
+    assert all(
+        field not in calls[-1]
+        for field in (
+            "training_panel",
+            "model_prices",
+            "precomputed_model_semantic_sha256",
+            "precomputed_training_semantic_sha256",
+        )
+    )
+    runner.validate_month_source_manifest(
+        {},
+        predictor_raw_store_root=tmp_path / "raw",
+        predictor_derived_store_root=tmp_path / "derived",
+    )
+    assert calls[-1]["reuse_sealed_snapshot_semantic"] is False
+
+    module = ast.parse(Path(runner.__file__).read_text(encoding="utf-8"))
+    functions = {
+        node.name: node
+        for node in module.body
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+    }
+    prepare_source = ast.unparse(functions["prepare_day"])
+    assert "_validate_retained_intramonth_month_source" in prepare_source
+    assert "precomputed_training_semantic_sha256" not in prepare_source
+    fold_calls = {
+        ast.unparse(node.func)
+        for node in ast.walk(functions["_load_or_create_month_fold"])
+        if isinstance(node, ast.Call)
+    }
+    assert {
+        "v17._candidate_training",
+        "_frame_sha",
+        "_numeric_sha",
+        "validate_fold_manifest",
+    }.issubset(fold_calls)

@@ -112,7 +112,7 @@ payload binds that commit and every artifact hash. A third commit records a
 receipt that binds the payload commit. Each of the three commits must be the
 exact head SHA of the first completed run-attempt-1 `pull_request` run of that
 workflow, and that run itself must succeed. Counting begins on the first TSE
-session, no earlier than 2026-08-05, whose 08:58:59 JST cutoff is strictly
+session, no earlier than 2026-08-06, whose 08:58:59 JST cutoff is strictly
 after the receipt commit's successful workflow server `updated_at`. That
 immutable server time alone selects the session. The post-response observation
 must finish before the already-selected cutoff or activation fails and requires
@@ -140,7 +140,10 @@ used, is ephemeral and is never stored or hashed into an artifact.
 The runtime lock fixes the exact transitive project files, Python executable
 and ABI, every distribution actually loaded by the runner/audit path, native
 numerical backends, single-thread fit/score context, Asia/Tokyo zoneinfo, and
-PDF parser binary. The closure includes the interpreter-startup
+PDF parser binary. The A2 runtime-closure repair additionally registers the
+host's exact `zstandard==0.25.0` tree and its loaded `backend_c` ELF extension;
+this is an operational dependency discovered before any counted outcome and
+does not alter SH01, its gates, or its calendar. The closure includes the interpreter-startup
 `distutils-precedence.pth` and `_distutils_hack`, the pandas dependencies
 python-dateutil, pytz, and six, the scikit-learn dependency charset-normalizer,
 setuptools, and both charset-normalizer native extensions. Every live module
@@ -156,17 +159,107 @@ child-process environment.
 The only originless distribution-generated alias is exact `six.moves`, whose
 null origin/file, empty search locations, `six._SixMetaPathImporter` loader,
 and hashed `six.py` provider are all fixed; no wildcard alias is accepted.
-It deliberately excludes the v1.8 runner and audit to avoid a hash
-cycle; the activation payload binds those two files directly while both pin
-the already-fixed lock bytes. Operational activation, parsing, fitting,
+It deliberately excludes the v1.8 runner, audit, and nonauthority rehearsal to
+avoid a hash cycle; the activation payload binds those three files directly
+while each pins the already-fixed lock bytes. Operational activation, parsing, fitting,
 scoring, and terminal reconstruction abort on runtime drift rather than
 silently changing numerical or parsing semantics.
 
+This preregistration is the A2 correction to the never-activated A attempt.
+The superseded A bytes produced no activation payload, receipt, decision,
+outcome, or result. A2 repairs only the zstandard runtime closure and the
+operational path needed to meet the pre-open cutoff; it does not change SH01,
+C00, C02, Ridge, the feature set, state formula, costs, gates, or registered
+calendar. Activation under the superseded protocol/runtime is forbidden. The
+fixed post-merge iteration report records that E60, quota variants, and TD01
+produced no selection-authorised signal; they remain development-only
+rejections and do not enter production or the A2 forward family.
+The A2 preregistration is the first commit on the fresh registered A2 branch
+created from current `main` after PR #8 merged; it does not append A/B/C or
+daily authority to the superseded experimental branch.
+
+Before payload B, A2 builds one preactivation cache anchor outside the daily
+cutoff. The anchor binds every registered historical raw object through `H`,
+each standalone parser shard, an exact cumulative raw31 snapshot, the compact
+12-column model-price snapshot, and one full raw31-versus-compact12 G0
+consumer-equivalence receipt. That receipt compares stable date/code rows,
+column order, dtypes, null masks, strings, booleans, and IEEE float bytes
+including negative zero for the full prefix plus the first synthetic target.
+The payload validates that the exact predecessor of the earliest possible
+counted session is strictly later than `H`; actual receipt C may move the start
+later but can never make it earlier or reuse an impossible window. A slow
+full-raw reference build is untimed and fixes the comparison hashes before the
+daily timing gate. The payload-bound nonauthority rehearsal then performs
+three cold compact runs for both a month-boundary case and the registered
+`intramonth_fold_reuse_upper_bound_proxy`; every run must match the reference
+target/fold/score/top-two bytes exactly and finish within 300 seconds or 120
+seconds respectively. An untimed strict-runtime preflight first validates the
+project/module closure and complete absence of canonical authority, then issues
+one opaque process-local capability. The separately timed seam accepts only that
+exact capability and performs no repository read/write, network request,
+calendar lookup, or module-closure scan; an untimed postflight revalidates the
+closure and revokes the capability. It uses only fresh `/tmp` roots and creates
+no activation, decision, outcome, checkpoint, or result authority.
+Reference and boundary calls compute every exact full-prefix proof once and
+bind canonical model-price CSV bytes/rows, source/shard identities, model
+semantic, full G0 digest, and pre-month training semantic into the private fold
+token. The intramonth proxy must freshly decode its compact snapshot, merge and
+canonical-encode the complete prefix, and match every byte/identity binding
+before it may reuse only those proof digests. It still freshly builds one panel,
+round-trips the target cache, recomputes current fold input hashes, validates the
+fold/bundle, and scores. Production follows the same causal boundary: exact
+retained month-source/snapshot bytes and bindings may reuse their already sealed
+model/training semantics without any caller frame/hash, while current fold
+input hashes and the target score remain fresh. Boundary creation and terminal
+recompute all semantics. This removes measured redundant proof rehashing; it
+does not relax either timing gate or the exact reference comparison.
+
+Predictor PDFs are a declared manual trust boundary. The operator attests that
+each labeled file is a faithful acquisition of the named official JPX PDF,
+without omission, substitution, or alteration before sealing. A2 proves the
+retained bytes and every downstream computation, but has no server receipt,
+licensed availability feed, independent acquisition-time proof, terminal JPX
+refetch, or independent origin/authenticity proof. URL and receipt time are
+operator metadata, and the result must say `official_source_verified=false`.
+A missing, partial, ambiguous, mislabeled, late, unparsable, conflicting, or
+unavailable source aborts the activated experiment; it never creates cash.
+Predictor and outcome authority for the same labeled daily PDF live under
+physically disjoint roots as separate single-link inodes, yet their filename,
+URL label, receipt metadata, byte count, and SHA-256 must match exactly. The
+same bytes may be parsed separately by the two authorities; A2 makes no
+parse-once claim for that boundary.
+
 Activation time alone is not sufficient proof that each later shadow decision
 was fixed pre-open. Each counted session therefore has two fixed public
-checkpoint paths: a safety-cash proposal and a primary proposal. One role-free
-command derives and seals both cores and creates both opaque proposals as an
-indivisible pair. A second noninteractive command uses only the locked Python
+checkpoint paths: a safety-cash proposal and a primary proposal. The canonical
+`prepare-day` command obtains complete D-1 predictor authority, builds the
+compact-prefix panel exactly once, prepares a monthly fold when due, seals the
+daily target slice, attaches the prior counted outcome from a physically
+distinct raw copy, closes a completed prior month, derives state, seals the
+exact two-row score shard, and creates both opaque checkpoint proposals in
+that order. Source, fold/bundle, or two-row-pair absence aborts. Only exact-zero
+state and unavailable state from the three required prior-month qualifications
+authorise cash. `finalize-terminal` alone attaches the final counted outcome,
+after the outcome-blind terminal predictor/checkpoint gate.
+
+`prepare-day` is the only daily mutation surface. It loads the exact compact
+snapshot through the preceding month, merges only the registered current-month
+suffix through D-1, builds the full-prefix G0 panel once, and derives both a
+month-boundary training slice/fold and the outcome-null D target slice from
+that same object. A recent-window approximation, incremental rolling G0
+state, caller-supplied panel, split month/source/state/top2/checkpoint command,
+or daily cumulative raw reparse is not registered. At terminal, each unique
+predictor raw object is reparsed exactly once, each standalone text/report/
+shard is compared, and raw31 rebuilds every monthly training fold and daily
+target cache before state, outcome, score, or performance is opened.
+
+The local checkpoint pair uses precreated private directories, directory locks,
+fsync, staged no-replace publication, fixed intent bytes, and exact replay so a
+local crash can be completed without changing a nonce, timestamp, decision, or
+byte. Conflicting, aliased, unsafe, or unexplained partial state aborts. The
+threat model excludes a same-UID process that deliberately bypasses the
+registered cooperative lock; group/world-writable parents are forbidden. A
+second noninteractive command uses only the locked Python
 HTTPS client and GitHub Git Data API to publish safety first and primary second
 as adjacent sole-parent, one-file commits on the registered branch while
 keeping the preregistered Actions workflow byte-identical. It creates the exact
@@ -217,18 +310,35 @@ The last counted primary commit is the terminal checkpoint tip. A later result,
 audit, or documentation commit may make the current branch tip newer, but
 remote paginated history must still prove that it descends from the terminal
 tip and never changed a proposal, workflow, or preregistered artifact.
-Daily nonselection reasons are a closed finite registry: missing versus partial
-source, unavailable fold versus unavailable pair, and insufficient state versus
-exact-zero state. Checkpoint safety adds no decision or failure reason. Exception
-text or caller prose cannot become a hidden experimental label.
+Daily decisions are a closed four-value registry: selected rank 1, selected
+rank 2, cash because a required prior month is unavailable, or cash because the
+exact state is zero. Checkpoint safety adds no decision or failure reason.
+Source/model/pair failure terminates the experiment and cannot become a fifth
+decision. Exception text or caller prose cannot become a hidden label.
 
 Every scheduled session from that point is retained. Missing source or model
-state is fail-closed cash, not a delayed start or a replaceable observation.
-The scheduled-session denominator is the preregistered, hash-bound TSE calendar
-from 2026-08-05 through 2027-12-30; a later source failure cannot rewrite it.
+authority is an irreversible integrity abort, not a delayed start, cash, or a
+replaceable observation.
+The preregistered, hash-bound calendar registry spans 2026-08-05 through
+2027-12-30, while A2's fixed not-before rule makes 2026-08-06 the earliest
+possible counted session; the unused 2026-08-05 registry row is retained for
+calendar identity and helper determinism. A later source failure cannot rewrite
+the counted denominator.
 The terminal date is the last scheduled session of the first calendar month-end
 at which at least 120 scheduled sessions and at least six distinct calendar
 months have been counted.
+For the earliest permitted start of 2026-08-06, session 120 is 2027-02-03 and
+the fixed terminal month-end is 2027-02-26, giving 135 scheduled sessions
+across seven represented months, split 67/68, with at least 122 executed days
+required.
+
+Each decision, outcome, and completed-month record is first sealed as a
+create-once per-key authority shard. Its JSONL is only an exact recoverable
+derived view: a torn suffix is rebuilt from shards, while divergence, extras,
+aliases, reordered keys, or a hash-chain break abort. Score authority uses the
+same per-session pattern. Referenced content-addressed derived objects are
+authoritative only through their bound manifests and hashes; unrelated objects
+are explicitly nonauthority and no complete-store-enumeration claim is made.
 
 An automated sealed process may ingest completed outcomes to form the next
 month's strictly lagged state. The registered May-through-July seed values and
@@ -243,11 +353,14 @@ linked and the terminal calendar month's completed-month record has been
 hash-chain and coverage validated. Only then are the three-row-per-session
 picks, every input binding, metrics, gates, and canonical result independently
 recomputed and compared byte for byte. If an integrity failure occurs instead,
-the sole `abort` path may create one outcome-blind result under the exact
-canonical schema. It records only a finite generic reason/stage, strict runtime
-identity, activation hashes that can be validated without performance access,
-and byte hashes of already-existing canonical files; it cannot parse or expose
-decisions, outcomes, picks, or performance and cannot overwrite any result.
+the sole post-C `abort` path irreversibly terminates the activation and may
+create one outcome-blind result under the exact canonical schema. It records
+only a finite generic reason/stage, strict runtime identity, the non-null C
+activation identity, and opaque byte fingerprints of already-existing files.
+It cannot parse or expose decisions, outcomes, scores, picks, or performance;
+all metrics, gates, and nominee fields are null. Once it exists every semantic
+or mutating command is locked out. `evaluate` reads only the final sorted-JSON
+status line to recognise the abort and opens no performance authority.
 
 ## Interpretation
 

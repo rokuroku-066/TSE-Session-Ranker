@@ -11,6 +11,7 @@ winner, and research-only authority decision.
 from __future__ import annotations
 
 import argparse
+import ast
 import base64
 import binascii
 from collections.abc import Iterable, Mapping, Sequence
@@ -30,6 +31,7 @@ import platform
 import re
 import ssl
 import stat
+import struct
 import subprocess
 import sys
 import sysconfig
@@ -54,13 +56,24 @@ DEFAULT_ACTIVATION_PAYLOAD = (
 DEFAULT_ACTIVATION_RECEIPT = (
     ROOT / "research/model_v18_shoulder_state_activation_receipt.json"
 )
+DEFAULT_ACTIVATION_CONTEXT = (
+    ROOT / "research/model_v18_shoulder_state_activation_context.json"
+)
 DEFAULT_DECISIONS = ROOT / "research/model_v18_shoulder_state_decisions.jsonl"
 DEFAULT_OUTCOMES = ROOT / "research/model_v18_shoulder_state_outcomes.jsonl"
 DEFAULT_MONTHS = ROOT / "research/model_v18_shoulder_state_months.jsonl"
+DEFAULT_DECISION_RECORDS = (
+    ROOT / "research/model_v18_shoulder_state_decision_records"
+)
+DEFAULT_OUTCOME_RECORDS = ROOT / "research/model_v18_shoulder_state_outcome_records"
+DEFAULT_MONTH_RECORDS = ROOT / "research/model_v18_shoulder_state_month_records"
 DEFAULT_STATE_MANIFESTS = ROOT / "research/model_v18_shoulder_state_state_manifests"
 DEFAULT_FOLD_MANIFESTS = ROOT / "research/model_v18_shoulder_state_fold_manifests"
 DEFAULT_FOLD_MODELS = ROOT / "research/model_v18_shoulder_state_fold_models"
 DEFAULT_SOURCE_MANIFESTS = ROOT / "research/model_v18_shoulder_state_source_manifests"
+DEFAULT_MONTH_SOURCE_MANIFESTS = (
+    ROOT / "research/model_v18_shoulder_state_month_source_manifests"
+)
 DEFAULT_OUTCOME_MANIFESTS = (
     ROOT / "research/model_v18_shoulder_state_outcome_manifests"
 )
@@ -68,10 +81,12 @@ DEFAULT_CHECKPOINT_PROPOSALS = (
     ROOT / "research/model_v18_shoulder_state_checkpoint_proposals"
 )
 DEFAULT_SCORES = ROOT / "research/model_v18_shoulder_state_scores.csv"
+DEFAULT_SCORE_SESSIONS = ROOT / "research/model_v18_shoulder_state_score_sessions"
 DEFAULT_PICKS = ROOT / "research/model_v18_shoulder_state_picks.csv"
 DEFAULT_CALENDAR = ROOT / "research/model_v18_tse_session_calendar.csv"
 DEFAULT_RESULT = ROOT / "research/model_v18_shoulder_state_result.json"
 DEFAULT_RUNNER = ROOT / "research/model_v18_shoulder_state_runner.py"
+DEFAULT_REHEARSAL = ROOT / "research/model_v18_a2_rehearsal.py"
 DEFAULT_OUTPUT = ROOT / "research/model_v18_shoulder_state_audit.json"
 DEFAULT_RUNTIME_LOCK = ROOT / "research/model_v18_runtime_lock.json"
 V05_PRICE_LOCK = ROOT / "research/model_v05_input_lock.json"
@@ -79,10 +94,10 @@ V04_PARSER_AUDIT = ROOT / "research/model_v04_parser_recovery_audit.json"
 V17_REPLAY_INPUT_LOCK = ROOT / "research/model_v17_replay_input_lock.json"
 
 PROTOCOL_ID = "model_v18_shoulder_state_forward_20260804"
-PROTOCOL_SHA256 = "c623fabfa8e94381bce27d359cefc6e51a9a80f1c18f62f6098cfdfc8e9f6112"
-RUNTIME_LOCK_SHA256 = "95a867e2f8f187528a7ba3d24f4db4f1bf0964531b6e0e2b85d88d0c758f1e32"
+PROTOCOL_SHA256 = "930a82163f347aa7c303dfea1fb8b593ac6bff95ff774a2c6804c437d679cb5f"
+RUNTIME_LOCK_SHA256 = "2cd701e0ae5969b3a13236908e260c7f072344f5ca477287b14a3ed22b257a54"
 RUNTIME_LOCK_SELF_SHA256 = (
-    "fcb453b3532625e2eefad679972389bd80cb7ee7685a40610d5aa858d7a32c2b"
+    "244fc4bf0809bf553379f627c6b89b2842759104577b248d1bcc902813ae12fb"
 )
 LOCKED_PYTHON_VERSION = "3.12.13"
 LOCKED_NUMPY_VERSION = "2.3.5"
@@ -114,6 +129,84 @@ BOOTSTRAP_CONFIDENCE = 0.90
 ZERO_SHA256 = "0" * 64
 NUMERIC_TOLERANCE = 1e-12
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
+
+CANONICAL_JSON_CONTRACT = "project_canonical_json_v1"
+RAW_SOURCE_PROVENANCE_MODE = "manual_operator_attested_v1"
+RAW_SOURCE_PROVENANCE_CAVEAT_ID = "manual_jpx_origin_not_independently_verified_v1"
+RAW_SOURCE_PROVENANCE_CAVEAT = (
+    "The operator attests faithful manual acquisition of the labeled official JPX "
+    "PDF without omission, substitution, or pre-seal alteration. The protocol "
+    "proves post-seal bytes and computation only; it has no independent server "
+    "receipt, availability, acquisition-time, origin, or authenticity proof."
+)
+RAW_SOURCE_PROVENANCE_CAVEAT_SHA256 = hashlib.sha256(
+    RAW_SOURCE_PROVENANCE_CAVEAT.encode("utf-8")
+).hexdigest()
+PREDICTOR_OBJECT_PREFIX = "model_v18_shoulder_state/predictor/"
+OUTCOME_OBJECT_PREFIX = "model_v18_shoulder_state/outcome/"
+PREDICTOR_SHARD_OBJECT_PREFIX = "model_v18_shoulder_state/predictor-shard/"
+G0_PANEL_CACHE_OBJECT_PREFIX = "model_v18_shoulder_state/g0-panel/"
+CACHE_ANCHOR_OBJECT_PREFIX = "model_v18_shoulder_state/cache-anchor/"
+MODEL_PRICE_SNAPSHOT_OBJECT_PREFIX = (
+    "model_v18_shoulder_state/model-price-snapshot/"
+)
+PREDICTOR_CACHE_CONTRACT_ID = "model_v18_predictor_cache_a2_v1"
+PARSED_SHARD_JSONL_CONTRACT = (
+    "canonical_json_array_rows_v1:utf8_no_bom_lf_final_lf;"
+    "registered_column_order;stable_date_code;strict_types;finite_binary64;"
+    "ieee_negative_zero_preserved"
+)
+G0_CACHE_JSONL_CONTRACT = PARSED_SHARD_JSONL_CONTRACT
+ADDITIONAL_TEST_ARTIFACT_PATHS = (
+    "tests/test_model_v18_a2_atomic_restart.py",
+    "tests/test_model_v18_a2_core_integration.py",
+    "tests/test_model_v18_a2_cross_role_anchor_abort.py",
+    "tests/test_model_v18_a2_local_authority_recovery.py",
+    "tests/test_model_v18_a2_nondiscretion_terminal_blind.py",
+    "tests/test_model_v18_a2_p0_negative_contracts.py",
+    "tests/test_model_v18_a2_preactivation_authority.py",
+    "tests/test_model_v18_a2_record_authority.py",
+    "tests/test_model_v18_a2_result_publication_retry.py",
+    "tests/test_model_v18_a2_resume_authority.py",
+    "tests/test_model_v18_a2_real_rehearsal.py",
+    "tests/test_model_v18_a2_independent_audit.py",
+    "tests/test_model_v18_operations.py",
+)
+A2_REHEARSAL_ENVELOPE_FIELDS = (
+    "schema_version",
+    "scope",
+    "input_kind",
+    "snapshot_row_count",
+    "suffix_row_count",
+    "comparison",
+    "production_authority",
+    "canonical_artifact_written",
+    "envelope_sha256",
+)
+A2_REHEARSAL_COMPARISON_FIELDS = (
+    "target_session",
+    "latest_required_source_session",
+    "model_price_row_count",
+    "model_price_semantic_sha256",
+    "model_price_csv_sha256",
+    "source_manifest_sha256",
+    "source_set_sha256",
+    "parsed_shard_set_sha256",
+    "g0_panel_exact_digest",
+    "g0_training_row_count",
+    "g0_training_panel_semantic_sha256",
+    "target_cache_byte_count",
+    "target_cache_sha256",
+    "target_cache_semantic_sha256",
+    "fold_manifest_file_sha256",
+    "fold_manifest_sha256",
+    "fold_model_bundle_file_sha256",
+    "fold_model_bundle_sha256",
+    "score_file_sha256",
+    "score_semantic_sha256",
+    "top2_code_score_ieee_sha256",
+    "build_forward_c00_panel_call_count",
+)
 
 C00_FEATURES = (
     "oc_last",
@@ -182,6 +275,331 @@ PARSED_PANEL_COLUMNS = (
     "partial_session",
 )
 
+PARSED_SHARD_BINDING_FIELDS = (
+    "raw_object_key",
+    "raw_file",
+    "raw_url",
+    "raw_byte_count",
+    "raw_sha256",
+    "shard_manifest_object_key",
+    "shard_manifest_byte_count",
+    "shard_manifest_file_sha256",
+    "shard_manifest_sha256",
+    "shard_object_key",
+    "shard_byte_count",
+    "shard_sha256",
+    "parsed_row_count",
+    "parsed_semantic_sha256",
+    "pdftotext_text_byte_count",
+    "pdftotext_text_sha256",
+    "parser_report_sha256",
+)
+
+PARSED_SHARD_MANIFEST_FIELDS = (
+    "schema_version",
+    "cache_contract_id",
+    "official_source_file_name",
+    "official_source_url",
+    "raw_byte_count",
+    "raw_sha256",
+    "chronology_class",
+    "raw_received_at",
+    "parser_path",
+    "parser_version",
+    "parser_sha256",
+    "pdftotext_file_sha256",
+    "pdftotext_elf_closure_sha256",
+    "pdftotext_argv_environment_contract_sha256",
+    "runtime_lock_sha256",
+    "runtime_lock_verified_at",
+    "created_at",
+    "sealed_at",
+    "data_object_key",
+    "data_byte_count",
+    "data_sha256",
+    "columns",
+    "columns_sha256",
+    "row_count",
+    "rejected_row_count",
+    "duplicate_date_code_count",
+    "unique_date_count",
+    "min_date",
+    "max_date",
+    "pdftotext_text_byte_count",
+    "pdftotext_text_sha256",
+    "parser_report_sha256",
+    "parsed_semantic_sha256",
+    "canonical_jsonl_contract",
+    "manifest_sha256",
+)
+
+MODEL_PRICE_COLUMNS = (
+    "date",
+    "code",
+    "name",
+    "open",
+    "high",
+    "low",
+    "close",
+    "volume",
+    "turnover",
+    "vwap",
+    "trading_unit",
+    "source_format",
+)
+
+MODEL_PRICE_REQUIRED_BY_CONSUMERS = {
+    "build_forward_c00_panel": {"date", "code", "name"},
+    "normalize_daily_prices": {"date", "code", "open", "high", "low", "close"},
+    "v16.build_exact_liquidity_features": {
+        "date", "code", "name", "close", "volume", "turnover", "vwap",
+        "trading_unit", "source_format",
+    },
+    "v17.build_reliability_features": {
+        "date", "code", "open", "high", "low", "close", "volume",
+        "turnover", "vwap", "trading_unit", "source_format",
+    },
+}
+
+MODEL_PRICE_SNAPSHOT_FIELDS = (
+    "schema_version", "cache_contract_id", "target_month",
+    "latest_source_session", "raw_source_set_sha256",
+    "parsed_shard_set_sha256", "raw_source_count", "parsed_row_count",
+    "columns", "columns_sha256", "data_object_key", "data_byte_count",
+    "data_sha256", "row_count", "unique_date_count",
+    "duplicate_date_code_count", "model_price_semantic_sha256",
+    "previous_snapshot_manifest_sha256", "previous_snapshot_target_month",
+    "previous_snapshot_latest_source_session",
+    "previous_snapshot_manifest_object_key",
+    "previous_snapshot_manifest_byte_count",
+    "previous_snapshot_manifest_file_sha256",
+    "previous_snapshot_raw_source_count",
+    "previous_snapshot_raw_source_set_sha256",
+    "previous_snapshot_parsed_shard_set_sha256", "runtime_lock_sha256",
+    "runtime_lock_verified_at", "protocol_sha256", "runner_sha256",
+    "parser_sha256", "created_at", "sealed_at", "canonical_csv_contract",
+    "snapshot_manifest_sha256",
+)
+
+MODEL_PRICE_CSV_CONTRACT = {
+    "format": "RFC4180-compatible canonical CSV",
+    "encoding": "UTF-8 without BOM",
+    "line_ending": "LF",
+    "final_lf": True,
+    "columns": list(MODEL_PRICE_COLUMNS),
+    "row_order": ["date", "code"],
+    "null": "empty field only in numeric columns",
+    "float": "finite IEEE-754 round-trip text preserving negative zero",
+    "reader": "pandas.read_csv(float_precision=round_trip)",
+}
+
+G0_PANEL_COLUMNS = (
+    "date", "code", "name", "oc_return_pct", "common_training_eligible",
+    "common_score_eligible", "feature_source_max_date", *C00_FEATURES,
+)
+
+G0_CACHE_MANIFEST_FIELDS = (
+    "schema_version", "cache_contract_id", "scope", "target_session",
+    "latest_required_source_session", "source_set_sha256",
+    "parsed_shard_set_sha256", "parsed_row_count", "columns",
+    "columns_sha256", "data_object_key", "data_byte_count", "data_sha256",
+    "row_count", "unique_date_count", "duplicate_date_code_count",
+    "data_semantic_sha256", "target_row_count",
+    "target_date_scoring_input_semantic_sha256", "target_slice_semantic_sha256",
+    "target_outcome_nonnull_count", "max_feature_source_date",
+    "v17_protocol_sha256", "v17_runner_sha256", "runtime_lock_sha256",
+    "runtime_lock_verified_at", "protocol_sha256", "runner_sha256",
+    "parser_sha256", "created_at", "sealed_at", "canonical_jsonl_contract",
+    "cache_manifest_sha256",
+)
+
+CACHE_ANCHOR_FIELDS = (
+    "schema_version",
+    "cache_contract_id",
+    "latest_source_session",
+    "raw_source_set_sha256",
+    "raw_source_count",
+    "raw_sources",
+    "ordered_shard_set_sha256",
+    "ordered_shard_count",
+    "parsed_shards",
+    "columns",
+    "columns_sha256",
+    "cumulative_snapshot_object_key",
+    "cumulative_snapshot_byte_count",
+    "cumulative_snapshot_file_sha256",
+    "cumulative_snapshot_semantic_sha256",
+    "model_price_snapshot_target_month",
+    "model_price_snapshot_object_key",
+    "model_price_snapshot_byte_count",
+    "model_price_snapshot_file_sha256",
+    "model_price_snapshot_semantic_sha256",
+    "model_price_snapshot_manifest_object_key",
+    "model_price_snapshot_manifest_byte_count",
+    "model_price_snapshot_manifest_file_sha256",
+    "model_price_snapshot_manifest_sha256",
+    "snapshot_manifest_object_key",
+    "snapshot_manifest_sha256",
+    "direct_reparse_started_at",
+    "direct_reparse_completed_at",
+    "direct_clean_room_verification_receipt_sha256",
+    "compact_consumer_equivalence_receipt",
+    "runtime_lock_sha256",
+    "runtime_lock_verified_at",
+    "created_at",
+    "sealed_at",
+    "protocol_sha256",
+    "runner_sha256",
+    "parser_sha256",
+    "canonical_jsonl_contract",
+    "verified_at",
+    "anchor_manifest_sha256",
+)
+
+CACHE_ANCHOR_SUMMARY_FIELDS = (
+    "latest_source_session",
+    "raw_source_set_sha256",
+    "raw_source_count",
+    "ordered_shard_set_sha256",
+    "ordered_shard_count",
+    "cumulative_snapshot_object_key",
+    "cumulative_snapshot_byte_count",
+    "cumulative_snapshot_file_sha256",
+    "cumulative_snapshot_semantic_sha256",
+    "model_price_snapshot_target_month",
+    "model_price_snapshot_object_key",
+    "model_price_snapshot_byte_count",
+    "model_price_snapshot_file_sha256",
+    "model_price_snapshot_semantic_sha256",
+    "model_price_snapshot_manifest_object_key",
+    "model_price_snapshot_manifest_byte_count",
+    "model_price_snapshot_manifest_file_sha256",
+    "model_price_snapshot_manifest_sha256",
+    "snapshot_manifest_object_key",
+    "snapshot_manifest_file_sha256",
+    "snapshot_manifest_sha256",
+    "direct_clean_room_verification_receipt_sha256",
+    "compact_consumer_equivalence_receipt_sha256",
+    "sealed_at",
+    "verified_at",
+)
+
+SOURCE_MANIFEST_FIELDS = (
+    "schema_version",
+    "target_session",
+    "latest_required_source_session",
+    "previous_counted_target_session",
+    "previous_counted_source_manifest_sha256",
+    "created_at",
+    "sealed_at",
+    "runtime_lock_sha256",
+    "runtime_lock_verified_at",
+    "source_files",
+    "source_urls",
+    "source_object_keys",
+    "source_byte_counts",
+    "source_sha256",
+    "source_set_sha256",
+    "parsed_shards",
+    "parsed_shard_set_sha256",
+    "month_source_manifest_sha256",
+    "model_price_snapshot_target_month",
+    "model_price_snapshot_latest_source_session",
+    "model_price_snapshot_object_key",
+    "model_price_snapshot_byte_count",
+    "model_price_snapshot_file_sha256",
+    "model_price_snapshot_semantic_sha256",
+    "model_price_snapshot_manifest_object_key",
+    "model_price_snapshot_manifest_byte_count",
+    "model_price_snapshot_manifest_file_sha256",
+    "model_price_snapshot_manifest_sha256",
+    "source_received_at",
+    "parser_path",
+    "parser_version",
+    "parser_sha256",
+    "parsed_row_count",
+    "rejected_row_count",
+    "duplicate_date_code_count",
+    "target_date_scoring_input_semantic_sha256",
+    "target_slice_semantic_sha256",
+    "g0_panel_cache_object_key",
+    "g0_panel_cache_byte_count",
+    "g0_panel_cache_sha256",
+    "g0_panel_cache_manifest_object_key",
+    "g0_panel_cache_manifest_byte_count",
+    "g0_panel_cache_manifest_file_sha256",
+    "g0_panel_cache_manifest_sha256",
+    "source_complete",
+    "failure_reason",
+    "python_version",
+    "canonical_json_contract",
+    "source_manifest_sha256",
+)
+
+MONTH_SOURCE_MANIFEST_FIELDS = (
+    "schema_version",
+    "target_month",
+    "first_counted_session",
+    "seal_session",
+    "activation_observed_at",
+    "latest_required_source_session",
+    "created_at",
+    "sealed_at",
+    "runtime_lock_sha256",
+    "runtime_lock_verified_at",
+    "source_files",
+    "source_urls",
+    "source_object_keys",
+    "source_byte_counts",
+    "source_sha256",
+    "source_set_sha256",
+    "source_received_at",
+    "parsed_shards",
+    "parsed_shard_set_sha256",
+    "model_price_snapshot_origin",
+    "previous_model_price_snapshot_target_month",
+    "previous_model_price_snapshot_latest_source_session",
+    "previous_model_price_snapshot_manifest_object_key",
+    "previous_model_price_snapshot_manifest_file_sha256",
+    "previous_model_price_snapshot_manifest_sha256",
+    "model_price_suffix_shard_count",
+    "model_price_suffix_shard_set_sha256",
+    "model_price_snapshot_target_month",
+    "model_price_snapshot_latest_source_session",
+    "model_price_snapshot_object_key",
+    "model_price_snapshot_byte_count",
+    "model_price_snapshot_file_sha256",
+    "model_price_snapshot_semantic_sha256",
+    "model_price_snapshot_manifest_object_key",
+    "model_price_snapshot_manifest_byte_count",
+    "model_price_snapshot_manifest_file_sha256",
+    "model_price_snapshot_manifest_sha256",
+    "parsed_row_count",
+    "model_price_full_prefix_semantic_sha256",
+    "g0_training_panel_semantic_sha256",
+    "g0_training_row_count",
+    "activation_payload_sha256",
+    "activation_receipt_sha256",
+    "protocol_sha256",
+    "runner_sha256",
+    "parser_sha256",
+    "canonical_json_contract",
+    "month_source_manifest_sha256",
+)
+
+COMPACT_CONSUMER_EQUIVALENCE_RECEIPT_FIELDS = (
+    "schema_version", "consumer_projection_columns",
+    "consumer_projection_columns_sha256", "consumer_union_contract_sha256",
+    "raw_date_code_identity_sha256", "historical_session_registry_sha256",
+    "synthetic_target_session", "latest_feature_source_session",
+    "full_g0_exact_digest", "compact_g0_exact_digest",
+    "synthetic_target_exact_digest_sha256", "synthetic_target_row_count",
+    "synthetic_target_outcome_nonnull_count",
+    "synthetic_target_max_feature_source_date",
+    "exact_columns_order_dtypes_nulls_ieee_strings_bools_equal",
+    "canonical_json_contract", "receipt_sha256",
+)
+
 OUTCOME_FIELDS = frozenset(
     {
         "label",
@@ -245,6 +663,9 @@ DECISION_REQUIRED_FIELDS = (
     "c00_fold_manifest_sha256",
     "fold_model_bundle_file_sha256",
     "state_manifest_sha256",
+    "score_session_file_sha256",
+    "score_session_semantic_sha256",
+    "score_session_set_sha256",
     "decision_cutoff",
     "computed_at",
     "source_complete",
@@ -305,10 +726,6 @@ DECISION_VALUES = frozenset(
         "selected_rank2",
         "cash_state_zero",
         "cash_state_unavailable",
-        "fail_closed_source_empty",
-        "fail_closed_source_partial",
-        "fail_closed_model_fold",
-        "fail_closed_model_pair",
     }
 )
 CHAIN_COLUMNS = ("sequence_number", "previous_record_sha256", "record_sha256")
@@ -400,6 +817,60 @@ def _require_plain_directory(path: str | Path, *, label: str) -> Path:
     return root
 
 
+def _private_local_authority_entries(
+    directory: str | Path,
+    *,
+    label: str,
+    expected_names: Sequence[str] | None = None,
+    filename_pattern: str | None = None,
+) -> list[Path]:
+    """Enumerate one canonical local authority without ignoring extras."""
+
+    root = _require_plain_directory(directory, label=label)
+    root_metadata = os.stat(root, follow_symlinks=False)
+    if (
+        root_metadata.st_uid != os.geteuid()
+        or stat.S_IMODE(root_metadata.st_mode) != 0o700
+    ):
+        raise AuditError(f"{label} directory owner/mode changed")
+    entries = sorted(root.iterdir(), key=lambda item: item.name)
+    observed_names = [item.name for item in entries]
+    if expected_names is not None and observed_names != sorted(expected_names):
+        raise AuditError(f"{label} has missing or extra files")
+    if filename_pattern is not None and any(
+        re.fullmatch(filename_pattern, item.name) is None for item in entries
+    ):
+        raise AuditError(f"{label} contains an unregistered filename")
+    for entry in entries:
+        metadata = os.lstat(entry)
+        if (
+            not stat.S_ISREG(metadata.st_mode)
+            or metadata.st_uid != os.geteuid()
+            or stat.S_IMODE(metadata.st_mode) != 0o600
+            or metadata.st_nlink != 1
+        ):
+            raise AuditError(f"{label} file owner/mode/link changed")
+    return entries
+
+
+def _require_private_local_file(path: str | Path, *, label: str) -> Path:
+    """Require one canonical private create-once/derived local file."""
+
+    target = Path(path)
+    try:
+        metadata = os.lstat(target)
+    except OSError as exc:
+        raise AuditError(f"{label} is missing") from exc
+    if (
+        not stat.S_ISREG(metadata.st_mode)
+        or metadata.st_uid != os.geteuid()
+        or stat.S_IMODE(metadata.st_mode) != 0o600
+        or metadata.st_nlink != 1
+    ):
+        raise AuditError(f"{label} owner/mode/link changed")
+    return target
+
+
 def validate_required_array_integrity(value: Mapping[str, Any]) -> int:
     """Reject duplicate entries in every protocol-mandated required array."""
 
@@ -433,6 +904,974 @@ def validate_required_array_integrity(value: Mapping[str, Any]) -> int:
     return checked
 
 
+def _validate_a2_protocol_contract(protocol: Mapping[str, Any]) -> None:
+    """Independently pin the finite A2 schemas and operational surface."""
+
+    correction = protocol.get("a2_correction", {})
+    if (
+        set(correction)
+        != {
+            "correction_id",
+            "superseded_unactivated_preregistration_commit_sha",
+            "superseded_protocol_sha256",
+            "superseded_runtime_lock_sha256",
+            "superseded_state",
+            "reasons",
+            "unchanged",
+            "activation_rule",
+        }
+        or correction.get("correction_id")
+        != "model_v18_shoulder_state_a2_20260805"
+        or correction.get("superseded_unactivated_preregistration_commit_sha")
+        != "0c2f1633ca7f8584f6550b1d858402e20fc55d6b"
+        or correction.get("superseded_protocol_sha256")
+        != "c623fabfa8e94381bce27d359cefc6e51a9a80f1c18f62f6098cfdfc8e9f6112"
+        or correction.get("superseded_runtime_lock_sha256")
+        != "95a867e2f8f187528a7ba3d24f4db4f1bf0964531b6e0e2b85d88d0c758f1e32"
+        or tuple(correction.get("reasons", ()))
+        != (
+            "zstandard 0.25.0/backend_c transitive runtime closure was missing",
+            "one full raw parse exceeded the 11-minute pre-open publication window",
+        )
+        or "never activated" not in str(correction.get("superseded_state", ""))
+    ):
+        raise AuditError("A2 correction identity/history changed")
+
+    activation = protocol.get("activation", {})
+    payload = activation.get("payload", {})
+    receipt = activation.get("receipt", {})
+    prereg = activation.get("preregistration_commit", {})
+    payload_fixed = payload.get("fixed_values", {})
+    receipt_fixed = receipt.get("fixed_values", {})
+    required_paths = tuple(prereg.get("required_paths", ()))
+    additional_paths = tuple(prereg.get("additional_test_artifact_paths", ()))
+    if (
+        activation.get("status")
+        != "pending_three_commit_activation_a2_correction"
+        or activation.get("not_before_session") != "2026-08-06"
+        or activation.get(
+            "expected_earliest_session_if_receipt_workflow_is_observed_before_cutoff"
+        )
+        != "2026-08-06"
+        or payload_fixed.get("activation_id")
+        != "model_v18_shoulder_state_activation_a2_20260805"
+        or receipt_fixed.get("activation_id")
+        != "model_v18_shoulder_state_activation_a2_20260805"
+        or payload_fixed.get("not_before_session") != "2026-08-06"
+        or receipt_fixed.get("not_before_session") != "2026-08-06"
+        or payload_fixed.get("iteration_report_path")
+        != "research/model_v18_postmerge_hypothesis_iteration_report.md"
+        or payload_fixed.get("validation_report_path") != "VALIDATION.md"
+        or payload_fixed.get("rehearsal_path")
+        != "research/model_v18_a2_rehearsal.py"
+        or "research/model_v18_postmerge_hypothesis_iteration_report.md"
+        not in required_paths
+        or "VALIDATION.md" not in required_paths
+        or "research/model_v18_a2_rehearsal.py" not in required_paths
+        or additional_paths != ADDITIONAL_TEST_ARTIFACT_PATHS
+        or len((*required_paths, *additional_paths))
+        != len(set((*required_paths, *additional_paths)))
+        or any(
+            field not in payload.get("required_fields", ())
+            for field in (
+                "iteration_report_path",
+                "iteration_report_sha256",
+                "validation_report_path",
+                "validation_report_sha256",
+                "rehearsal_path",
+                "rehearsal_sha256",
+                "additional_test_artifacts",
+                "predictor_cache_anchor",
+            )
+        )
+        or "additional_test_artifacts" in payload_fixed
+    ):
+        raise AuditError("A2 activation/preregistration contract changed")
+
+    expected_period = protocol.get("periods", {}).get(
+        "expected_if_first_counted_session_is_2026_08_06", {}
+    )
+    if expected_period != {
+        "session_120": "2027-02-03",
+        "sessions_through_2027_01_29": 117,
+        "terminal_session": "2027-02-26",
+        "terminal_scheduled_sessions": 135,
+        "represented_calendar_months": 7,
+        "early_slice_sessions": 67,
+        "late_slice_sessions": 68,
+        "required_positive_months_net40": 6,
+        "required_executed_days": 122,
+    }:
+        raise AuditError("A2 terminal denominator example changed")
+
+    a2 = protocol.get("a2_operational_repair_contract", {})
+    expected_schema_arrays = {
+        "parsed_shard_manifest_required_fields": PARSED_SHARD_MANIFEST_FIELDS,
+        "parsed_shard_binding_required_fields": PARSED_SHARD_BINDING_FIELDS,
+        "model_price_snapshot_manifest_required_fields": MODEL_PRICE_SNAPSHOT_FIELDS,
+        "g0_target_cache_manifest_required_fields": G0_CACHE_MANIFEST_FIELDS,
+        "cache_anchor_manifest_required_fields": CACHE_ANCHOR_FIELDS,
+        "cache_anchor_summary_required_fields": CACHE_ANCHOR_SUMMARY_FIELDS,
+        "compact_consumer_equivalence_receipt_required_fields": (
+            COMPACT_CONSUMER_EQUIVALENCE_RECEIPT_FIELDS
+        ),
+        "month_source_manifest_required_fields": MONTH_SOURCE_MANIFEST_FIELDS,
+    }
+    if (
+        a2.get("schema_version") != 1
+        or a2.get("cache_contract_id") != PREDICTOR_CACHE_CONTRACT_ID
+    ):
+        raise AuditError("A2 cache contract identity changed")
+    for field, expected in expected_schema_arrays.items():
+        if tuple(a2.get(field, ())) != expected:
+            raise AuditError(f"A2 protocol schema changed: {field}")
+    if (
+        tuple(a2.get("compact_model_price_columns", ())) != MODEL_PRICE_COLUMNS
+        or tuple(a2.get("canonical_cli_order", ()))
+        != (
+            "prepare-day",
+            "publish-checkpoint",
+            "decide",
+            "finalize-terminal",
+            "evaluate",
+        )
+        or tuple(a2.get("forbidden_split_mutation_commands", ()))
+        != (
+            "prepare-source-manifest",
+            "prepare-month",
+            "prepare-top2",
+            "prepare-state",
+            "prepare-checkpoint",
+            "prepare-outcome-manifest",
+            "attach-outcomes",
+            "close-month",
+        )
+        or tuple(a2.get("root_arguments", ()))
+        != (
+            "--predictor-raw-store-root",
+            "--predictor-derived-store-root",
+            "--outcome-raw-store-root",
+            "--checkpoint-core-store-root",
+        )
+        or a2.get("timing_activation_gate")
+        != {
+            "cold_runs": 3,
+            "intramonth_local_e2e_seconds_max": 120,
+            "month_boundary_local_e2e_seconds_max": 300,
+            "measured_compact_e2e_seconds": 69.1,
+            "measured_peak_gib": 3.815,
+            "fixed_synthetic_target_session": "2026-08-05",
+            "untimed_reference_input_kind": "full31_reference",
+            "month_boundary_input_kind": "month_boundary_compact",
+            "intramonth_input_kind": "intramonth_fold_reuse_upper_bound_proxy",
+            "preflight_api": "prepare_a2_nonauthority_rehearsal_contract",
+            "runner_api": "build_a2_nonauthority_rehearsal_day",
+            "postflight_api": "validate_a2_nonauthority_rehearsal_postflight",
+            "authority": False,
+            "comparison_rule": (
+                "The input-kind/snapshot/suffix/timing envelope is documentary. "
+                "Only the nested comparison object is exact-compared: "
+                "source-manifest/source-set/parsed-shard-set identities, model-price "
+                "CSV/semantics, one full G0 digest, exact pre-month training "
+                "semantic/count, target-cache bytes/semantics, real fold/bundle "
+                "bytes, real score bytes/semantics, IEEE top-two scores, and panel "
+                "call count. Reference and boundary calls freshly compute every "
+                "proof field and bind them into a process-local, nonserialisable "
+                "fold token together with the exact canonical full-prefix CSV byte "
+                "count/SHA, row count, target/latest sessions, and source/shard "
+                "identities. The intramonth proxy must freshly strict-decode its "
+                "compact snapshot, project its suffix, canonical-encode the merged "
+                "full prefix once, and require every exact identity to equal that "
+                "token before reusing only the sealed model-semantic/full-G0/"
+                "training-semantic proof fields. It must still freshly build exactly "
+                "one panel, encode/round-trip the target cache, recompute current "
+                "fold row/target/feature hashes, validate the reused fold/bundle, "
+                "and score; it may not fit inside its timed call. Any prefix or token "
+                "mismatch aborts before proof reuse."
+            ),
+            "rule": (
+                "A slow full-raw reference build is outside the daily timing gate "
+                "and fixes exact comparison hashes. The untimed preflight creates "
+                "one process-local opaque capability after strict runtime/project/"
+                "canonical-authority-absence validation; timed calls accept only "
+                "that exact capability and perform no canonical repository "
+                "read/write, network call, calendar lookup, or module-closure scan; "
+                "untimed postflight revalidates the same closure and revokes the "
+                "capability. Production intramonth preparation uses the same causal "
+                "optimization: after exact retained month-source, snapshot data-byte/"
+                "canonical-decode/self/source/shard bindings are validated, the "
+                "already sealed model/training semantic fields may be reused without "
+                "caller-supplied frames or hashes, while current fold row/target/"
+                "feature hashes and target score remain fresh; boundary creation and "
+                "terminal independently compute all semantics. Three fresh compact "
+                "nonauthority runs for each registered boundary and intramonth case "
+                "must exact-match that reference; any compact run over its budget "
+                "forbids activation."
+            ),
+        }
+    ):
+        raise AuditError("A2 operational surface/timing gate changed")
+
+    source = protocol.get("source_contract", {})
+    provenance = source.get("raw_source_provenance", {})
+    policy = source.get("raw_source_provenance_policy", {})
+    if (
+        provenance != _raw_source_provenance_envelope()
+        or policy.get("caveat") != RAW_SOURCE_PROVENANCE_CAVEAT
+        or len(policy.get("trusted_claims", ())) != 2
+        or len(policy.get("nonclaims", ())) != 4
+        or not str(policy.get("upgrade_rule", ""))
+    ):
+        raise AuditError("A2 manual source-provenance contract changed")
+    required_result_inputs = (
+        "runtime_lock_sha256",
+        "checkpoint_proposal_set_sha256",
+        "checkpoint_core_object_set_sha256",
+        "checkpoint_evidence_set_sha256",
+        "predictor_source_manifest_set_sha256",
+        "predictor_raw_source_set_sha256",
+        "predictor_unique_raw_object_count",
+        "predictor_parser_sha256",
+        "predictor_parsed_shard_binding_set_sha256",
+        "predictor_target_slice_semantic_set_sha256",
+        "predictor_target_date_scoring_input_semantic_set_sha256",
+        "c00_fold_manifest_set_sha256",
+        "c00_fold_model_bundle_file_set_sha256",
+        "v17_c00_protocol_sha256",
+        "v17_c00_runner_sha256",
+    )
+    if (
+        tuple(a2.get("result_input_fields", ())) != required_result_inputs
+        or tuple(protocol.get("result_contract", {}).get("required_input_fields", ()))
+        != required_result_inputs
+        or tuple(protocol.get("append_only_artifacts", {}).get("decision_values", ()))
+        != (
+            "selected_rank1",
+            "selected_rank2",
+            "cash_state_zero",
+            "cash_state_unavailable",
+        )
+        or protocol.get("daily_decision_failure_reason_contract", {}).get(
+            "decision_reason_map"
+        )
+        != {
+            "selected_rank1": None,
+            "selected_rank2": None,
+            "cash_state_zero": "state_value_exact_zero",
+            "cash_state_unavailable": "state_insufficient_prior_months",
+        }
+    ):
+        raise AuditError("A2 result/decision registry changed")
+
+    fold_bundle_fields = (
+        "schema_version", "target_month", "created_at", "runtime_lock_sha256",
+        "runtime_lock_verified_at", "input_feature_order", "input_feature_dtype",
+        "input_feature_shape", "transformed_feature_order",
+        "transformed_feature_dtype", "transformed_feature_shape",
+        "imputer_strategy", "imputer_add_indicator", "imputer_keep_empty_features",
+        "imputer_statistics", "imputer_indicator_features", "scaler_with_mean",
+        "scaler_with_std", "scaler_mean", "scaler_scale", "ridge_alpha",
+        "ridge_fit_intercept", "ridge_coef", "ridge_intercept", "protocol_sha256",
+        "runner_sha256", "python_version", "numpy_version", "scikit_learn_version",
+        "canonical_json_contract", "fold_model_bundle_sha256",
+    )
+    fold_manifest_fields = (
+        "schema_version", "target_month", "fit_started_at", "fit_completed_at",
+        "sealed_at", "runtime_lock_sha256", "runtime_lock_verified_at",
+        "training_first_session", "training_last_session", "training_session_count",
+        "training_row_identity_sha256", "training_target_sha256",
+        "feature_matrix_sha256", "feature_names", "month_source_manifest_path",
+        "month_source_manifest_sha256", "training_source_set_sha256",
+        "training_parsed_shard_set_sha256",
+        "training_g0_panel_semantic_sha256", "ridge_alpha",
+        "fold_model_bundle_path",
+        "fold_model_bundle_schema_version", "fold_model_bundle_file_sha256",
+        "fold_model_bundle_sha256", "input_feature_order_sha256",
+        "transformed_feature_order_sha256", "imputer_statistics_sha256",
+        "imputer_indicator_features_sha256", "scaler_mean_sha256",
+        "scaler_scale_sha256", "ridge_coef_sha256",
+        "ridge_intercept", "universe_contract_sha256", "protocol_sha256",
+        "runner_sha256", "python_version", "numpy_version", "pandas_version",
+        "scikit_learn_version", "canonical_json_contract", "fold_manifest_sha256",
+    )
+    state_fields = (
+        "schema_version", "target_month", "created_at",
+        "three_prior_calendar_months", "three_complete_pair_day_counts",
+        "three_month_medians_pct", "state_available", "state_value_pct",
+        "selected_source_rank", "c00_fold_manifest_sha256",
+        "fold_model_bundle_file_sha256", "protocol_sha256",
+        "activation_payload_sha256", "activation_receipt_sha256",
+        "state_manifest_sha256",
+    )
+    completed_fields = (
+        "schema_version", "sequence_number", "completed_month", "created_at",
+        "counted_scheduled_sessions", "complete_pair_days",
+        "ordered_complete_pair_session_sha256", "ordered_difference_values_sha256",
+        "monthly_median_rank1_minus_rank2_pct", "available", "protocol_sha256",
+        "activation_payload_sha256", "activation_receipt_sha256",
+        "previous_record_sha256", "record_sha256",
+    )
+    c00 = protocol.get("c00_contract", {})
+    state_contract = protocol.get("state_contract", {})
+    if (
+        tuple(c00.get("fold_model_bundle_contract", {}).get("required_fields", ()))
+        != fold_bundle_fields
+        or tuple(c00.get("fold_manifest_required_fields", ()))
+        != fold_manifest_fields
+        or tuple(state_contract.get("target_month_state_manifest_required_fields", ()))
+        != state_fields
+        or tuple(state_contract.get("completed_month_record_required_fields", ()))
+        != completed_fields
+    ):
+        raise AuditError("A2 fold/state/month authority schema changed")
+
+
+def _ast_call_name(node: ast.Call) -> str:
+    if isinstance(node.func, ast.Name):
+        return node.func.id
+    if isinstance(node.func, ast.Attribute):
+        return ast.unparse(node.func)
+    return ast.unparse(node.func)
+
+
+def _ast_local_dict_fields(function: ast.FunctionDef, name: str) -> tuple[str, ...]:
+    fields: list[str] = []
+    for node in ast.walk(function):
+        value: ast.AST | None = None
+        targets: list[ast.AST] = []
+        if isinstance(node, ast.AnnAssign):
+            targets = [node.target]
+            value = node.value
+        elif isinstance(node, ast.Assign):
+            targets = list(node.targets)
+            value = node.value
+        if any(isinstance(target, ast.Name) and target.id == name for target in targets):
+            if not isinstance(value, ast.Dict):
+                raise AuditError(f"A2 rehearsal {name} is not a literal schema")
+            for key in value.keys:
+                if not isinstance(key, ast.Constant) or not isinstance(key.value, str):
+                    raise AuditError(f"A2 rehearsal {name} has a dynamic field")
+                fields.append(key.value)
+        for target in targets:
+            if (
+                isinstance(target, ast.Subscript)
+                and isinstance(target.value, ast.Name)
+                and target.value.id == name
+                and isinstance(target.slice, ast.Constant)
+                and isinstance(target.slice.value, str)
+            ):
+                fields.append(target.slice.value)
+    if not fields or len(fields) != len(set(fields)):
+        raise AuditError(f"A2 rehearsal {name} schema is absent or duplicated")
+    return tuple(fields)
+
+
+def validate_a2_nonauthority_rehearsal_runner_surface(
+    runner_payload: bytes,
+) -> dict[str, Any]:
+    """Statically prove the frozen runner cannot consume its rehearsal output.
+
+    This complements the bound dynamic zero-I/O rehearsal test.  It does not
+    import or execute the runner and therefore cannot create a second runtime
+    or authority channel inside the independent terminal audit.
+    """
+
+    try:
+        source = runner_payload.decode("utf-8", errors="strict")
+        tree = ast.parse(source)
+    except (UnicodeDecodeError, SyntaxError) as exc:
+        raise AuditError("registered runner is not strict parseable Python") from exc
+    functions: dict[str, ast.FunctionDef] = {}
+    classes: dict[str, ast.ClassDef] = {}
+    for node in tree.body:
+        if isinstance(node, ast.FunctionDef):
+            if node.name in functions:
+                raise AuditError("registered runner duplicates a top-level function")
+            functions[node.name] = node
+        elif isinstance(node, ast.ClassDef):
+            if node.name in classes:
+                raise AuditError("registered runner duplicates a top-level class")
+            classes[node.name] = node
+    required_functions = {
+        "prepare_a2_nonauthority_rehearsal_contract",
+        "validate_a2_nonauthority_rehearsal_postflight",
+        "build_a2_nonauthority_rehearsal_day",
+        "_require_active_a2_rehearsal_contract",
+        "_a2_rehearsal_canonical_authority_paths",
+        "_a2_rehearsal_preflight_payload",
+        "_validate_month_source_manifest_impl",
+        "validate_month_source_manifest",
+        "_validate_retained_intramonth_month_source",
+        "_validate_model_price_snapshot_manifest",
+        "_load_or_create_month_fold",
+    }
+    if not required_functions.issubset(functions):
+        raise AuditError("registered runner lacks the A2 rehearsal capability surface")
+    authority_source = ast.unparse(
+        functions["_a2_rehearsal_canonical_authority_paths"]
+    )
+    for binding in (
+        "_registered_local_authority_files()",
+        "_registered_local_authority_directories()",
+        "DECISION_LEDGER",
+        "OUTCOME_LEDGER",
+        "COMPLETED_MONTH_LEDGER",
+        "SCORE_OUTPUT",
+        "PICKS_OUTPUT",
+        "CHECKPOINT_PROPOSAL_DIR",
+    ):
+        if binding not in authority_source:
+            raise AuditError("A2 rehearsal absence registry is incomplete")
+    postflight_source = ast.unparse(
+        functions["validate_a2_nonauthority_rehearsal_postflight"]
+    )
+    if (
+        "_a2_rehearsal_preflight_payload()" not in postflight_source
+        or "_ACTIVE_A2_REHEARSAL_CONTRACT = None" not in postflight_source
+        or "finally:" not in postflight_source
+    ):
+        raise AuditError("A2 rehearsal postflight does not revalidate/revoke")
+    build = functions["build_a2_nonauthority_rehearsal_day"]
+    positional = tuple(
+        item.arg for item in (*build.args.posonlyargs, *build.args.args)
+    )
+    keyword_only = tuple(item.arg for item in build.args.kwonlyargs)
+    if (
+        positional != ("snapshot_prices", "suffix_prices")
+        or keyword_only
+        != (
+            "rehearsal_contract",
+            "input_kind",
+            "target_session",
+            "runtime_lock_verified_at",
+            "month_source_sealed_at",
+            "fit_started_at",
+            "fit_completed_at",
+            "score_generated_at",
+            "source_manifest_sha256",
+            "source_set_sha256",
+            "parsed_shard_set_sha256",
+            "reuse_fold_token",
+        )
+        or build.args.vararg is not None
+        or build.args.kwarg is not None
+        or len(build.args.kw_defaults) != len(keyword_only)
+        or any(
+            value is not None
+            for value in build.args.kw_defaults[:-1]
+        )
+        or not isinstance(build.args.kw_defaults[-1], ast.Constant)
+        or build.args.kw_defaults[-1].value is not None
+        or any(token in item for item in (*positional, *keyword_only) for token in ("path", "root", "output"))
+    ):
+        raise AuditError("A2 timed rehearsal API gained a path/output or changed")
+
+    token_class = classes.get("_A2RehearsalFoldToken")
+    if token_class is None:
+        raise AuditError("A2 rehearsal fold token class is absent")
+    token_fields = tuple(
+        node.target.id
+        for node in token_class.body
+        if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name)
+    )
+    token_decorators = {
+        _ast_call_name(node) for node in token_class.decorator_list
+    }
+    frozen_dataclass = any(
+        isinstance(node, ast.Call)
+        and _ast_call_name(node) == "dataclass"
+        and any(
+            item.arg == "frozen"
+            and isinstance(item.value, ast.Constant)
+            and item.value.value is True
+            for item in node.keywords
+        )
+        for node in token_class.decorator_list
+    )
+    if (
+        token_fields
+        != (
+            "fold_manifest",
+            "model_bundle",
+            "month_source_manifest",
+            "exact_prefix_proof_json",
+            "exact_prefix_proof_sha256",
+        )
+        or "dataclass" not in token_decorators
+        or not frozen_dataclass
+    ):
+        raise AuditError("A2 rehearsal fold token schema/mutability changed")
+
+    parents: dict[ast.AST, ast.AST] = {}
+    for parent in ast.walk(tree):
+        for child in ast.iter_child_nodes(parent):
+            parents[child] = parent
+
+    def enclosing_function(node: ast.AST) -> str | None:
+        current = node
+        while current in parents:
+            current = parents[current]
+            if isinstance(current, ast.FunctionDef):
+                return current.name
+        return None
+
+    retained = functions["_validate_retained_intramonth_month_source"]
+    retained_positional = tuple(
+        item.arg for item in (*retained.args.posonlyargs, *retained.args.args)
+    )
+    retained_keywords = tuple(item.arg for item in retained.args.kwonlyargs)
+    if (
+        retained_positional != ("manifest",)
+        or retained_keywords
+        != ("predictor_raw_store_root", "predictor_derived_store_root")
+        or retained.args.vararg is not None
+        or retained.args.kwarg is not None
+        or retained.args.defaults
+        or any(item is not None for item in retained.args.kw_defaults)
+    ):
+        raise AuditError(
+            "production retained month-source path accepts caller frames/hashes"
+        )
+    retained_source = ast.unparse(retained)
+    if (
+        "if not _STRICT_RUNTIME_ACTIVE:" not in retained_source
+        or "reuse_sealed_snapshot_semantic=True" not in retained_source
+    ):
+        raise AuditError("production retained month-source strict reuse gate changed")
+    retained_impl_calls = [
+        node
+        for node in ast.walk(retained)
+        if isinstance(node, ast.Call)
+        and _ast_call_name(node) == "_validate_month_source_manifest_impl"
+    ]
+    if len(retained_impl_calls) != 1 or {
+        item.arg for item in retained_impl_calls[0].keywords
+    } != {
+        "predictor_raw_store_root",
+        "predictor_derived_store_root",
+        "reuse_sealed_snapshot_semantic",
+    }:
+        raise AuditError("production retained month-source delegation changed")
+    reuse_keyword = next(
+        item
+        for item in retained_impl_calls[0].keywords
+        if item.arg == "reuse_sealed_snapshot_semantic"
+    )
+    if not (
+        isinstance(reuse_keyword.value, ast.Constant)
+        and reuse_keyword.value.value is True
+    ):
+        raise AuditError("production retained month-source reuse is not explicit")
+
+    impl = functions["_validate_month_source_manifest_impl"]
+    impl_keywords = tuple(item.arg for item in impl.args.kwonlyargs)
+    if impl_keywords != (
+        "predictor_raw_store_root",
+        "predictor_derived_store_root",
+        "training_panel",
+        "model_prices",
+        "precomputed_model_semantic_sha256",
+        "precomputed_training_semantic_sha256",
+        "reuse_sealed_snapshot_semantic",
+    ):
+        raise AuditError("month-source implementation semantic input surface changed")
+    impl_source = ast.unparse(impl)
+    for binding in (
+        "retained month-source semantic reuse cannot accept caller frames/hashes",
+        "_validate_bound_predictor_shard_metadata(",
+        "_validate_model_price_snapshot_binding(",
+        "_reuse_sealed_semantic=reuse_sealed_snapshot_semantic",
+        "snapshot_manifest_sha256",
+        "source_set_sha256",
+        "parsed_shard_set_sha256",
+        "month_source_manifest_sha256",
+    ):
+        if binding not in impl_source:
+            raise AuditError(
+                "production retained month-source exact snapshot proof changed"
+            )
+    public_month = functions["validate_month_source_manifest"]
+    public_calls = [
+        node
+        for node in ast.walk(public_month)
+        if isinstance(node, ast.Call)
+        and _ast_call_name(node) == "_validate_month_source_manifest_impl"
+    ]
+    if len(public_calls) != 1:
+        raise AuditError("public/full month-source validator changed")
+    public_reuse = [
+        item
+        for item in public_calls[0].keywords
+        if item.arg == "reuse_sealed_snapshot_semantic"
+    ]
+    if not (
+        len(public_reuse) == 1
+        and isinstance(public_reuse[0].value, ast.Constant)
+        and public_reuse[0].value.value is False
+    ):
+        raise AuditError("public/terminal month-source validation can reuse semantics")
+
+    retained_calls = [
+        (node, enclosing_function(node))
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        and _ast_call_name(node) == "_validate_retained_intramonth_month_source"
+    ]
+    if (
+        len(retained_calls) != 1
+        or retained_calls[0][1] != "month_factory"
+        or "_validate_retained_intramonth_month_source("
+        not in ast.unparse(functions["prepare_day"])
+    ):
+        raise AuditError("retained month-source fast path escaped prepare-day")
+
+    snapshot_validator = functions["_validate_model_price_snapshot_manifest"]
+    snapshot_validator_source = ast.unparse(snapshot_validator)
+    snapshot_call_names = {
+        _ast_call_name(node)
+        for node in ast.walk(snapshot_validator)
+        if isinstance(node, ast.Call)
+    }
+    if not {
+        "_external_object_metadata",
+        "_external_object_bytes",
+        "decode_canonical_model_price_csv",
+        "canonical_json_sha256",
+    }.issubset(snapshot_call_names):
+        raise AuditError("retained compact snapshot exact-byte decoder changed")
+    for binding in (
+        "_external_object_metadata(",
+        "_external_object_bytes(",
+        "decode_canonical_model_price_csv(",
+        "snapshot_manifest_sha256",
+        "raw_source_set_sha256",
+        "parsed_shard_set_sha256",
+        "data_byte_count",
+        "data_sha256",
+    ):
+        if binding not in snapshot_validator_source:
+            raise AuditError("retained compact snapshot byte/chain validation changed")
+
+    fold_loader = functions["_load_or_create_month_fold"]
+    fold_loader_calls = [
+        _ast_call_name(node)
+        for node in ast.walk(fold_loader)
+        if isinstance(node, ast.Call)
+    ]
+    if (
+        fold_loader_calls.count("v17._candidate_training") != 1
+        or fold_loader_calls.count("_frame_sha") != 1
+        or fold_loader_calls.count("_numeric_sha") != 2
+        or "validate_fold_manifest" not in fold_loader_calls
+        or _ast_local_dict_fields(fold_loader, "current_hashes")
+        != (
+            "training_row_identity_sha256",
+            "training_target_sha256",
+            "feature_matrix_sha256",
+        )
+    ):
+        raise AuditError("production intramonth fold-current hashes are not fresh")
+
+    build_source = ast.unparse(build)
+    build_call_names = [
+        _ast_call_name(node)
+        for node in ast.walk(build)
+        if isinstance(node, ast.Call)
+    ]
+    if (
+        build_call_names.count("build_forward_c00_panel") != 1
+        or build_call_names.count("canonical_frame_jsonl_bytes") != 1
+        or build_call_names.count("decode_canonical_frame_jsonl") != 1
+        or build_call_names.count("v17._candidate_training") != 1
+        or build_call_names.count("_frame_sha") != 1
+        or build_call_names.count("_numeric_sha") != 2
+        or build_call_names.count("freeze_c00_top2") != 1
+    ):
+        raise AuditError("A2 rehearsal fresh panel/fold/score call set changed")
+    exact_prefix_fields = _ast_local_dict_fields(build, "exact_prefix_identity")
+    if exact_prefix_fields != (
+        "schema_version",
+        "target_session",
+        "latest_required_source_session",
+        "model_price_row_count",
+        "model_price_csv_byte_count",
+        "model_price_csv_sha256",
+        "source_manifest_sha256",
+        "source_set_sha256",
+        "parsed_shard_set_sha256",
+    ):
+        raise AuditError("A2 rehearsal exact full-prefix identity changed")
+    for binding in (
+        "canonical_json_bytes(retained_proof).decode('utf-8')",
+        "canonical_json_sha256(retained_proof)",
+        "retained_proof[field] != expected",
+        "canonical_model_price_csv_bytes(compact_projection",
+        "build_forward_c00_panel(prices, target)",
+        "canonical_frame_jsonl_bytes(target_rows",
+        "decode_canonical_frame_jsonl(target_payload",
+        "v17._candidate_training(panel",
+        "_frame_sha(identity",
+        "_numeric_sha(training['_daily_rank_target']",
+        "_numeric_sha(training.loc[:, list(G0_FEATURES)]",
+        "freeze_c00_top2(panel",
+    ):
+        if binding not in build_source:
+            raise AuditError("A2 rehearsal fresh proof/fold/score path changed")
+
+    rehearsal_api_names = {
+        "prepare_a2_nonauthority_rehearsal_contract",
+        "build_a2_nonauthority_rehearsal_day",
+        "validate_a2_nonauthority_rehearsal_postflight",
+    }
+    rehearsal_calls = [
+        (node, enclosing_function(node))
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        and _ast_call_name(node) in rehearsal_api_names
+    ]
+    if rehearsal_calls:
+        raise AuditError("production runner calls its nonauthority rehearsal API")
+
+    forbidden_direct = {
+        "open",
+        "read_json",
+        "sha256_file",
+        "urlopen",
+        "subprocess.run",
+        "subprocess.Popen",
+        "os.open",
+        "os.write",
+        "os.unlink",
+        "os.remove",
+        "os.rename",
+        "os.replace",
+        "os.mkdir",
+        "os.makedirs",
+        "os.link",
+        "os.symlink",
+    }
+    direct_calls = [
+        node for node in ast.walk(build) if isinstance(node, ast.Call)
+    ]
+    direct_names = {_ast_call_name(node) for node in direct_calls}
+    if direct_names.intersection(forbidden_direct) or any(
+        name.startswith(("_write", "_atomic", "_github", "_git_data"))
+        for name in direct_names
+    ):
+        raise AuditError("A2 timed rehearsal directly performs authority/network I/O")
+    required_capability_calls = {
+        "_build_fold": {"_a2_rehearsal_contract", "month_source_manifest"},
+        "validate_fold_manifest": {
+            "_a2_rehearsal_contract",
+            "_a2_rehearsal_month_source",
+        },
+        "freeze_c00_top2": {
+            "_a2_rehearsal_contract",
+            "month_source_manifest",
+            "model_bundle",
+            "fold_manifest",
+        },
+    }
+    for call_name, required_keywords in required_capability_calls.items():
+        calls = [node for node in direct_calls if _ast_call_name(node) == call_name]
+        if len(calls) != 1 or not required_keywords.issubset(
+            {item.arg for item in calls[0].keywords}
+        ):
+            raise AuditError(f"A2 timed rehearsal pure binding changed: {call_name}")
+
+    capability_helpers = (
+        "_numeric_execution",
+        "export_c00_model_bundle",
+        "validate_c00_model_bundle",
+        "predict_c00_model_bundle",
+        "_build_fold",
+        "validate_fold_manifest",
+        "freeze_c00_top2",
+    )
+    for name in capability_helpers:
+        function = functions.get(name)
+        if function is None or "_a2_rehearsal_contract" not in {
+            item.arg for item in function.args.kwonlyargs
+        }:
+            raise AuditError(f"A2 pure capability did not reach {name}")
+    fold_validator = functions["validate_fold_manifest"]
+    if "_a2_rehearsal_month_source" not in {
+        item.arg for item in fold_validator.args.kwonlyargs
+    }:
+        raise AuditError("A2 pure fold validation can probe canonical month source")
+
+    envelope_fields = _ast_local_dict_fields(build, "envelope")
+    comparison_fields = _ast_local_dict_fields(build, "comparison")
+    if envelope_fields != A2_REHEARSAL_ENVELOPE_FIELDS:
+        raise AuditError("A2 rehearsal envelope schema changed")
+    if comparison_fields != A2_REHEARSAL_COMPARISON_FIELDS:
+        raise AuditError("A2 rehearsal exact-comparison schema changed")
+    production_schemas = (
+        PARSED_SHARD_MANIFEST_FIELDS,
+        MODEL_PRICE_SNAPSHOT_FIELDS,
+        G0_CACHE_MANIFEST_FIELDS,
+        CACHE_ANCHOR_FIELDS,
+        MONTH_SOURCE_MANIFEST_FIELDS,
+        SOURCE_MANIFEST_FIELDS,
+        DECISION_REQUIRED_FIELDS,
+        OUTCOME_REQUIRED_FIELDS,
+    )
+    if any(set(envelope_fields) == set(schema) for schema in production_schemas):
+        raise AuditError("A2 rehearsal envelope collides with a production schema")
+    for name, function in functions.items():
+        if name == "build_a2_nonauthority_rehearsal_day":
+            continue
+        if any(
+            isinstance(node, ast.Constant)
+            and node.value == "nonauthority_rehearsal_only"
+            for node in ast.walk(function)
+        ):
+            raise AuditError("a production runner path recognizes rehearsal output")
+    return {
+        "runner_rehearsal_api": "build_a2_nonauthority_rehearsal_day",
+        "production_call_count": 0,
+        "production_retained_month_source_call_count": 1,
+        "production_retained_month_source_caller": "prepare_day.month_factory",
+        "fold_token_exact_prefix_schema_sha256": canonical_json_sha256(
+            exact_prefix_fields
+        ),
+        "envelope_schema_sha256": canonical_json_sha256(envelope_fields),
+        "comparison_schema_sha256": canonical_json_sha256(comparison_fields),
+    }
+
+
+def validate_a2_nonauthority_rehearsal_driver_surface(
+    rehearsal_payload: bytes,
+) -> dict[str, Any]:
+    """Pin the direct rehearsal driver without importing its runner dependency."""
+
+    try:
+        source = rehearsal_payload.decode("utf-8", errors="strict")
+        tree = ast.parse(source)
+    except (UnicodeDecodeError, SyntaxError) as exc:
+        raise AuditError("registered rehearsal driver is not parseable Python") from exc
+    imported: set[str] = set()
+    functions: dict[str, ast.FunctionDef] = {}
+    for node in tree.body:
+        if isinstance(node, ast.Import):
+            imported.update(item.name.split(".", 1)[0] for item in node.names)
+        elif isinstance(node, ast.ImportFrom) and node.module:
+            imported.add(node.module.split(".", 1)[0])
+        elif isinstance(node, ast.FunctionDef):
+            functions[node.name] = node
+    if imported.intersection({"socket", "urllib", "http", "requests", "subprocess"}):
+        raise AuditError("A2 rehearsal driver gained a network/repository client")
+    required = {
+        "_prepare_reference",
+        "_run_cold",
+        "_timed_seam",
+        "_build_seam",
+        "_prepare_runner_contract",
+        "_postflight_runner_contract",
+        "_validate_seam_envelope",
+        "_assert_canonical_authority_absent",
+        "main",
+    }
+    if not required.issubset(functions):
+        raise AuditError("A2 rehearsal driver surface is incomplete")
+
+    all_calls = [node for node in ast.walk(tree) if isinstance(node, ast.Call)]
+    runner_seam_calls = [
+        node
+        for node in all_calls
+        if _ast_call_name(node)
+        == "runner.build_a2_nonauthority_rehearsal_day"
+    ]
+    if len(runner_seam_calls) != 1:
+        raise AuditError("A2 rehearsal driver has an alternate timed runner path")
+    seam_keywords = {item.arg for item in runner_seam_calls[0].keywords}
+    if not {
+        "input_kind",
+        "rehearsal_contract",
+        "reuse_fold_token",
+    }.issubset(seam_keywords):
+        raise AuditError("A2 rehearsal driver does not bind the opaque capability")
+
+    timed_calls = {
+        _ast_call_name(node)
+        for node in ast.walk(functions["_timed_seam"])
+        if isinstance(node, ast.Call)
+    }
+    if timed_calls != {
+        "time.perf_counter_ns",
+        "_build_seam",
+        "RehearsalError",
+    }:
+        raise AuditError("A2 rehearsal timer contains non-seam work or I/O")
+
+    for name in ("_prepare_reference", "_run_cold"):
+        function = functions[name]
+        protected = False
+        for candidate in ast.walk(function):
+            if not isinstance(candidate, ast.Try):
+                continue
+            final_calls = {
+                _ast_call_name(node)
+                for statement in candidate.finalbody
+                for node in ast.walk(statement)
+                if isinstance(node, ast.Call)
+            }
+            if "_postflight_runner_contract" in final_calls:
+                protected = True
+                break
+        if not protected:
+            raise AuditError(f"A2 rehearsal capability is not revoked in {name}")
+    postflight_calls = [
+        node
+        for node in ast.walk(functions["_postflight_runner_contract"])
+        if isinstance(node, ast.Call)
+        and _ast_call_name(node)
+        == "runner.validate_a2_nonauthority_rehearsal_postflight"
+    ]
+    if len(postflight_calls) != 1:
+        raise AuditError("A2 rehearsal driver bypasses runner postflight")
+
+    forbidden_production = {
+        "runner.prepare_day",
+        "runner.publish_checkpoint",
+        "runner.decide",
+        "runner.finalize_terminal",
+        "runner.evaluate",
+        "runner.build_result",
+        "runner.build_integrity_abort_result",
+        "runner.append_jsonl_record",
+        "runner.append_score_rows",
+    }
+    observed_calls = {_ast_call_name(node) for node in all_calls}
+    if observed_calls.intersection(forbidden_production):
+        raise AuditError("A2 rehearsal driver invokes a production mutation path")
+    main_calls = {
+        _ast_call_name(node)
+        for node in ast.walk(functions["main"])
+        if isinstance(node, ast.Call)
+    }
+    if (
+        "_assert_canonical_authority_absent" not in main_calls
+        or "_tree_state" not in main_calls
+        or "_temporary_writes_confined" not in main_calls
+    ):
+        raise AuditError("A2 rehearsal driver lacks its repository/output guards")
+    cold_source = ast.unparse(functions["_run_cold"])
+    for binding in (
+        "reuse_fold_token=boundary_token",
+        "intramonth_token is not boundary_token",
+        "reference['exact_comparison'] == boundary_comparison == intramonth_comparison",
+    ):
+        if binding not in cold_source:
+            raise AuditError("A2 rehearsal driver token/comparison chain changed")
+    return {
+        "driver_network_client_count": 0,
+        "runner_seam_call_count": 1,
+        "reference_and_cold_postflight_finally": True,
+        "timed_call_set_sha256": canonical_json_sha256(sorted(timed_calls)),
+    }
+
+
 def validate_protocol_contract(
     path: str | Path = DEFAULT_PROTOCOL,
 ) -> tuple[dict[str, Any], str]:
@@ -449,8 +1888,9 @@ def validate_protocol_contract(
         raise AuditError("v1.8 protocol identity changed")
     if protocol.get("repository") != "rokuroku-066/TSE-Session-Ranker" or protocol.get(
         "branch"
-    ) != "agent/v16-real-data-model-eval-20260728":
+    ) != "agent/v18-a2-shoulder-state-20260805":
         raise AuditError("v1.8 repository/branch changed")
+    _validate_a2_protocol_contract(protocol)
     authority = protocol.get("authority", {})
     if any(
         authority.get(field) is not False
@@ -528,7 +1968,7 @@ def validate_protocol_contract(
         raise AuditError("v1.8 gate registry changed")
     periods = protocol.get("periods", {})
     if (
-        periods.get("not_before_session") != "2026-08-05"
+        periods.get("not_before_session") != "2026-08-06"
         or periods.get("minimum_scheduled_sessions") != MIN_FORWARD_SESSIONS
         or periods.get("minimum_distinct_calendar_months") != MIN_FORWARD_MONTHS
     ):
@@ -616,9 +2056,10 @@ def validate_protocol_contract(
     if not all(
         fragment in first_counted_rule
         for fragment in (
-            "solely from the immutable workflow server time",
-            "must be strictly before that already-selected cutoff",
-            "requires a new preregistration rather than shifting",
+            "first scheduled TSE session whose 08:58:59 Asia/Tokyo cutoff is strictly after",
+            "observed_at must be before that already selected cutoff",
+            "exact D-1 predecessor to be strictly later than anchor H",
+            "integrity abort, never cash or a shifted/reused start",
         )
     ):
         raise AuditError("v1.8 first-counted workflow-time authority changed")
@@ -676,6 +2117,7 @@ def validate_protocol_contract(
             "failure_reason",
             "integrity_stage",
             "authority",
+            "raw_source_provenance",
             "input",
             "forward_period",
             "state_months",
@@ -939,6 +2381,7 @@ def validate_elf_closure(
             "PYTHONPATH",
             "PYTHONSAFEPATH",
             "PYTHONUSERBASE",
+            "PYTHON_ZSTANDARD_IMPORT_POLICY",
             "SETUPTOOLS_USE_DISTUTILS",
             "SSL_CERT_DIR",
         "SSL_CERT_FILE",
@@ -1321,8 +2764,8 @@ def validate_runtime_lock(
         raise AuditError("runtime lock top-level schema changed")
     if (
         lock["schema_version"] != 1
-        or lock["lock_id"] != "model_v18_runtime_lock_20260804"
-        or lock["registered_on"] != "2026-08-04"
+        or lock["lock_id"] != "model_v18_runtime_lock_20260805_a2"
+        or lock["registered_on"] != "2026-08-05"
         or lock["canonical_json_contract"] != "project_canonical_json_v1"
     ):
         raise AuditError("runtime lock fixed identity changed")
@@ -1442,6 +2885,7 @@ def validate_runtime_lock(
             "setuptools",
             "six",
             "threadpoolctl",
+            "zstandard",
         ]
     ):
         raise AuditError("runtime distribution registry changed")
@@ -1486,6 +2930,7 @@ def validate_runtime_lock(
         != {"sitecustomize": None, "usercustomize": None}
         or startup["direct_activation_project_module_paths"]
         != [
+            "research/model_v18_a2_rehearsal.py",
             "research/model_v18_shoulder_state_audit.py",
             "research/model_v18_shoulder_state_runner.py",
         ]
@@ -2234,6 +3679,43 @@ def validate_activation_payload(
     for field, expected in contract["fixed_values"].items():
         if payload.get(field) != expected:
             raise AuditError(f"activation payload fixed field changed: {field}")
+    expected_additional = tuple(
+        protocol["activation"]["preregistration_commit"][
+            "additional_test_artifact_paths"
+        ]
+    )
+    if expected_additional != ADDITIONAL_TEST_ARTIFACT_PATHS:
+        raise AuditError("protocol additional-test path registry changed")
+    additional = payload.get("additional_test_artifacts")
+    if not isinstance(additional, list) or len(additional) != len(expected_additional):
+        raise AuditError("activation additional-test artifact records changed")
+    for expected_path, item in zip(expected_additional, additional, strict=True):
+        if (
+            not isinstance(item, Mapping)
+            or tuple(item) != ("path", "sha256")
+            or item["path"] != expected_path
+            or SHA256_RE.fullmatch(str(item["sha256"])) is None
+            or sha256_file(ROOT / expected_path) != item["sha256"]
+        ):
+            raise AuditError("activation additional-test path/hash changed")
+    if (
+        len({item["path"] for item in additional}) != len(additional)
+        or payload.get("tests_path") in {item["path"] for item in additional}
+    ):
+        raise AuditError("activation test artifact registries overlap or duplicate")
+    anchor_summary = _validate_a2_cache_anchor_summary(
+        payload["predictor_cache_anchor"]
+    )
+    not_before = _a2_date(payload["not_before_session"], "activation not-before")
+    calendar = load_registered_calendar()
+    positions = np.flatnonzero(calendar == not_before)
+    if (
+        len(positions) != 1
+        or int(positions[0]) == 0
+        or pd.Timestamp(calendar[int(positions[0]) - 1])
+        <= _a2_date(anchor_summary["latest_source_session"], "activation anchor H")
+    ):
+        raise AuditError("activation not-before predecessor is not strictly after H")
     preregistration_commit = str(payload["preregistration_commit_sha"])
     if (
         re.fullmatch(r"[0-9a-f]{40}", preregistration_commit) is None
@@ -2270,7 +3752,10 @@ def validate_activation_payload(
         ("runtime_lock_path", "runtime_lock_sha256"),
         ("runner_path", "runner_sha256"),
         ("audit_path", "audit_sha256"),
+        ("rehearsal_path", "rehearsal_sha256"),
         ("tests_path", "tests_sha256"),
+        ("iteration_report_path", "iteration_report_sha256"),
+        ("validation_report_path", "validation_report_sha256"),
         ("session_calendar_path", "session_calendar_sha256"),
         ("workflow_path", "workflow_sha256"),
     )
@@ -2305,6 +3790,7 @@ def validate_activation_receipt(
     protocol: Mapping[str, Any],
     *,
     payload_file_path: str | Path | None = None,
+    payload_file_bytes: bytes | None = None,
 ) -> str:
     contract = protocol["activation"]["receipt"]
     required = set(contract["required_fields"])
@@ -2317,11 +3803,22 @@ def validate_activation_receipt(
         raise AuditError("activation receipt id differs from payload")
     if receipt["payload_sha256"] != payload["payload_sha256"]:
         raise AuditError("activation receipt does not bind payload")
-    expected_payload_file_sha = (
-        sha256_file(payload_file_path)
-        if payload_file_path is not None
-        else hashlib.sha256(canonical_json_file_bytes(payload)).hexdigest()
-    )
+    if payload_file_bytes is not None:
+        if not isinstance(payload_file_bytes, bytes):
+            raise AuditError("activation payload file snapshot must be bytes")
+        expected_payload_file_sha = hashlib.sha256(payload_file_bytes).hexdigest()
+    elif payload_file_path is not None:
+        expected_payload_file_sha = hashlib.sha256(
+            _stable_plain_file_bytes(
+                payload_file_path,
+                label="canonical activation payload",
+                required_mode=0o644,
+            )
+        ).hexdigest()
+    else:
+        expected_payload_file_sha = hashlib.sha256(
+            canonical_json_file_bytes(payload)
+        ).hexdigest()
     if receipt["payload_file_sha256"] != expected_payload_file_sha:
         raise AuditError("activation receipt does not bind exact payload file bytes")
     commit = str(receipt["payload_commit_sha"])
@@ -2375,6 +3872,150 @@ def validate_activation_receipt(
     if receipt["receipt_sha256"] != expected_hash:
         raise AuditError("activation receipt self-hash mismatch")
     return expected_hash
+
+
+ACTIVATION_CONTEXT_FIELDS = (
+    "activation_payload_sha256",
+    "activation_receipt_sha256",
+    "activation_receipt_commit_sha",
+    "activation_receipt_commit_url",
+    "activation_receipt_commit_committed_at",
+    "activation_receipt_commit_observed_at",
+    "branch_tip_sha_when_receipt_observed",
+    "activation_receipt_file_sha256",
+    "receipt_commit_observation",
+    "receipt_branch_observation",
+    "activation_receipt_workflow_run_id",
+    "activation_receipt_workflow_run_updated_at",
+    "activation_receipt_workflow_run_observed_at",
+    "receipt_workflow_run_observation",
+    "first_counted_session",
+    "first_counted_predecessor_session",
+    "terminal_session",
+    "terminal_scheduled_sessions",
+    "represented_calendar_months",
+    "calendar_sha256",
+    "production_model_changed",
+    "orders_allowed",
+)
+
+
+def validate_activation_context(
+    context: Mapping[str, Any],
+    *,
+    payload: Mapping[str, Any],
+    payload_sha256: str,
+    receipt: Mapping[str, Any],
+    receipt_sha256: str,
+    protocol: Mapping[str, Any],
+    receipt_file_path: str | Path = DEFAULT_ACTIVATION_RECEIPT,
+    receipt_file_bytes: bytes | None = None,
+) -> dict[str, Any]:
+    value = dict(context)
+    exact_receipt_file_sha256 = hashlib.sha256(
+        receipt_file_bytes
+        if receipt_file_bytes is not None
+        else _stable_plain_file_bytes(
+            receipt_file_path,
+            label="canonical activation receipt",
+            required_mode=0o644,
+        )
+    ).hexdigest()
+    if set(value) != set(ACTIVATION_CONTEXT_FIELDS):
+        raise AuditError("activation context fields changed")
+    if (
+        value["activation_payload_sha256"] != payload_sha256
+        or value["activation_receipt_sha256"] != receipt_sha256
+        or value["activation_receipt_file_sha256"] != exact_receipt_file_sha256
+    ):
+        raise AuditError("activation context canonical artifact binding changed")
+    commit = str(value["activation_receipt_commit_sha"])
+    if (
+        re.fullmatch(r"[0-9a-f]{40}", commit) is None
+        or value["activation_receipt_commit_url"]
+        != f"https://github.com/{protocol['repository']}/commit/{commit}"
+    ):
+        raise AuditError("activation context receipt commit identity changed")
+    committed = _aware_timestamp(
+        value["activation_receipt_commit_committed_at"], "context C committed"
+    )
+    observed = _aware_timestamp(
+        value["activation_receipt_commit_observed_at"], "context C observed"
+    )
+    if observed < committed:
+        raise AuditError("activation context observation predates C")
+    _validate_observation_derivation(
+        commit_observation=value["receipt_commit_observation"],
+        branch_observation=value["receipt_branch_observation"],
+        protocol=protocol,
+        commit_sha=commit,
+        commit_url=value["activation_receipt_commit_url"],
+        committed_at=value["activation_receipt_commit_committed_at"],
+        branch_tip_sha=value["branch_tip_sha_when_receipt_observed"],
+        observed_at=value["activation_receipt_commit_observed_at"],
+        label="activation context receipt observation",
+    )
+    _validate_workflow_observation_derivation(
+        observation=value["receipt_workflow_run_observation"],
+        protocol=protocol,
+        expected_head_sha=commit,
+        run_id=value["activation_receipt_workflow_run_id"],
+        updated_at=value["activation_receipt_workflow_run_updated_at"],
+        observed_at=value["activation_receipt_workflow_run_observed_at"],
+        label="activation context receipt workflow",
+    )
+    calendar = load_registered_calendar()
+    first = first_counted_session(
+        workflow_run_updated_at=value["activation_receipt_workflow_run_updated_at"],
+        workflow_run_observed_at=value[
+            "activation_receipt_workflow_run_observed_at"
+        ],
+        calendar=calendar,
+        not_before_session=payload["not_before_session"],
+    )
+    if pd.Timestamp(
+        f"{first.date()}T08:58:59+09:00"
+    ) <= max(
+        observed,
+        _aware_timestamp(
+            value["activation_receipt_workflow_run_observed_at"],
+            "context workflow observed",
+        ),
+    ):
+        raise AuditError("activation context observations missed first cutoff")
+    positions = np.flatnonzero(calendar == first)
+    if len(positions) != 1 or int(positions[0]) == 0:
+        raise AuditError("activation context first session lacks predecessor")
+    predecessor = pd.Timestamp(calendar[int(positions[0]) - 1]).normalize()
+    anchor_latest = _a2_date(
+        _validate_a2_cache_anchor_summary(payload["predictor_cache_anchor"])[
+            "latest_source_session"
+        ],
+        "activation anchor H",
+    )
+    if predecessor <= anchor_latest:
+        raise AuditError("activation first predecessor is not strictly after H")
+    terminal = deterministic_terminal_session(first, calendar)
+    denominator = calendar[(calendar >= first) & (calendar <= terminal)]
+    exact = {
+        "first_counted_session": str(first.date()),
+        "first_counted_predecessor_session": str(predecessor.date()),
+        "terminal_session": str(terminal.date()),
+        "terminal_scheduled_sessions": len(denominator),
+        "represented_calendar_months": int(denominator.to_period("M").nunique()),
+        "calendar_sha256": sha256_file(DEFAULT_CALENDAR),
+        "production_model_changed": False,
+        "orders_allowed": False,
+    }
+    if any(value[field] != expected for field, expected in exact.items()):
+        raise AuditError("activation context derived denominator changed")
+    # B-to-C sole-parent/Git blob immutability is independently checked by
+    # validate_activation_git_history before any terminal network evidence.
+    if value["receipt_commit_observation"]["canonical_projection"][
+        "parent_shas"
+    ] != [receipt["payload_commit_sha"]]:
+        raise AuditError("activation context does not prove sole-parent B-to-C")
+    return value
 
 
 def _git_command(
@@ -2486,6 +4127,8 @@ def validate_activation_git_history(
     repository_root: str | Path = ROOT,
     payload_file_path: str | Path = DEFAULT_ACTIVATION_PAYLOAD,
     receipt_file_path: str | Path = DEFAULT_ACTIVATION_RECEIPT,
+    payload_file_bytes: bytes | None = None,
+    receipt_file_bytes: bytes | None = None,
     github_fetcher: Callable[[str], Mapping[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Verify activation against real local Git objects, bytes, and ancestry."""
@@ -2908,9 +4551,13 @@ def validate_activation_git_history(
             raise AuditError(f"activation commit lacks required path: {path}")
         return result.stdout
 
-    prereg_paths = protocol["activation"]["preregistration_commit"][
-        "required_paths"
+    preregistration_contract = protocol["activation"]["preregistration_commit"]
+    prereg_paths = [
+        *preregistration_contract["required_paths"],
+        *preregistration_contract["additional_test_artifact_paths"],
     ]
+    if len(prereg_paths) != len(set(prereg_paths)):
+        raise AuditError("preregistration protected path union overlaps")
     prereg_hash_by_path = {
         str(payload[path_field]): str(payload[hash_field])
         for path_field, hash_field in (
@@ -2919,11 +4566,20 @@ def validate_activation_git_history(
             ("runtime_lock_path", "runtime_lock_sha256"),
             ("runner_path", "runner_sha256"),
             ("audit_path", "audit_sha256"),
+            ("rehearsal_path", "rehearsal_sha256"),
             ("tests_path", "tests_sha256"),
+            ("iteration_report_path", "iteration_report_sha256"),
+            ("validation_report_path", "validation_report_sha256"),
             ("session_calendar_path", "session_calendar_sha256"),
             ("workflow_path", "workflow_sha256"),
         )
     }
+    prereg_hash_by_path.update(
+        {
+            str(item["path"]): str(item["sha256"])
+            for item in payload["additional_test_artifacts"]
+        }
+    )
     if set(map(str, prereg_paths)) != set(prereg_hash_by_path):
         raise AuditError("preregistration path/hash registry is incomplete")
     for path in prereg_paths:
@@ -2998,9 +4654,27 @@ def validate_activation_git_history(
         receipt_path
     }:
         raise AuditError("receipt commit changed a path other than the receipt")
+    observed_payload_bytes = (
+        payload_file_bytes
+        if payload_file_bytes is not None
+        else _stable_plain_file_bytes(
+            payload_file_path,
+            label="canonical activation payload",
+            required_mode=0o644,
+        )
+    )
+    observed_receipt_bytes = (
+        receipt_file_bytes
+        if receipt_file_bytes is not None
+        else _stable_plain_file_bytes(
+            receipt_file_path,
+            label="canonical activation receipt",
+            required_mode=0o644,
+        )
+    )
     payload_bytes = committed_bytes(commit_fields["payload"], payload_path)
     if (
-        payload_bytes != Path(payload_file_path).read_bytes()
+        payload_bytes != observed_payload_bytes
         or hashlib.sha256(payload_bytes).hexdigest() != receipt["payload_file_sha256"]
         or committed_bytes(commit_fields["receipt"], payload_path) != payload_bytes
     ):
@@ -3008,7 +4682,7 @@ def validate_activation_git_history(
     receipt_bytes = committed_bytes(commit_fields["receipt"], receipt_path)
     receipt_file_sha = hashlib.sha256(receipt_bytes).hexdigest()
     if (
-        receipt_bytes != Path(receipt_file_path).read_bytes()
+        receipt_bytes != observed_receipt_bytes
         or any(
             row["activation_receipt_file_sha256"] != receipt_file_sha
             for row in decisions
@@ -3363,196 +5037,162 @@ def validate_source_manifest(
     predictor_raw_store_root: str | Path | None = None,
     external_identity_registry: dict[tuple[int, int], str] | None = None,
 ) -> dict[str, Any]:
-    required = set(
-        protocol["source_contract"]["forward_daily"][
-            "source_manifest_required_fields"
-        ]
-    )
-    if set(manifest) != required:
+    if set(manifest) != set(SOURCE_MANIFEST_FIELDS):
         raise AuditError("source manifest fields changed")
     value = dict(manifest)
-    target = pd.Timestamp(session_date).normalize()
-    if pd.Timestamp(value["target_session"]).normalize() != target:
+    target = _a2_date(session_date, "source target")
+    if _a2_date(value["target_session"], "source target binding") != target:
         raise AuditError("source manifest target differs")
-    latest = pd.Timestamp(value["latest_required_source_session"]).normalize()
     calendar = load_registered_calendar()
-    if target == pd.Timestamp("2026-08-05"):
-        expected_latest = pd.Timestamp("2026-08-04")
-    else:
-        positions = np.flatnonzero(calendar == target)
-        if len(positions) != 1 or int(positions[0]) == 0:
-            raise AuditError("source target is outside the predecessor calendar")
-        expected_latest = calendar[int(positions[0]) - 1]
-    if latest != expected_latest:
-        raise AuditError(
-            "source latest-required session is not the exact registered predecessor"
+    positions = np.flatnonzero(calendar == target)
+    if len(positions) != 1 or int(positions[0]) == 0:
+        raise AuditError("source target lacks a registered predecessor")
+    latest = _a2_date(value["latest_required_source_session"], "source latest")
+    if latest != pd.Timestamp(calendar[int(positions[0]) - 1]):
+        raise AuditError("source latest is not exact registered D-1")
+    runtime_verified = _runtime_verification_timestamp(value, "source manifest")
+    received = _aware_timestamp(value["source_received_at"], "source receipt")
+    created = _aware_timestamp(value["created_at"], "source manifest created")
+    sealed = _aware_timestamp(value["sealed_at"], "source manifest sealed")
+    cutoff = _aware_timestamp(
+        f"{target.date()}T08:58:59+09:00", "source manifest cutoff"
+    )
+    if runtime_verified > created or received > created or created > sealed or sealed > cutoff:
+        raise AuditError("source manifest timestamp DAG changed")
+    vectors = tuple(
+        value[field]
+        for field in (
+            "source_object_keys",
+            "source_files",
+            "source_urls",
+            "source_byte_counts",
+            "source_sha256",
         )
-    files = value["source_files"]
-    urls = value["source_urls"]
-    object_keys = value["source_object_keys"]
-    byte_counts = value["source_byte_counts"]
-    hashes = value["source_sha256"]
-    vectors = (object_keys, files, urls, byte_counts, hashes)
-    if not all(isinstance(item, list) for item in vectors):
-        raise AuditError("source manifest source vectors are not arrays")
-    if len({len(item) for item in vectors}) != 1:
-        raise AuditError("source manifest vector lengths differ")
+    )
+    if not all(isinstance(item, list) for item in vectors) or len(
+        {len(item) for item in vectors}
+    ) != 1:
+        raise AuditError("source manifest raw vectors changed")
+    object_keys, files, urls, byte_counts, hashes = vectors
     expected_sources = expected_predictor_sources(latest)
-    expected_by_file = {item["file"]: item for item in expected_sources}
-    expected_files = [item["file"] for item in expected_sources]
-    actual_files = [str(item) for item in files]
-    if any(item not in expected_by_file for item in actual_files):
-        raise AuditError("source manifest contains an unregistered predictor source")
-    canonical_subset = [item for item in expected_files if item in set(actual_files)]
-    if actual_files != canonical_subset:
-        raise AuditError("source manifest source registry is not canonical")
-    source_objects: list[dict[str, Any]] = []
-    order_keys: list[tuple[int, str, str]] = []
-    seen_files: set[str] = set()
-    seen_keys: set[str] = set()
-    for index, (object_key, source_file, url, byte_count, digest) in enumerate(
-        zip(object_keys, files, urls, byte_counts, hashes, strict=True)
+    if [str(item) for item in files] != [item["file"] for item in expected_sources]:
+        raise AuditError("source manifest is not the exact cumulative registry")
+    records: list[dict[str, Any]] = []
+    for index, (key, file_name, url, count, digest, expected) in enumerate(
+        zip(object_keys, files, urls, byte_counts, hashes, expected_sources, strict=True)
     ):
-        if (
-            not isinstance(object_key, str)
-            or "\x00" in object_key
-            or Path(object_key).is_absolute()
-            or any(part in {"", ".", ".."} for part in Path(object_key).parts)
-            or not object_key.startswith("model_v18_shoulder_state/predictor/")
+        expected_key = f"{PREDICTOR_OBJECT_PREFIX}{expected['kind']}/{file_name}"
+        if key != expected_key or Path(str(file_name)).name != str(file_name):
+            raise AuditError("source manifest object key/filename changed")
+        if expected["kind"] == "daily":
+            _official_jpx_daily_url_label(
+                url,
+                file_name=str(file_name),
+                source_session=_predictor_source_date(str(file_name), "daily"),
+                label=f"source URL {index}",
+            )
+        else:
+            _official_jpx_url_label(url, label=f"source URL {index}")
+        observed_count = _strict_nonnegative_int(count, f"source bytes {index}")
+        if observed_count <= 0:
+            raise AuditError("source manifest byte count is not positive")
+        _require_nonzero_sha(digest, f"source SHA {index}")
+        if expected["sha256"] is not None and digest != expected["sha256"]:
+            raise AuditError("historical predictor SHA changed")
+        if expected["byte_count"] is not None and observed_count != int(
+            expected["byte_count"]
         ):
-            raise AuditError("source manifest predictor object key is unsafe")
-        parts = Path(object_key).parts
-        expected_source = expected_by_file.get(source_file)
-        if (
-            len(parts) != 4
-            or expected_source is None
-            or parts[2] != expected_source["kind"]
-            or parts[3] != source_file
-        ):
-            raise AuditError("source manifest predictor object key pattern changed")
-        if (
-            not isinstance(source_file, str)
-            or Path(source_file).name != source_file
-            or not source_file.lower().endswith(".pdf")
-            or source_file in seen_files
-            or object_key in seen_keys
-        ):
-            raise AuditError("source manifest source file/key is invalid or duplicated")
-        if not isinstance(url, str) or not url.startswith("https://www.jpx.co.jp/"):
-            raise AuditError("source manifest URL is not official JPX HTTPS")
-        count = _strict_nonnegative_int(byte_count, f"source_byte_counts[{index}]")
-        if count <= 0:
-            raise AuditError("source manifest byte count is invalid")
-        _require_nonzero_sha(digest, f"source_sha256[{index}]")
-        if (
-            expected_source["sha256"] is not None
-            and digest != expected_source["sha256"]
-        ):
-            raise AuditError("source manifest historical predictor SHA changed")
-        if (
-            expected_source["byte_count"] is not None
-            and count != expected_source["byte_count"]
-        ):
-            raise AuditError("source manifest historical predictor byte count changed")
-        if expected_source["url"] is not None and url != expected_source["url"]:
-            raise AuditError("source manifest historical predictor URL changed")
-        seen_files.add(source_file)
-        seen_keys.add(object_key)
-        dates = re.findall(r"(?<!\d)(20\d{4}(?:\d{2})?)(?!\d)", source_file)
-        source_date = dates[-1] if dates else ""
-        order_keys.append(
-            (0 if parts[2] == "price_warmup" else 1, source_date, source_file)
-        )
-        source_objects.append(
-            {
-                "object_key": object_key,
-                "file": source_file,
-                "url": url,
-                "byte_count": count,
-                "sha256": str(digest),
-            }
-        )
+            raise AuditError("historical predictor byte count changed")
+        if expected["url"] is not None and url != expected["url"]:
+            raise AuditError("historical predictor URL changed")
+        record = {
+            "object_key": key,
+            "file": file_name,
+            "url": url,
+            "byte_count": observed_count,
+            "sha256": digest,
+        }
+        records.append(record)
         if predictor_raw_store_root is not None:
-            raw_bytes = _read_external_object_bytes(
+            raw_payload = _read_external_object_bytes(
                 predictor_raw_store_root,
-                object_key,
-                required_prefix="model_v18_shoulder_state/predictor/",
+                key,
+                required_prefix=PREDICTOR_OBJECT_PREFIX,
                 identity_registry=external_identity_registry,
             )
-            if len(raw_bytes) != count or hashlib.sha256(raw_bytes).hexdigest() != digest:
-                raise AuditError("predictor raw object bytes differ from source manifest")
-    if order_keys != sorted(order_keys):
-        raise AuditError("source manifest objects are not in canonical order")
-    expected_set_hash = canonical_json_sha256(source_objects)
-    if value["source_set_sha256"] != expected_set_hash:
-        raise AuditError("source manifest ordered source-set hash mismatch")
-    received = (
-        None
-        if value["source_received_at"] is None
-        else _aware_timestamp(value["source_received_at"], "source_received_at")
-    )
-    cutoff = pd.Timestamp(f"{target.date()}T08:58:59+09:00")
-    runtime_verified = _runtime_verification_timestamp(value, "source manifest")
-    created = _aware_timestamp(value["created_at"], "source manifest created_at")
-    sealed = _aware_timestamp(value["sealed_at"], "source manifest sealed_at")
+            if len(raw_payload) != observed_count or hashlib.sha256(
+                raw_payload
+            ).hexdigest() != digest:
+                raise AuditError("predictor raw bytes differ from source manifest")
+    if value["source_set_sha256"] != canonical_json_sha256(records):
+        raise AuditError("source manifest ordered raw-set hash changed")
+    bindings = value["parsed_shards"]
     if (
-        runtime_verified > created
-        or (received is not None and received > created)
-        or created > sealed
-        or sealed > cutoff
+        not isinstance(bindings, list)
+        or len(bindings) != len(records)
+        or value["parsed_shard_set_sha256"]
+        != _a2_parsed_shard_set_sha256(bindings)
     ):
-        raise AuditError("source manifest timestamps violate the pre-open DAG")
+        raise AuditError("source manifest parsed-shard set changed")
     contract = protocol["source_contract"]["forward_daily"]
     if (
         value["schema_version"] != 1
-        or _strict_nonnegative_int(value["parsed_row_count"], "parsed_row_count") < 0
-        or _strict_nonnegative_int(value["rejected_row_count"], "rejected_row_count")
-        != contract["required_rejected_rows"]
-        or _strict_nonnegative_int(
-            value["duplicate_date_code_count"], "duplicate_date_code_count"
-        )
-        != 0
+        or value["runtime_lock_sha256"] != RUNTIME_LOCK_SHA256
         or value["parser_path"] != contract["parser_path"]
         or value["parser_version"] != contract["parser_version"]
         or value["parser_sha256"] != contract["parser_sha256"]
         or value["python_version"] != LOCKED_PYTHON_VERSION
-        or value["canonical_json_contract"] != "project_canonical_json_v1"
+        or value["canonical_json_contract"] != CANONICAL_JSON_CONTRACT
+        or isinstance(value["parsed_row_count"], bool)
+        or int(value["parsed_row_count"]) <= 0
+        or int(value["rejected_row_count"]) != 0
+        or int(value["duplicate_date_code_count"]) != 0
+        or _strict_bool(value["source_complete"], "source_complete") is not True
+        or value["failure_reason"] is not None
     ):
-        raise AuditError("source/parser manifest contract changed")
-    complete = _strict_bool(value["source_complete"], "source_complete")
-    failure_reason = value["failure_reason"]
-    semantic_fields = (
-        "parsed_panel_semantic_sha256",
-        "g0_panel_semantic_sha256",
-        "common_universe_semantic_sha256",
+        raise AuditError("source manifest complete-only A2 contract changed")
+    for field in (
+        "month_source_manifest_sha256",
+        "model_price_snapshot_file_sha256",
+        "model_price_snapshot_semantic_sha256",
+        "model_price_snapshot_manifest_file_sha256",
+        "model_price_snapshot_manifest_sha256",
         "target_date_scoring_input_semantic_sha256",
+        "target_slice_semantic_sha256",
+        "g0_panel_cache_sha256",
+        "g0_panel_cache_manifest_file_sha256",
+        "g0_panel_cache_manifest_sha256",
+    ):
+        _require_nonzero_sha(value[field], f"source manifest {field}")
+    for field, prefix in (
+        ("model_price_snapshot_object_key", MODEL_PRICE_SNAPSHOT_OBJECT_PREFIX),
+        (
+            "model_price_snapshot_manifest_object_key",
+            MODEL_PRICE_SNAPSHOT_OBJECT_PREFIX,
+        ),
+        ("g0_panel_cache_object_key", G0_PANEL_CACHE_OBJECT_PREFIX),
+        ("g0_panel_cache_manifest_object_key", G0_PANEL_CACHE_OBJECT_PREFIX),
+    ):
+        key = value[field]
+        if (
+            not isinstance(key, str)
+            or not key.startswith(prefix)
+            or Path(key).is_absolute()
+            or any(part in {"", ".", ".."} for part in Path(key).parts)
+        ):
+            raise AuditError(f"source manifest {field} is unsafe")
+    _a2_month(value["model_price_snapshot_target_month"], "source snapshot month")
+    snapshot_latest = _a2_date(
+        value["model_price_snapshot_latest_source_session"],
+        "source snapshot latest",
     )
-    if complete:
-        if (
-            actual_files != expected_files
-            or received is None
-            or failure_reason is not None
-        ):
-            raise AuditError("complete source manifest receipt/failure state is invalid")
-        for field in semantic_fields:
-            _require_nonzero_sha(value[field], f"source manifest {field}")
-        if _strict_nonnegative_int(value["parsed_row_count"], "parsed_row_count") <= 0:
-            raise AuditError("complete source manifest parsed no rows")
-    else:
-        if (
-            not isinstance(failure_reason, str)
-            or not failure_reason.strip()
-            or int(value["parsed_row_count"]) != 0
-            or any(value[field] is not None for field in semantic_fields)
-            or bool(actual_files) != (received is not None)
-        ):
-            raise AuditError("incomplete source manifest is not valid fail-closed state")
+    if snapshot_latest > latest:
+        raise AuditError("source snapshot extends past the daily D-1 prefix")
     _require_nonzero_sha(value["source_manifest_sha256"], "source manifest hash")
-    expected_hash = canonical_json_sha256(
+    if value["source_manifest_sha256"] != canonical_json_sha256(
         value, exclude_fields={"source_manifest_sha256"}
-    )
-    if value["source_manifest_sha256"] != expected_hash:
-        raise AuditError("source manifest self-hash mismatch")
+    ):
+        raise AuditError("source manifest self hash changed")
     return value
 
 
@@ -4313,6 +5953,273 @@ def semantic_rows_sha256(
                 )
         rows.append(row)
     return canonical_json_sha256(rows)
+
+
+_A2_JSONL_DATE_COLUMNS = frozenset({"date", "feature_source_max_date"})
+_A2_JSONL_BOOL_COLUMNS = frozenset(
+    {"traded", "partial_session", "common_training_eligible", "common_score_eligible"}
+)
+_A2_JSONL_INTEGER_COLUMNS = frozenset({"source_line"})
+_A2_JSONL_NULLABLE_INTEGER_COLUMNS = frozenset({"trading_unit"})
+_A2_JSONL_STRING_COLUMNS = frozenset(
+    {
+        "code", "name", "raw_name", "volume_unit", "turnover_unit",
+        "source_volume_unit", "source_turnover_unit", "source_file",
+        "source_format",
+    }
+)
+_A2_JSONL_NULLABLE_STRING_COLUMNS = frozenset(
+    {"volume_unit", "turnover_unit", "source_volume_unit", "source_turnover_unit"}
+)
+_A2_PARSED_OPTIONAL_COLUMNS = frozenset(
+    {
+        "trading_unit", "final_special_quote", "net_change", "vwap",
+        "volume_unit", "turnover_unit", "source_volume_unit", "source_turnover_unit",
+    }
+)
+
+
+def _a2_semantic_cell(value: Any, *, column: str) -> Any:
+    if value is None or pd.isna(value):
+        return None
+    if column in _A2_JSONL_DATE_COLUMNS:
+        parsed = pd.Timestamp(value)
+        if parsed.tzinfo is not None:
+            parsed = parsed.tz_convert("Asia/Tokyo").tz_localize(None)
+        if parsed != parsed.normalize():
+            raise AuditError(f"A2 {column} contains a time component")
+        return str(parsed.date())
+    if isinstance(value, (bool, np.bool_)):
+        return bool(value)
+    if isinstance(value, (int, np.integer)):
+        return int(value)
+    if isinstance(value, (float, np.floating)):
+        number = float(value)
+        if not math.isfinite(number):
+            raise AuditError(f"A2 {column} contains a non-finite number")
+        return number
+    if isinstance(value, str):
+        return value
+    raise AuditError(f"A2 {column} has unsupported type {type(value).__name__}")
+
+
+def _coerce_a2_jsonl_frame(
+    frame: pd.DataFrame, columns: Sequence[str], *, label: str
+) -> pd.DataFrame:
+    registered = tuple(str(item) for item in columns)
+    if not isinstance(frame, pd.DataFrame) or len(registered) != len(set(registered)):
+        raise AuditError(f"{label} has an invalid registered frame")
+    source = frame.copy()
+    for column in registered:
+        if column not in source and column in _A2_PARSED_OPTIONAL_COLUMNS:
+            source[column] = None
+    missing = [column for column in registered if column not in source]
+    if missing:
+        raise AuditError(f"{label} lacks registered columns: {missing}")
+    value = source.loc[:, list(registered)].copy()
+    for column in registered:
+        if column in _A2_JSONL_DATE_COLUMNS:
+            nonnull = value[column].notna()
+            parsed = pd.to_datetime(value[column], errors="coerce", format="mixed")
+            if parsed.loc[nonnull].isna().any() or (column == "date" and parsed.isna().any()):
+                raise AuditError(f"{label} contains an invalid {column}")
+            if getattr(parsed.dt, "tz", None) is not None:
+                parsed = parsed.dt.tz_convert("Asia/Tokyo").dt.tz_localize(None)
+            if not parsed.dropna().eq(parsed.dropna().dt.normalize()).all():
+                raise AuditError(f"{label} {column} contains a time")
+            value[column] = parsed.dt.normalize()
+        elif column in _A2_JSONL_BOOL_COLUMNS:
+            if value[column].isna().any() or not value[column].map(
+                lambda item: isinstance(item, (bool, np.bool_))
+            ).all():
+                raise AuditError(f"{label} boolean {column} changed")
+            value[column] = value[column].astype(bool)
+        elif column in _A2_JSONL_INTEGER_COLUMNS:
+            numeric = pd.to_numeric(value[column], errors="coerce")
+            if numeric.isna().any() or not np.equal(numeric, np.floor(numeric)).all():
+                raise AuditError(f"{label} integer {column} changed")
+            value[column] = numeric.astype("int64")
+        elif column in _A2_JSONL_NULLABLE_INTEGER_COLUMNS:
+            nonnull = value[column].notna()
+            numeric = pd.to_numeric(value[column], errors="coerce")
+            finite = numeric.dropna().to_numpy(dtype=float)
+            if numeric.loc[nonnull].isna().any() or not np.isfinite(finite).all() or not np.equal(finite, np.floor(finite)).all():
+                raise AuditError(f"{label} nullable integer {column} changed")
+            value[column] = numeric.astype("float64")
+        elif column in _A2_JSONL_STRING_COLUMNS:
+            if column not in _A2_JSONL_NULLABLE_STRING_COLUMNS and value[column].isna().any():
+                raise AuditError(f"{label} string {column} contains null")
+            value[column] = value[column].map(
+                lambda item: None if pd.isna(item) else str(item)
+            ).astype(object)
+            if value[column].dropna().eq("").any():
+                raise AuditError(f"{label} string {column} is empty")
+        else:
+            nonnull = value[column].notna()
+            numeric = pd.to_numeric(value[column], errors="coerce")
+            finite = numeric.dropna().to_numpy(dtype=float)
+            if numeric.loc[nonnull].isna().any() or not np.isfinite(finite).all():
+                raise AuditError(f"{label} numeric {column} changed")
+            value[column] = numeric.astype("float64")
+    value["code"] = value["code"].astype(object)
+    if value["code"].eq("").any() or value[["date", "code"]].duplicated().any():
+        raise AuditError(f"{label} has invalid date/code identity")
+    return value.sort_values(["date", "code"], kind="stable").reset_index(drop=True)
+
+
+def _canonical_a2_frame_jsonl_bytes(
+    frame: pd.DataFrame, columns: Sequence[str], *, label: str
+) -> bytes:
+    value = _coerce_a2_jsonl_frame(frame, columns, label=label)
+    rows: list[bytes] = []
+    for record in value.to_dict(orient="records"):
+        row: list[Any] = []
+        for column in columns:
+            item = _a2_semantic_cell(record[column], column=column)
+            if column in _A2_JSONL_NULLABLE_INTEGER_COLUMNS and item is not None:
+                item = int(item)
+            row.append(item)
+        rows.append(canonical_json_bytes(row) + b"\n")
+    if not rows:
+        raise AuditError(f"{label} cannot be empty")
+    return b"".join(rows)
+
+
+def decode_a2_canonical_frame_jsonl(
+    payload: bytes, columns: Sequence[str], *, label: str
+) -> pd.DataFrame:
+    if (
+        not payload or payload.startswith(b"\xef\xbb\xbf") or b"\r" in payload
+        or not payload.endswith(b"\n") or b"\n\n" in payload
+    ):
+        raise AuditError(f"{label} is not canonical final-LF JSONL")
+    try:
+        text = payload.decode("utf-8", errors="strict")
+    except UnicodeDecodeError as exc:
+        raise AuditError(f"{label} is not UTF-8") from exc
+    registered = tuple(str(item) for item in columns)
+    records: list[dict[str, Any]] = []
+    for index, line in enumerate(text.splitlines(), start=1):
+        try:
+            row = json.loads(
+                line,
+                parse_constant=lambda token: (_ for _ in ()).throw(
+                    ValueError(f"non-finite {token}")
+                ),
+            )
+        except (json.JSONDecodeError, ValueError) as exc:
+            raise AuditError(f"{label} row {index} is not strict JSON") from exc
+        if not isinstance(row, list) or len(row) != len(registered):
+            raise AuditError(f"{label} row {index} width changed")
+        record: dict[str, Any] = {}
+        for column, cell in zip(registered, row, strict=True):
+            if cell is None:
+                forbidden_null = (
+                    column == "date" or column == "code"
+                    or column in _A2_JSONL_BOOL_COLUMNS
+                    or column in _A2_JSONL_INTEGER_COLUMNS
+                    or column in (_A2_JSONL_STRING_COLUMNS - _A2_JSONL_NULLABLE_STRING_COLUMNS)
+                )
+                if forbidden_null:
+                    raise AuditError(f"{label} row {index} nulls {column}")
+            elif column in _A2_JSONL_BOOL_COLUMNS and not isinstance(cell, bool):
+                raise AuditError(f"{label} row {index} changes boolean {column}")
+            elif column in (_A2_JSONL_INTEGER_COLUMNS | _A2_JSONL_NULLABLE_INTEGER_COLUMNS) and (
+                isinstance(cell, bool) or not isinstance(cell, int)
+            ):
+                raise AuditError(f"{label} row {index} changes integer {column}")
+            elif column in (_A2_JSONL_STRING_COLUMNS | _A2_JSONL_DATE_COLUMNS) and not isinstance(cell, str):
+                raise AuditError(f"{label} row {index} changes string/date {column}")
+            elif column not in (
+                _A2_JSONL_BOOL_COLUMNS | _A2_JSONL_INTEGER_COLUMNS
+                | _A2_JSONL_NULLABLE_INTEGER_COLUMNS | _A2_JSONL_STRING_COLUMNS
+                | _A2_JSONL_DATE_COLUMNS
+            ) and cell is not None and (
+                isinstance(cell, bool) or not isinstance(cell, (int, float))
+                or not math.isfinite(float(cell))
+            ):
+                raise AuditError(f"{label} row {index} changes numeric {column}")
+            record[column] = cell
+        if canonical_json_bytes(row) != line.encode("utf-8"):
+            raise AuditError(f"{label} row {index} is not canonical JSON")
+        records.append(record)
+    frame = _coerce_a2_jsonl_frame(pd.DataFrame(records), registered, label=label)
+    if _canonical_a2_frame_jsonl_bytes(frame, registered, label=label) != payload:
+        raise AuditError(f"{label} does not round-trip exactly")
+    return frame
+
+
+_MODEL_PRICE_STRING_COLUMNS = frozenset({"code", "name", "source_format"})
+_MODEL_PRICE_NUMERIC_COLUMNS = frozenset(MODEL_PRICE_COLUMNS) - {
+    "date", *_MODEL_PRICE_STRING_COLUMNS,
+}
+
+
+def _coerce_a2_model_price_frame(frame: pd.DataFrame, *, label: str) -> pd.DataFrame:
+    if not isinstance(frame, pd.DataFrame):
+        raise AuditError(f"{label} must be a DataFrame")
+    missing = [column for column in MODEL_PRICE_COLUMNS if column not in frame]
+    if missing:
+        raise AuditError(f"{label} lacks model-price columns: {missing}")
+    value = frame.loc[:, list(MODEL_PRICE_COLUMNS)].copy()
+    dates = pd.to_datetime(value["date"], errors="coerce", format="mixed")
+    if dates.isna().any() or not dates.eq(dates.dt.normalize()).all():
+        raise AuditError(f"{label} has invalid dates")
+    value["date"] = dates.dt.normalize()
+    for column in _MODEL_PRICE_STRING_COLUMNS:
+        if value[column].isna().any():
+            raise AuditError(f"{label} string {column} contains null")
+        value[column] = value[column].map(str).astype(object)
+        if value[column].eq("").any() or value[column].map(
+            lambda item: any(mark in item for mark in ("\r", "\n", "\x00"))
+        ).any():
+            raise AuditError(f"{label} string {column} is invalid")
+    for column in _MODEL_PRICE_NUMERIC_COLUMNS:
+        nonnull = value[column].notna()
+        numeric = pd.to_numeric(value[column], errors="coerce").astype("float64")
+        if numeric.loc[nonnull].isna().any() or not np.isfinite(
+            numeric.dropna().to_numpy(dtype=float)
+        ).all():
+            raise AuditError(f"{label} numeric {column} is invalid")
+        value[column] = numeric
+    if value[["date", "code"]].duplicated().any():
+        raise AuditError(f"{label} has duplicate date/code")
+    return value.sort_values(["date", "code"], kind="stable").reset_index(drop=True)
+
+
+def _canonical_a2_model_price_csv_bytes(frame: pd.DataFrame, *, label: str) -> bytes:
+    value = _coerce_a2_model_price_frame(frame, label=label)
+    payload = value.to_csv(
+        index=False, lineterminator="\n", na_rep="", date_format="%Y-%m-%d"
+    ).encode("utf-8")
+    if not payload or payload.startswith(b"\xef\xbb\xbf") or b"\r" in payload or not payload.endswith(b"\n"):
+        raise AuditError(f"{label} violates canonical CSV")
+    return payload
+
+
+def decode_a2_canonical_model_price_csv(payload: bytes, *, label: str) -> pd.DataFrame:
+    if not payload or payload.startswith(b"\xef\xbb\xbf") or b"\r" in payload or not payload.endswith(b"\n"):
+        raise AuditError(f"{label} is not canonical CSV")
+    try:
+        payload.decode("utf-8", errors="strict")
+        decoded = pd.read_csv(
+            io.BytesIO(payload),
+            dtype={
+                "code": "string", "name": "string", "source_format": "string",
+                **{column: "float64" for column in _MODEL_PRICE_NUMERIC_COLUMNS},
+            },
+            keep_default_na=False,
+            na_values=[""],
+            float_precision="round_trip",
+        )
+    except (UnicodeDecodeError, ValueError, pd.errors.ParserError) as exc:
+        raise AuditError(f"{label} cannot be decoded") from exc
+    if decoded.columns.tolist() != list(MODEL_PRICE_COLUMNS):
+        raise AuditError(f"{label} columns changed")
+    value = _coerce_a2_model_price_frame(decoded, label=label)
+    if _canonical_a2_model_price_csv_bytes(value, label=label) != payload:
+        raise AuditError(f"{label} does not round-trip exactly")
+    return value
 
 
 def _rolling_by_code(
@@ -5620,6 +7527,12 @@ def validate_checkpoint_evidence(
     proposal_root = _require_plain_directory(
         proposal_directory, label="checkpoint proposal directory"
     )
+    proposal_root_metadata = os.stat(proposal_root, follow_symlinks=False)
+    if (
+        proposal_root_metadata.st_uid != os.geteuid()
+        or stat.S_IMODE(proposal_root_metadata.st_mode) != 0o700
+    ):
+        raise AuditError("checkpoint proposal root owner/mode changed")
     proposal_relative_root = str(contract["proposal_directory"])
     expected_sessions = [str(row["session_date"]) for row in decisions]
     if len(expected_sessions) != len(set(expected_sessions)):
@@ -5630,10 +7543,24 @@ def validate_checkpoint_evidence(
     proposal_paths: dict[tuple[str, str], Path] = {}
     for directory in session_entries:
         _require_plain_directory(directory, label="checkpoint proposal session directory")
+        directory_metadata = os.stat(directory, follow_symlinks=False)
+        if (
+            directory_metadata.st_uid != os.geteuid()
+            or stat.S_IMODE(directory_metadata.st_mode) != 0o755
+        ):
+            raise AuditError("checkpoint proposal session owner/mode changed")
         children = sorted(directory.iterdir(), key=lambda item: item.name)
         if [item.name for item in children] != ["primary.json", "safety_cash.json"]:
             raise AuditError("checkpoint proposal pair is incomplete or has extras")
         for path in children:
+            metadata = os.lstat(path)
+            if (
+                not stat.S_ISREG(metadata.st_mode)
+                or metadata.st_uid != os.geteuid()
+                or stat.S_IMODE(metadata.st_mode) != 0o644
+                or metadata.st_nlink != 1
+            ):
+                raise AuditError("checkpoint proposal file owner/mode/link changed")
             _stable_plain_file_bytes(path, label="checkpoint proposal pair member")
             proposal_paths[(directory.name, path.stem)] = path
 
@@ -5667,9 +7594,11 @@ def validate_checkpoint_evidence(
     if post_terminal_commits.intersection(proposal_history):
         raise AuditError("checkpoint proposal path changed after terminal publication")
 
-    protected_paths = list(
-        protocol["activation"]["preregistration_commit"]["required_paths"]
-    )
+    preregistration_contract = protocol["activation"]["preregistration_commit"]
+    protected_paths = [
+        *preregistration_contract["required_paths"],
+        *preregistration_contract["additional_test_artifact_paths"],
+    ]
     if len(protected_paths) != len(set(protected_paths)):
         raise AuditError("checkpoint protected-path registry changed")
     for protected_path in protected_paths:
@@ -5713,7 +7642,10 @@ def validate_checkpoint_evidence(
         ("runtime_lock_path", "runtime_lock_sha256"),
         ("runner_path", "runner_sha256"),
         ("audit_path", "audit_sha256"),
+        ("rehearsal_path", "rehearsal_sha256"),
         ("tests_path", "tests_sha256"),
+        ("iteration_report_path", "iteration_report_sha256"),
+        ("validation_report_path", "validation_report_sha256"),
         ("session_calendar_path", "session_calendar_sha256"),
         ("workflow_path", "workflow_sha256"),
     )
@@ -5721,6 +7653,12 @@ def validate_checkpoint_evidence(
         str(activation_payload[path_field]): str(activation_payload[hash_field])
         for path_field, hash_field in artifact_pairs
     }
+    protected_authority.update(
+        {
+            str(item["path"]): str(item["sha256"])
+            for item in activation_payload["additional_test_artifacts"]
+        }
+    )
     if set(protected_authority) != set(protected_paths):
         raise AuditError("checkpoint activation protected-path authority changed")
     for path, expected_sha256 in protected_authority.items():
@@ -6066,6 +8004,7 @@ def validate_decision_records(
     previous_date: pd.Timestamp | None = None
     month_state: dict[str, tuple[Any, ...]] = {}
     receipt_observation_identity: tuple[str, str, str] | None = None
+    score_session_cumulative: list[dict[str, str]] = []
     for row in rows:
         if OUTCOME_FIELDS & set(row):
             raise AuditError("decision ledger contains outcome fields")
@@ -6259,8 +8198,30 @@ def validate_decision_records(
 
         source_complete = _strict_bool(row["source_complete"], "source_complete")
         model_complete = _strict_bool(row["model_complete"], "model_complete")
-        if model_complete and not source_complete:
-            raise AuditError("model cannot be complete when source is incomplete")
+        if not source_complete or not model_complete:
+            raise AuditError(
+                "counted decisions require complete source/model authority; "
+                "operational failures are integrity aborts"
+            )
+        score_file_sha = _require_nonzero_sha(
+            row["score_session_file_sha256"],
+            "decision score_session_file_sha256",
+        )
+        score_semantic_sha = _require_nonzero_sha(
+            row["score_session_semantic_sha256"],
+            "decision score_session_semantic_sha256",
+        )
+        score_session_cumulative.append(
+            {
+                "session_date": str(session.date()),
+                "file_sha256": score_file_sha,
+                "semantic_sha256": score_semantic_sha,
+            }
+        )
+        if row["score_session_set_sha256"] != canonical_json_sha256(
+            score_session_cumulative
+        ):
+            raise AuditError("decision score-session cumulative set hash changed")
         state_available = _strict_bool(row["state_available"], "state_available")
         decision = str(row["decision"])
         if decision not in DECISION_VALUES:
@@ -6312,47 +8273,16 @@ def validate_decision_records(
         rank1_code = row["c00_rank1_code"]
         rank2_code = row["c02_rank2_code"]
         candidate_code = row["candidate_selected_code"]
-        if source_complete and model_complete:
-            if fold_hash is None:
-                raise AuditError("complete model is missing sealed fold/bundle hashes")
-            if rank1_code is None or rank2_code is None or rank1_code == rank2_code:
-                raise AuditError("complete C00 pair is not two distinct codes")
-            if (
-                _finite_or_none(row["c00_rank1_score"], "c00_rank1_score") is None
-                or _finite_or_none(row["c02_rank2_score"], "c02_rank2_score")
-                is None
-            ):
-                raise AuditError("complete C00 pair has missing scores")
-        else:
-            if any(
-                item is not None
-                for item in (
-                    rank1_code,
-                    rank2_code,
-                    row["c00_rank1_score"],
-                    row["c02_rank2_score"],
-                )
-            ):
-                raise AuditError("incomplete source/model exposed a frozen pair")
-        if not source_complete:
-            if selected_rank is not None:
-                raise AuditError("fail-closed source exposed selected state rank")
-            expected_decision = (
-                "fail_closed_source_empty"
-                if row["failure_reason"] == "source_missing_before_cutoff"
-                else "fail_closed_source_partial"
-            )
-            expected_code = None
-        elif not model_complete:
-            if selected_rank is not None:
-                raise AuditError("fail-closed model exposed selected state rank")
-            expected_decision = (
-                "fail_closed_model_fold"
-                if fold_hash is None
-                else "fail_closed_model_pair"
-            )
-            expected_code = None
-        elif not state_available:
+        if fold_hash is None:
+            raise AuditError("complete model is missing sealed fold/bundle hashes")
+        if rank1_code is None or rank2_code is None or rank1_code == rank2_code:
+            raise AuditError("complete C00 pair is not two distinct codes")
+        if (
+            _finite_or_none(row["c00_rank1_score"], "c00_rank1_score") is None
+            or _finite_or_none(row["c02_rank2_score"], "c02_rank2_score") is None
+        ):
+            raise AuditError("complete C00 pair has missing scores")
+        if not state_available:
             if selected_rank is not None:
                 raise AuditError("unavailable state exposed a selected rank")
             expected_decision, expected_code = "cash_state_unavailable", None
@@ -6392,6 +8322,46 @@ def validate_decision_records(
         if state_identity != prior:
             raise AuditError("target-month state changed intramonth")
     return rows
+
+
+def _validate_external_roots_disjoint(
+    roots: Mapping[str, str | Path],
+) -> dict[str, Path]:
+    """Validate the four operational stores without enumerating their contents."""
+
+    resolved: dict[str, Path] = {}
+    identities: dict[tuple[int, int], str] = {}
+    repository = ROOT.resolve()
+    for label, raw in roots.items():
+        candidate = Path(raw).absolute()
+        if candidate.is_symlink():
+            raise AuditError(f"{label} root is a symlink")
+        try:
+            value = candidate.resolve(strict=True)
+            metadata = os.stat(candidate, follow_symlinks=False)
+        except OSError as exc:
+            raise AuditError(f"{label} root is unavailable") from exc
+        if (
+            not stat.S_ISDIR(metadata.st_mode)
+            or metadata.st_uid != os.geteuid()
+            or stat.S_IMODE(metadata.st_mode) & 0o022
+            or value == repository
+            or repository in value.parents
+        ):
+            raise AuditError(f"{label} root owner/mode/location changed")
+        identity = (int(metadata.st_dev), int(metadata.st_ino))
+        prior = identities.setdefault(identity, label)
+        if prior != label:
+            raise AuditError(f"external roots alias: {prior} and {label}")
+        resolved[label] = value
+    pairs = list(resolved.items())
+    for index, (left_label, left) in enumerate(pairs):
+        for right_label, right in pairs[index + 1 :]:
+            if left in right.parents or right in left.parents:
+                raise AuditError(
+                    f"external roots overlap: {left_label} and {right_label}"
+                )
+    return resolved
 
 
 def _read_external_object_bytes(
@@ -6434,14 +8404,35 @@ def _read_external_object_bytes(
     try:
         current_fd = os.open(root_input, directory_flags)
         descriptors.append(current_fd)
+        root_metadata = os.fstat(current_fd)
+        if (
+            not stat.S_ISDIR(root_metadata.st_mode)
+            or root_metadata.st_uid != os.geteuid()
+            or stat.S_IMODE(root_metadata.st_mode) & 0o022
+        ):
+            raise AuditError("external evidence-store root owner/mode changed")
         for component in key_path.parts[:-1]:
             current_fd = os.open(component, directory_flags, dir_fd=current_fd)
             descriptors.append(current_fd)
+            directory_metadata = os.fstat(current_fd)
+            if (
+                not stat.S_ISDIR(directory_metadata.st_mode)
+                or directory_metadata.st_uid != os.geteuid()
+                or stat.S_IMODE(directory_metadata.st_mode) & 0o022
+            ):
+                raise AuditError("external evidence-store parent owner/mode changed")
         object_fd = os.open(key_path.parts[-1], file_flags, dir_fd=current_fd)
         descriptors.append(object_fd)
         metadata = os.fstat(object_fd)
-        if not stat.S_ISREG(metadata.st_mode) or metadata.st_nlink != 1:
-            raise AuditError("external raw object is not a single-link regular file")
+        if (
+            not stat.S_ISREG(metadata.st_mode)
+            or metadata.st_uid != os.geteuid()
+            or stat.S_IMODE(metadata.st_mode) != 0o600
+            or metadata.st_nlink != 1
+        ):
+            raise AuditError(
+                "external referenced object is not private single-link regular"
+            )
         if identity_registry is not None:
             identity = (int(metadata.st_dev), int(metadata.st_ino))
             prior_key = identity_registry.setdefault(identity, object_key)
@@ -6458,15 +8449,28 @@ def _read_external_object_bytes(
         after = os.fstat(object_fd)
         if (
             after.st_nlink != 1
-            or (after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns)
+            or (
+                after.st_dev,
+                after.st_ino,
+                after.st_uid,
+                stat.S_IMODE(after.st_mode),
+                after.st_nlink,
+                after.st_size,
+                after.st_mtime_ns,
+                after.st_ctime_ns,
+            )
             != (
                 metadata.st_dev,
                 metadata.st_ino,
+                metadata.st_uid,
+                stat.S_IMODE(metadata.st_mode),
+                metadata.st_nlink,
                 metadata.st_size,
                 metadata.st_mtime_ns,
+                metadata.st_ctime_ns,
             )
         ):
-            raise AuditError("external raw object changed while pinned")
+            raise AuditError("external referenced object changed while pinned")
         return b"".join(chunks)
     except AuditError:
         raise
@@ -6480,6 +8484,1337 @@ def _read_external_object_bytes(
                 os.close(descriptor)
             except OSError:
                 pass
+
+
+def _read_external_canonical_json(
+    root: str | Path,
+    object_key: str,
+    *,
+    required_prefix: str,
+    label: str,
+    identity_registry: dict[tuple[int, int], str] | None = None,
+) -> tuple[dict[str, Any], bytes]:
+    payload = _read_external_object_bytes(
+        root,
+        object_key,
+        required_prefix=required_prefix,
+        identity_registry=identity_registry,
+    )
+    value = _parse_json_object_bytes(payload, label=label)
+    if canonical_json_file_bytes(value) != payload:
+        raise AuditError(f"{label} bytes are not canonical JSON")
+    return value, payload
+
+
+def _official_jpx_url_label(value: Any, *, label: str) -> str:
+    token = str(value)
+    parsed = urlparse(token)
+    if (
+        parsed.scheme != "https"
+        or parsed.hostname != "www.jpx.co.jp"
+        or parsed.netloc != "www.jpx.co.jp"
+        or parsed.username is not None
+        or parsed.password is not None
+        or not parsed.path.startswith("/")
+        or parsed.query
+        or parsed.fragment
+        or parsed.params
+        or "%" in parsed.path
+        or "//" in parsed.path
+        or any(part in {".", ".."} for part in parsed.path.split("/"))
+    ):
+        raise AuditError(f"{label} is not an operator-attested JPX URL label")
+    return token
+
+
+def _official_jpx_daily_url_label(
+    value: Any, *, file_name: Any, source_session: Any, label: str
+) -> str:
+    token = _official_jpx_url_label(value, label=label)
+    session = pd.Timestamp(source_session).normalize()
+    expected_file = f"stq_{session:%Y%m%d}.pdf"
+    if str(file_name) != expected_file:
+        raise AuditError(f"{label} filename/date binding changed")
+    pattern = re.compile(
+        r"^/markets/statistics-equities/daily/[a-z0-9]+-att/"
+        + re.escape(expected_file)
+        + r"$"
+    )
+    if pattern.fullmatch(urlparse(token).path) is None:
+        raise AuditError(f"{label} path is not the canonical daily URL label")
+    return token
+
+
+def _raw_source_provenance_envelope() -> dict[str, Any]:
+    return {
+        "mode": RAW_SOURCE_PROVENANCE_MODE,
+        "official_source_verified": False,
+        "caveat_id": RAW_SOURCE_PROVENANCE_CAVEAT_ID,
+        "caveat_text_sha256": RAW_SOURCE_PROVENANCE_CAVEAT_SHA256,
+    }
+
+
+def _a2_pdftotext_contract(runtime_lock: Mapping[str, Any]) -> dict[str, str]:
+    closure = runtime_lock["elf_closure"]
+    environment_contract = closure["external_process_environment"]
+    common = environment_contract["common_exact"]
+    extra = environment_contract["pdftotext_exact_extra"]
+    if set(common) & set(extra):
+        raise AuditError("pdftotext environment contract overlaps")
+    environment = {str(key): str(value) for key, value in {**common, **extra}.items()}
+    executable = str(runtime_lock["pdftotext"]["executable_path"])
+    argv_environment = {
+        "argv": [executable, "-layout", "{source}", "{target}"],
+        "environment": environment,
+        "shell": False,
+        "stdin": "DEVNULL",
+    }
+    return {
+        "file_sha256": str(runtime_lock["pdftotext"]["executable_sha256"]),
+        "elf_closure_sha256": canonical_json_sha256(closure),
+        "argv_environment_contract_sha256": canonical_json_sha256(argv_environment),
+    }
+
+
+def _a2_shard_identity(
+    raw_record: Mapping[str, Any],
+    *,
+    protocol: Mapping[str, Any],
+    runtime_lock: Mapping[str, Any],
+) -> tuple[str, str, str]:
+    parser = protocol["source_contract"]["forward_daily"]
+    converter = _a2_pdftotext_contract(runtime_lock)
+    identity = {
+        "cache_contract_id": PREDICTOR_CACHE_CONTRACT_ID,
+        "official_source_file_name": str(raw_record["file"]),
+        "official_source_url": str(raw_record["url"]),
+        "raw_byte_count": int(raw_record["byte_count"]),
+        "raw_sha256": str(raw_record["sha256"]),
+        "parser_path": parser["parser_path"],
+        "parser_version": parser["parser_version"],
+        "parser_sha256": parser["parser_sha256"],
+        "pdftotext_file_sha256": converter["file_sha256"],
+        "pdftotext_elf_closure_sha256": converter["elf_closure_sha256"],
+        "pdftotext_argv_environment_contract_sha256": converter[
+            "argv_environment_contract_sha256"
+        ],
+        "runtime_lock_sha256": RUNTIME_LOCK_SHA256,
+        "columns_sha256": canonical_json_sha256(list(PARSED_PANEL_COLUMNS)),
+        "canonical_jsonl_contract": PARSED_SHARD_JSONL_CONTRACT,
+    }
+    token = canonical_json_sha256(identity)
+    return (
+        token,
+        f"{PREDICTOR_SHARD_OBJECT_PREFIX}{token}.jsonl",
+        f"{PREDICTOR_SHARD_OBJECT_PREFIX}{token}.manifest.json",
+    )
+
+
+def _reparse_predictor_raw_objects_once(
+    raw_records: Sequence[Mapping[str, Any]],
+    *,
+    predictor_raw_store_root: str | Path,
+    external_identity_registry: dict[tuple[int, int], str],
+) -> dict[str, dict[str, Any]]:
+    """Reparse every unique referenced PDF exactly once through locked tooling."""
+
+    try:
+        from tse_session_ranker.data.jpx import collect_jpx
+    except Exception as exc:  # pragma: no cover - installation integrity
+        raise AuditError("independent JPX parser is unavailable") from exc
+    output: dict[str, dict[str, Any]] = {}
+    with tempfile.TemporaryDirectory(prefix="v18-a2-audit-") as temporary:
+        temporary_root = Path(temporary)
+        for index, raw in enumerate(raw_records):
+            key = str(raw["object_key"])
+            if key in output:
+                raise AuditError("predictor raw object key is duplicated")
+            payload = _read_external_object_bytes(
+                predictor_raw_store_root,
+                key,
+                required_prefix=PREDICTOR_OBJECT_PREFIX,
+                identity_registry=external_identity_registry,
+            )
+            if (
+                len(payload) != int(raw["byte_count"])
+                or hashlib.sha256(payload).hexdigest() != raw["sha256"]
+                or not payload.startswith(b"%PDF")
+            ):
+                raise AuditError("predictor raw object bytes differ from its binding")
+            file_name = str(raw["file"])
+            source_parent = temporary_root / f"{index:04d}"
+            source_parent.mkdir(mode=0o700)
+            source = source_parent / file_name
+            target = source.with_suffix(".txt")
+            source.write_bytes(payload)
+            _locked_pdf_to_text(source, target)
+            text_payload = _stable_plain_file_bytes(
+                target, label="independent pdftotext output"
+            )
+            try:
+                frame, report = collect_jpx([target])
+            except Exception as exc:
+                raise AuditError("predictor raw object could not be reparsed") from exc
+            if not isinstance(report, Mapping):
+                raise AuditError("predictor parser report is not a mapping")
+            inputs = report.get("inputs")
+            if not isinstance(inputs, list) or len(inputs) != 1:
+                raise AuditError("predictor parser report input cardinality changed")
+            parser_input = dict(inputs[0])
+            if int(parser_input.get("rejected_rows", -1)) != 0:
+                raise AuditError("predictor parser rejected a row")
+            text_hash = hashlib.sha256(text_payload).hexdigest()
+            if str(parser_input.get("sha256")) != text_hash:
+                raise AuditError("predictor parser report text hash changed")
+            parser_input["path"] = Path(file_name).with_suffix(".txt").name
+            report_projection = {**dict(report), "inputs": [parser_input]}
+            canonical_frame = _coerce_a2_jsonl_frame(
+                frame, PARSED_PANEL_COLUMNS, label="independent raw parse"
+            )
+            output[key] = {
+                "frame": canonical_frame,
+                "pdftotext_text_byte_count": len(text_payload),
+                "pdftotext_text_sha256": text_hash,
+                "parser_report_sha256": canonical_json_sha256(report_projection),
+            }
+    return output
+
+
+def _validate_a2_parsed_shard_binding(
+    raw_record: Mapping[str, Any],
+    binding: Mapping[str, Any],
+    direct: Mapping[str, Any],
+    *,
+    chronology_class: str,
+    protocol: Mapping[str, Any],
+    runtime_lock: Mapping[str, Any],
+    runner_sha256: str,
+    predictor_derived_store_root: str | Path,
+    external_identity_registry: dict[tuple[int, int], str],
+) -> tuple[dict[str, Any], pd.DataFrame]:
+    if set(binding) != set(PARSED_SHARD_BINDING_FIELDS):
+        raise AuditError("parsed-shard binding fields changed")
+    _, data_key, manifest_key = _a2_shard_identity(
+        raw_record, protocol=protocol, runtime_lock=runtime_lock
+    )
+    expected_binding_raw = {
+        "raw_object_key": raw_record["object_key"],
+        "raw_file": raw_record["file"],
+        "raw_url": raw_record["url"],
+        "raw_byte_count": int(raw_record["byte_count"]),
+        "raw_sha256": raw_record["sha256"],
+        "shard_manifest_object_key": manifest_key,
+        "shard_object_key": data_key,
+    }
+    if any(binding[field] != expected for field, expected in expected_binding_raw.items()):
+        raise AuditError("parsed-shard binding raw/key identity changed")
+    manifest, manifest_payload = _read_external_canonical_json(
+        predictor_derived_store_root,
+        manifest_key,
+        required_prefix=PREDICTOR_SHARD_OBJECT_PREFIX,
+        label="parsed-shard manifest",
+        identity_registry=external_identity_registry,
+    )
+    if set(manifest) != set(PARSED_SHARD_MANIFEST_FIELDS):
+        raise AuditError("parsed-shard manifest fields changed")
+    parser = protocol["source_contract"]["forward_daily"]
+    converter = _a2_pdftotext_contract(runtime_lock)
+    source_file = str(raw_record["file"])
+    source_kind = "daily" if source_file.startswith("stq_") else "price_warmup"
+    source_date = _predictor_source_date(source_file, source_kind)
+    official_url = (
+        _official_jpx_daily_url_label(
+            raw_record["url"],
+            file_name=source_file,
+            source_session=source_date,
+            label="parsed-shard official URL label",
+        )
+        if source_kind == "daily"
+        else _official_jpx_url_label(
+            raw_record["url"], label="parsed-shard official URL label"
+        )
+    )
+    fixed = {
+        "schema_version": 1,
+        "cache_contract_id": PREDICTOR_CACHE_CONTRACT_ID,
+        "official_source_file_name": source_file,
+        "official_source_url": official_url,
+        "raw_byte_count": int(raw_record["byte_count"]),
+        "raw_sha256": raw_record["sha256"],
+        "chronology_class": chronology_class,
+        "parser_path": parser["parser_path"],
+        "parser_version": parser["parser_version"],
+        "parser_sha256": parser["parser_sha256"],
+        "pdftotext_file_sha256": converter["file_sha256"],
+        "pdftotext_elf_closure_sha256": converter["elf_closure_sha256"],
+        "pdftotext_argv_environment_contract_sha256": converter[
+            "argv_environment_contract_sha256"
+        ],
+        "runtime_lock_sha256": RUNTIME_LOCK_SHA256,
+        "data_object_key": data_key,
+        "columns": list(PARSED_PANEL_COLUMNS),
+        "columns_sha256": canonical_json_sha256(list(PARSED_PANEL_COLUMNS)),
+        "canonical_jsonl_contract": PARSED_SHARD_JSONL_CONTRACT,
+    }
+    if any(manifest[field] != expected for field, expected in fixed.items()):
+        raise AuditError("parsed-shard manifest fixed binding changed")
+    if chronology_class == "anchor":
+        if manifest["raw_received_at"] is not None:
+            raise AuditError("anchor parsed shard has a forward receipt")
+    elif chronology_class == "forward":
+        if manifest["raw_received_at"] is None:
+            raise AuditError("forward parsed shard lacks a receipt")
+    else:
+        raise AuditError("parsed-shard chronology class is unregistered")
+    verified = _aware_timestamp(
+        manifest["runtime_lock_verified_at"], "parsed shard runtime verified"
+    )
+    created = _aware_timestamp(manifest["created_at"], "parsed shard created")
+    sealed = _aware_timestamp(manifest["sealed_at"], "parsed shard sealed")
+    if verified > created or created > sealed:
+        raise AuditError("parsed-shard timestamp DAG changed")
+    if manifest["raw_received_at"] is not None and _aware_timestamp(
+        manifest["raw_received_at"], "parsed shard receipt"
+    ) > created:
+        raise AuditError("parsed shard predates its raw receipt")
+    if manifest["manifest_sha256"] != canonical_json_sha256(
+        manifest, exclude_fields={"manifest_sha256"}
+    ):
+        raise AuditError("parsed-shard manifest self-hash changed")
+    data_payload = _read_external_object_bytes(
+        predictor_derived_store_root,
+        data_key,
+        required_prefix=PREDICTOR_SHARD_OBJECT_PREFIX,
+        identity_registry=external_identity_registry,
+    )
+    if (
+        len(data_payload) != int(manifest["data_byte_count"])
+        or hashlib.sha256(data_payload).hexdigest() != manifest["data_sha256"]
+    ):
+        raise AuditError("parsed-shard data bytes changed")
+    frame = decode_a2_canonical_frame_jsonl(
+        data_payload, PARSED_PANEL_COLUMNS, label="parsed-shard data"
+    )
+    direct_frame = _coerce_a2_jsonl_frame(
+        direct["frame"], PARSED_PANEL_COLUMNS, label="direct raw parse"
+    )
+    if not frame.equals(direct_frame):
+        raise AuditError("parsed shard differs exactly from direct raw reparse")
+    dates = pd.to_datetime(frame["date"], errors="coerce")
+    expected_values = {
+        "row_count": len(frame),
+        "unique_date_count": int(dates.nunique()),
+        "duplicate_date_code_count": int(
+            frame[["date", "code"]].duplicated(keep=False).sum()
+        ),
+        "min_date": str(dates.min().date()),
+        "max_date": str(dates.max().date()),
+        "parsed_semantic_sha256": semantic_rows_sha256(
+            frame, PARSED_PANEL_COLUMNS
+        ),
+        "pdftotext_text_byte_count": int(direct["pdftotext_text_byte_count"]),
+        "pdftotext_text_sha256": direct["pdftotext_text_sha256"],
+        "parser_report_sha256": direct["parser_report_sha256"],
+        "rejected_row_count": 0,
+    }
+    if any(manifest[field] != expected for field, expected in expected_values.items()):
+        raise AuditError("parsed-shard decoded/parser binding changed")
+    if source_kind == "daily":
+        if not dates.eq(source_date).all() or int(dates.nunique()) != 1:
+            raise AuditError("daily parsed-shard filename/date binding changed")
+    elif not dates.dt.to_period("M").eq(source_date.to_period("M")).all():
+        raise AuditError("monthly parsed-shard filename/month binding changed")
+    expected_binding = {
+        **expected_binding_raw,
+        "shard_manifest_byte_count": len(manifest_payload),
+        "shard_manifest_file_sha256": hashlib.sha256(manifest_payload).hexdigest(),
+        "shard_manifest_sha256": manifest["manifest_sha256"],
+        "shard_byte_count": len(data_payload),
+        "shard_sha256": hashlib.sha256(data_payload).hexdigest(),
+        "parsed_row_count": len(frame),
+        "parsed_semantic_sha256": manifest["parsed_semantic_sha256"],
+        "pdftotext_text_byte_count": manifest["pdftotext_text_byte_count"],
+        "pdftotext_text_sha256": manifest["pdftotext_text_sha256"],
+        "parser_report_sha256": manifest["parser_report_sha256"],
+    }
+    if dict(binding) != expected_binding:
+        raise AuditError("parsed-shard binding differs from referenced objects")
+    del runner_sha256  # runner is bound by enclosing anchor/source manifests.
+    return manifest, frame
+
+
+def _a2_month(value: Any, label: str) -> pd.Period:
+    try:
+        observed = pd.Period(str(value), freq="M")
+    except (TypeError, ValueError) as exc:
+        raise AuditError(f"{label} is not YYYY-MM") from exc
+    if str(observed) != str(value):
+        raise AuditError(f"{label} is not canonical YYYY-MM")
+    return observed
+
+
+def _a2_date(value: Any, label: str) -> pd.Timestamp:
+    try:
+        observed = pd.Timestamp(value)
+    except (TypeError, ValueError) as exc:
+        raise AuditError(f"{label} is not a date") from exc
+    if observed.tzinfo is not None:
+        observed = observed.tz_convert("Asia/Tokyo").tz_localize(None)
+    if observed != observed.normalize() or (
+        isinstance(value, str) and str(observed.date()) != value
+    ):
+        raise AuditError(f"{label} is not canonical YYYY-MM-DD")
+    return observed
+
+
+def _a2_latest_source_before_month(month: pd.Period) -> pd.Timestamp:
+    calendar = load_registered_calendar()
+    eligible = calendar[calendar < month.start_time]
+    if eligible.empty:
+        raise AuditError("registered calendar lacks the prior-month source session")
+    return pd.Timestamp(eligible[-1]).normalize()
+
+
+def _a2_parsed_shard_set_sha256(
+    bindings: Sequence[Mapping[str, Any]],
+) -> str:
+    records = [dict(item) for item in bindings]
+    if any(set(item) != set(PARSED_SHARD_BINDING_FIELDS) for item in records):
+        raise AuditError("parsed-shard binding set schema changed")
+    return canonical_json_sha256(records)
+
+
+def _a2_model_snapshot_identity(
+    *,
+    target_month: pd.Period,
+    latest_source_session: pd.Timestamp,
+    raw_source_set_sha256: str,
+    parsed_shard_set_sha256: str,
+    previous_snapshot_manifest_sha256: str | None,
+    protocol: Mapping[str, Any],
+    runner_sha256: str,
+) -> tuple[str, str, str]:
+    parser = protocol["source_contract"]["forward_daily"]
+    identity = {
+        "cache_contract_id": PREDICTOR_CACHE_CONTRACT_ID,
+        "target_month": str(target_month),
+        "latest_source_session": str(latest_source_session.date()),
+        "raw_source_set_sha256": raw_source_set_sha256,
+        "parsed_shard_set_sha256": parsed_shard_set_sha256,
+        "previous_snapshot_manifest_sha256": previous_snapshot_manifest_sha256,
+        "columns_sha256": canonical_json_sha256(list(MODEL_PRICE_COLUMNS)),
+        "runtime_lock_sha256": RUNTIME_LOCK_SHA256,
+        "protocol_sha256": PROTOCOL_SHA256,
+        "runner_sha256": runner_sha256,
+        "parser_sha256": parser["parser_sha256"],
+        "canonical_csv_contract": MODEL_PRICE_CSV_CONTRACT,
+    }
+    token = canonical_json_sha256(identity)
+    return (
+        token,
+        f"{MODEL_PRICE_SNAPSHOT_OBJECT_PREFIX}{target_month}/{token}.csv",
+        f"{MODEL_PRICE_SNAPSHOT_OBJECT_PREFIX}{target_month}/{token}.manifest.json",
+    )
+
+
+def _validate_a2_model_snapshot_manifest(
+    manifest: Mapping[str, Any],
+    *,
+    predictor_derived_store_root: str | Path,
+    expected_target_month: Any,
+    expected_latest_source_session: Any,
+    expected_raw_source_set_sha256: str,
+    expected_parsed_shard_set_sha256: str,
+    protocol: Mapping[str, Any],
+    runner_sha256: str,
+    external_identity_registry: dict[tuple[int, int], str],
+    expected_frame: pd.DataFrame | None = None,
+    _visited: set[str] | None = None,
+) -> tuple[dict[str, Any], pd.DataFrame, str, bytes]:
+    value = dict(manifest)
+    if set(value) != set(MODEL_PRICE_SNAPSHOT_FIELDS):
+        raise AuditError("model-price snapshot fields changed")
+    month = _a2_month(expected_target_month, "model-price target month")
+    latest = _a2_date(expected_latest_source_session, "model-price latest source")
+    parser_sha = protocol["source_contract"]["forward_daily"]["parser_sha256"]
+    fixed = {
+        "schema_version": 1,
+        "cache_contract_id": PREDICTOR_CACHE_CONTRACT_ID,
+        "target_month": str(month),
+        "latest_source_session": str(latest.date()),
+        "raw_source_set_sha256": expected_raw_source_set_sha256,
+        "parsed_shard_set_sha256": expected_parsed_shard_set_sha256,
+        "columns": list(MODEL_PRICE_COLUMNS),
+        "columns_sha256": canonical_json_sha256(list(MODEL_PRICE_COLUMNS)),
+        "runtime_lock_sha256": RUNTIME_LOCK_SHA256,
+        "protocol_sha256": PROTOCOL_SHA256,
+        "runner_sha256": runner_sha256,
+        "parser_sha256": parser_sha,
+        "canonical_csv_contract": MODEL_PRICE_CSV_CONTRACT,
+    }
+    if any(value[field] != expected for field, expected in fixed.items()):
+        raise AuditError("model-price snapshot fixed binding changed")
+    previous = value["previous_snapshot_manifest_sha256"]
+    predecessor_fields = (
+        "previous_snapshot_target_month",
+        "previous_snapshot_latest_source_session",
+        "previous_snapshot_manifest_object_key",
+        "previous_snapshot_manifest_byte_count",
+        "previous_snapshot_manifest_file_sha256",
+        "previous_snapshot_raw_source_count",
+        "previous_snapshot_raw_source_set_sha256",
+        "previous_snapshot_parsed_shard_set_sha256",
+    )
+    visited = set() if _visited is None else _visited
+    self_hash = value.get("snapshot_manifest_sha256")
+    _require_nonzero_sha(self_hash, "model-price snapshot self hash")
+    if self_hash in visited:
+        raise AuditError("model-price snapshot predecessor cycle detected")
+    visited.add(str(self_hash))
+    previous_value: dict[str, Any] | None = None
+    if previous is None:
+        if any(value[field] is not None for field in predecessor_fields):
+            raise AuditError("initial model-price snapshot has predecessor details")
+    else:
+        _require_nonzero_sha(previous, "model-price predecessor self hash")
+        if any(value[field] is None for field in predecessor_fields):
+            raise AuditError("model-price snapshot predecessor details are incomplete")
+        prior_month = _a2_month(
+            value["previous_snapshot_target_month"], "model-price predecessor month"
+        )
+        prior_latest = _a2_date(
+            value["previous_snapshot_latest_source_session"],
+            "model-price predecessor latest source",
+        )
+        if prior_month != month - 1 or prior_latest != _a2_latest_source_before_month(
+            prior_month
+        ):
+            raise AuditError("model-price predecessor is not the immediate month")
+        prior_manifest, prior_payload = _read_external_canonical_json(
+            predictor_derived_store_root,
+            value["previous_snapshot_manifest_object_key"],
+            required_prefix=MODEL_PRICE_SNAPSHOT_OBJECT_PREFIX,
+            label="model-price predecessor manifest",
+            identity_registry=external_identity_registry,
+        )
+        if (
+            len(prior_payload) != int(value["previous_snapshot_manifest_byte_count"])
+            or hashlib.sha256(prior_payload).hexdigest()
+            != value["previous_snapshot_manifest_file_sha256"]
+            or prior_manifest.get("snapshot_manifest_sha256") != previous
+            or int(prior_manifest.get("raw_source_count", -1))
+            != int(value["previous_snapshot_raw_source_count"])
+            or prior_manifest.get("raw_source_set_sha256")
+            != value["previous_snapshot_raw_source_set_sha256"]
+            or prior_manifest.get("parsed_shard_set_sha256")
+            != value["previous_snapshot_parsed_shard_set_sha256"]
+        ):
+            raise AuditError("model-price predecessor exact binding changed")
+        previous_value, _, prior_key, _ = _validate_a2_model_snapshot_manifest(
+            prior_manifest,
+            predictor_derived_store_root=predictor_derived_store_root,
+            expected_target_month=prior_month,
+            expected_latest_source_session=prior_latest,
+            expected_raw_source_set_sha256=value[
+                "previous_snapshot_raw_source_set_sha256"
+            ],
+            expected_parsed_shard_set_sha256=value[
+                "previous_snapshot_parsed_shard_set_sha256"
+            ],
+            protocol=protocol,
+            runner_sha256=runner_sha256,
+            external_identity_registry=external_identity_registry,
+            _visited=visited,
+        )
+        if prior_key != value["previous_snapshot_manifest_object_key"]:
+            raise AuditError("model-price predecessor manifest key changed")
+    _, data_key, manifest_key = _a2_model_snapshot_identity(
+        target_month=month,
+        latest_source_session=latest,
+        raw_source_set_sha256=expected_raw_source_set_sha256,
+        parsed_shard_set_sha256=expected_parsed_shard_set_sha256,
+        previous_snapshot_manifest_sha256=previous,
+        protocol=protocol,
+        runner_sha256=runner_sha256,
+    )
+    if value["data_object_key"] != data_key:
+        raise AuditError("model-price snapshot data key is caller-selectable")
+    if self_hash != canonical_json_sha256(
+        value, exclude_fields={"snapshot_manifest_sha256"}
+    ):
+        raise AuditError("model-price snapshot self hash changed")
+    verified = _aware_timestamp(
+        value["runtime_lock_verified_at"], "model-price runtime verified"
+    )
+    created = _aware_timestamp(value["created_at"], "model-price created")
+    sealed = _aware_timestamp(value["sealed_at"], "model-price sealed")
+    if verified > created or created > sealed:
+        raise AuditError("model-price snapshot timestamp DAG changed")
+    if previous_value is not None and _aware_timestamp(
+        previous_value["sealed_at"], "model-price predecessor sealed"
+    ) > created:
+        raise AuditError("model-price snapshot predates its predecessor")
+    for field in ("raw_source_count", "parsed_row_count", "row_count"):
+        if isinstance(value[field], bool) or int(value[field]) <= 0:
+            raise AuditError(f"model-price snapshot {field} is not positive")
+    payload = _read_external_object_bytes(
+        predictor_derived_store_root,
+        data_key,
+        required_prefix=MODEL_PRICE_SNAPSHOT_OBJECT_PREFIX,
+        identity_registry=external_identity_registry,
+    )
+    if (
+        len(payload) != int(value["data_byte_count"])
+        or hashlib.sha256(payload).hexdigest() != value["data_sha256"]
+    ):
+        raise AuditError("model-price snapshot data bytes changed")
+    frame = decode_a2_canonical_model_price_csv(payload, label="model-price snapshot")
+    dates = pd.to_datetime(frame["date"], errors="coerce")
+    observed = {
+        "row_count": len(frame),
+        "parsed_row_count": len(frame),
+        "unique_date_count": int(dates.nunique()),
+        "duplicate_date_code_count": int(
+            frame[["date", "code"]].duplicated(keep=False).sum()
+        ),
+        "model_price_semantic_sha256": semantic_rows_sha256(
+            frame, MODEL_PRICE_COLUMNS
+        ),
+    }
+    if any(value[field] != expected for field, expected in observed.items()):
+        raise AuditError("model-price snapshot decoded claims changed")
+    if dates.max().normalize() != latest or dates.ge(month.start_time).any():
+        raise AuditError("model-price snapshot is not the exact M-1 prefix")
+    if expected_frame is not None:
+        exact_expected = _coerce_a2_model_price_frame(
+            expected_frame, label="direct model-price projection"
+        )
+        if not frame.equals(exact_expected):
+            raise AuditError("model-price snapshot differs from direct raw projection")
+    visited.remove(str(self_hash))
+    return value, frame, manifest_key, canonical_json_file_bytes(value)
+
+
+def _a2_g0_cache_identity(
+    *,
+    target_session: pd.Timestamp,
+    latest_source_session: pd.Timestamp,
+    source_set_sha256: str,
+    parsed_shard_set_sha256: str,
+    protocol: Mapping[str, Any],
+    runner_sha256: str,
+) -> tuple[str, str, str]:
+    prior = protocol["prior_result_binding"]["v17"]
+    parser_sha = protocol["source_contract"]["forward_daily"]["parser_sha256"]
+    identity = {
+        "cache_contract_id": PREDICTOR_CACHE_CONTRACT_ID,
+        "scope": "target_slice",
+        "target_session": str(target_session.date()),
+        "latest_required_source_session": str(latest_source_session.date()),
+        "source_set_sha256": source_set_sha256,
+        "parsed_shard_set_sha256": parsed_shard_set_sha256,
+        "columns_sha256": canonical_json_sha256(list(G0_PANEL_COLUMNS)),
+        "v17_protocol_sha256": prior["protocol_sha256"],
+        "v17_runner_sha256": prior["runner_sha256"],
+        "runtime_lock_sha256": RUNTIME_LOCK_SHA256,
+        "protocol_sha256": PROTOCOL_SHA256,
+        "runner_sha256": runner_sha256,
+        "parser_sha256": parser_sha,
+        "canonical_jsonl_contract": G0_CACHE_JSONL_CONTRACT,
+    }
+    token = canonical_json_sha256(identity)
+    return (
+        token,
+        f"{G0_PANEL_CACHE_OBJECT_PREFIX}target-slice/{token}.jsonl",
+        f"{G0_PANEL_CACHE_OBJECT_PREFIX}target-slice/{token}.manifest.json",
+    )
+
+
+def _validate_a2_g0_cache_manifest(
+    manifest: Mapping[str, Any],
+    *,
+    predictor_derived_store_root: str | Path,
+    expected_target_session: Any,
+    expected_latest_source_session: Any,
+    expected_source_set_sha256: str,
+    expected_parsed_shard_set_sha256: str,
+    expected_parsed_row_count: int,
+    protocol: Mapping[str, Any],
+    runner_sha256: str,
+    external_identity_registry: dict[tuple[int, int], str],
+    expected_target_frame: pd.DataFrame | None = None,
+) -> tuple[dict[str, Any], pd.DataFrame, str, bytes]:
+    value = dict(manifest)
+    if set(value) != set(G0_CACHE_MANIFEST_FIELDS):
+        raise AuditError("G0 target-slice manifest fields changed")
+    target = _a2_date(expected_target_session, "G0 target session")
+    latest = _a2_date(expected_latest_source_session, "G0 latest source")
+    if latest >= target:
+        raise AuditError("G0 cache source is not strictly before target")
+    prior = protocol["prior_result_binding"]["v17"]
+    parser_sha = protocol["source_contract"]["forward_daily"]["parser_sha256"]
+    fixed = {
+        "schema_version": 1,
+        "cache_contract_id": PREDICTOR_CACHE_CONTRACT_ID,
+        "scope": "target_slice",
+        "target_session": str(target.date()),
+        "latest_required_source_session": str(latest.date()),
+        "source_set_sha256": expected_source_set_sha256,
+        "parsed_shard_set_sha256": expected_parsed_shard_set_sha256,
+        "parsed_row_count": int(expected_parsed_row_count),
+        "columns": list(G0_PANEL_COLUMNS),
+        "columns_sha256": canonical_json_sha256(list(G0_PANEL_COLUMNS)),
+        "v17_protocol_sha256": prior["protocol_sha256"],
+        "v17_runner_sha256": prior["runner_sha256"],
+        "runtime_lock_sha256": RUNTIME_LOCK_SHA256,
+        "protocol_sha256": PROTOCOL_SHA256,
+        "runner_sha256": runner_sha256,
+        "parser_sha256": parser_sha,
+        "canonical_jsonl_contract": G0_CACHE_JSONL_CONTRACT,
+    }
+    if any(value[field] != expected for field, expected in fixed.items()):
+        raise AuditError("G0 target-slice fixed binding changed")
+    _, data_key, manifest_key = _a2_g0_cache_identity(
+        target_session=target,
+        latest_source_session=latest,
+        source_set_sha256=expected_source_set_sha256,
+        parsed_shard_set_sha256=expected_parsed_shard_set_sha256,
+        protocol=protocol,
+        runner_sha256=runner_sha256,
+    )
+    if value["data_object_key"] != data_key:
+        raise AuditError("G0 target-slice data key is caller-selectable")
+    if value["cache_manifest_sha256"] != canonical_json_sha256(
+        value, exclude_fields={"cache_manifest_sha256"}
+    ):
+        raise AuditError("G0 target-slice self hash changed")
+    verified = _aware_timestamp(
+        value["runtime_lock_verified_at"], "G0 cache runtime verified"
+    )
+    created = _aware_timestamp(value["created_at"], "G0 cache created")
+    sealed = _aware_timestamp(value["sealed_at"], "G0 cache sealed")
+    cutoff = _aware_timestamp(
+        f"{target.date()}T08:58:59+09:00", "G0 cache cutoff"
+    )
+    if verified > created or created > sealed or sealed > cutoff:
+        raise AuditError("G0 target-slice timestamp DAG changed")
+    payload = _read_external_object_bytes(
+        predictor_derived_store_root,
+        data_key,
+        required_prefix=G0_PANEL_CACHE_OBJECT_PREFIX,
+        identity_registry=external_identity_registry,
+    )
+    if (
+        len(payload) != int(value["data_byte_count"])
+        or hashlib.sha256(payload).hexdigest() != value["data_sha256"]
+    ):
+        raise AuditError("G0 target-slice data bytes changed")
+    frame = decode_a2_canonical_frame_jsonl(
+        payload, G0_PANEL_COLUMNS, label="G0 target slice"
+    )
+    dates = pd.to_datetime(frame["date"], errors="coerce")
+    feature_dates = pd.to_datetime(
+        frame["feature_source_max_date"], errors="coerce"
+    )
+    if (
+        frame.empty
+        or not dates.eq(target).all()
+        or frame["oc_return_pct"].notna().any()
+        or feature_dates.isna().any()
+        or feature_dates.ge(target).any()
+    ):
+        raise AuditError("G0 target slice exposes outcome/future/non-target rows")
+    scoring_columns = (
+        "date",
+        "code",
+        "name",
+        "common_score_eligible",
+        "feature_source_max_date",
+        *C00_FEATURES,
+    )
+    observed = {
+        "row_count": len(frame),
+        "unique_date_count": 1,
+        "duplicate_date_code_count": int(
+            frame[["date", "code"]].duplicated(keep=False).sum()
+        ),
+        "data_semantic_sha256": semantic_rows_sha256(frame, G0_PANEL_COLUMNS),
+        "target_row_count": len(frame),
+        "target_date_scoring_input_semantic_sha256": semantic_rows_sha256(
+            frame, scoring_columns
+        ),
+        "target_slice_semantic_sha256": semantic_rows_sha256(
+            frame, G0_PANEL_COLUMNS
+        ),
+        "target_outcome_nonnull_count": 0,
+        "max_feature_source_date": str(feature_dates.max().date()),
+    }
+    if any(value[field] != expected for field, expected in observed.items()):
+        raise AuditError("G0 target-slice decoded claims changed")
+    if expected_target_frame is not None:
+        expected = _coerce_a2_jsonl_frame(
+            expected_target_frame, G0_PANEL_COLUMNS, label="direct G0 target slice"
+        )
+        if not frame.equals(expected):
+            raise AuditError("G0 target slice differs from raw-first clean-room panel")
+    return value, frame, manifest_key, canonical_json_file_bytes(value)
+
+
+def _a2_date_code_identity_sha256(frame: pd.DataFrame, *, label: str) -> str:
+    view = frame.loc[:, ["date", "code"]].copy()
+    view["date"] = pd.to_datetime(view["date"], errors="coerce", format="mixed")
+    view["code"] = view["code"].astype("string")
+    if (
+        view["date"].isna().any()
+        or view["code"].isna().any()
+        or view["code"].eq("").any()
+        or view.duplicated().any()
+    ):
+        raise AuditError(f"{label} date/code identity changed")
+    view = view.sort_values(["date", "code"], kind="stable").reset_index(drop=True)
+    digest = hashlib.sha256()
+    dates = view["date"].astype("datetime64[ns]").astype("<i8").to_numpy()
+    for date_bits, code in zip(dates, view["code"].astype(str), strict=True):
+        encoded = code.encode("utf-8", errors="strict")
+        digest.update(struct.pack("<qI", int(date_bits), len(encoded)))
+        digest.update(encoded)
+    return digest.hexdigest()
+
+
+def _a2_exact_g0_frame_digest(frame: pd.DataFrame) -> dict[str, Any]:
+    value = frame.loc[:, list(G0_PANEL_COLUMNS)].copy()
+    value["date"] = pd.to_datetime(value["date"], errors="coerce", format="mixed")
+    value["code"] = value["code"].astype("string")
+    if (
+        value["date"].isna().any()
+        or value["code"].isna().any()
+        or value["code"].eq("").any()
+        or value[["date", "code"]].duplicated().any()
+    ):
+        raise AuditError("compact-consumer G0 identity changed")
+    value = value.sort_values(["date", "code"], kind="stable").reset_index(drop=True)
+    column_digests: list[dict[str, Any]] = []
+    for column in G0_PANEL_COLUMNS:
+        series = value[column]
+        nulls = series.isna().to_numpy(dtype=np.uint8)
+        payload_hash = hashlib.sha256()
+        metadata: dict[str, Any] | None = None
+        if isinstance(series.dtype, pd.CategoricalDtype):
+            metadata = {
+                "ordered": bool(series.dtype.ordered),
+                "categories": [
+                    _a2_semantic_cell(item, column=column)
+                    for item in series.dtype.categories.tolist()
+                ],
+            }
+            payload_hash.update(
+                series.cat.codes.to_numpy(dtype="<i8", copy=True).tobytes(order="C")
+            )
+        elif pd.api.types.is_datetime64_any_dtype(series.dtype):
+            payload_hash.update(
+                pd.to_datetime(series)
+                .astype("datetime64[ns]")
+                .astype("<i8")
+                .to_numpy()
+                .tobytes(order="C")
+            )
+        elif pd.api.types.is_bool_dtype(series.dtype):
+            array = np.zeros(len(series), dtype=np.uint8)
+            present = nulls == 0
+            array[present] = series.loc[present].astype(bool).to_numpy(dtype=np.uint8)
+            payload_hash.update(array.tobytes(order="C"))
+        elif pd.api.types.is_float_dtype(series.dtype):
+            array = series.to_numpy(dtype="<f8", na_value=np.nan, copy=True)
+            array[nulls.astype(bool)] = 0.0
+            payload_hash.update(array.tobytes(order="C"))
+        elif pd.api.types.is_integer_dtype(series.dtype):
+            array = np.zeros(len(series), dtype="<i8")
+            present = nulls == 0
+            array[present] = series.loc[present].astype("int64").to_numpy()
+            payload_hash.update(array.tobytes(order="C"))
+        else:
+            for item, is_null in zip(series.tolist(), nulls, strict=True):
+                if is_null:
+                    payload_hash.update(b"N")
+                    continue
+                encoded = canonical_json_bytes(
+                    {"v": _a2_semantic_cell(item, column=column)}
+                )
+                payload_hash.update(b"V" + struct.pack("<I", len(encoded)))
+                payload_hash.update(encoded)
+        column_digests.append(
+            {
+                "column": column,
+                "dtype": str(series.dtype),
+                "null_bitmap_sha256": hashlib.sha256(
+                    nulls.tobytes(order="C")
+                ).hexdigest(),
+                "value_bytes_sha256": payload_hash.hexdigest(),
+                "dtype_metadata": metadata,
+            }
+        )
+    output: dict[str, Any] = {
+        "columns": list(G0_PANEL_COLUMNS),
+        "row_count": len(value),
+        "row_identity_sha256": _a2_date_code_identity_sha256(
+            value, label="exact G0 digest"
+        ),
+        "column_digests": column_digests,
+    }
+    output["exact_digest_sha256"] = canonical_json_sha256(
+        output, exclude_fields={"exact_digest_sha256"}
+    )
+    return output
+
+
+def _validate_a2_compact_equivalence_receipt(
+    receipt: Mapping[str, Any],
+    *,
+    full_prices: pd.DataFrame,
+    compact_prices: pd.DataFrame,
+) -> dict[str, Any]:
+    value = dict(receipt)
+    if set(value) != set(COMPACT_CONSUMER_EQUIVALENCE_RECEIPT_FIELDS):
+        raise AuditError("compact-consumer receipt fields changed")
+    target = _a2_date(
+        value["synthetic_target_session"], "compact synthetic target"
+    )
+    latest = _a2_date(
+        value["latest_feature_source_session"], "compact latest source"
+    )
+    full = _coerce_a2_jsonl_frame(
+        full_prices, PARSED_PANEL_COLUMNS, label="compact full31 input"
+    )
+    compact = _coerce_a2_model_price_frame(
+        compact_prices, label="compact model-price input"
+    )
+    if not _coerce_a2_model_price_frame(
+        full, label="compact full31 projection"
+    ).equals(compact):
+        raise AuditError("compact model-price input differs from full31 projection")
+    if latest != pd.to_datetime(full["date"]).max().normalize() or latest >= target:
+        raise AuditError("compact-consumer synthetic chronology changed")
+    full_panel = build_clean_room_g0_panel(full, target)
+    compact_panel = build_clean_room_g0_panel(compact, target)
+    full_digest = _a2_exact_g0_frame_digest(full_panel)
+    compact_digest = _a2_exact_g0_frame_digest(compact_panel)
+    target_rows = full_panel.loc[
+        pd.to_datetime(full_panel["date"], errors="coerce").eq(target)
+    ]
+    feature_dates = pd.to_datetime(
+        target_rows["feature_source_max_date"], errors="coerce"
+    )
+    if (
+        target_rows.empty
+        or feature_dates.isna().any()
+        or target_rows["oc_return_pct"].notna().any()
+        or feature_dates.max().normalize() > latest
+    ):
+        raise AuditError(
+            "compact-consumer target exposes no rows, an outcome, or post-D-1 features"
+        )
+    calendar = load_registered_calendar()
+    registry = [str(pd.Timestamp(item).date()) for item in calendar if item <= target]
+    expected = {
+        "schema_version": 1,
+        "consumer_projection_columns": list(MODEL_PRICE_COLUMNS),
+        "consumer_projection_columns_sha256": canonical_json_sha256(
+            list(MODEL_PRICE_COLUMNS)
+        ),
+        "consumer_union_contract_sha256": canonical_json_sha256(
+            {
+                key: sorted(columns)
+                for key, columns in sorted(MODEL_PRICE_REQUIRED_BY_CONSUMERS.items())
+            }
+        ),
+        "raw_date_code_identity_sha256": _a2_date_code_identity_sha256(
+            full, label="compact raw input"
+        ),
+        "historical_session_registry_sha256": canonical_json_sha256(registry),
+        "synthetic_target_session": str(target.date()),
+        "latest_feature_source_session": str(latest.date()),
+        "full_g0_exact_digest": full_digest,
+        "compact_g0_exact_digest": compact_digest,
+        "synthetic_target_exact_digest_sha256": _a2_exact_g0_frame_digest(
+            target_rows
+        )["exact_digest_sha256"],
+        "synthetic_target_row_count": len(target_rows),
+        "synthetic_target_outcome_nonnull_count": int(
+            target_rows["oc_return_pct"].notna().sum()
+        ),
+        "synthetic_target_max_feature_source_date": str(
+            feature_dates.max().date()
+        ),
+        "exact_columns_order_dtypes_nulls_ieee_strings_bools_equal": True,
+        "canonical_json_contract": CANONICAL_JSON_CONTRACT,
+    }
+    expected["receipt_sha256"] = canonical_json_sha256(
+        expected, exclude_fields={"receipt_sha256"}
+    )
+    if full_digest != compact_digest or value != expected:
+        raise AuditError("compact-consumer receipt does not independently recompute")
+    return value
+
+
+def _a2_cache_anchor_identity(
+    *,
+    latest_source_session: pd.Timestamp,
+    raw_source_set_sha256: str,
+    ordered_shard_set_sha256: str,
+    protocol: Mapping[str, Any],
+    runner_sha256: str,
+) -> tuple[str, str, str]:
+    parser_sha = protocol["source_contract"]["forward_daily"]["parser_sha256"]
+    identity = {
+        "cache_contract_id": PREDICTOR_CACHE_CONTRACT_ID,
+        "latest_source_session": str(latest_source_session.date()),
+        "raw_source_set_sha256": raw_source_set_sha256,
+        "ordered_shard_set_sha256": ordered_shard_set_sha256,
+        "columns_sha256": canonical_json_sha256(list(PARSED_PANEL_COLUMNS)),
+        "runtime_lock_sha256": RUNTIME_LOCK_SHA256,
+        "protocol_sha256": PROTOCOL_SHA256,
+        "runner_sha256": runner_sha256,
+        "parser_sha256": parser_sha,
+        "canonical_jsonl_contract": PARSED_SHARD_JSONL_CONTRACT,
+    }
+    token = canonical_json_sha256(identity)
+    return (
+        token,
+        f"{CACHE_ANCHOR_OBJECT_PREFIX}{token}.jsonl",
+        f"{CACHE_ANCHOR_OBJECT_PREFIX}{token}.manifest.json",
+    )
+
+
+def _validate_a2_cache_anchor_summary(summary: Mapping[str, Any]) -> dict[str, Any]:
+    value = dict(summary)
+    if set(value) != set(CACHE_ANCHOR_SUMMARY_FIELDS):
+        raise AuditError("activation cache-anchor summary fields changed")
+    _a2_date(value["latest_source_session"], "cache-anchor summary latest")
+    verified = _aware_timestamp(value["verified_at"], "cache-anchor summary verified")
+    sealed = _aware_timestamp(value["sealed_at"], "cache-anchor summary sealed")
+    if verified > sealed:
+        raise AuditError("cache-anchor summary verification follows seal")
+    for field in (
+        "raw_source_set_sha256",
+        "ordered_shard_set_sha256",
+        "cumulative_snapshot_file_sha256",
+        "cumulative_snapshot_semantic_sha256",
+        "model_price_snapshot_file_sha256",
+        "model_price_snapshot_semantic_sha256",
+        "model_price_snapshot_manifest_file_sha256",
+        "model_price_snapshot_manifest_sha256",
+        "snapshot_manifest_file_sha256",
+        "snapshot_manifest_sha256",
+        "direct_clean_room_verification_receipt_sha256",
+        "compact_consumer_equivalence_receipt_sha256",
+    ):
+        _require_nonzero_sha(value[field], f"cache-anchor summary {field}")
+    for field in (
+        "raw_source_count",
+        "ordered_shard_count",
+        "cumulative_snapshot_byte_count",
+        "model_price_snapshot_byte_count",
+        "model_price_snapshot_manifest_byte_count",
+    ):
+        if isinstance(value[field], bool) or int(value[field]) <= 0:
+            raise AuditError(f"cache-anchor summary {field} is not positive")
+    if int(value["raw_source_count"]) != int(value["ordered_shard_count"]):
+        raise AuditError("cache-anchor summary raw/shard counts differ")
+    return value
+
+
+def _validate_a2_cache_anchor(
+    anchor: Mapping[str, Any],
+    *,
+    payload_summary: Mapping[str, Any],
+    direct_by_key: Mapping[str, Mapping[str, Any]],
+    predictor_derived_store_root: str | Path,
+    protocol: Mapping[str, Any],
+    runtime_lock: Mapping[str, Any],
+    runner_sha256: str,
+    external_identity_registry: dict[tuple[int, int], str],
+) -> tuple[dict[str, Any], dict[str, Any], pd.DataFrame, list[dict[str, Any]]]:
+    value = dict(anchor)
+    if set(value) != set(CACHE_ANCHOR_FIELDS):
+        raise AuditError("predictor cache-anchor fields changed")
+    if value["schema_version"] != 1 or value["cache_contract_id"] != (
+        PREDICTOR_CACHE_CONTRACT_ID
+    ):
+        raise AuditError("predictor cache-anchor schema/contract changed")
+    latest = _a2_date(value["latest_source_session"], "cache-anchor latest")
+    raw_records = value["raw_sources"]
+    bindings = value["parsed_shards"]
+    if not isinstance(raw_records, list) or not isinstance(bindings, list):
+        raise AuditError("cache-anchor raw/shard sets are not arrays")
+    expected = expected_predictor_sources(latest)
+    if [str(item.get("file")) for item in raw_records] != [
+        item["file"] for item in expected
+    ]:
+        raise AuditError("cache-anchor does not cover exact cumulative registry")
+    if (
+        len(raw_records) != int(value["raw_source_count"])
+        or len(bindings) != int(value["ordered_shard_count"])
+        or len(raw_records) != len(bindings)
+        or not raw_records
+    ):
+        raise AuditError("cache-anchor raw/shard counts differ")
+    for raw, expected_source in zip(raw_records, expected, strict=True):
+        if set(raw) != {"object_key", "file", "url", "byte_count", "sha256"}:
+            raise AuditError("cache-anchor raw record fields changed")
+        expected_key = (
+            f"{PREDICTOR_OBJECT_PREFIX}{expected_source['kind']}/"
+            f"{expected_source['file']}"
+        )
+        if raw["object_key"] != expected_key:
+            raise AuditError("cache-anchor raw object key changed")
+        if expected_source["kind"] == "daily":
+            _official_jpx_daily_url_label(
+                raw["url"],
+                file_name=raw["file"],
+                source_session=_predictor_source_date(raw["file"], "daily"),
+                label="cache-anchor daily URL",
+            )
+        else:
+            _official_jpx_url_label(
+                raw["url"], label="cache-anchor monthly URL"
+            )
+        if expected_source["sha256"] is not None and raw["sha256"] != (
+            expected_source["sha256"]
+        ):
+            raise AuditError("cache-anchor historical raw SHA changed")
+        if expected_source["byte_count"] is not None and int(raw["byte_count"]) != int(
+            expected_source["byte_count"]
+        ):
+            raise AuditError("cache-anchor historical raw byte count changed")
+        if expected_source["url"] is not None and raw["url"] != expected_source["url"]:
+            raise AuditError("cache-anchor historical raw URL changed")
+        if raw["object_key"] not in direct_by_key:
+            raise AuditError("cache-anchor raw object lacks direct reparse")
+    raw_set_hash = canonical_json_sha256(raw_records)
+    shard_set_hash = _a2_parsed_shard_set_sha256(bindings)
+    if (
+        value["raw_source_set_sha256"] != raw_set_hash
+        or value["ordered_shard_set_sha256"] != shard_set_hash
+    ):
+        raise AuditError("cache-anchor ordered-set hash changed")
+    _, snapshot_key, manifest_key = _a2_cache_anchor_identity(
+        latest_source_session=latest,
+        raw_source_set_sha256=raw_set_hash,
+        ordered_shard_set_sha256=shard_set_hash,
+        protocol=protocol,
+        runner_sha256=runner_sha256,
+    )
+    fixed = {
+        "cumulative_snapshot_object_key": snapshot_key,
+        "snapshot_manifest_object_key": manifest_key,
+        "columns": list(PARSED_PANEL_COLUMNS),
+        "columns_sha256": canonical_json_sha256(list(PARSED_PANEL_COLUMNS)),
+        "runtime_lock_sha256": RUNTIME_LOCK_SHA256,
+        "protocol_sha256": PROTOCOL_SHA256,
+        "runner_sha256": runner_sha256,
+        "parser_sha256": protocol["source_contract"]["forward_daily"][
+            "parser_sha256"
+        ],
+        "canonical_jsonl_contract": PARSED_SHARD_JSONL_CONTRACT,
+    }
+    if any(value[field] != expected_value for field, expected_value in fixed.items()):
+        raise AuditError("cache-anchor fixed binding changed")
+    if value["snapshot_manifest_sha256"] != value["anchor_manifest_sha256"]:
+        raise AuditError("cache-anchor nested/self hashes differ")
+    if value["anchor_manifest_sha256"] != canonical_json_sha256(
+        value, exclude_fields={"anchor_manifest_sha256", "snapshot_manifest_sha256"}
+    ):
+        raise AuditError("cache-anchor self hash changed")
+    verified = _aware_timestamp(value["runtime_lock_verified_at"], "anchor runtime")
+    direct_started = _aware_timestamp(
+        value["direct_reparse_started_at"], "anchor direct start"
+    )
+    direct_completed = _aware_timestamp(
+        value["direct_reparse_completed_at"], "anchor direct complete"
+    )
+    created = _aware_timestamp(value["created_at"], "anchor created")
+    sealed = _aware_timestamp(value["sealed_at"], "anchor sealed")
+    observed_verified = _aware_timestamp(value["verified_at"], "anchor verified")
+    if not (
+        verified <= direct_started <= direct_completed <= created <= sealed
+        and observed_verified == direct_completed
+    ):
+        raise AuditError("cache-anchor timestamp DAG changed")
+    shard_frames: list[pd.DataFrame] = []
+    shard_manifests: list[dict[str, Any]] = []
+    for raw, binding in zip(raw_records, bindings, strict=True):
+        shard_manifest, shard_frame = _validate_a2_parsed_shard_binding(
+            raw,
+            binding,
+            direct_by_key[raw["object_key"]],
+            chronology_class="anchor",
+            protocol=protocol,
+            runtime_lock=runtime_lock,
+            runner_sha256=runner_sha256,
+            predictor_derived_store_root=predictor_derived_store_root,
+            external_identity_registry=external_identity_registry,
+        )
+        if _aware_timestamp(shard_manifest["sealed_at"], "anchor shard sealed") > (
+            direct_started
+        ):
+            raise AuditError("cache-anchor direct verification predates shard seal")
+        shard_manifests.append(shard_manifest)
+        shard_frames.append(shard_frame)
+    try:
+        from tse_session_ranker.data.common import merge_daily_prices
+
+        merged = merge_daily_prices(shard_frames)
+    except Exception as exc:
+        raise AuditError("cache-anchor shard merge failed") from exc
+    direct_frame = _coerce_a2_jsonl_frame(
+        merged, PARSED_PANEL_COLUMNS, label="cache-anchor direct raw union"
+    )
+    snapshot_payload = _read_external_object_bytes(
+        predictor_derived_store_root,
+        snapshot_key,
+        required_prefix=CACHE_ANCHOR_OBJECT_PREFIX,
+        identity_registry=external_identity_registry,
+    )
+    if (
+        len(snapshot_payload) != int(value["cumulative_snapshot_byte_count"])
+        or hashlib.sha256(snapshot_payload).hexdigest()
+        != value["cumulative_snapshot_file_sha256"]
+    ):
+        raise AuditError("cache-anchor cumulative snapshot bytes changed")
+    snapshot = decode_a2_canonical_frame_jsonl(
+        snapshot_payload, PARSED_PANEL_COLUMNS, label="cache-anchor snapshot"
+    )
+    if not snapshot.equals(direct_frame) or value[
+        "cumulative_snapshot_semantic_sha256"
+    ] != semantic_rows_sha256(snapshot, PARSED_PANEL_COLUMNS):
+        raise AuditError("cache-anchor snapshot differs exactly from fresh raw union")
+    model_month = _a2_month(
+        value["model_price_snapshot_target_month"], "anchor model-price month"
+    )
+    model_latest = _a2_latest_source_before_month(model_month)
+    expected_prefix = expected_predictor_sources(model_latest)
+    prefix_count = len(expected_prefix)
+    if [item["file"] for item in raw_records[:prefix_count]] != [
+        item["file"] for item in expected_prefix
+    ]:
+        raise AuditError("cache-anchor compact raw prefix changed")
+    model_manifest, model_manifest_payload = _read_external_canonical_json(
+        predictor_derived_store_root,
+        value["model_price_snapshot_manifest_object_key"],
+        required_prefix=MODEL_PRICE_SNAPSHOT_OBJECT_PREFIX,
+        label="cache-anchor model-price manifest",
+        identity_registry=external_identity_registry,
+    )
+    direct_model = _coerce_a2_model_price_frame(
+        snapshot.loc[pd.to_datetime(snapshot["date"]).le(model_latest)],
+        label="cache-anchor direct compact projection",
+    )
+    model_snapshot, model_prices, model_manifest_key, _ = (
+        _validate_a2_model_snapshot_manifest(
+            model_manifest,
+            predictor_derived_store_root=predictor_derived_store_root,
+            expected_target_month=model_month,
+            expected_latest_source_session=model_latest,
+            expected_raw_source_set_sha256=canonical_json_sha256(
+                raw_records[:prefix_count]
+            ),
+            expected_parsed_shard_set_sha256=_a2_parsed_shard_set_sha256(
+                bindings[:prefix_count]
+            ),
+            protocol=protocol,
+            runner_sha256=runner_sha256,
+            external_identity_registry=external_identity_registry,
+            expected_frame=direct_model,
+        )
+    )
+    if (
+        max(
+            _aware_timestamp(item["sealed_at"], "anchor prefix shard sealed")
+            for item in shard_manifests[:prefix_count]
+        )
+        > _aware_timestamp(model_snapshot["created_at"], "anchor snapshot created")
+        or _aware_timestamp(model_snapshot["sealed_at"], "anchor snapshot sealed")
+        > created
+    ):
+        raise AuditError("cache-anchor compact snapshot timestamp DAG changed")
+    exact_model = {
+        "model_price_snapshot_object_key": model_snapshot["data_object_key"],
+        "model_price_snapshot_byte_count": int(model_snapshot["data_byte_count"]),
+        "model_price_snapshot_file_sha256": model_snapshot["data_sha256"],
+        "model_price_snapshot_semantic_sha256": model_snapshot[
+            "model_price_semantic_sha256"
+        ],
+        "model_price_snapshot_manifest_object_key": model_manifest_key,
+        "model_price_snapshot_manifest_byte_count": len(model_manifest_payload),
+        "model_price_snapshot_manifest_file_sha256": hashlib.sha256(
+            model_manifest_payload
+        ).hexdigest(),
+        "model_price_snapshot_manifest_sha256": model_snapshot[
+            "snapshot_manifest_sha256"
+        ],
+    }
+    if any(value[field] != expected_value for field, expected_value in exact_model.items()):
+        raise AuditError("cache-anchor compact snapshot exact binding changed")
+    verification_receipt = {
+        "cache_contract_id": PREDICTOR_CACHE_CONTRACT_ID,
+        "raw_source_set_sha256": raw_set_hash,
+        "ordered_shard_set_sha256": shard_set_hash,
+        "direct_reparse_started_at": value["direct_reparse_started_at"],
+        "direct_reparse_completed_at": value["direct_reparse_completed_at"],
+        "direct_parsed_semantic_sha256": value[
+            "cumulative_snapshot_semantic_sha256"
+        ],
+        "snapshot_semantic_sha256": value["cumulative_snapshot_semantic_sha256"],
+        "model_price_snapshot_semantic_sha256": value[
+            "model_price_snapshot_semantic_sha256"
+        ],
+        "exact_frame_and_dtype_equal": True,
+        "runtime_lock_sha256": RUNTIME_LOCK_SHA256,
+    }
+    if canonical_json_sha256(verification_receipt) != value[
+        "direct_clean_room_verification_receipt_sha256"
+    ]:
+        raise AuditError("cache-anchor clean-room receipt hash changed")
+    equivalence = _validate_a2_compact_equivalence_receipt(
+        value["compact_consumer_equivalence_receipt"],
+        full_prices=snapshot,
+        compact_prices=_coerce_a2_model_price_frame(
+            snapshot, label="anchor compact-consumer projection"
+        ),
+    )
+    manifest_payload = canonical_json_file_bytes(value)
+    observed_summary = {
+        "latest_source_session": value["latest_source_session"],
+        "raw_source_set_sha256": raw_set_hash,
+        "raw_source_count": len(raw_records),
+        "ordered_shard_set_sha256": shard_set_hash,
+        "ordered_shard_count": len(bindings),
+        "cumulative_snapshot_object_key": snapshot_key,
+        "cumulative_snapshot_byte_count": int(value["cumulative_snapshot_byte_count"]),
+        "cumulative_snapshot_file_sha256": value[
+            "cumulative_snapshot_file_sha256"
+        ],
+        "cumulative_snapshot_semantic_sha256": value[
+            "cumulative_snapshot_semantic_sha256"
+        ],
+        "model_price_snapshot_target_month": value[
+            "model_price_snapshot_target_month"
+        ],
+        **exact_model,
+        "snapshot_manifest_object_key": manifest_key,
+        "snapshot_manifest_file_sha256": hashlib.sha256(manifest_payload).hexdigest(),
+        "snapshot_manifest_sha256": value["snapshot_manifest_sha256"],
+        "direct_clean_room_verification_receipt_sha256": value[
+            "direct_clean_room_verification_receipt_sha256"
+        ],
+        "compact_consumer_equivalence_receipt_sha256": equivalence["receipt_sha256"],
+        "sealed_at": value["sealed_at"],
+        "verified_at": value["verified_at"],
+    }
+    expected_summary = _validate_a2_cache_anchor_summary(payload_summary)
+    if observed_summary != expected_summary:
+        raise AuditError("activation cache-anchor summary differs from external anchor")
+    return value, observed_summary, snapshot, bindings
 def validate_outcome_manifest(
     manifest: Mapping[str, Any],
     decision: Mapping[str, Any],
@@ -6508,12 +9843,14 @@ def validate_outcome_manifest(
         not isinstance(source_name, str)
         or not source_name
         or Path(source_name).name != source_name
-        or not source_name.lower().endswith(".pdf")
-        or session.replace("-", "") not in source_name
-        or not isinstance(value["source_url"], str)
-        or not value["source_url"].startswith("https://www.jpx.co.jp/")
     ):
-        raise AuditError("outcome source filename/URL is invalid")
+        raise AuditError("outcome source filename is invalid")
+    _official_jpx_daily_url_label(
+        value["source_url"],
+        file_name=source_name,
+        source_session=session,
+        label="outcome source URL",
+    )
     byte_count = _strict_nonnegative_int(
         value["source_byte_count"], "outcome source byte count"
     )
@@ -7351,7 +10688,7 @@ def first_counted_session(
     workflow_run_updated_at: Any,
     workflow_run_observed_at: Any,
     calendar: pd.DatetimeIndex,
-    not_before_session: str = "2026-08-05",
+    not_before_session: str = "2026-08-06",
 ) -> pd.Timestamp:
     updated = pd.Timestamp(workflow_run_updated_at)
     observed = pd.Timestamp(workflow_run_observed_at)
@@ -7707,15 +11044,264 @@ class AuditRecorder:
             )
 
 
+def load_record_shard_authority(
+    *,
+    ledger_path: str | Path,
+    authority_directory: str | Path,
+    key_field: str,
+    required_fields: Sequence[str],
+    validator: Callable[[Sequence[Mapping[str, Any]]], list[dict[str, Any]]],
+) -> tuple[list[dict[str, Any]], bytes]:
+    """Independently load create-once record shards and exact derived JSONL."""
+
+    directory = _require_plain_directory(
+        authority_directory, label=f"{key_field} record authority"
+    )
+    directory_metadata = os.stat(directory, follow_symlinks=False)
+    if (
+        directory_metadata.st_uid != os.geteuid()
+        or stat.S_IMODE(directory_metadata.st_mode) != 0o700
+    ):
+        raise AuditError(f"{key_field} record authority directory is not 0700")
+    key_pattern = r"\d{4}-\d{2}" if key_field == "completed_month" else r"\d{4}-\d{2}-\d{2}"
+    final_pattern = re.compile(rf"({key_pattern})\.json")
+    stage_pattern = re.compile(rf"\.({key_pattern})\.json\.staging")
+    records: list[dict[str, Any]] = []
+    for entry in sorted(directory.iterdir(), key=lambda item: item.name):
+        if stage_pattern.fullmatch(entry.name):
+            # Unpublished deterministic stages are explicitly nonauthority.
+            metadata = os.lstat(entry)
+            if (
+                not stat.S_ISREG(metadata.st_mode)
+                or metadata.st_uid != os.geteuid()
+                or stat.S_IMODE(metadata.st_mode) != 0o600
+                or metadata.st_nlink != 1
+            ):
+                raise AuditError("record authority staging object is unsafe")
+            continue
+        match = final_pattern.fullmatch(entry.name)
+        if match is None:
+            raise AuditError("record authority contains an unregistered entry")
+        metadata = os.lstat(entry)
+        if (
+            not stat.S_ISREG(metadata.st_mode)
+            or metadata.st_uid != os.geteuid()
+            or stat.S_IMODE(metadata.st_mode) != 0o600
+            or metadata.st_nlink != 1
+        ):
+            raise AuditError("record authority shard owner/mode/link changed")
+        payload = _stable_plain_file_bytes(
+            entry, label="record authority shard", required_mode=0o600
+        )
+        if not payload.endswith(b"\n") or payload.count(b"\n") != 1:
+            raise AuditError("record authority shard is not one canonical JSON line")
+        value = _parse_json_object_bytes(payload[:-1], label="record authority shard")
+        if canonical_json_bytes(value) + b"\n" != payload:
+            raise AuditError("record authority shard bytes are noncanonical")
+        if str(value.get(key_field)) != match.group(1):
+            raise AuditError("record authority filename/key binding changed")
+        records.append(value)
+    records.sort(key=lambda item: int(item.get("sequence_number", -1)))
+    validated = validator(records)
+    if canonical_json_bytes(validated) != canonical_json_bytes(records):
+        raise AuditError("record authority validator changed retained records")
+    if any(set(item) != set(required_fields) for item in validated):
+        raise AuditError("record authority exact fields differ")
+    expected = b"".join(canonical_json_bytes(item) + b"\n" for item in validated)
+    _require_private_local_file(ledger_path, label="derived canonical ledger")
+    observed = _stable_plain_file_bytes(
+        ledger_path, label="derived canonical ledger", required_mode=0o600
+    )
+    if observed != expected:
+        raise AuditError("derived canonical ledger differs from record authority")
+    return validated, observed
+
+
+def validate_score_session_authority(
+    scores: pd.DataFrame,
+    *,
+    score_path: str | Path,
+    authority_directory: str | Path,
+) -> str:
+    """Exact-compare the derived score CSV with immutable daily pair shards."""
+
+    directory = _require_plain_directory(authority_directory, label="score authority")
+    metadata = os.stat(directory, follow_symlinks=False)
+    if metadata.st_uid != os.geteuid() or stat.S_IMODE(metadata.st_mode) != 0o700:
+        raise AuditError("score authority directory is not private 0700")
+    expected_groups: dict[str, pd.DataFrame] = {}
+    parsed_sessions = pd.to_datetime(scores["session_date"], errors="coerce")
+    if parsed_sessions.isna().any():
+        raise AuditError("score ledger has an invalid session")
+    for session, group in scores.assign(_session=parsed_sessions).groupby(
+        "_session", sort=True
+    ):
+        expected_groups[str(pd.Timestamp(session).date())] = group.drop(
+            columns="_session"
+        ).reset_index(drop=True)
+    bindings: list[dict[str, Any]] = []
+    finals: dict[str, Path] = {}
+    for entry in sorted(directory.iterdir(), key=lambda item: item.name):
+        if re.fullmatch(r"\.\d{4}-\d{2}-\d{2}\.csv\.staging", entry.name):
+            stage = os.lstat(entry)
+            if (
+                not stat.S_ISREG(stage.st_mode)
+                or stage.st_uid != os.geteuid()
+                or stat.S_IMODE(stage.st_mode) != 0o600
+                or stage.st_nlink != 1
+            ):
+                raise AuditError("score authority staging object is unsafe")
+            continue
+        match = re.fullmatch(r"(\d{4}-\d{2}-\d{2})\.csv", entry.name)
+        if match is None:
+            raise AuditError("score authority contains an unregistered entry")
+        file_metadata = os.lstat(entry)
+        if (
+            not stat.S_ISREG(file_metadata.st_mode)
+            or file_metadata.st_uid != os.geteuid()
+            or stat.S_IMODE(file_metadata.st_mode) != 0o600
+            or file_metadata.st_nlink != 1
+        ):
+            raise AuditError("score authority shard owner/mode/link changed")
+        finals[match.group(1)] = entry
+    if set(finals) != set(expected_groups):
+        raise AuditError("score authority final set differs from score ledger")
+    for session in sorted(finals):
+        payload = _stable_plain_file_bytes(
+            finals[session], label="score shard", required_mode=0o600
+        )
+        expected = expected_groups[session].to_csv(
+            index=False, lineterminator="\n"
+        ).encode()
+        if payload != expected:
+            raise AuditError("score authority shard differs from derived ledger")
+        bindings.append(
+            {
+                "session_date": session,
+                "byte_count": len(payload),
+                "file_sha256": hashlib.sha256(payload).hexdigest(),
+                "semantic_sha256": semantic_score_hash(expected_groups[session]),
+            }
+        )
+    derived = scores.to_csv(index=False, lineterminator="\n").encode()
+    _require_private_local_file(score_path, label="derived score ledger")
+    if _stable_plain_file_bytes(
+        score_path, label="derived score ledger", required_mode=0o600
+    ) != derived:
+        raise AuditError("derived score ledger bytes differ from score authority")
+    return canonical_json_sha256(bindings)
+
+
+def validate_deferred_score_evidence(
+    scores: pd.DataFrame,
+    expectations: Sequence[Mapping[str, Any]],
+    decisions: Sequence[Mapping[str, Any]],
+    *,
+    score_path: str | Path = DEFAULT_SCORES,
+    authority_directory: str | Path = DEFAULT_SCORE_SESSIONS,
+) -> pd.DataFrame:
+    """Open score authority only after the outcome-blind predictor/checkpoint gates."""
+
+    semantic_score_hash(scores)
+    validate_score_session_authority(
+        scores, score_path=score_path, authority_directory=authority_directory
+    )
+    identity_fields = (
+        "session_date",
+        "source_rank",
+        "code",
+        "name",
+        "model_score",
+        "feature_source_max_date",
+        "source_manifest_sha256",
+        "c00_fold_manifest_sha256",
+    )
+    observed = scores.loc[:, list(identity_fields)].copy()
+    expected = pd.DataFrame([dict(item) for item in expectations], columns=identity_fields)
+    for frame in (observed, expected):
+        if frame.empty:
+            continue
+        frame["session_date"] = pd.to_datetime(
+            frame["session_date"], errors="coerce"
+        ).dt.strftime("%Y-%m-%d")
+        frame["feature_source_max_date"] = pd.to_datetime(
+            frame["feature_source_max_date"], errors="coerce"
+        ).dt.strftime("%Y-%m-%d")
+        frame["source_rank"] = pd.to_numeric(
+            frame["source_rank"], errors="coerce"
+        ).astype("int64")
+        frame["code"] = frame["code"].astype(str)
+    observed = observed.sort_values(
+        ["session_date", "source_rank"], kind="stable"
+    ).reset_index(drop=True)
+    expected = expected.sort_values(
+        ["session_date", "source_rank"], kind="stable"
+    ).reset_index(drop=True)
+    if len(observed) != len(expected):
+        raise AuditError("deferred score ledger has a missing/extra row")
+    for index in range(len(expected)):
+        for field in identity_fields:
+            left = observed.at[index, field]
+            right = expected.at[index, field]
+            if field == "model_score":
+                if struct.pack("<d", float(left)) != struct.pack("<d", float(right)):
+                    raise AuditError("deferred score model bits differ from raw replay")
+            elif left != right:
+                raise AuditError(f"deferred score binding differs: {field}")
+    decision_by_session = {str(item["session_date"]): dict(item) for item in decisions}
+    cumulative: list[dict[str, Any]] = []
+    root = Path(authority_directory)
+    for session, group in scores.groupby(
+        pd.to_datetime(scores["session_date"]).dt.strftime("%Y-%m-%d"), sort=True
+    ):
+        decision = decision_by_session.get(str(session))
+        if decision is None:
+            raise AuditError("score authority contains an uncounted session")
+        payload = _stable_plain_file_bytes(
+            root / f"{session}.csv", label="score-session authority shard"
+        )
+        file_sha = hashlib.sha256(payload).hexdigest()
+        semantic_sha = semantic_score_hash(group.reset_index(drop=True))
+        if (
+            decision["score_session_file_sha256"] != file_sha
+            or decision["score_session_semantic_sha256"] != semantic_sha
+        ):
+            raise AuditError("decision score-session hash binding changed")
+        cumulative.append(
+            {
+                "session_date": str(session),
+                "file_sha256": file_sha,
+                "semantic_sha256": semantic_sha,
+            }
+        )
+        if decision["score_session_set_sha256"] != canonical_json_sha256(cumulative):
+            raise AuditError("decision score-session cumulative set hash changed")
+    if set(decision_by_session) != set(
+        pd.to_datetime(scores["session_date"]).dt.strftime("%Y-%m-%d")
+    ):
+        raise AuditError("score authority does not cover every counted decision")
+    return scores
+
+
 def _manifest_map(
     directory: str | Path,
     protocol: Mapping[str, Any],
     *,
     first_counted_session: Any | None = None,
+    expected_months: Sequence[str] | None = None,
 ) -> dict[str, dict[str, Any]]:
-    root = _require_plain_directory(directory, label="state manifest directory")
+    paths = _private_local_authority_entries(
+        directory,
+        label="state manifest authority",
+        expected_names=(
+            None
+            if expected_months is None
+            else [f"{month}.json" for month in expected_months]
+        ),
+        filename_pattern=r"\d{4}-\d{2}\.json",
+    )
     output: dict[str, dict[str, Any]] = {}
-    for path in sorted(root.glob("*.json")):
+    for path in paths:
         raw = read_json(path)
         month = str(raw.get("target_month"))
         if path.name != f"{month}.json":
@@ -7735,13 +11321,24 @@ def _source_manifest_map(
     directory: str | Path,
     protocol: Mapping[str, Any],
     *,
+    first_counted_session_value: Any | None = None,
     predictor_raw_store_root: str | Path | None = None,
     external_identity_registry: dict[tuple[int, int], str] | None = None,
+    expected_sessions: Sequence[str] | None = None,
 ) -> dict[str, dict[str, Any]]:
-    root = _require_plain_directory(directory, label="source manifest directory")
+    paths = _private_local_authority_entries(
+        directory,
+        label="source manifest authority",
+        expected_names=(
+            None
+            if expected_sessions is None
+            else [f"{session}.json" for session in expected_sessions]
+        ),
+        filename_pattern=r"\d{4}-\d{2}-\d{2}\.json",
+    )
     output: dict[str, dict[str, Any]] = {}
     observed_targets: set[str] = set()
-    for path in sorted(root.glob("*.json")):
+    for path in paths:
         raw = read_json(path)
         target = str(raw.get("target_session"))
         if path.name != f"{target}.json":
@@ -7758,7 +11355,420 @@ def _source_manifest_map(
             raise AuditError("duplicate source manifest hash/target")
         output[digest] = value
         observed_targets.add(target)
+    ordered = sorted(output.values(), key=lambda item: item["target_session"])
+    first = (
+        None
+        if first_counted_session_value is None
+        else _a2_date(first_counted_session_value, "source-chain first session")
+    )
+    previous: dict[str, Any] | None = None
+    for index, value in enumerate(ordered):
+        target = _a2_date(value["target_session"], "source-chain target")
+        if first is not None and index == 0 and target != first:
+            raise AuditError("source-chain does not start at first counted session")
+        expected_target = None if previous is None else previous["target_session"]
+        expected_hash = (
+            None if previous is None else previous["source_manifest_sha256"]
+        )
+        if (
+            value["previous_counted_target_session"] != expected_target
+            or value["previous_counted_source_manifest_sha256"] != expected_hash
+        ):
+            raise AuditError("source-chain immediate predecessor binding changed")
+        if previous is not None:
+            calendar = load_registered_calendar()
+            positions = np.flatnonzero(calendar == target)
+            if len(positions) != 1 or pd.Timestamp(calendar[int(positions[0]) - 1]) != (
+                _a2_date(previous["target_session"], "source-chain predecessor")
+            ):
+                raise AuditError("source-chain skips a counted calendar session")
+        previous = value
     return output
+
+
+def _a2_month_seal_session(
+    month: pd.Period, *, first_counted_session_value: Any
+) -> pd.Timestamp:
+    first = _a2_date(first_counted_session_value, "first counted session")
+    if first.to_period("M") == month:
+        return first
+    calendar = load_registered_calendar()
+    matches = calendar[calendar.to_period("M") == month]
+    if matches.empty:
+        raise AuditError("month-source target month has no registered session")
+    return pd.Timestamp(matches[0]).normalize()
+
+
+def _validate_a2_month_source_manifest(
+    manifest: Mapping[str, Any],
+    *,
+    first_counted_session_value: Any,
+    activation_observed_at: Any,
+    activation_payload_sha256: str,
+    activation_receipt_sha256: str,
+    anchor_raw_keys: set[str],
+    direct_by_key: Mapping[str, Mapping[str, Any]],
+    predictor_derived_store_root: str | Path,
+    protocol: Mapping[str, Any],
+    runtime_lock: Mapping[str, Any],
+    runner_sha256: str,
+    external_identity_registry: dict[tuple[int, int], str],
+) -> tuple[dict[str, Any], pd.DataFrame, pd.DataFrame]:
+    value = dict(manifest)
+    if set(value) != set(MONTH_SOURCE_MANIFEST_FIELDS):
+        raise AuditError("month-source manifest fields changed")
+    month = _a2_month(value["target_month"], "month-source target")
+    first = _a2_date(value["first_counted_session"], "month-source first")
+    if first != _a2_date(first_counted_session_value, "expected first counted"):
+        raise AuditError("month-source first-counted binding changed")
+    seal_session = _a2_date(value["seal_session"], "month-source seal")
+    if seal_session != _a2_month_seal_session(
+        month, first_counted_session_value=first
+    ):
+        raise AuditError("month-source seal session changed")
+    latest = _a2_latest_source_before_month(month)
+    if _a2_date(value["latest_required_source_session"], "month-source latest") != latest:
+        raise AuditError("month-source latest is not exact M-1")
+    observed_activation = _aware_timestamp(
+        activation_observed_at, "activation receipt observed"
+    )
+    if _aware_timestamp(
+        value["activation_observed_at"], "month-source activation observed"
+    ) != observed_activation:
+        raise AuditError("month-source activation observation changed")
+    verified = _aware_timestamp(
+        value["runtime_lock_verified_at"], "month-source runtime verified"
+    )
+    received = _aware_timestamp(value["source_received_at"], "month-source receipt")
+    created = _aware_timestamp(value["created_at"], "month-source created")
+    sealed = _aware_timestamp(value["sealed_at"], "month-source sealed")
+    cutoff = _aware_timestamp(
+        f"{seal_session.date()}T08:58:59+09:00", "month-source cutoff"
+    )
+    if max(verified, received, observed_activation) > created or created > sealed or sealed > cutoff:
+        raise AuditError("month-source timestamp DAG changed")
+    fixed = {
+        "schema_version": 1,
+        "runtime_lock_sha256": RUNTIME_LOCK_SHA256,
+        "activation_payload_sha256": activation_payload_sha256,
+        "activation_receipt_sha256": activation_receipt_sha256,
+        "protocol_sha256": PROTOCOL_SHA256,
+        "runner_sha256": runner_sha256,
+        "parser_sha256": protocol["source_contract"]["forward_daily"][
+            "parser_sha256"
+        ],
+        "canonical_json_contract": CANONICAL_JSON_CONTRACT,
+    }
+    if any(value[field] != expected for field, expected in fixed.items()):
+        raise AuditError("month-source fixed binding changed")
+    vectors = tuple(
+        value[field]
+        for field in (
+            "source_object_keys",
+            "source_files",
+            "source_urls",
+            "source_byte_counts",
+            "source_sha256",
+        )
+    )
+    if not all(isinstance(item, list) for item in vectors) or len(
+        {len(item) for item in vectors}
+    ) != 1:
+        raise AuditError("month-source raw vectors changed")
+    keys, files, urls, counts, hashes = vectors
+    expected_sources = expected_predictor_sources(latest)
+    if [str(item) for item in files] != [item["file"] for item in expected_sources]:
+        raise AuditError("month-source does not cover exact registered prefix")
+    raw_records: list[dict[str, Any]] = []
+    for key, file_name, url, count, digest, expected in zip(
+        keys, files, urls, counts, hashes, expected_sources, strict=True
+    ):
+        record = {
+            "object_key": key,
+            "file": file_name,
+            "url": url,
+            "byte_count": int(count),
+            "sha256": digest,
+        }
+        if key != f"{PREDICTOR_OBJECT_PREFIX}{expected['kind']}/{file_name}":
+            raise AuditError("month-source raw key changed")
+        if key not in direct_by_key:
+            raise AuditError("month-source raw object lacks direct reparse")
+        raw_records.append(record)
+    if value["source_set_sha256"] != canonical_json_sha256(raw_records):
+        raise AuditError("month-source raw-set hash changed")
+    bindings = value["parsed_shards"]
+    if (
+        not isinstance(bindings, list)
+        or len(bindings) != len(raw_records)
+        or value["parsed_shard_set_sha256"]
+        != _a2_parsed_shard_set_sha256(bindings)
+    ):
+        raise AuditError("month-source shard-set hash changed")
+    shard_manifests: list[dict[str, Any]] = []
+    shard_frames: list[pd.DataFrame] = []
+    for raw, binding in zip(raw_records, bindings, strict=True):
+        chronology = "anchor" if raw["object_key"] in anchor_raw_keys else "forward"
+        shard_manifest, frame = _validate_a2_parsed_shard_binding(
+            raw,
+            binding,
+            direct_by_key[raw["object_key"]],
+            chronology_class=chronology,
+            protocol=protocol,
+            runtime_lock=runtime_lock,
+            runner_sha256=runner_sha256,
+            predictor_derived_store_root=predictor_derived_store_root,
+            external_identity_registry=external_identity_registry,
+        )
+        shard_manifests.append(shard_manifest)
+        shard_frames.append(frame)
+    try:
+        from tse_session_ranker.data.common import merge_daily_prices
+
+        full31 = _coerce_a2_jsonl_frame(
+            merge_daily_prices(shard_frames),
+            PARSED_PANEL_COLUMNS,
+            label="month-source raw31 prefix",
+        )
+    except Exception as exc:
+        raise AuditError("month-source raw31 merge failed") from exc
+    snapshot_manifest, snapshot_payload = _read_external_canonical_json(
+        predictor_derived_store_root,
+        value["model_price_snapshot_manifest_object_key"],
+        required_prefix=MODEL_PRICE_SNAPSHOT_OBJECT_PREFIX,
+        label="month-source model-price manifest",
+        identity_registry=external_identity_registry,
+    )
+    direct_model = _coerce_a2_model_price_frame(
+        full31, label="month-source direct compact projection"
+    )
+    snapshot, model_prices, snapshot_key, _ = _validate_a2_model_snapshot_manifest(
+        snapshot_manifest,
+        predictor_derived_store_root=predictor_derived_store_root,
+        expected_target_month=month,
+        expected_latest_source_session=latest,
+        expected_raw_source_set_sha256=value["source_set_sha256"],
+        expected_parsed_shard_set_sha256=value["parsed_shard_set_sha256"],
+        protocol=protocol,
+        runner_sha256=runner_sha256,
+        external_identity_registry=external_identity_registry,
+        expected_frame=direct_model,
+    )
+    exact_snapshot = {
+        "model_price_snapshot_target_month": str(month),
+        "model_price_snapshot_latest_source_session": str(latest.date()),
+        "model_price_snapshot_object_key": snapshot["data_object_key"],
+        "model_price_snapshot_byte_count": int(snapshot["data_byte_count"]),
+        "model_price_snapshot_file_sha256": snapshot["data_sha256"],
+        "model_price_snapshot_semantic_sha256": snapshot[
+            "model_price_semantic_sha256"
+        ],
+        "model_price_snapshot_manifest_object_key": snapshot_key,
+        "model_price_snapshot_manifest_byte_count": len(snapshot_payload),
+        "model_price_snapshot_manifest_file_sha256": hashlib.sha256(
+            snapshot_payload
+        ).hexdigest(),
+        "model_price_snapshot_manifest_sha256": snapshot[
+            "snapshot_manifest_sha256"
+        ],
+    }
+    if any(value[field] != expected for field, expected in exact_snapshot.items()):
+        raise AuditError("month-source snapshot exact binding changed")
+    origin = value["model_price_snapshot_origin"]
+    previous_fields = (
+        "previous_model_price_snapshot_target_month",
+        "previous_model_price_snapshot_latest_source_session",
+        "previous_model_price_snapshot_manifest_object_key",
+        "previous_model_price_snapshot_manifest_file_sha256",
+        "previous_model_price_snapshot_manifest_sha256",
+    )
+    suffix_count = int(value["model_price_suffix_shard_count"])
+    if suffix_count < 0 or suffix_count > len(bindings):
+        raise AuditError("month-source suffix count changed")
+    suffix_bindings = bindings[len(bindings) - suffix_count :] if suffix_count else []
+    if value["model_price_suffix_shard_set_sha256"] != canonical_json_sha256(
+        [dict(item) for item in suffix_bindings]
+    ):
+        raise AuditError("month-source suffix set hash changed")
+    if origin == "activation_anchor":
+        if (
+            month != first.to_period("M")
+            or any(value[field] is not None for field in previous_fields)
+            or suffix_count != 0
+            or snapshot["previous_snapshot_manifest_sha256"] is not None
+            or set(keys) != anchor_raw_keys.intersection(keys)
+        ):
+            raise AuditError("initial month-source is not the activated snapshot")
+        if received != max(
+            _aware_timestamp(snapshot["sealed_at"], "anchor snapshot sealed"),
+            observed_activation,
+        ):
+            raise AuditError("initial month-source receipt is not anchor/C max")
+    elif origin == "forward_extension":
+        if any(value[field] is None for field in previous_fields) or suffix_count <= 0:
+            raise AuditError("forward month-source lacks predecessor/suffix")
+        prior_month = _a2_month(
+            value["previous_model_price_snapshot_target_month"],
+            "month-source predecessor month",
+        )
+        prior_latest = _a2_date(
+            value["previous_model_price_snapshot_latest_source_session"],
+            "month-source predecessor latest",
+        )
+        if prior_month != month - 1 or prior_latest != _a2_latest_source_before_month(
+            prior_month
+        ):
+            raise AuditError("month-source predecessor is not immediate")
+        prior_manifest, prior_payload = _read_external_canonical_json(
+            predictor_derived_store_root,
+            value["previous_model_price_snapshot_manifest_object_key"],
+            required_prefix=MODEL_PRICE_SNAPSHOT_OBJECT_PREFIX,
+            label="month-source predecessor snapshot manifest",
+            identity_registry=external_identity_registry,
+        )
+        previous_count = int(prior_manifest.get("raw_source_count", -1))
+        if previous_count != len(raw_records) - suffix_count:
+            raise AuditError("month-source suffix is not exact append")
+        prior, prior_frame, prior_key, _ = _validate_a2_model_snapshot_manifest(
+            prior_manifest,
+            predictor_derived_store_root=predictor_derived_store_root,
+            expected_target_month=prior_month,
+            expected_latest_source_session=prior_latest,
+            expected_raw_source_set_sha256=canonical_json_sha256(
+                raw_records[:previous_count]
+            ),
+            expected_parsed_shard_set_sha256=_a2_parsed_shard_set_sha256(
+                bindings[:previous_count]
+            ),
+            protocol=protocol,
+            runner_sha256=runner_sha256,
+            external_identity_registry=external_identity_registry,
+        )
+        if (
+            prior_key != value["previous_model_price_snapshot_manifest_object_key"]
+            or hashlib.sha256(prior_payload).hexdigest()
+            != value["previous_model_price_snapshot_manifest_file_sha256"]
+            or prior["snapshot_manifest_sha256"]
+            != value["previous_model_price_snapshot_manifest_sha256"]
+            or snapshot["previous_snapshot_manifest_sha256"]
+            != prior["snapshot_manifest_sha256"]
+        ):
+            raise AuditError("month-source predecessor exact binding changed")
+        suffix_frames: list[pd.DataFrame] = []
+        suffix_receipts: list[datetime] = []
+        snapshot_created = _aware_timestamp(
+            snapshot["created_at"], "month-source snapshot created"
+        )
+        for shard_manifest, frame in zip(
+            shard_manifests[previous_count:], shard_frames[previous_count:], strict=True
+        ):
+            if (
+                shard_manifest["chronology_class"] != "forward"
+                or _a2_date(shard_manifest["min_date"], "month suffix min")
+                <= prior_latest
+                or _a2_date(shard_manifest["max_date"], "month suffix max") > latest
+                or _aware_timestamp(shard_manifest["sealed_at"], "month suffix sealed")
+                > snapshot_created
+            ):
+                raise AuditError("month-source suffix chronology/date DAG changed")
+            suffix_frames.append(
+                _coerce_a2_model_price_frame(frame, label="month suffix projection")
+            )
+            suffix_receipts.append(
+                _aware_timestamp(shard_manifest["raw_received_at"], "month suffix receipt")
+            )
+        reconstructed = _coerce_a2_model_price_frame(
+            pd.concat([prior_frame, *suffix_frames], ignore_index=True),
+            label="month predecessor plus suffix",
+        )
+        if not reconstructed.equals(model_prices) or received != max(suffix_receipts):
+            raise AuditError("month-source snapshot/receipt differs from exact suffix")
+    else:
+        raise AuditError("month-source snapshot origin changed")
+    if _aware_timestamp(snapshot["sealed_at"], "month snapshot sealed") > created:
+        raise AuditError("month-source manifest predates its snapshot")
+    full_panel = build_clean_room_g0_panel(full31, seal_session)
+    compact_panel = build_clean_room_g0_panel(model_prices, seal_session)
+    if _a2_exact_g0_frame_digest(full_panel) != _a2_exact_g0_frame_digest(
+        compact_panel
+    ):
+        raise AuditError("month-source full31/compact12 panels differ exactly")
+    training = _coerce_a2_jsonl_frame(
+        full_panel.loc[pd.to_datetime(full_panel["date"]).lt(month.start_time)],
+        G0_PANEL_COLUMNS,
+        label="month-source training panel",
+    )
+    compact_training = _coerce_a2_jsonl_frame(
+        compact_panel.loc[pd.to_datetime(compact_panel["date"]).lt(month.start_time)],
+        G0_PANEL_COLUMNS,
+        label="month-source compact training panel",
+    )
+    if not training.equals(compact_training):
+        raise AuditError("month-source training rows differ full31/compact12")
+    exact = {
+        "parsed_row_count": len(model_prices),
+        "model_price_full_prefix_semantic_sha256": semantic_rows_sha256(
+            model_prices, MODEL_PRICE_COLUMNS
+        ),
+        "g0_training_panel_semantic_sha256": semantic_rows_sha256(
+            training, G0_PANEL_COLUMNS
+        ),
+        "g0_training_row_count": len(training),
+    }
+    if any(value[field] != expected for field, expected in exact.items()):
+        raise AuditError("month-source semantic/count claims changed")
+    if value["month_source_manifest_sha256"] != canonical_json_sha256(
+        value, exclude_fields={"month_source_manifest_sha256"}
+    ):
+        raise AuditError("month-source self hash changed")
+    return value, training, model_prices
+
+
+def _month_source_manifest_map(
+    directory: str | Path,
+    *,
+    expected_months: Sequence[str] | None = None,
+) -> dict[str, dict[str, Any]]:
+    paths = _private_local_authority_entries(
+        directory,
+        label="month-source manifest authority",
+        expected_names=(
+            None
+            if expected_months is None
+            else [f"{month}.json" for month in expected_months]
+        ),
+        filename_pattern=r"\d{4}-\d{2}\.json",
+    )
+    output: dict[str, dict[str, Any]] = {}
+    for path in paths:
+        raw = read_json(path)
+        month = str(raw.get("target_month"))
+        if path.name != f"{month}.json" or month in output:
+            raise AuditError("month-source manifest filename/target changed")
+        output[month] = raw
+    return output
+
+
+
+
+def _a2_source_records(value: Mapping[str, Any]) -> list[dict[str, Any]]:
+    return [
+        {
+            "object_key": key,
+            "file": file_name,
+            "url": url,
+            "byte_count": int(count),
+            "sha256": digest,
+        }
+        for key, file_name, url, count, digest in zip(
+            value["source_object_keys"],
+            value["source_files"],
+            value["source_urls"],
+            value["source_byte_counts"],
+            value["source_sha256"],
+            strict=True,
+        )
+    ]
 
 
 def validate_predictor_evidence(
@@ -7767,309 +11777,478 @@ def validate_predictor_evidence(
     protocol: Mapping[str, Any],
     *,
     predictor_raw_store_root: str | Path,
+    predictor_derived_store_root: str | Path,
+    activation_payload: Mapping[str, Any],
+    activation_payload_sha256: str,
+    activation_receipt_sha256: str,
+    activation_observed_at: Any,
+    runtime_lock: Mapping[str, Any],
+    runner_sha256: str,
+    month_source_manifests: Mapping[str, Mapping[str, Any]],
     fold_manifests_by_month: Mapping[str, Mapping[str, Any]],
     fold_model_directory: str | Path,
-    scores: pd.DataFrame,
+    scores: pd.DataFrame | None = None,
+    direct_by_key: Mapping[str, Mapping[str, Any]] | None = None,
     external_identity_registry: dict[tuple[int, int], str] | None = None,
 ) -> dict[str, Any]:
-    """Terminal clean-room replay from external predictor PDFs through C00 top2."""
+    """Raw-first independent A2 replay, with score bytes deferred by default."""
 
-    if (
-        not isinstance(scores, pd.DataFrame)
-        or scores.columns.tolist() != list(SCORE_FIELDS)
-    ):
-        raise AuditError("score ledger must retain the exact registered header")
-
-    parser_path = ROOT / protocol["source_contract"]["forward_daily"]["parser_path"]
-    parser_sha = protocol["source_contract"]["forward_daily"]["parser_sha256"]
-    if sha256_file(parser_path) != parser_sha:
-        raise AuditError("predictor parser source SHA-256 changed")
-    object_union: dict[str, dict[str, Any]] = {}
-    for manifest in source_manifests.values():
-        for key, file_name, url, count, digest in zip(
-            manifest["source_object_keys"],
-            manifest["source_files"],
-            manifest["source_urls"],
-            manifest["source_byte_counts"],
-            manifest["source_sha256"],
-            strict=True,
+    rows = [dict(item) for item in decisions]
+    if not rows:
+        raise AuditError("terminal predictor replay requires counted decisions")
+    registry = {} if external_identity_registry is None else external_identity_registry
+    parser = protocol["source_contract"]["forward_daily"]
+    if sha256_file(ROOT / parser["parser_path"]) != parser["parser_sha256"]:
+        raise AuditError("terminal predictor parser source SHA changed")
+    ordered_manifests: list[dict[str, Any]] = []
+    for decision in rows:
+        manifest = source_manifests.get(decision["source_manifest_sha256"])
+        if manifest is None or manifest["target_session"] != decision["session_date"]:
+            raise AuditError("decision does not bind its daily source manifest")
+        if not bool(decision["source_complete"]) or not bool(
+            decision["model_complete"]
         ):
-            metadata = {
-                "object_key": key,
-                "file": file_name,
-                "url": url,
-                "byte_count": int(count),
-                "sha256": digest,
-            }
-            previous = object_union.setdefault(key, metadata)
-            if previous != metadata:
-                raise AuditError("predictor object key has conflicting metadata")
-    ordered_union = [object_union[key] for key in sorted(object_union)]
+            raise AuditError("counted source/model failure must be integrity abort")
+        ordered_manifests.append(dict(manifest))
+    # Every daily source is a strict cumulative prefix.  The final prefix is
+    # therefore the deterministic raw/shard union; no directory enumeration is
+    # used or claimed as authority.
+    final_records = _a2_source_records(ordered_manifests[-1])
+    final_bindings = [dict(item) for item in ordered_manifests[-1]["parsed_shards"]]
+    if len(final_records) != len(final_bindings) or not final_records:
+        raise AuditError("terminal predictor raw/shard union is empty or misaligned")
+    for manifest in ordered_manifests:
+        count = len(manifest["source_files"])
+        if (
+            _a2_source_records(manifest) != final_records[:count]
+            or [dict(item) for item in manifest["parsed_shards"]]
+            != final_bindings[:count]
+        ):
+            raise AuditError("daily predictor raw/shard prefix forks")
 
+    # This is intentionally the first external-evidence phase: all referenced
+    # PDF bytes are opened and directly reparsed before any derived accelerator.
+    if direct_by_key is None:
+        direct_reparse = _reparse_predictor_raw_objects_once(
+            final_records,
+            predictor_raw_store_root=predictor_raw_store_root,
+            external_identity_registry=registry,
+        )
+    else:
+        direct_reparse = {str(key): dict(value) for key, value in direct_by_key.items()}
+        if set(direct_reparse) != {
+            str(item["object_key"]) for item in final_records
+        }:
+            raise AuditError("prevalidated predictor raw set differs from final prefix")
+    anchor_summary = _validate_a2_cache_anchor_summary(
+        activation_payload["predictor_cache_anchor"]
+    )
+    anchor_manifest, anchor_payload = _read_external_canonical_json(
+        predictor_derived_store_root,
+        anchor_summary["snapshot_manifest_object_key"],
+        required_prefix=CACHE_ANCHOR_OBJECT_PREFIX,
+        label="terminal cache-anchor manifest",
+        identity_registry=registry,
+    )
+    if hashlib.sha256(anchor_payload).hexdigest() != anchor_summary[
+        "snapshot_manifest_file_sha256"
+    ]:
+        raise AuditError("activation cache-anchor manifest bytes changed")
+    validated_anchor, _, anchor_frame, anchor_bindings = _validate_a2_cache_anchor(
+        anchor_manifest,
+        payload_summary=anchor_summary,
+        direct_by_key=direct_reparse,
+        predictor_derived_store_root=predictor_derived_store_root,
+        protocol=protocol,
+        runtime_lock=runtime_lock,
+        runner_sha256=runner_sha256,
+        external_identity_registry=registry,
+    )
+    anchor_raw = [dict(item) for item in validated_anchor["raw_sources"]]
+    anchor_keys = {str(item["object_key"]) for item in anchor_raw}
+    if (
+        final_records[: len(anchor_raw)] != anchor_raw
+        or final_bindings[: len(anchor_bindings)]
+        != [dict(item) for item in anchor_bindings]
+    ):
+        raise AuditError("daily predictor chain forks payload-B anchor")
+
+    # Validate every unique parsed shard once, including direct frame equality,
+    # then build one full raw union for target/month slices.
+    shard_manifests: dict[str, dict[str, Any]] = {}
+    shard_frames: dict[str, pd.DataFrame] = {}
+    for raw, binding in zip(final_records, final_bindings, strict=True):
+        chronology = "anchor" if raw["object_key"] in anchor_keys else "forward"
+        shard_manifest, shard_frame = _validate_a2_parsed_shard_binding(
+            raw,
+            binding,
+            direct_reparse[raw["object_key"]],
+            chronology_class=chronology,
+            protocol=protocol,
+            runtime_lock=runtime_lock,
+            runner_sha256=runner_sha256,
+            predictor_derived_store_root=predictor_derived_store_root,
+            external_identity_registry=registry,
+        )
+        shard_manifests[str(raw["object_key"])] = shard_manifest
+        shard_frames[str(raw["object_key"])] = shard_frame
     try:
         from tse_session_ranker.data.common import merge_daily_prices
-        from tse_session_ranker.data.jpx import parse_jpx_text
-    except Exception as exc:  # pragma: no cover - installation integrity
-        raise AuditError("bound predictor parser is unavailable") from exc
-    parsed_by_key: dict[str, tuple[pd.DataFrame, int]] = {}
-    with tempfile.TemporaryDirectory(prefix="v18-predictor-audit-") as temporary:
-        temporary_root = Path(temporary)
-        for metadata in ordered_union:
-            raw_bytes = _read_external_object_bytes(
-                predictor_raw_store_root,
-                metadata["object_key"],
-                required_prefix="model_v18_shoulder_state/predictor/",
-                identity_registry=external_identity_registry,
-            )
-            if (
-                len(raw_bytes) != metadata["byte_count"]
-                or hashlib.sha256(raw_bytes).hexdigest() != metadata["sha256"]
-            ):
-                raise AuditError("predictor object union byte binding changed")
-            pdf_path = temporary_root / Path(metadata["file"])
-            text_path = temporary_root / Path(metadata["file"]).with_suffix(".txt")
-            if pdf_path.exists() or text_path.exists():
-                raise AuditError("predictor source filenames collide during reparse")
-            pdf_path.write_bytes(raw_bytes)
-            try:
-                _locked_pdf_to_text(pdf_path, text_path)
-                frame, report = parse_jpx_text(text_path)
-            except Exception as exc:
-                raise AuditError("predictor raw object could not be reparsed") from exc
-            if int(report.rejected_rows) != 0:
-                raise AuditError("predictor reparse rejected rows")
-            parsed_dates = pd.to_datetime(frame["date"], errors="coerce").dt.normalize()
-            if parsed_dates.isna().any() or parsed_dates.empty:
-                raise AuditError("predictor reparse has no valid source dates")
-            kind = Path(metadata["object_key"]).parts[2]
-            expected_source_date = _predictor_source_date(metadata["file"], kind)
-            if kind == "daily":
-                if set(parsed_dates) != {expected_source_date}:
-                    raise AuditError("predictor daily filename/date binding changed")
-            elif not parsed_dates.dt.to_period("M").eq(
-                expected_source_date.to_period("M")
-            ).all():
-                raise AuditError("predictor warmup filename/month binding changed")
-            parsed_by_key[metadata["object_key"]] = (frame, int(report.rejected_rows))
 
-    scores_copy = scores.copy()
-    scores_copy["session_date"] = pd.to_datetime(
-        scores_copy["session_date"], errors="coerce"
-    ).dt.normalize()
-    if scores_copy["session_date"].isna().any():
-        raise AuditError("score output contains invalid sessions")
-    refitted_months: set[str] = set()
-    manifest_pairs: list[dict[str, Any]] = []
-    semantic_pairs = {
-        field: []
-        for field in (
-            "parsed_panel_semantic_sha256",
-            "g0_panel_semantic_sha256",
-            "common_universe_semantic_sha256",
-            "target_date_scoring_input_semantic_sha256",
+        union_prices = _coerce_a2_jsonl_frame(
+            merge_daily_prices([shard_frames[item["object_key"]] for item in final_records]),
+            PARSED_PANEL_COLUMNS,
+            label="terminal predictor full raw union",
         )
+    except Exception as exc:
+        raise AuditError("terminal predictor raw union merge failed") from exc
+    anchor_names = {
+        Path(item["file"]).with_suffix(".txt").name for item in anchor_raw
     }
-    for decision in decisions:
-        digest = decision["source_manifest_sha256"]
-        manifest = source_manifests.get(digest)
-        if manifest is None or manifest["target_session"] != decision["session_date"]:
-            raise AuditError("decision does not bind its predictor source manifest")
-        target = pd.Timestamp(decision["session_date"])
-        manifest_pairs.append(
-            {"target_session": decision["session_date"], "source_manifest_sha256": digest}
+    anchor_direct = _coerce_a2_jsonl_frame(
+        union_prices.loc[union_prices["source_file"].astype(str).isin(anchor_names)],
+        PARSED_PANEL_COLUMNS,
+        label="terminal predictor anchor subset",
+    )
+    if not anchor_direct.equals(anchor_frame):
+        raise AuditError("terminal raw union differs from cache-anchor snapshot")
+
+    represented_months = sorted({item["session_date"][:7] for item in rows})
+    if set(month_source_manifests) != set(represented_months):
+        raise AuditError("month-source manifest set differs from represented months")
+    month_training: dict[str, pd.DataFrame] = {}
+    validated_month_sources: dict[str, dict[str, Any]] = {}
+    for month in represented_months:
+        month_source, training, _ = _validate_a2_month_source_manifest(
+            month_source_manifests[month],
+            first_counted_session_value=rows[0]["session_date"],
+            activation_observed_at=activation_observed_at,
+            activation_payload_sha256=activation_payload_sha256,
+            activation_receipt_sha256=activation_receipt_sha256,
+            anchor_raw_keys=anchor_keys,
+            direct_by_key=direct_reparse,
+            predictor_derived_store_root=predictor_derived_store_root,
+            protocol=protocol,
+            runtime_lock=runtime_lock,
+            runner_sha256=runner_sha256,
+            external_identity_registry=registry,
         )
-        for field, pairs in semantic_pairs.items():
-            pairs.append(
-                {"target_session": decision["session_date"], field: manifest[field]}
-            )
-        if not manifest["source_complete"]:
-            continue
-        frames = [parsed_by_key[key][0] for key in manifest["source_object_keys"]]
-        if not frames:
-            raise AuditError("complete predictor manifest has no reparsed frames")
-        try:
-            parsed = merge_daily_prices(frames)
-        except Exception as exc:
-            raise AuditError("predictor parser panels could not be merged") from exc
-        if len(parsed) != int(manifest["parsed_row_count"]):
-            raise AuditError("predictor parsed row count does not recompute")
-        if parsed[["date", "code"]].duplicated().any():
-            raise AuditError("predictor merged panel has duplicate date/code rows")
-        if parsed["date"].max() != pd.Timestamp(
-            manifest["latest_required_source_session"]
-        ):
-            raise AuditError("predictor raw union does not end at exact D-1")
-        parsed_hash = semantic_rows_sha256(parsed, PARSED_PANEL_COLUMNS)
-        if parsed_hash != manifest["parsed_panel_semantic_sha256"]:
-            raise AuditError("predictor parsed-panel semantic hash differs")
-        panel = build_clean_room_g0_panel(parsed, target)
-        through = panel.loc[panel["date"].le(target)].copy()
-        g0_columns = (
-            "date",
-            "code",
-            "name",
-            "oc_return_pct",
-            "common_training_eligible",
-            "common_score_eligible",
-            "feature_source_max_date",
-            *C00_FEATURES,
-        )
-        universe_columns = (
-            "date",
-            "code",
-            "common_training_eligible",
-            "common_score_eligible",
-            "feature_source_max_date",
-        )
-        scoring_columns = (
-            "date",
-            "code",
-            "name",
-            "common_score_eligible",
-            "feature_source_max_date",
-            *C00_FEATURES,
-        )
-        target_rows = through.loc[through["date"].eq(target)]
-        recomputed_semantics = {
-            "g0_panel_semantic_sha256": semantic_rows_sha256(through, g0_columns),
-            "common_universe_semantic_sha256": semantic_rows_sha256(
-                through, universe_columns
-            ),
-            "target_date_scoring_input_semantic_sha256": semantic_rows_sha256(
-                target_rows, scoring_columns
-            ),
-        }
-        for field, expected in recomputed_semantics.items():
-            if manifest[field] != expected:
-                raise AuditError(f"predictor {field} differs")
-        month = str(target.to_period("M"))
+        validated_month_sources[month] = month_source
+        month_training[month] = training
+
+    fold_manifest_pairs: list[dict[str, Any]] = []
+    fold_bundle_pairs: list[dict[str, Any]] = []
+    bundles: dict[str, dict[str, Any]] = {}
+    for month in represented_months:
         fold = fold_manifests_by_month.get(month)
         if fold is None:
-            if decision["c00_fold_manifest_sha256"] is not None:
-                raise AuditError("decision names an absent clean-room fold")
-            continue
-        if decision["c00_fold_manifest_sha256"] != fold["fold_manifest_sha256"]:
-            raise AuditError("decision fold hash differs from target-month fold")
+            raise AuditError("counted represented month lacks C00 fold")
+        month_source = validated_month_sources[month]
+        expected_month_path = (
+            "research/model_v18_shoulder_state_month_source_manifests/"
+            f"{month}.json"
+        )
+        required_month_bindings = {
+            "month_source_manifest_path": expected_month_path,
+            "month_source_manifest_sha256": month_source[
+                "month_source_manifest_sha256"
+            ],
+            "training_source_set_sha256": month_source["source_set_sha256"],
+            "training_parsed_shard_set_sha256": month_source[
+                "parsed_shard_set_sha256"
+            ],
+            "training_g0_panel_semantic_sha256": month_source[
+                "g0_training_panel_semantic_sha256"
+            ],
+        }
+        if any(fold.get(field) != expected for field, expected in required_month_bindings.items()):
+            raise AuditError("fold does not bind its exact month-source authority")
+        if _aware_timestamp(month_source["sealed_at"], "month-source sealed") > (
+            _aware_timestamp(fold["fit_started_at"], "fold fit started")
+        ):
+            raise AuditError("fold fit predates month-source seal")
         bundle_path = Path(fold_model_directory) / f"{month}.json"
         bundle = validate_fold_model_bundle(
             read_json(bundle_path),
             protocol,
-            first_counted_session=decisions[0]["session_date"],
+            runner_sha256=runner_sha256,
+            first_counted_session=rows[0]["session_date"],
         )
-        if month not in refitted_months:
-            validate_clean_room_fold_fit(panel, month, fold, bundle, protocol)
-            refitted_months.add(month)
-        scoring = target_rows.loc[
-            target_rows["common_score_eligible"].fillna(False).astype(bool)
-        ].copy()
-        expected_scores = reconstruct_c00_scores(
-            bundle, scoring.loc[:, list(C00_FEATURES)], protocol
+        if sha256_file(bundle_path) != fold["fold_model_bundle_file_sha256"]:
+            raise AuditError("fold model bundle exact bytes changed")
+        validate_clean_room_fold_fit(
+            month_training[month], month, fold, bundle, protocol
         )
-        ranked = scoring.loc[:, ["code", "name", "feature_source_max_date"]].copy()
-        ranked["model_score"] = expected_scores
-        ranked = ranked.sort_values(
-            ["model_score", "code"], ascending=[False, True], kind="stable"
-        ).head(2)
-        observed = scores_copy.loc[scores_copy["session_date"].eq(target)].sort_values(
-            "source_rank", kind="stable"
+        bundles[month] = bundle
+        fold_manifest_pairs.append(
+            {"target_month": month, "fold_manifest_sha256": fold["fold_manifest_sha256"]}
         )
-        if len(ranked) < 2:
-            if decision["model_complete"]:
-                raise AuditError("decision claims a complete model without two scores")
-            if len(observed):
-                raise AuditError("score output contains a fail-closed model pair")
-            continue
-        if not decision["model_complete"] or len(observed) != 2:
-            raise AuditError("clean-room top2 exists but decision/score output is incomplete")
-        ranked = ranked.reset_index(drop=True)
-        observed = observed.reset_index(drop=True)
-        for rank in (1, 2):
-            clean = ranked.iloc[rank - 1]
-            sealed = observed.iloc[rank - 1]
-            if (
-                int(sealed["source_rank"]) != rank
-                or str(sealed["code"]) != str(clean["code"])
-                or str(sealed["name"]) != str(clean["name"])
-                or not math.isclose(
-                    float(sealed["model_score"]),
-                    float(clean["model_score"]),
-                    rel_tol=0.0,
-                    abs_tol=1e-12,
-                )
-                or sealed["source_manifest_sha256"] != digest
-                or sealed["c00_fold_manifest_sha256"]
-                != fold["fold_manifest_sha256"]
-            ):
-                raise AuditError("clean-room score-sorted top2 differs from score output")
+        fold_bundle_pairs.append(
+            {
+                "target_month": month,
+                "fold_model_bundle_file_sha256": fold[
+                    "fold_model_bundle_file_sha256"
+                ],
+            }
+        )
+
+    source_pairs: list[dict[str, Any]] = []
+    shard_pairs: list[dict[str, Any]] = []
+    target_slice_pairs: list[dict[str, Any]] = []
+    scoring_pairs: list[dict[str, Any]] = []
+    score_expectations: list[dict[str, Any]] = []
+    for decision, manifest in zip(rows, ordered_manifests, strict=True):
+        target = _a2_date(decision["session_date"], "daily predictor target")
+        latest = _a2_date(
+            manifest["latest_required_source_session"], "daily predictor latest"
+        )
+        count = len(manifest["source_files"])
+        raw_records = final_records[:count]
+        bindings = final_bindings[:count]
+        last_shard = shard_manifests[raw_records[-1]["object_key"]]
         if (
-            str(decision["c00_rank1_code"]) != str(ranked.iloc[0]["code"])
-            or str(decision["c02_rank2_code"]) != str(ranked.iloc[1]["code"])
-            or not math.isclose(
-                float(decision["c00_rank1_score"]),
-                float(ranked.iloc[0]["model_score"]),
-                rel_tol=0.0,
-                abs_tol=1e-12,
-            )
-            or not math.isclose(
-                float(decision["c02_rank2_score"]),
-                float(ranked.iloc[1]["model_score"]),
-                rel_tol=0.0,
-                abs_tol=1e-12,
+            last_shard["chronology_class"] != "forward"
+            or _aware_timestamp(last_shard["raw_received_at"], "daily shard receipt")
+            != _aware_timestamp(manifest["source_received_at"], "daily source receipt")
+            or any(
+                _aware_timestamp(
+                    shard_manifests[item["object_key"]]["sealed_at"],
+                    "daily shard sealed",
+                )
+                > _aware_timestamp(manifest["created_at"], "daily source created")
+                for item in raw_records
             )
         ):
-            raise AuditError("clean-room top2 differs from frozen decision")
-
-    represented_months = sorted({row["session_date"][:7] for row in decisions})
-    fold_manifest_pairs = [
-        {
-            "target_month": month,
-            "fold_manifest_sha256": (
-                None
-                if month not in fold_manifests_by_month
-                else fold_manifests_by_month[month]["fold_manifest_sha256"]
+            raise AuditError("daily source/shard receipt or seal DAG changed")
+        parsed = _coerce_a2_jsonl_frame(
+            union_prices.loc[pd.to_datetime(union_prices["date"]).le(latest)],
+            PARSED_PANEL_COLUMNS,
+            label="daily raw31 source prefix",
+        )
+        if len(parsed) != int(manifest["parsed_row_count"]) or pd.to_datetime(
+            parsed["date"]
+        ).max().normalize() != latest:
+            raise AuditError("daily parsed raw prefix count/end changed")
+        snapshot_manifest, snapshot_payload = _read_external_canonical_json(
+            predictor_derived_store_root,
+            manifest["model_price_snapshot_manifest_object_key"],
+            required_prefix=MODEL_PRICE_SNAPSHOT_OBJECT_PREFIX,
+            label="daily model-price snapshot manifest",
+            identity_registry=registry,
+        )
+        snapshot_month = _a2_month(
+            manifest["model_price_snapshot_target_month"], "daily snapshot month"
+        )
+        snapshot_latest = _a2_date(
+            manifest["model_price_snapshot_latest_source_session"],
+            "daily snapshot latest",
+        )
+        snapshot_count = int(snapshot_manifest.get("raw_source_count", -1))
+        if snapshot_count <= 0 or snapshot_count > count:
+            raise AuditError("daily snapshot raw prefix count changed")
+        direct_snapshot = _coerce_a2_model_price_frame(
+            parsed.loc[pd.to_datetime(parsed["date"]).le(snapshot_latest)],
+            label="daily direct snapshot projection",
+        )
+        snapshot, _, snapshot_key, _ = _validate_a2_model_snapshot_manifest(
+            snapshot_manifest,
+            predictor_derived_store_root=predictor_derived_store_root,
+            expected_target_month=snapshot_month,
+            expected_latest_source_session=snapshot_latest,
+            expected_raw_source_set_sha256=canonical_json_sha256(
+                raw_records[:snapshot_count]
             ),
-        }
-        for month in represented_months
-    ]
-    fold_bundle_pairs = [
-        {
-            "target_month": month,
-            "fold_model_bundle_file_sha256": (
-                None
-                if month not in fold_manifests_by_month
-                else fold_manifests_by_month[month][
-                    "fold_model_bundle_file_sha256"
-                ]
+            expected_parsed_shard_set_sha256=_a2_parsed_shard_set_sha256(
+                bindings[:snapshot_count]
             ),
+            protocol=protocol,
+            runner_sha256=runner_sha256,
+            external_identity_registry=registry,
+            expected_frame=direct_snapshot,
+        )
+        exact_snapshot = {
+            "model_price_snapshot_object_key": snapshot["data_object_key"],
+            "model_price_snapshot_byte_count": int(snapshot["data_byte_count"]),
+            "model_price_snapshot_file_sha256": snapshot["data_sha256"],
+            "model_price_snapshot_semantic_sha256": snapshot[
+                "model_price_semantic_sha256"
+            ],
+            "model_price_snapshot_manifest_object_key": snapshot_key,
+            "model_price_snapshot_manifest_byte_count": len(snapshot_payload),
+            "model_price_snapshot_manifest_file_sha256": hashlib.sha256(
+                snapshot_payload
+            ).hexdigest(),
+            "model_price_snapshot_manifest_sha256": snapshot[
+                "snapshot_manifest_sha256"
+            ],
         }
-        for month in represented_months
-    ]
-    prior_v17 = protocol["prior_result_binding"]["v17"]
-    return {
+        if any(manifest[field] != expected for field, expected in exact_snapshot.items()):
+            raise AuditError("daily model-price snapshot binding changed")
+        month_source = validated_month_sources[str(target.to_period("M"))]
+        if (
+            manifest["month_source_manifest_sha256"]
+            != month_source["month_source_manifest_sha256"]
+            or manifest["model_price_snapshot_manifest_sha256"]
+            != month_source["model_price_snapshot_manifest_sha256"]
+            or _aware_timestamp(month_source["sealed_at"], "daily month-source sealed")
+            > _aware_timestamp(manifest["created_at"], "daily source created")
+        ):
+            raise AuditError("daily source differs from same-month source/snapshot")
+        full_panel = build_clean_room_g0_panel(parsed, target)
+        target_frame = _coerce_a2_jsonl_frame(
+            full_panel.loc[pd.to_datetime(full_panel["date"]).eq(target)],
+            G0_PANEL_COLUMNS,
+            label="daily direct G0 target slice",
+        )
+        cache_manifest, cache_payload = _read_external_canonical_json(
+            predictor_derived_store_root,
+            manifest["g0_panel_cache_manifest_object_key"],
+            required_prefix=G0_PANEL_CACHE_OBJECT_PREFIX,
+            label="daily G0 target-slice manifest",
+            identity_registry=registry,
+        )
+        cache, _, cache_key, _ = _validate_a2_g0_cache_manifest(
+            cache_manifest,
+            predictor_derived_store_root=predictor_derived_store_root,
+            expected_target_session=target,
+            expected_latest_source_session=latest,
+            expected_source_set_sha256=manifest["source_set_sha256"],
+            expected_parsed_shard_set_sha256=manifest["parsed_shard_set_sha256"],
+            expected_parsed_row_count=int(manifest["parsed_row_count"]),
+            protocol=protocol,
+            runner_sha256=runner_sha256,
+            external_identity_registry=registry,
+            expected_target_frame=target_frame,
+        )
+        exact_cache = {
+            "g0_panel_cache_object_key": cache["data_object_key"],
+            "g0_panel_cache_byte_count": int(cache["data_byte_count"]),
+            "g0_panel_cache_sha256": cache["data_sha256"],
+            "g0_panel_cache_manifest_object_key": cache_key,
+            "g0_panel_cache_manifest_byte_count": len(cache_payload),
+            "g0_panel_cache_manifest_file_sha256": hashlib.sha256(
+                cache_payload
+            ).hexdigest(),
+            "g0_panel_cache_manifest_sha256": cache["cache_manifest_sha256"],
+            "target_date_scoring_input_semantic_sha256": cache[
+                "target_date_scoring_input_semantic_sha256"
+            ],
+            "target_slice_semantic_sha256": cache[
+                "target_slice_semantic_sha256"
+            ],
+        }
+        if any(manifest[field] != expected for field, expected in exact_cache.items()):
+            raise AuditError("daily source/G0 exact binding changed")
+        if _aware_timestamp(cache["sealed_at"], "daily G0 cache sealed") > (
+            _aware_timestamp(manifest["created_at"], "daily source created")
+        ):
+            raise AuditError("daily source manifest predates G0 cache seal")
+        month = str(target.to_period("M"))
+        fold = fold_manifests_by_month[month]
+        if (
+            decision["c00_fold_manifest_sha256"] != fold["fold_manifest_sha256"]
+            or decision["fold_model_bundle_file_sha256"]
+            != fold["fold_model_bundle_file_sha256"]
+        ):
+            raise AuditError("decision fold binding differs from monthly authority")
+        eligible = target_frame.loc[
+            target_frame["common_score_eligible"].fillna(False).astype(bool)
+        ].copy()
+        ranked = eligible.loc[:, ["code", "name", "feature_source_max_date"]].copy()
+        ranked["model_score"] = reconstruct_c00_scores(
+            bundles[month], eligible.loc[:, list(C00_FEATURES)], protocol
+        )
+        ranked = ranked.sort_values(
+            ["model_score", "code"], ascending=[False, True], kind="stable"
+        ).head(2).reset_index(drop=True)
+        if len(ranked) != 2:
+            raise AuditError("raw-first C00 scoring does not produce exact top2")
+        for index, source_rank in enumerate((1, 2)):
+            row = ranked.iloc[index]
+            score_expectations.append(
+                {
+                    "session_date": str(target.date()),
+                    "source_rank": source_rank,
+                    "code": str(row["code"]),
+                    "name": str(row["name"]),
+                    "model_score": float(row["model_score"]),
+                    "feature_source_max_date": str(
+                        pd.Timestamp(row["feature_source_max_date"]).date()
+                    ),
+                    "source_manifest_sha256": manifest[
+                        "source_manifest_sha256"
+                    ],
+                    "c00_fold_manifest_sha256": fold["fold_manifest_sha256"],
+                }
+            )
+        if (
+            decision["c00_rank1_code"] != str(ranked.iloc[0]["code"])
+            or decision["c02_rank2_code"] != str(ranked.iloc[1]["code"])
+            or float(decision["c00_rank1_score"])
+            != float(ranked.iloc[0]["model_score"])
+            or float(decision["c02_rank2_score"])
+            != float(ranked.iloc[1]["model_score"])
+        ):
+            raise AuditError("decision top2 differs from raw-first C00 replay")
+        source_pairs.append(
+            {
+                "target_session": str(target.date()),
+                "source_manifest_sha256": manifest["source_manifest_sha256"],
+            }
+        )
+        shard_pairs.append(
+            {
+                "target_session": str(target.date()),
+                "parsed_shard_set_sha256": manifest["parsed_shard_set_sha256"],
+            }
+        )
+        target_slice_pairs.append(
+            {
+                "target_session": str(target.date()),
+                "target_slice_semantic_sha256": manifest[
+                    "target_slice_semantic_sha256"
+                ],
+            }
+        )
+        scoring_pairs.append(
+            {
+                "target_session": str(target.date()),
+                "target_date_scoring_input_semantic_sha256": manifest[
+                    "target_date_scoring_input_semantic_sha256"
+                ],
+            }
+        )
+    prior = protocol["prior_result_binding"]["v17"]
+    output = {
+        "_outcome_blind_score_expectations": score_expectations,
+        "_terminal_predictor_raw_records": final_records,
+        "_terminal_predictor_shard_bindings": final_bindings,
         "runtime_lock_sha256": RUNTIME_LOCK_SHA256,
-        "predictor_source_manifest_set_sha256": canonical_json_sha256(manifest_pairs),
-        "predictor_raw_source_set_sha256": canonical_json_sha256(ordered_union),
-        "predictor_unique_raw_object_count": len(ordered_union),
-        "predictor_parser_sha256": parser_sha,
-        "predictor_parsed_panel_semantic_set_sha256": canonical_json_sha256(
-            semantic_pairs["parsed_panel_semantic_sha256"]
+        "predictor_source_manifest_set_sha256": canonical_json_sha256(source_pairs),
+        "predictor_raw_source_set_sha256": canonical_json_sha256(final_records),
+        "predictor_unique_raw_object_count": len(final_records),
+        "predictor_parser_sha256": parser["parser_sha256"],
+        "predictor_parsed_shard_binding_set_sha256": canonical_json_sha256(
+            shard_pairs
         ),
-        "predictor_g0_panel_semantic_set_sha256": canonical_json_sha256(
-            semantic_pairs["g0_panel_semantic_sha256"]
-        ),
-        "predictor_common_universe_semantic_set_sha256": canonical_json_sha256(
-            semantic_pairs["common_universe_semantic_sha256"]
+        "predictor_target_slice_semantic_set_sha256": canonical_json_sha256(
+            target_slice_pairs
         ),
         "predictor_target_date_scoring_input_semantic_set_sha256": canonical_json_sha256(
-            semantic_pairs["target_date_scoring_input_semantic_sha256"]
+            scoring_pairs
         ),
-        "c00_fold_manifest_set_sha256": canonical_json_sha256(fold_manifest_pairs),
+        "c00_fold_manifest_set_sha256": canonical_json_sha256(
+            fold_manifest_pairs
+        ),
         "c00_fold_model_bundle_file_set_sha256": canonical_json_sha256(
             fold_bundle_pairs
         ),
-        "v17_c00_protocol_sha256": prior_v17["protocol_sha256"],
-        "v17_c00_runner_sha256": prior_v17["runner_sha256"],
+        "v17_c00_protocol_sha256": prior["protocol_sha256"],
+        "v17_c00_runner_sha256": prior["runner_sha256"],
     }
+    if scores is not None:
+        validate_deferred_score_evidence(scores, score_expectations, rows)
+    return output
 
 
 def _outcome_manifest_map(
@@ -8080,11 +12259,16 @@ def _outcome_manifest_map(
     raw_store_root: str | Path,
     external_identity_registry: dict[tuple[int, int], str] | None = None,
 ) -> dict[str, dict[str, Any]]:
-    root = _require_plain_directory(directory, label="outcome manifest directory")
     decisions_by_session = {row["session_date"]: row for row in decisions}
+    paths = _private_local_authority_entries(
+        directory,
+        label="outcome manifest authority",
+        expected_names=[f"{session}.json" for session in decisions_by_session],
+        filename_pattern=r"\d{4}-\d{2}-\d{2}\.json",
+    )
     by_hash: dict[str, dict[str, Any]] = {}
     observed_sessions: set[str] = set()
-    for path in sorted(root.glob("*.json")):
+    for path in paths:
         raw = read_json(path)
         session = str(raw.get("target_session"))
         if path.name != f"{session}.json" or session not in decisions_by_session:
@@ -8106,6 +12290,72 @@ def _outcome_manifest_map(
     return by_hash
 
 
+def validate_terminal_predictor_outcome_cross_role(
+    predictor_raw_records: Sequence[Mapping[str, Any]],
+    predictor_shard_bindings: Sequence[Mapping[str, Any]],
+    outcome_manifests: Sequence[Mapping[str, Any]],
+    *,
+    terminal_session: Any,
+    predictor_derived_store_root: str | Path,
+    external_identity_registry: dict[tuple[int, int], str],
+) -> None:
+    """Prove post-seal cross-role equality without claiming JPX authenticity."""
+
+    raws = [dict(item) for item in predictor_raw_records]
+    bindings = [dict(item) for item in predictor_shard_bindings]
+    if len(raws) != len(bindings):
+        raise AuditError("cross-role predictor arrays are misaligned")
+    predictor_by_file: dict[str, tuple[dict[str, Any], dict[str, Any]]] = {}
+    for raw, binding in zip(raws, bindings, strict=True):
+        file_name = str(raw["file"])
+        if file_name in predictor_by_file:
+            raise AuditError("cross-role predictor filename is duplicated")
+        predictor_by_file[file_name] = (raw, binding)
+    terminal = _a2_date(terminal_session, "cross-role terminal")
+    unmatched: list[pd.Timestamp] = []
+    seen: set[pd.Timestamp] = set()
+    for outcome in outcome_manifests:
+        target = _a2_date(outcome["target_session"], "cross-role outcome target")
+        if target in seen:
+            raise AuditError("cross-role outcome target is duplicated")
+        seen.add(target)
+        file_name = str(outcome["source_file_name"])
+        matched = predictor_by_file.get(file_name)
+        if matched is None:
+            if target != terminal:
+                raise AuditError("preterminal outcome lacks matching predictor PDF")
+            unmatched.append(target)
+            continue
+        raw, binding = matched
+        exact = {
+            "file": file_name,
+            "url": outcome["source_url"],
+            "byte_count": int(outcome["source_byte_count"]),
+            "sha256": outcome["source_sha256"],
+        }
+        if any(raw[field] != expected for field, expected in exact.items()):
+            raise AuditError("predictor/outcome roles bind different daily bytes")
+        shard_manifest, _ = _read_external_canonical_json(
+            predictor_derived_store_root,
+            binding["shard_manifest_object_key"],
+            required_prefix=PREDICTOR_SHARD_OBJECT_PREFIX,
+            label="cross-role predictor shard manifest",
+            identity_registry=external_identity_registry,
+        )
+        if (
+            shard_manifest.get("chronology_class") != "forward"
+            or _aware_timestamp(
+                shard_manifest.get("raw_received_at"), "cross-role shard receipt"
+            )
+            != _aware_timestamp(
+                outcome["source_received_at"], "cross-role outcome receipt"
+            )
+        ):
+            raise AuditError("cross-role forward shard receipt binding changed")
+    if unmatched != [terminal]:
+        raise AuditError("terminal outcome-only session set changed")
+
+
 def _fold_artifact_maps(
     manifest_directory: str | Path,
     model_directory: str | Path,
@@ -8113,21 +12363,36 @@ def _fold_artifact_maps(
     *,
     runner_sha256: str,
     first_counted_session: Any | None = None,
+    expected_months: Sequence[str] | None = None,
 ) -> tuple[dict[str, dict[str, Any]], dict[str, dict[str, Any]]]:
-    manifests_root = _require_plain_directory(
-        manifest_directory, label="fold manifest directory"
+    expected_names = (
+        None
+        if expected_months is None
+        else [f"{month}.json" for month in expected_months]
     )
-    models_root = _require_plain_directory(
-        model_directory, label="fold model directory"
+    manifest_paths = _private_local_authority_entries(
+        manifest_directory,
+        label="fold manifest authority",
+        expected_names=expected_names,
+        filename_pattern=r"\d{4}-\d{2}\.json",
     )
+    model_paths = _private_local_authority_entries(
+        model_directory,
+        label="fold model authority",
+        expected_names=expected_names,
+        filename_pattern=r"\d{4}-\d{2}\.json",
+    )
+    models_by_month = {path.stem: path for path in model_paths}
     by_hash: dict[str, dict[str, Any]] = {}
     by_month: dict[str, dict[str, Any]] = {}
-    for manifest_path in sorted(manifests_root.glob("*.json")):
+    for manifest_path in manifest_paths:
         raw_manifest = read_json(manifest_path)
         month = str(raw_manifest.get("target_month"))
         if manifest_path.name != f"{month}.json":
             raise AuditError("fold manifest filename does not equal target month")
-        model_path = models_root / f"{month}.json"
+        model_path = models_by_month.get(month)
+        if model_path is None:
+            raise AuditError("fold model bundle is missing for manifest")
         model_bytes = _stable_plain_file_bytes(
             model_path, label=f"fold model bundle {month}"
         )
@@ -8148,15 +12413,18 @@ def _fold_artifact_maps(
             raise AuditError("duplicate fold manifest hash/month")
         by_hash[digest] = value
         by_month[month] = value
-    extra_models = {
-        path.stem for path in models_root.glob("*.json")
-    } - set(by_month)
+    extra_models = set(models_by_month) - set(by_month)
     if extra_models:
         raise AuditError(f"unbound fold model bundles exist: {sorted(extra_models)}")
     return by_hash, by_month
 
 
-def _stable_plain_file_bytes(path: str | Path, *, label: str) -> bytes:
+def _stable_plain_file_bytes(
+    path: str | Path,
+    *,
+    label: str,
+    required_mode: int | None = None,
+) -> bytes:
     """Read one pinned single-link regular file without following a final link."""
 
     target = Path(path)
@@ -8166,6 +12434,11 @@ def _stable_plain_file_bytes(path: str | Path, *, label: str) -> bytes:
         raise
     if not stat.S_ISREG(before_path.st_mode) or before_path.st_nlink != 1:
         raise AuditError(f"{label} is not a single-link regular file")
+    if required_mode is not None and (
+        before_path.st_uid != os.geteuid()
+        or stat.S_IMODE(before_path.st_mode) != required_mode
+    ):
+        raise AuditError(f"{label} owner/mode changed")
     try:
         descriptor = os.open(
             target,
@@ -8180,6 +12453,13 @@ def _stable_plain_file_bytes(path: str | Path, *, label: str) -> bytes:
             or before.st_nlink != 1
             or (before.st_dev, before.st_ino)
             != (before_path.st_dev, before_path.st_ino)
+            or (
+                required_mode is not None
+                and (
+                    before.st_uid != os.geteuid()
+                    or stat.S_IMODE(before.st_mode) != required_mode
+                )
+            )
         ):
             raise AuditError(f"{label} changed before reading")
         try:
@@ -8198,6 +12478,8 @@ def _stable_plain_file_bytes(path: str | Path, *, label: str) -> bytes:
         immutable = (
             "st_dev",
             "st_ino",
+            "st_uid",
+            "st_mode",
             "st_nlink",
             "st_size",
             "st_mtime_ns",
@@ -8223,8 +12505,165 @@ def _stable_plain_file_sha256(path: str | Path, *, label: str) -> str:
     return hashlib.sha256(_stable_plain_file_bytes(path, label=label)).hexdigest()
 
 
+def _stream_plain_file_sha256(path: str | Path, *, label: str) -> str | None:
+    """Hash an optional pinned artifact without decoding or retaining its bytes."""
+
+    target = Path(path)
+    try:
+        before_path = os.lstat(target)
+    except FileNotFoundError:
+        return None
+    if not stat.S_ISREG(before_path.st_mode) or before_path.st_nlink != 1:
+        raise AuditError(f"{label} is not a single-link regular file")
+    flags = os.O_RDONLY | os.O_CLOEXEC | getattr(os, "O_NOFOLLOW", 0)
+    try:
+        descriptor = os.open(target, flags)
+    except OSError as exc:
+        raise AuditError(f"{label} cannot be pinned for opaque hashing") from exc
+    try:
+        before = os.fstat(descriptor)
+        if (
+            not stat.S_ISREG(before.st_mode)
+            or before.st_nlink != 1
+            or (before.st_dev, before.st_ino)
+            != (before_path.st_dev, before_path.st_ino)
+        ):
+            raise AuditError(f"{label} changed before opaque hashing")
+        try:
+            fcntl.flock(descriptor, fcntl.LOCK_SH)
+        except OSError as exc:
+            raise AuditError(f"{label} cannot be locked for opaque hashing") from exc
+        digest = hashlib.sha256()
+        byte_count = 0
+        while True:
+            chunk = os.read(descriptor, 1024 * 1024)
+            if not chunk:
+                break
+            digest.update(chunk)
+            byte_count += len(chunk)
+        after = os.fstat(descriptor)
+        if byte_count != before.st_size or any(
+            getattr(before, field) != getattr(after, field)
+            for field in (
+                "st_dev",
+                "st_ino",
+                "st_nlink",
+                "st_size",
+                "st_mtime_ns",
+                "st_ctime_ns",
+            )
+        ):
+            raise AuditError(f"{label} changed during opaque hashing")
+        return digest.hexdigest()
+    finally:
+        try:
+            fcntl.flock(descriptor, fcntl.LOCK_UN)
+        except OSError:
+            pass
+        os.close(descriptor)
+
+
+def _result_status_token_without_performance_read(path: str | Path) -> str:
+    """Classify a retained sorted-JSON result by reading only its final member.
+
+    Canonical JSON sorts top-level keys, making ``status`` the last member.
+    Walking backward over only that line prevents a selection result's
+    performance-bearing body from being read before predictor and checkpoint
+    evidence has passed.
+    """
+
+    target = Path(path)
+    try:
+        before_path = os.lstat(target)
+    except OSError as exc:
+        raise AuditError("canonical result is unavailable for status") from exc
+    if (
+        not stat.S_ISREG(before_path.st_mode)
+        or before_path.st_uid != os.geteuid()
+        or stat.S_IMODE(before_path.st_mode) != 0o600
+        or before_path.st_nlink != 1
+    ):
+        raise AuditError("canonical result status authority metadata changed")
+    flags = os.O_RDONLY | os.O_CLOEXEC | getattr(os, "O_NOFOLLOW", 0)
+    try:
+        descriptor = os.open(target, flags)
+    except OSError as exc:
+        raise AuditError("canonical result could not be pinned for status") from exc
+    try:
+        before = os.fstat(descriptor)
+        if (
+            not stat.S_ISREG(before.st_mode)
+            or before.st_uid != os.geteuid()
+            or stat.S_IMODE(before.st_mode) != 0o600
+            or before.st_nlink != 1
+            or before.st_size < 5
+            or (before.st_dev, before.st_ino)
+            != (before_path.st_dev, before_path.st_ino)
+        ):
+            raise AuditError("canonical result changed before status read")
+        try:
+            fcntl.flock(descriptor, fcntl.LOCK_SH)
+        except OSError as exc:
+            raise AuditError("canonical result could not be locked for status") from exc
+        if os.pread(descriptor, 3, before.st_size - 3) != b"\n}\n":
+            raise AuditError("canonical result status suffix is not canonical")
+        cursor = before.st_size - 4
+        reversed_line = bytearray()
+        while cursor >= 0:
+            observed = os.pread(descriptor, 1, cursor)
+            if len(observed) != 1:
+                raise AuditError("canonical result status read was truncated")
+            if observed == b"\n":
+                break
+            reversed_line.extend(observed)
+            if len(reversed_line) > 96:
+                raise AuditError("canonical result status line is too long")
+            cursor -= 1
+        if cursor < 0:
+            raise AuditError("canonical result status line is not delimited")
+        match = re.fullmatch(
+            rb'  "status": "([a-z0-9_]+)"', bytes(reversed(reversed_line))
+        )
+        if match is None:
+            raise AuditError("canonical result status line is malformed")
+        after = os.fstat(descriptor)
+        if any(
+            getattr(before, field) != getattr(after, field)
+            for field in (
+                "st_dev",
+                "st_ino",
+                "st_uid",
+                "st_mode",
+                "st_nlink",
+                "st_size",
+                "st_mtime_ns",
+                "st_ctime_ns",
+            )
+        ):
+            raise AuditError("canonical result changed during status classification")
+        token = match.group(1).decode("ascii")
+        if token not in {
+            "aborted_integrity_failure",
+            "forward_passed_one_v19_research_nominee",
+            "forward_rejected_candidate",
+        }:
+            raise AuditError("canonical result status is not registered")
+        return token
+    finally:
+        try:
+            fcntl.flock(descriptor, fcntl.LOCK_UN)
+        except OSError:
+            pass
+        os.close(descriptor)
+
+
 def _result_status_discriminator(payload: bytes) -> str:
-    """Read only the canonical top-level status line before unblinding."""
+    """Validate an already-authorized result payload's unique status member.
+
+    This compatibility helper is deliberately not used by :func:`audit` for
+    branch selection; terminal branch selection must use the path-based,
+    tail-only reader above.
+    """
 
     try:
         text = payload.decode("utf-8", errors="strict")
@@ -8245,6 +12684,7 @@ def validate_abort_result(
     runner_path: str | Path = DEFAULT_RUNNER,
     activation_payload_path: str | Path = DEFAULT_ACTIVATION_PAYLOAD,
     activation_receipt_path: str | Path = DEFAULT_ACTIVATION_RECEIPT,
+    activation_context_path: str | Path = DEFAULT_ACTIVATION_CONTEXT,
     artifact_paths: Mapping[str, str | Path] | None = None,
     result_path: str | Path | None = None,
 ) -> dict[str, Any]:
@@ -8276,6 +12716,8 @@ def validate_abort_result(
         raise AuditError("abort failure reason is not registered for integrity stage")
     if value["authority"] != contract["authority_values"]:
         raise AuditError("abort result authority changed")
+    if value["raw_source_provenance"] != _raw_source_provenance_envelope():
+        raise AuditError("abort raw-source provenance envelope changed")
     for field in ("forward_period", "state_months", "models", "candidate_gate"):
         if value[field] is not None:
             raise AuditError(f"abort result exposed sealed {field}")
@@ -8305,38 +12747,59 @@ def validate_abort_result(
     if value["input"] != expected_input:
         raise AuditError("abort result input bindings changed or expose derived content")
 
-    payload_value: Mapping[str, Any] | None = None
-    payload_sha: str | None = None
     payload_path = Path(activation_payload_path)
-    if payload_path.is_file() and not payload_path.is_symlink():
-        try:
-            payload_value = read_json(payload_path)
-            payload_sha = validate_activation_payload(payload_value, protocol)
-        except (AuditError, OSError, ValueError, json.JSONDecodeError):
-            payload_value = None
-            payload_sha = None
-    receipt_sha: str | None = None
     receipt_path = Path(activation_receipt_path)
-    if (
-        payload_value is not None
-        and receipt_path.is_file()
-        and not receipt_path.is_symlink()
-    ):
-        try:
-            receipt_sha = validate_activation_receipt(
-                read_json(receipt_path),
-                payload_value,
-                protocol,
-                payload_file_path=payload_path,
-            )
-        except (AuditError, OSError, ValueError, json.JSONDecodeError):
-            receipt_sha = None
+    context_path = Path(activation_context_path)
+    _require_private_local_file(context_path, label="canonical activation context")
+    payload_value = _parse_json_object_bytes(
+        payload_file_bytes := _stable_plain_file_bytes(
+            payload_path,
+            label="canonical activation payload",
+            required_mode=0o644,
+        ),
+        label="canonical activation payload",
+    )
+    receipt_value = _parse_json_object_bytes(
+        receipt_file_bytes := _stable_plain_file_bytes(
+            receipt_path,
+            label="canonical activation receipt",
+            required_mode=0o644,
+        ),
+        label="canonical activation receipt",
+    )
+    context_value = _parse_json_object_bytes(
+        _stable_plain_file_bytes(
+            context_path,
+            label="canonical activation context",
+            required_mode=0o600,
+        ),
+        label="canonical activation context",
+    )
+    payload_sha = validate_activation_payload(payload_value, protocol)
+    receipt_sha = validate_activation_receipt(
+        receipt_value,
+        payload_value,
+        protocol,
+        payload_file_path=payload_path,
+        payload_file_bytes=payload_file_bytes,
+    )
+    context = validate_activation_context(
+        context_value,
+        payload=payload_value,
+        payload_sha256=payload_sha,
+        receipt=receipt_value,
+        receipt_sha256=receipt_sha,
+        protocol=protocol,
+        receipt_file_path=receipt_path,
+        receipt_file_bytes=receipt_file_bytes,
+    )
     if (
         value["activation_payload_sha256"] != payload_sha
         or value["activation_receipt_sha256"] != receipt_sha
-        or value["activation_receipt_commit_sha"] is not None
+        or value["activation_receipt_commit_sha"]
+        != context["activation_receipt_commit_sha"]
     ):
-        raise AuditError("abort result activation nullability or binding changed")
+        raise AuditError("abort result activation/context binding changed")
 
     default_artifacts: dict[str, str | Path] = {
         "decision_ledger_sha256": DEFAULT_DECISIONS,
@@ -8353,13 +12816,9 @@ def validate_abort_result(
         field: None for field in contract["required_artifact_hashes"]
     }
     for field, path in default_artifacts.items():
-        target = Path(path)
-        try:
-            expected_artifacts[field] = _stable_plain_file_sha256(
-                target, label=f"abort {field}"
-            )
-        except FileNotFoundError:
-            expected_artifacts[field] = None
+        expected_artifacts[field] = _stream_plain_file_sha256(
+            path, label=f"abort {field}"
+        )
     expected_artifacts["score_semantic_sha256"] = None
     if value["artifact_sha256"] != expected_artifacts:
         raise AuditError("abort result artifact byte hashes changed")
@@ -8397,11 +12856,13 @@ def validate_abort_result(
     if result_path is not None:
         result_file = Path(result_path)
         result_bytes = _stable_plain_file_bytes(
-            result_file, label="canonical abort result"
+            result_file, label="canonical abort result", required_mode=0o600
         )
         if result_bytes != canonical_json_file_bytes(value):
             raise AuditError("canonical abort result bytes changed")
     return value
+
+
 
 
 def audit(
@@ -8409,6 +12870,7 @@ def audit(
     protocol_path: Path = DEFAULT_PROTOCOL,
     activation_payload_path: Path = DEFAULT_ACTIVATION_PAYLOAD,
     activation_receipt_path: Path = DEFAULT_ACTIVATION_RECEIPT,
+    activation_context_path: Path = DEFAULT_ACTIVATION_CONTEXT,
     decisions_path: Path = DEFAULT_DECISIONS,
     outcomes_path: Path = DEFAULT_OUTCOMES,
     months_path: Path = DEFAULT_MONTHS,
@@ -8416,9 +12878,11 @@ def audit(
     fold_manifest_directory: Path = DEFAULT_FOLD_MANIFESTS,
     fold_model_directory: Path = DEFAULT_FOLD_MODELS,
     source_manifest_directory: Path = DEFAULT_SOURCE_MANIFESTS,
+    month_source_manifest_directory: Path = DEFAULT_MONTH_SOURCE_MANIFESTS,
     outcome_manifest_directory: Path = DEFAULT_OUTCOME_MANIFESTS,
     checkpoint_proposal_directory: Path = DEFAULT_CHECKPOINT_PROPOSALS,
     predictor_raw_store_root: Path | None = None,
+    predictor_derived_store_root: Path | None = None,
     outcome_raw_store_root: Path | None = None,
     checkpoint_core_store_root: Path | None = None,
     scores_path: Path = DEFAULT_SCORES,
@@ -8427,13 +12891,14 @@ def audit(
     runner_path: Path = DEFAULT_RUNNER,
     calendar_path: Path = DEFAULT_CALENDAR,
 ) -> dict[str, Any]:
+    """Independently replay A2 with a strict outcome-unsealing boundary."""
+
     recorder = AuditRecorder()
-    # Establish every repository-local authority lexically before reading the
-    # result discriminator or choosing the outcome-blind abort branch.
     canonical_repo_paths = {
         "protocol path": (protocol_path, DEFAULT_PROTOCOL),
         "activation payload path": (activation_payload_path, DEFAULT_ACTIVATION_PAYLOAD),
         "activation receipt path": (activation_receipt_path, DEFAULT_ACTIVATION_RECEIPT),
+        "activation context path": (activation_context_path, DEFAULT_ACTIVATION_CONTEXT),
         "decision ledger path": (decisions_path, DEFAULT_DECISIONS),
         "outcome ledger path": (outcomes_path, DEFAULT_OUTCOMES),
         "completed-month ledger path": (months_path, DEFAULT_MONTHS),
@@ -8441,6 +12906,10 @@ def audit(
         "fold manifest directory": (fold_manifest_directory, DEFAULT_FOLD_MANIFESTS),
         "fold model directory": (fold_model_directory, DEFAULT_FOLD_MODELS),
         "source manifest directory": (source_manifest_directory, DEFAULT_SOURCE_MANIFESTS),
+        "month-source manifest directory": (
+            month_source_manifest_directory,
+            DEFAULT_MONTH_SOURCE_MANIFESTS,
+        ),
         "outcome manifest directory": (outcome_manifest_directory, DEFAULT_OUTCOME_MANIFESTS),
         "checkpoint proposal directory": (
             checkpoint_proposal_directory,
@@ -8454,23 +12923,27 @@ def audit(
     }
     for label, (provided, expected) in canonical_repo_paths.items():
         _require_lexical_canonical_path(provided, expected, label=label)
+
+    # This is the sole pre-gate result read.  It touches only the final sorted
+    # JSON member and never loads a selection result's body.
+    result_status = _result_status_token_without_performance_read(result_path)
     protocol, protocol_sha = validate_protocol_contract(protocol_path)
     runtime_lock, runtime_lock_sha = validate_runtime_lock(
-        DEFAULT_RUNTIME_LOCK,
-        strict_environment=True,
+        DEFAULT_RUNTIME_LOCK, strict_environment=True
     )
-    result_bytes = _stable_plain_file_bytes(result_path, label="canonical result")
-    result_status = _result_status_discriminator(result_bytes)
+
+    external_roots = (
+        predictor_raw_store_root,
+        predictor_derived_store_root,
+        outcome_raw_store_root,
+        checkpoint_core_store_root,
+    )
     if result_status == "aborted_integrity_failure":
-        if any(
-            item is not None
-            for item in (
-                predictor_raw_store_root,
-                outcome_raw_store_root,
-                checkpoint_core_store_root,
-            )
-        ):
+        if any(item is not None for item in external_roots):
             raise AuditError("abort audit does not accept external evidence roots")
+        result_bytes = _stable_plain_file_bytes(
+            result_path, label="canonical abort result", required_mode=0o600
+        )
         result = _parse_json_object_bytes(result_bytes, label="canonical abort result")
         validated_abort = validate_abort_result(
             result,
@@ -8480,6 +12953,7 @@ def audit(
             runner_path=runner_path,
             activation_payload_path=activation_payload_path,
             activation_receipt_path=activation_receipt_path,
+            activation_context_path=activation_context_path,
             artifact_paths={
                 "decision_ledger_sha256": decisions_path,
                 "outcome_ledger_sha256": outcomes_path,
@@ -8498,17 +12972,22 @@ def audit(
                 "runner_imported": False,
                 "project_profit_helpers_imported": False,
                 "project_bootstrap_helpers_imported": False,
+                "orchestration_profit_and_gate_reconstruction_independent": True,
+                "registered_parser_and_feature_implementations_reused": True,
+                "parser_or_feature_implementation_independence_claimed": False,
             },
             "artifact_hashes": {
                 "protocol": protocol_sha,
                 "runtime_lock": runtime_lock_sha,
                 "runner": sha256_file(runner_path),
                 "audit_runner": sha256_file(__file__),
-                "result": sha256_file(result_path),
+                "result": hashlib.sha256(result_bytes).hexdigest(),
                 **validated_abort["artifact_sha256"],
             },
             "integrity": {
                 "abort_result_outcome_blind": True,
+                "opaque_existing_artifact_fingerprints_only": True,
+                "raw_source_provenance": _raw_source_provenance_envelope(),
                 "failure_reason": validated_abort["failure_reason"],
                 "integrity_stage": validated_abort["integrity_stage"],
             },
@@ -8523,17 +13002,48 @@ def audit(
             "numeric_tolerance": NUMERIC_TOLERANCE,
             "discrepancies": [],
         }
+
+    if any(item is None for item in external_roots):
+        raise AuditError(
+            "terminal selection audit requires predictor raw/derived, outcome raw, "
+            "and checkpoint core store roots"
+        )
+    assert predictor_raw_store_root is not None
+    assert predictor_derived_store_root is not None
+    assert outcome_raw_store_root is not None
+    assert checkpoint_core_store_root is not None
+    _validate_external_roots_disjoint(
+        {
+            "predictor raw": predictor_raw_store_root,
+            "predictor derived": predictor_derived_store_root,
+            "outcome raw": outcome_raw_store_root,
+            "checkpoint core": checkpoint_core_store_root,
+        }
+    )
+
+    # Activation evidence and the outcome-blind decision denominator precede
+    # every model state, completed-month, outcome, score, picks, or result-body read.
     payload_bytes = _stable_plain_file_bytes(
-        activation_payload_path, label="canonical activation payload"
+        activation_payload_path,
+        label="canonical activation payload",
+        required_mode=0o644,
     )
     receipt_bytes = _stable_plain_file_bytes(
-        activation_receipt_path, label="canonical activation receipt"
+        activation_receipt_path,
+        label="canonical activation receipt",
+        required_mode=0o644,
     )
-    payload = _parse_json_object_bytes(
-        payload_bytes, label="canonical activation payload"
+    context_bytes = _stable_plain_file_bytes(
+        _require_private_local_file(
+            activation_context_path, label="canonical activation context"
+        ),
+        label="canonical activation context",
+        required_mode=0o600,
     )
-    receipt = _parse_json_object_bytes(
-        receipt_bytes, label="canonical activation receipt"
+    payload = _parse_json_object_bytes(payload_bytes, label="canonical activation payload")
+    receipt = _parse_json_object_bytes(receipt_bytes, label="canonical activation receipt")
+    context_value = _parse_json_object_bytes(
+        context_bytes, label="canonical activation context"
     )
     payload_sha = validate_activation_payload(payload, protocol)
     receipt_sha = validate_activation_receipt(
@@ -8541,69 +13051,66 @@ def audit(
         payload,
         protocol,
         payload_file_path=activation_payload_path,
+        payload_file_bytes=payload_bytes,
     )
-    decision_bytes = _stable_plain_file_bytes(
-        decisions_path, label="canonical decision ledger"
+    activation_context = validate_activation_context(
+        context_value,
+        payload=payload,
+        payload_sha256=payload_sha,
+        receipt=receipt,
+        receipt_sha256=receipt_sha,
+        protocol=protocol,
+        receipt_file_path=activation_receipt_path,
+        receipt_file_bytes=receipt_bytes,
     )
-    decisions = validate_decision_records(
-        _parse_jsonl_bytes(decision_bytes, label="canonical decision ledger")
+    runner_bytes = _stable_plain_file_bytes(
+        runner_path, label="registered v1.8 runner"
+    )
+    runner_sha = hashlib.sha256(runner_bytes).hexdigest()
+    rehearsal_runner_surface = validate_a2_nonauthority_rehearsal_runner_surface(
+        runner_bytes
+    )
+    rehearsal_bytes = _stable_plain_file_bytes(
+        DEFAULT_REHEARSAL,
+        label="registered A2 nonauthority rehearsal driver",
+        required_mode=0o644,
+    )
+    rehearsal_driver_surface = validate_a2_nonauthority_rehearsal_driver_surface(
+        rehearsal_bytes
+    )
+
+    decisions, decision_bytes = load_record_shard_authority(
+        ledger_path=decisions_path,
+        authority_directory=DEFAULT_DECISION_RECORDS,
+        key_field="session_date",
+        required_fields=DECISION_REQUIRED_FIELDS,
+        validator=validate_decision_records,
     )
     if not decisions:
-        raise AuditError("terminal audit requires a non-empty decision ledger")
+        raise AuditError("terminal audit requires a non-empty decision authority")
+    activation_fields = ACTIVATION_CONTEXT_FIELDS[:14]
+    if any(
+        any(row[field] != activation_context[field] for field in activation_fields)
+        for row in decisions
+    ):
+        raise AuditError("decision authority differs from canonical activation context")
     calendar_bytes = _stable_plain_file_bytes(
         calendar_path, label="registered TSE calendar"
     )
     calendar = load_registered_calendar(calendar_path)
-    first = first_counted_session(
-        workflow_run_updated_at=decisions[0][
-            "activation_receipt_workflow_run_updated_at"
-        ],
-        workflow_run_observed_at=decisions[0][
-            "activation_receipt_workflow_run_observed_at"
-        ],
-        calendar=calendar,
-        not_before_session=protocol["periods"]["not_before_session"],
-    )
-    terminal = deterministic_terminal_session(first, calendar)
+    first = _a2_date(activation_context["first_counted_session"], "context first")
+    terminal = _a2_date(activation_context["terminal_session"], "context terminal")
     expected_sessions = calendar[(calendar >= first) & (calendar <= terminal)]
     observed_sessions = pd.DatetimeIndex(
         pd.to_datetime([row["session_date"] for row in decisions])
     )
-    if not observed_sessions.equals(expected_sessions):
-        raise AuditError(
-            "decision ledger is not the exact registered terminal denominator"
-        )
-    month_bytes = _stable_plain_file_bytes(
-        months_path, label="canonical completed-month ledger"
-    )
-    month_records = _parse_jsonl_bytes(
-        month_bytes, label="canonical completed-month ledger"
-    )
-    # The exact terminal decision denominator and the completed-month
-    # structural/hash/chronology authority must be ready before the outcome
-    # ledger is even opened.  This preflight is intentionally outcome-blind.
-    preflight_terminal_completed_month_coverage(
-        month_records, decisions, protocol
-    )
-    outcome_bytes = _stable_plain_file_bytes(
-        outcomes_path, label="canonical outcome ledger"
-    )
-    outcome_records = _parse_jsonl_bytes(
-        outcome_bytes, label="canonical outcome ledger"
-    )
-    outcomes = validate_outcome_records(outcome_records, decisions)
-    # This terminal-inclusive seal is the performance unblinding boundary.
-    # It must succeed before any external outcome reparse, picks materialization,
-    # predictor replay, bootstrap, grouping, or evaluation-frame construction.
-    months = validate_terminal_completed_month_coverage(
-        month_records, decisions, outcomes, protocol
-    )
-    # Only the exact terminal-inclusive month seal permits parsing a normal
-    # pass/reject result.  Before this point only the outcome-blind status line
-    # above has been inspected.
-    result = _parse_json_object_bytes(result_bytes, label="canonical terminal result")
-    if result.get("status") != result_status:
-        raise AuditError("canonical result status discriminator changed on parse")
+    if (
+        not observed_sessions.equals(expected_sessions)
+        or len(decisions) != int(activation_context["terminal_scheduled_sessions"])
+        or decisions[0]["session_date"] != str(first.date())
+        or decisions[-1]["session_date"] != str(terminal.date())
+    ):
+        raise AuditError("decision authority is not the canonical terminal denominator")
     activation_git = validate_activation_git_history(
         payload,
         receipt,
@@ -8612,63 +13119,38 @@ def audit(
         repository_root=ROOT,
         payload_file_path=activation_payload_path,
         receipt_file_path=activation_receipt_path,
+        payload_file_bytes=payload_bytes,
+        receipt_file_bytes=receipt_bytes,
     )
-    validate_live_module_origin_closure(
-        runtime_lock, phase="post-activation-network"
-    )
-    external_identity_registry: dict[tuple[int, int], str] = {}
-    if checkpoint_core_store_root is None:
-        raise AuditError("terminal audit requires --checkpoint-core-store-root")
-    runner_bytes = _stable_plain_file_bytes(runner_path, label="registered v1.8 runner")
-    runner_sha = hashlib.sha256(runner_bytes).hexdigest()
-    checkpoint_input = validate_checkpoint_evidence(
-        decisions,
-        proposal_directory=checkpoint_proposal_directory,
-        checkpoint_core_store_root=checkpoint_core_store_root,
-        protocol=protocol,
-        activation_payload=payload,
-        runner_sha256=runner_sha,
-        external_identity_registry=external_identity_registry,
-        repository_root=ROOT,
-    )
-    validate_live_module_origin_closure(
-        runtime_lock, phase="post-checkpoint-network"
-    )
-    if outcome_raw_store_root is None:
-        raise AuditError("terminal audit requires --outcome-raw-store-root")
-    outcome_manifests = _outcome_manifest_map(
-        outcome_manifest_directory,
-        decisions,
-        protocol,
-        raw_store_root=outcome_raw_store_root,
-        external_identity_registry=external_identity_registry,
-    )
-    outcomes = validate_outcome_records(
-        outcome_records,
-        decisions,
-        outcome_manifests=outcome_manifests,
-    )
-    validate_live_module_origin_closure(runtime_lock, phase="post-outcome-parser")
-    expected_picks_bytes = recompute_picks_csv_bytes(decisions, outcomes)
-    picks_bytes = _stable_plain_file_bytes(
-        picks_path, label="canonical picks output"
-    )
-    recorder.check(
-        "picks_output_recomputed_from_decision_and_outcome_ledgers",
-        picks_bytes == expected_picks_bytes,
-    )
-    manifests = _manifest_map(
-        state_manifest_directory,
-        protocol,
-        first_counted_session=first,
-    )
-    if predictor_raw_store_root is None:
-        raise AuditError("terminal audit requires --predictor-raw-store-root")
+    validate_live_module_origin_closure(runtime_lock, phase="post-activation-network")
+
+    registry: dict[tuple[int, int], str] = {}
     source_manifests = _source_manifest_map(
         source_manifest_directory,
         protocol,
+        first_counted_session_value=first,
+        predictor_raw_store_root=None,
+        expected_sessions=[row["session_date"] for row in decisions],
+    )
+    final_source = source_manifests.get(decisions[-1]["source_manifest_sha256"])
+    if final_source is None:
+        raise AuditError("terminal decision lacks its source manifest")
+    terminal_raw_records = _a2_source_records(final_source)
+
+    # No derived A2 accelerator or fold is opened before this direct raw proof.
+    direct_by_key = _reparse_predictor_raw_objects_once(
+        terminal_raw_records,
         predictor_raw_store_root=predictor_raw_store_root,
-        external_identity_registry=external_identity_registry,
+        external_identity_registry=registry,
+    )
+    validate_live_module_origin_closure(runtime_lock, phase="post-predictor-raw-reparse")
+
+    represented_months = sorted(
+        {row["session_date"][:7] for row in decisions}
+    )
+    month_source_manifests = _month_source_manifest_map(
+        month_source_manifest_directory,
+        expected_months=represented_months,
     )
     fold_manifests, fold_manifests_by_month = _fold_artifact_maps(
         fold_manifest_directory,
@@ -8676,86 +13158,153 @@ def audit(
         protocol,
         runner_sha256=runner_sha,
         first_counted_session=first,
+        expected_months=represented_months,
     )
+    predictor_internal = validate_predictor_evidence(
+        source_manifests,
+        decisions,
+        protocol,
+        predictor_raw_store_root=predictor_raw_store_root,
+        predictor_derived_store_root=predictor_derived_store_root,
+        activation_payload=payload,
+        activation_payload_sha256=payload_sha,
+        activation_receipt_sha256=receipt_sha,
+        activation_observed_at=activation_context[
+            "activation_receipt_workflow_run_observed_at"
+        ],
+        runtime_lock=runtime_lock,
+        runner_sha256=runner_sha,
+        month_source_manifests=month_source_manifests,
+        fold_manifests_by_month=fold_manifests_by_month,
+        fold_model_directory=fold_model_directory,
+        scores=None,
+        direct_by_key=direct_by_key,
+        external_identity_registry=registry,
+    )
+    score_expectations = predictor_internal.pop("_outcome_blind_score_expectations")
+    predictor_raw_records = predictor_internal.pop("_terminal_predictor_raw_records")
+    predictor_shard_bindings = predictor_internal.pop(
+        "_terminal_predictor_shard_bindings"
+    )
+    predictor_input = dict(predictor_internal)
+    validate_live_module_origin_closure(runtime_lock, phase="post-predictor-fit-score")
 
-    recorder.check(
-        "first_counted_session_recomputed",
-        decisions[0]["session_date"] == str(first.date()),
-        observed=decisions[0]["session_date"],
-        expected=str(first.date()),
+    # Checkpoint evidence remains outcome-blind and is the final gate before
+    # state/month/outcome/score/result semantic unsealing.
+    checkpoint_input = validate_checkpoint_evidence(
+        decisions,
+        proposal_directory=checkpoint_proposal_directory,
+        checkpoint_core_store_root=checkpoint_core_store_root,
+        protocol=protocol,
+        activation_payload=payload,
+        runner_sha256=runner_sha,
+        external_identity_registry=registry,
+        repository_root=ROOT,
     )
-    recorder.check("activation_git_history_and_committed_bytes_verified", True)
-    recorder.check(
-        "registered_calendar_denominator_and_terminal_exact",
-        observed_sessions.equals(expected_sessions),
-        observed=list(observed_sessions.strftime("%Y-%m-%d")),
-        expected=list(expected_sessions.strftime("%Y-%m-%d")),
+    validate_live_module_origin_closure(runtime_lock, phase="post-checkpoint-network")
+    recomputed_input = {**checkpoint_input, **predictor_input}
+    required_input_fields = tuple(protocol["result_contract"]["required_input_fields"])
+    if set(recomputed_input) != set(required_input_fields) or len(
+        required_input_fields
+    ) != len(set(required_input_fields)):
+        raise AuditError("A2 predictor/checkpoint result input field set changed")
+
+    # Performance-bearing authorities are opened only after both blind gates.
+    manifests = _manifest_map(
+        state_manifest_directory,
+        protocol,
+        first_counted_session=first,
+        expected_months=represented_months,
     )
-    recorder.check(
-        "activation_hashes_bound_to_every_decision",
-        all(
-            row["activation_payload_sha256"] == payload_sha
-            and row["activation_receipt_sha256"] == receipt_sha
-            for row in decisions
+    month_required_fields = tuple(
+        protocol["state_contract"]["completed_month_record_required_fields"]
+    )
+    month_records, month_bytes = load_record_shard_authority(
+        ledger_path=months_path,
+        authority_directory=DEFAULT_MONTH_RECORDS,
+        key_field="completed_month",
+        required_fields=month_required_fields,
+        validator=lambda rows: preflight_terminal_completed_month_coverage(
+            rows, decisions, protocol
         ),
     )
-    recorder.check(
-        "receipt_commit_binding_month_fixed",
-        len(
-            {
-                (
-                    row["activation_receipt_commit_sha"],
-                    row["activation_receipt_commit_url"],
-                    row["activation_receipt_commit_committed_at"],
-                    row["activation_receipt_commit_observed_at"],
-                    row["branch_tip_sha_when_receipt_observed"],
-                    row["activation_receipt_file_sha256"],
-                    row["activation_receipt_workflow_run_id"],
-                    row["activation_receipt_workflow_run_updated_at"],
-                    row["activation_receipt_workflow_run_observed_at"],
-                    canonical_json_sha256(row["receipt_workflow_run_observation"]),
-                )
-                for row in decisions
-            }
-        )
-        == 1,
+    outcome_records, outcome_bytes = load_record_shard_authority(
+        ledger_path=outcomes_path,
+        authority_directory=DEFAULT_OUTCOME_RECORDS,
+        key_field="session_date",
+        required_fields=OUTCOME_REQUIRED_FIELDS,
+        validator=lambda rows: validate_outcome_records(rows, decisions),
     )
+    outcome_manifests = _outcome_manifest_map(
+        outcome_manifest_directory,
+        decisions,
+        protocol,
+        raw_store_root=outcome_raw_store_root,
+        external_identity_registry=registry,
+    )
+    outcomes = validate_outcome_records(
+        outcome_records, decisions, outcome_manifests=outcome_manifests
+    )
+    validate_live_module_origin_closure(runtime_lock, phase="post-outcome-parser")
+    months = validate_terminal_completed_month_coverage(
+        month_records, decisions, outcomes, protocol
+    )
+
+    scores, score_bytes = _read_csv_stable(
+        scores_path,
+        label="canonical score output",
+        dtype={"code": str},
+        float_precision="round_trip",
+    )
+    if scores.columns.tolist() != list(SCORE_FIELDS):
+        raise AuditError("canonical score output header changed")
+    canonical_score_bytes = scores.to_csv(index=False, lineterminator="\n").encode()
+    if score_bytes != canonical_score_bytes:
+        raise AuditError("canonical score output bytes are not canonical CSV")
+    validate_deferred_score_evidence(
+        scores,
+        score_expectations,
+        decisions,
+        score_path=scores_path,
+        authority_directory=DEFAULT_SCORE_SESSIONS,
+    )
+    score_semantic_sha = semantic_score_hash(scores)
+    validate_terminal_predictor_outcome_cross_role(
+        predictor_raw_records,
+        predictor_shard_bindings,
+        list(outcome_manifests.values()),
+        terminal_session=terminal,
+        predictor_derived_store_root=predictor_derived_store_root,
+        external_identity_registry=registry,
+    )
+
+    expected_picks_bytes = recompute_picks_csv_bytes(decisions, outcomes)
+    picks_bytes = _stable_plain_file_bytes(
+        _require_private_local_file(picks_path, label="canonical picks output"),
+        label="canonical picks output",
+        required_mode=0o600,
+    )
+    if picks_bytes != expected_picks_bytes:
+        raise AuditError("picks output differs from decision/outcome authorities")
+
+    # Only now may the normal result body be loaded.
+    result_bytes = _stable_plain_file_bytes(
+        result_path, label="canonical terminal result", required_mode=0o600
+    )
+    result = _parse_json_object_bytes(result_bytes, label="canonical terminal result")
+    if result.get("status") != result_status:
+        raise AuditError("canonical result status changed after blind validation")
+
     activation_ready = max(
         _aware_timestamp(
-            decisions[0]["activation_receipt_workflow_run_updated_at"],
-            "activation_receipt_workflow_run_updated_at",
+            activation_context["activation_receipt_workflow_run_updated_at"],
+            "activation workflow updated",
         ),
         _aware_timestamp(
-            decisions[0]["activation_receipt_workflow_run_observed_at"],
-            "activation_receipt_workflow_run_observed_at",
+            activation_context["activation_receipt_workflow_run_observed_at"],
+            "activation workflow observed",
         ),
     )
-    recorder.check(
-        "activation_is_actual_and_all_seals_are_after_observation",
-        all(
-            _aware_timestamp(
-                row["decision_materialized_at"], "decision_materialized_at"
-            )
-            >= activation_ready
-            for row in decisions
-        )
-        and all(
-            state["activation_payload_sha256"] == payload_sha
-            and state["activation_receipt_sha256"] == receipt_sha
-            and _aware_timestamp(state["created_at"], "state created_at")
-            >= activation_ready
-            for state in manifests.values()
-        )
-        and all(
-            _aware_timestamp(fold["fit_started_at"], "fold fit_started_at")
-            >= activation_ready
-            and _aware_timestamp(fold["fit_completed_at"], "fold fit_completed_at")
-            >= activation_ready
-            for fold in fold_manifests_by_month.values()
-        ),
-    )
-
-    represented_months = sorted({row["session_date"][:7] for row in decisions})
     state_schedule = recompute_state_schedule(
         seed_records=recompute_registered_seed(protocol),
         completed_months=months,
@@ -8767,105 +13316,22 @@ def audit(
         activation_payload_sha256=payload_sha,
         activation_receipt_sha256=receipt_sha,
     )
-    recorder.check(
-        "state_schedule_recomputed_from_seed_and_exact_completed_month_ledger",
-        len(state_schedule) == len(represented_months),
-    )
-    recorder.check(
-        "state_manifest_exists_and_binds_each_target_month",
-        set(represented_months) == set(manifests)
-        and all(
-            row["state_manifest_sha256"]
-            == manifests[row["session_date"][:7]]["state_manifest_sha256"]
-            and row["three_prior_calendar_months"]
-            == manifests[row["session_date"][:7]]["three_prior_calendar_months"]
-            and row["three_complete_pair_day_counts"]
-            == manifests[row["session_date"][:7]]["three_complete_pair_day_counts"]
-            and row["three_month_medians_pct"]
-            == manifests[row["session_date"][:7]]["three_month_medians_pct"]
-            for row in decisions
-        ),
-    )
-    recorder.check(
-        "fold_bundles_are_numeric_sealed_and_bind_every_available_month",
-        all(
-            (
-                state["c00_fold_manifest_sha256"] is None
-                and state["fold_model_bundle_file_sha256"] is None
-                and month not in fold_manifests_by_month
-            )
-            or (
-                state["c00_fold_manifest_sha256"] in fold_manifests
-                and fold_manifests[state["c00_fold_manifest_sha256"]][
-                    "target_month"
-                ]
-                == month
-                and fold_manifests[state["c00_fold_manifest_sha256"]][
-                    "fold_model_bundle_file_sha256"
-                ]
-                == state["fold_model_bundle_file_sha256"]
-            )
-            for month, state in manifests.items()
-        )
-        and all(
-            row["c00_fold_manifest_sha256"]
-            == manifests[row["session_date"][:7]]["c00_fold_manifest_sha256"]
-            and row["fold_model_bundle_file_sha256"]
-            == manifests[row["session_date"][:7]][
-                "fold_model_bundle_file_sha256"
-            ]
-            for row in decisions
-        ),
-    )
-    recorder.check(
-        "source_manifests_bind_decisions_and_are_D_minus_one",
-        set(source_manifests)
-        == {row["source_manifest_sha256"] for row in decisions}
-        and all(
-            row["source_manifest_sha256"] in source_manifests
-            and source_manifests[row["source_manifest_sha256"]]["target_session"]
-            == row["session_date"]
-            and source_manifests[row["source_manifest_sha256"]]["source_complete"]
-            == row["source_complete"]
-            for row in decisions
-        ),
-    )
-    recorder.check(
-        "every_outcome_manifest_and_external_raw_object_reparsed_including_terminal",
-        len(outcome_manifests) == len(decisions)
-        and decisions[-1]["session_date"]
-        in {item["target_session"] for item in outcome_manifests.values()}
-        and all(
-            row["outcome_manifest_sha256"] in outcome_manifests
-            for row in outcomes
-        ),
-    )
-    recorder.check(
-        "completed_month_ledger_covers_every_represented_month_including_terminal",
-        [row["completed_month"] for row in months] == represented_months,
-    )
-
-    scores, score_bytes = _read_csv_stable(
-        scores_path,
-        label="canonical score output",
-        dtype={"code": str},
-        float_precision="round_trip",
-    )
-    score_semantic_sha = semantic_score_hash(scores)
-    if score_bytes != scores.to_csv(index=False, lineterminator="\n").encode("utf-8"):
-        raise AuditError("canonical score output bytes are not canonical CSV")
-    score_dates = pd.to_datetime(scores["session_date"], errors="coerce")
-    score_sessions = {str(item.date()) for item in score_dates}
-    expected_score_sessions = {
-        row["session_date"] for row in decisions if row["model_complete"]
-    }
-    recorder.check(
-        "score_output_outcome_free_and_two_rows_per_session",
-        score_dates.notna().all()
-        and len(scores) == 2 * len(expected_score_sessions)
-        and score_sessions == expected_score_sessions
-        and not (OUTCOME_FIELDS & set(scores)),
-    )
+    if set(manifests) != set(represented_months):
+        raise AuditError("state-manifest set differs from represented months")
+    for row in decisions:
+        state = manifests[row["session_date"][:7]]
+        for field in (
+            "state_manifest_sha256",
+            "c00_fold_manifest_sha256",
+            "fold_model_bundle_file_sha256",
+            "three_prior_calendar_months",
+            "three_complete_pair_day_counts",
+            "three_month_medians_pct",
+            "state_value_pct",
+            "selected_source_rank",
+        ):
+            if row[field] != state[field]:
+                raise AuditError(f"decision/state binding changed: {field}")
     validate_pit_causality(
         decisions,
         scores,
@@ -8874,42 +13340,10 @@ def audit(
         fold_manifests=fold_manifests,
         activation_ready_at=activation_ready,
     )
-    recorder.check(
-        "score_and_decision_timestamp_causality_recomputed",
-        True,
-    )
-    predictor_input = validate_predictor_evidence(
-        source_manifests,
-        decisions,
-        protocol,
-        predictor_raw_store_root=predictor_raw_store_root,
-        fold_manifests_by_month=fold_manifests_by_month,
-        fold_model_directory=fold_model_directory,
-        scores=scores,
-        external_identity_registry=external_identity_registry,
-    )
-    validate_live_module_origin_closure(runtime_lock, phase="post-predictor-fit-score")
-    recomputed_input = {**checkpoint_input, **predictor_input}
-    recorder.check(
-        "predictor_raw_clean_room_replay_and_result_input_exact",
-        set(recomputed_input)
-        == set(protocol["result_contract"]["required_input_fields"])
-        and result.get("input") == recomputed_input,
-        observed=result.get("input"),
-        expected=recomputed_input,
-    )
     evaluation = evaluate_candidate(
-        decisions,
-        outcomes,
-        calendar=calendar,
-        completed_months=months,
+        decisions, outcomes, calendar=calendar, completed_months=months
     )
     validate_live_module_origin_closure(runtime_lock, phase="pre-result-verification")
-    recorder.check(
-        "terminal_gate_evaluated_once",
-        evaluation.get("gate_evaluated") is True
-        and evaluation.get("scheduled_sessions") == len(decisions),
-    )
 
     artifact_hashes = {
         "decision_ledger_sha256": hashlib.sha256(decision_bytes).hexdigest(),
@@ -8919,54 +13353,9 @@ def audit(
         "score_semantic_sha256": score_semantic_sha,
         "picks_output_sha256": hashlib.sha256(picks_bytes).hexdigest(),
     }
-
-    required_result = set(protocol["result_contract"]["required_top_level_fields"])
-    recorder.check(
-        "result_top_level_schema_complete",
-        set(result) == required_result,
-        observed=sorted(result),
-        expected=sorted(required_result),
-    )
-    recorder.check(
-        "result_identity_hashes_exact",
-        result.get("protocol_id") == PROTOCOL_ID
-        and result.get("schema_version") == 1
-        and result.get("protocol_sha256") == protocol_sha
-        and result.get("runner_sha256") == runner_sha
-        and result.get("activation_payload_sha256") == payload_sha
-        and result.get("activation_receipt_sha256") == receipt_sha
-        and result.get("activation_receipt_commit_sha")
-        == decisions[0]["activation_receipt_commit_sha"],
-    )
     runtime_versions = {
         item["name"]: item["version"]
         for item in runtime_lock["runtime"]["distributions"]
-    }
-    recorder.check(
-        "result_runtime_exactly_matches_operational_lock",
-        runtime_lock_sha == RUNTIME_LOCK_SHA256
-        and isinstance(result.get("runtime"), Mapping)
-        and set(result["runtime"])
-        == set(protocol["result_contract"]["required_runtime_fields"])
-        and result["runtime"].get("runtime_lock_sha256") == runtime_lock_sha
-        and result["runtime"].get("runtime_lock_self_sha256")
-        == runtime_lock["runtime_lock_self_sha256"]
-        and _aware_timestamp(
-            result["runtime"].get("runtime_lock_verified_at"),
-            "result runtime_lock_verified_at",
-        )
-        <= datetime.now(timezone.utc)
-        and result["runtime"].get("python_version")
-        == runtime_lock["runtime"]["python"]["version"]
-        and result["runtime"].get("numpy_version") == runtime_versions["numpy"]
-        and result["runtime"].get("pandas_version") == runtime_versions["pandas"]
-        and result["runtime"].get("scikit_learn_version")
-        == runtime_versions["scikit-learn"],
-    )
-    authority = result.get("authority", {})
-    expected_authority = {
-        "analysis_type": protocol["authority"]["analysis_type"],
-        **protocol["result_contract"]["authority_values"],
     }
     observed_runtime = result.get("runtime")
     if not isinstance(observed_runtime, Mapping) or set(observed_runtime) != set(
@@ -8986,6 +13375,10 @@ def audit(
         "pandas_version": runtime_versions["pandas"],
         "scikit_learn_version": runtime_versions["scikit-learn"],
     }
+    expected_authority = {
+        "analysis_type": protocol["authority"]["analysis_type"],
+        **protocol["result_contract"]["authority_values"],
+    }
     candidate_evaluation = {**evaluation, "input_bindings": recomputed_input}
     expected_result = {
         "schema_version": 1,
@@ -8994,17 +13387,18 @@ def audit(
         "runner_sha256": runner_sha,
         "activation_payload_sha256": payload_sha,
         "activation_receipt_sha256": receipt_sha,
-        "activation_receipt_commit_sha": decisions[0][
+        "activation_receipt_commit_sha": activation_context[
             "activation_receipt_commit_sha"
         ],
         "status": evaluation["status"],
         "failure_reason": None,
         "integrity_stage": None,
         "authority": expected_authority,
+        "raw_source_provenance": _raw_source_provenance_envelope(),
         "input": recomputed_input,
         "forward_period": {
-            "first_counted_session": decisions[0]["session_date"],
-            "terminal_session": decisions[-1]["session_date"],
+            "first_counted_session": str(first.date()),
+            "terminal_session": str(terminal.date()),
             "scheduled_sessions": len(decisions),
             "represented_calendar_months": len(represented_months),
         },
@@ -9023,91 +13417,56 @@ def audit(
         "artifact_sha256": artifact_hashes,
         "runtime": expected_runtime,
     }
+    if set(result) != set(protocol["result_contract"]["required_top_level_fields"]):
+        raise AuditError("normal result top-level fields changed")
     expected_result_bytes = canonical_json_file_bytes(expected_result)
     if result != expected_result or result_bytes != expected_result_bytes:
         raise AuditError(
             "normal result is not the exact independently reconstructed canonical object"
         )
-    recorder.check("full_result_object_and_canonical_bytes_exact", True)
-    recorder.check(
-        "result_authority_research_only",
-        authority == expected_authority
-        and evaluation["decision"]["production_model_changed"] is False
-        and evaluation["decision"]["production_promotion_allowed"] is False
-        and evaluation["decision"]["orders_allowed"] is False,
-    )
-    recorder.check(
-        "result_status_and_winner_recomputed",
-        result.get("status") == evaluation["status"]
-        and result.get("failure_reason") is None
-        and result.get("integrity_stage") is None
-        and result.get("decision") == evaluation["decision"],
-        observed={"status": result.get("status"), "decision": result.get("decision")},
-        expected={"status": evaluation["status"], "decision": evaluation["decision"]},
-    )
-    recorder.compare_nested(
-        "candidate_model_metrics_recomputed",
-        result.get("models", {}).get(SH01),
-        candidate_evaluation,
-    )
-    recorder.compare_nested(
-        "control_cost_metrics_recomputed",
-        {
-            C00_TOP1: result.get("models", {}).get(C00_TOP1),
-            C02_TOP2: result.get("models", {}).get(C02_TOP2),
-        },
-        evaluation["control_cost_metrics"],
-    )
-    recorder.compare_nested(
-        "completed_month_result_records_recomputed",
-        result.get("state_months"),
-        months,
-    )
-    recorder.compare_nested(
-        "forward_period_recomputed",
-        result.get("forward_period"),
-        {
-            "first_counted_session": decisions[0]["session_date"],
-            "terminal_session": decisions[-1]["session_date"],
-            "scheduled_sessions": len(decisions),
-            "represented_calendar_months": len(represented_months),
-        },
-    )
-    candidate_gate = result.get("candidate_gate", {})
-    recorder.check(
-        "candidate_gate_checks_recomputed",
-        candidate_gate.get("candidate_id") == SH01
-        and candidate_gate.get("checks") == evaluation["gate_checks"]
-        and candidate_gate.get("passed") == evaluation["gate_passed"],
-    )
 
-    recorder.check(
-        "result_artifact_hashes_recomputed",
-        result.get("artifact_sha256") == artifact_hashes,
-        observed=result.get("artifact_sha256"),
-        expected=artifact_hashes,
-    )
-    recorder.check(
-        "result_file_bytes_are_canonical",
-        result_bytes == canonical_json_file_bytes(result),
-    )
-    passed = not recorder.discrepancies and all(recorder.checks.values())
+    checks = {
+        "result_tail_only_before_blind_gates": True,
+        "nonauthority_rehearsal_runner_surface_isolated": True,
+        "nonauthority_rehearsal_driver_surface_isolated": True,
+        "intramonth_retained_semantics_private_and_exact_byte_bound": True,
+        "intramonth_fold_current_hashes_and_target_score_fresh": True,
+        "record_shard_authorities_and_derived_ledgers_exact": True,
+        "predictor_raw_first_parsed_shard_snapshot_cache_exact": True,
+        "checkpoint_validated_before_performance_unseal": True,
+        "cross_role_predictor_outcome_bytes_and_nonalias_exact": True,
+        "manual_operator_attested_provenance_caveat_exact": True,
+        "full_result_object_and_canonical_bytes_exact": True,
+    }
+    for key, value in checks.items():
+        recorder.check(key, value)
     return {
         "schema_version": 1,
         "audit_id": "model_v18_shoulder_state_independent_audit",
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
-        "status": "pass" if passed else "fail",
+        "status": "pass",
         "independence": {
             "runner_imported": False,
             "project_profit_helpers_imported": False,
             "project_bootstrap_helpers_imported": False,
+            "orchestration_profit_and_gate_reconstruction_independent": True,
+            "registered_parser_and_feature_implementations_reused": True,
+            "parser_or_feature_implementation_independence_claimed": False,
         },
         "artifact_hashes": {
             "protocol": protocol_sha,
             "runtime_lock": runtime_lock_sha,
             "activation_payload_file": hashlib.sha256(payload_bytes).hexdigest(),
             "activation_receipt_file": hashlib.sha256(receipt_bytes).hexdigest(),
+            "activation_context_file": hashlib.sha256(context_bytes).hexdigest(),
             "runner": runner_sha,
+            "rehearsal_runner_surface": canonical_json_sha256(
+                rehearsal_runner_surface
+            ),
+            "rehearsal_driver": hashlib.sha256(rehearsal_bytes).hexdigest(),
+            "rehearsal_driver_surface": canonical_json_sha256(
+                rehearsal_driver_surface
+            ),
             "audit_runner": sha256_file(__file__),
             "calendar": hashlib.sha256(calendar_bytes).hexdigest(),
             **artifact_hashes,
@@ -9121,6 +13480,8 @@ def audit(
             "decision_head_sha256": decisions[-1]["record_sha256"],
             "outcome_head_sha256": outcomes[-1]["record_sha256"],
             "activation_git": activation_git,
+            "raw_source_provenance": _raw_source_provenance_envelope(),
+            "unreferenced_derived_store_extras_are_nonauthority": True,
         },
         "recomputed": evaluation,
         "recomputed_input": recomputed_input,
@@ -9164,6 +13525,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--activation-receipt", type=Path, default=DEFAULT_ACTIVATION_RECEIPT
     )
+    parser.add_argument(
+        "--activation-context", type=Path, default=DEFAULT_ACTIVATION_CONTEXT
+    )
     parser.add_argument("--decisions", type=Path, default=DEFAULT_DECISIONS)
     parser.add_argument("--outcomes", type=Path, default=DEFAULT_OUTCOMES)
     parser.add_argument("--months", type=Path, default=DEFAULT_MONTHS)
@@ -9178,6 +13542,11 @@ def parse_args() -> argparse.Namespace:
         "--source-manifests", type=Path, default=DEFAULT_SOURCE_MANIFESTS
     )
     parser.add_argument(
+        "--month-source-manifests",
+        type=Path,
+        default=DEFAULT_MONTH_SOURCE_MANIFESTS,
+    )
+    parser.add_argument(
         "--outcome-manifests", type=Path, default=DEFAULT_OUTCOME_MANIFESTS
     )
     parser.add_argument(
@@ -9187,6 +13556,11 @@ def parse_args() -> argparse.Namespace:
         "--predictor-raw-store-root",
         type=Path,
         help="external append-only sealed predictor JPX PDF evidence-store root",
+    )
+    parser.add_argument(
+        "--predictor-derived-store-root",
+        type=Path,
+        help="external referenced-only A2 predictor-derived evidence-store root",
     )
     parser.add_argument(
         "--outcome-raw-store-root",
@@ -9216,6 +13590,7 @@ def main() -> None:
         protocol_path=args.protocol,
         activation_payload_path=args.activation_payload,
         activation_receipt_path=args.activation_receipt,
+        activation_context_path=args.activation_context,
         decisions_path=args.decisions,
         outcomes_path=args.outcomes,
         months_path=args.months,
@@ -9223,9 +13598,11 @@ def main() -> None:
         fold_manifest_directory=args.fold_manifests,
         fold_model_directory=args.fold_models,
         source_manifest_directory=args.source_manifests,
+        month_source_manifest_directory=args.month_source_manifests,
         outcome_manifest_directory=args.outcome_manifests,
         checkpoint_proposal_directory=args.checkpoint_proposals,
         predictor_raw_store_root=args.predictor_raw_store_root,
+        predictor_derived_store_root=args.predictor_derived_store_root,
         outcome_raw_store_root=args.outcome_raw_store_root,
         checkpoint_core_store_root=args.checkpoint_core_store_root,
         scores_path=args.scores,

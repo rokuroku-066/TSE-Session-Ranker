@@ -22,10 +22,11 @@ import base64
 import binascii
 from collections.abc import Iterable, Mapping, Sequence
 from contextlib import contextmanager
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 from datetime import date, datetime, time
 from enum import Enum
 import fcntl
+import gc
 import hashlib
 import importlib
 import importlib.metadata
@@ -66,33 +67,65 @@ for import_root in (ROOT / "src", ROOT):
 
 from research import model_v17_liquidity_reliability_runner as v17  # noqa: E402
 from research.model_v13_symbolic_context_runner import G0_FEATURES  # noqa: E402
+from tse_session_ranker.data.common import merge_daily_prices  # noqa: E402
 from tse_session_ranker.data.jpx import collect_jpx  # noqa: E402
 from tse_session_ranker.validation import paired_moving_block_bootstrap  # noqa: E402
 
 
 PROTOCOL = ROOT / "research/model_v18_shoulder_state_protocol.json"
 PROTOCOL_ID = "model_v18_shoulder_state_forward_20260804"
-PROTOCOL_SHA256 = "c623fabfa8e94381bce27d359cefc6e51a9a80f1c18f62f6098cfdfc8e9f6112"
+PROTOCOL_SHA256 = "930a82163f347aa7c303dfea1fb8b593ac6bff95ff774a2c6804c437d679cb5f"
 CALENDAR = ROOT / "research/model_v18_tse_session_calendar.csv"
 CALENDAR_SHA256 = "c5c5908b0e26ebd57eb2e473b9d4ce7f92a7c8b336f6ad70596152de971b77a7"
-HYPOTHESIS_SHA256 = "d92dfea8b02d2e10516e4c98fae7219e8b8cdc91967d57df1c5f546ef55111d6"
+HYPOTHESIS_SHA256 = "7f750b0613252caa6d87bcff7c5b4a783cc33a09a0c5f7bcd6b3d4ed47630025"
 RUNTIME_LOCK = ROOT / "research/model_v18_runtime_lock.json"
-RUNTIME_LOCK_SHA256 = "95a867e2f8f187528a7ba3d24f4db4f1bf0964531b6e0e2b85d88d0c758f1e32"
+RUNTIME_LOCK_SHA256 = "2cd701e0ae5969b3a13236908e260c7f072344f5ca477287b14a3ed22b257a54"
 
 ACTIVATION_PAYLOAD = ROOT / "research/model_v18_shoulder_state_activation_payload.json"
 ACTIVATION_RECEIPT = ROOT / "research/model_v18_shoulder_state_activation_receipt.json"
+ACTIVATION_CONTEXT = ROOT / "research/model_v18_shoulder_state_activation_context.json"
 DECISION_LEDGER = ROOT / "research/model_v18_shoulder_state_decisions.jsonl"
 OUTCOME_LEDGER = ROOT / "research/model_v18_shoulder_state_outcomes.jsonl"
 COMPLETED_MONTH_LEDGER = ROOT / "research/model_v18_shoulder_state_months.jsonl"
+DECISION_RECORD_DIR = ROOT / "research/model_v18_shoulder_state_decision_records"
+OUTCOME_RECORD_DIR = ROOT / "research/model_v18_shoulder_state_outcome_records"
+COMPLETED_MONTH_RECORD_DIR = (
+    ROOT / "research/model_v18_shoulder_state_month_records"
+)
 SOURCE_MANIFEST_DIR = ROOT / "research/model_v18_shoulder_state_source_manifests"
+MONTH_SOURCE_MANIFEST_DIR = (
+    ROOT / "research/model_v18_shoulder_state_month_source_manifests"
+)
 OUTCOME_MANIFEST_DIR = ROOT / "research/model_v18_shoulder_state_outcome_manifests"
 CHECKPOINT_PROPOSAL_DIR = ROOT / "research/model_v18_shoulder_state_checkpoint_proposals"
 FOLD_MANIFEST_DIR = ROOT / "research/model_v18_shoulder_state_fold_manifests"
 FOLD_MODEL_DIR = ROOT / "research/model_v18_shoulder_state_fold_models"
 STATE_MANIFEST_DIR = ROOT / "research/model_v18_shoulder_state_state_manifests"
+SCORE_SESSION_DIR = ROOT / "research/model_v18_shoulder_state_score_sessions"
 SCORE_OUTPUT = ROOT / "research/model_v18_shoulder_state_scores.csv"
 PICKS_OUTPUT = ROOT / "research/model_v18_shoulder_state_picks.csv"
 RESULT_OUTPUT = ROOT / "research/model_v18_shoulder_state_result.json"
+
+# The base v1.8 test retains the legacy tests_path/tests_sha256 payload fields.
+# These additional paths are protocol-fixed in this exact order; their hashes
+# are computed only after commit A's protocol and tests are final, then bound by
+# payload B.  Keeping hashes out of the protocol avoids a protocol/test cycle.
+ADDITIONAL_TEST_ARTIFACT_PATHS = (
+    "tests/test_model_v18_a2_atomic_restart.py",
+    "tests/test_model_v18_a2_core_integration.py",
+    "tests/test_model_v18_a2_cross_role_anchor_abort.py",
+    "tests/test_model_v18_a2_local_authority_recovery.py",
+    "tests/test_model_v18_a2_nondiscretion_terminal_blind.py",
+    "tests/test_model_v18_a2_p0_negative_contracts.py",
+    "tests/test_model_v18_a2_preactivation_authority.py",
+    "tests/test_model_v18_a2_record_authority.py",
+    "tests/test_model_v18_a2_result_publication_retry.py",
+    "tests/test_model_v18_a2_resume_authority.py",
+    "tests/test_model_v18_a2_real_rehearsal.py",
+    "tests/test_model_v18_a2_independent_audit.py",
+    "tests/test_model_v18_operations.py",
+)
+ADDITIONAL_TEST_ARTIFACT_FIELDS = ("path", "sha256")
 
 CANDIDATE_ID = "SH01_LAGGED_MONTHLY_SHOULDER_STATE"
 C00_ID = "C00_PRICE_RIDGE_TOP1"
@@ -111,6 +144,17 @@ BOOTSTRAP_CONFIDENCE = 0.90
 TOKYO = ZoneInfo("Asia/Tokyo")
 CUTOFF_TIME = time(8, 58, 59)
 CANONICAL_JSON_CONTRACT = "project_canonical_json_v1"
+RAW_SOURCE_PROVENANCE_MODE = "manual_operator_attested_v1"
+RAW_SOURCE_PROVENANCE_CAVEAT_ID = "manual_jpx_origin_not_independently_verified_v1"
+RAW_SOURCE_PROVENANCE_CAVEAT = (
+    "The operator attests faithful manual acquisition of the labeled official JPX "
+    "PDF without omission, substitution, or pre-seal alteration. The protocol "
+    "proves post-seal bytes and computation only; it has no independent server "
+    "receipt, availability, acquisition-time, origin, or authenticity proof."
+)
+RAW_SOURCE_PROVENANCE_CAVEAT_SHA256 = hashlib.sha256(
+    RAW_SOURCE_PROVENANCE_CAVEAT.encode("utf-8")
+).hexdigest()
 ZERO_SHA256 = "0" * 64
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 GIT_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
@@ -121,6 +165,21 @@ JPX_PARSER_VERSION = "jpx_daily_text_v6_special_quote_marker"
 JPX_PARSER_SHA256 = "1bd2e74acced608eb36c3606b593ea407d2d1e5f54b3283790ef8fd0fb1041f7"
 PREDICTOR_OBJECT_PREFIX = "model_v18_shoulder_state/predictor/"
 OUTCOME_OBJECT_PREFIX = "model_v18_shoulder_state/outcome/"
+PREDICTOR_SHARD_OBJECT_PREFIX = "model_v18_shoulder_state/predictor-shard/"
+G0_PANEL_CACHE_OBJECT_PREFIX = "model_v18_shoulder_state/g0-panel/"
+CACHE_ANCHOR_OBJECT_PREFIX = "model_v18_shoulder_state/cache-anchor/"
+MODEL_PRICE_SNAPSHOT_OBJECT_PREFIX = (
+    "model_v18_shoulder_state/model-price-snapshot/"
+)
+FOLD_STAGE_OBJECT_PREFIX = "model_v18_shoulder_state/fold-stage/"
+PREDICTOR_CACHE_CONTRACT_ID = "model_v18_predictor_cache_a2_v1"
+PARSED_SHARD_JSONL_CONTRACT = (
+    "canonical_json_array_rows_v1:utf8_no_bom_lf_final_lf;"
+    "registered_column_order;stable_date_code;strict_types;finite_binary64;"
+    "ieee_negative_zero_preserved"
+)
+G0_CACHE_JSONL_CONTRACT = PARSED_SHARD_JSONL_CONTRACT
+
 CHECKPOINT_CORE_OBJECT_PREFIX = "model_v18_shoulder_state/checkpoint-core/"
 CHECKPOINT_CORE_ENVELOPE_BYTES = 16_384
 CHECKPOINT_CORE_MAGIC = b"TSEV18CP"
@@ -129,7 +188,7 @@ GITHUB_API_ACCEPT = "application/vnd.github+json"
 GITHUB_API_VERSION = "2022-11-28"
 GITHUB_API_USER_AGENT = "TSE-Session-Ranker-model-v18-activation"
 GITHUB_REPOSITORY = "rokuroku-066/TSE-Session-Ranker"
-GITHUB_BRANCH = "agent/v16-real-data-model-eval-20260728"
+GITHUB_BRANCH = "agent/v18-a2-shoulder-state-20260805"
 GITHUB_REF = f"refs/heads/{GITHUB_BRANCH}"
 WORKFLOW_PATH = ".github/workflows/tests.yml"
 WORKFLOW_SHA256 = "7c9811768511bacb889e0f7bfa9508c2d2212079e8857db3b152d75868c232c7"
@@ -238,10 +297,6 @@ ABORT_FAILURE_REASONS = (
     "canonical_path_conflict",
 )
 DAILY_FAILURE_REASONS = (
-    "source_missing_before_cutoff",
-    "source_partial_or_late_before_cutoff",
-    "fold_unavailable_before_target_month",
-    "pair_unavailable_before_cutoff",
     "state_insufficient_prior_months",
     "state_value_exact_zero",
 )
@@ -280,6 +335,9 @@ CHECKPOINT_CORE_FIELDS = (
     "c00_fold_manifest_sha256",
     "fold_model_bundle_file_sha256",
     "state_manifest_sha256",
+    "score_session_file_sha256",
+    "score_session_semantic_sha256",
+    "score_session_set_sha256",
     "decision_cutoff",
     "computed_at",
     "source_complete",
@@ -359,6 +417,49 @@ _LOCKED_PDFTOTEXT_EXECUTABLE: Path | None = None
 _LOCKED_TLS_CAFILE: Path | None = None
 _LIVE_MODULE_CLOSURE_STATE: dict[str, Any] | None = None
 
+
+A2_REHEARSAL_INPUT_KINDS = (
+    "full31_reference",
+    "month_boundary_compact",
+    "intramonth_fold_reuse_upper_bound_proxy",
+)
+
+
+@dataclass(frozen=True)
+class _A2RehearsalContract:
+    """Opaque, process-local capability for the nonauthority timing seam."""
+
+    nonce: str
+    protocol_sha256: str
+    runner_sha256: str
+    runtime_lock_sha256: str
+    calendar_sha256: str
+    c00_contract_json: str
+    fold_manifest_required_fields: tuple[str, ...]
+    fold_model_bundle_required_fields: tuple[str, ...]
+    runtime_python_version: str
+    numpy_version: str
+    pandas_version: str
+    scikit_learn_version: str
+    numeric_threadpool_limit: int
+    target_session: str
+    latest_required_source_session: str
+    preflight_sha256: str
+
+
+@dataclass(frozen=True)
+class _A2RehearsalFoldToken:
+    """In-memory-only fold reuse token; never a serialised authority."""
+
+    fold_manifest: dict[str, Any]
+    model_bundle: dict[str, Any]
+    month_source_manifest: dict[str, Any]
+    exact_prefix_proof_json: str
+    exact_prefix_proof_sha256: str
+
+
+_ACTIVE_A2_REHEARSAL_CONTRACT: _A2RehearsalContract | None = None
+
 # collect_jpx sorts the registered external paths before concatenation; under
 # the fixed predictor/{daily|price_warmup} layout the daily projection is the
 # bound stable order below.  Hashing a caller-selected subset (or an extra
@@ -395,6 +496,289 @@ PARSED_PRICE_COLUMNS = (
     "pm_close",
     "traded",
     "partial_session",
+)
+
+PARSED_SHARD_BINDING_FIELDS = (
+    "raw_object_key",
+    "raw_file",
+    "raw_url",
+    "raw_byte_count",
+    "raw_sha256",
+    "shard_manifest_object_key",
+    "shard_manifest_byte_count",
+    "shard_manifest_file_sha256",
+    "shard_manifest_sha256",
+    "shard_object_key",
+    "shard_byte_count",
+    "shard_sha256",
+    "parsed_row_count",
+    "parsed_semantic_sha256",
+    "pdftotext_text_byte_count",
+    "pdftotext_text_sha256",
+    "parser_report_sha256",
+)
+
+PARSED_SHARD_MANIFEST_FIELDS = (
+    "schema_version",
+    "cache_contract_id",
+    "official_source_file_name",
+    "official_source_url",
+    "raw_byte_count",
+    "raw_sha256",
+    "chronology_class",
+    "raw_received_at",
+    "parser_path",
+    "parser_version",
+    "parser_sha256",
+    "pdftotext_file_sha256",
+    "pdftotext_elf_closure_sha256",
+    "pdftotext_argv_environment_contract_sha256",
+    "runtime_lock_sha256",
+    "runtime_lock_verified_at",
+    "created_at",
+    "sealed_at",
+    "data_object_key",
+    "data_byte_count",
+    "data_sha256",
+    "columns",
+    "columns_sha256",
+    "row_count",
+    "rejected_row_count",
+    "duplicate_date_code_count",
+    "unique_date_count",
+    "min_date",
+    "max_date",
+    "pdftotext_text_byte_count",
+    "pdftotext_text_sha256",
+    "parser_report_sha256",
+    "parsed_semantic_sha256",
+    "canonical_jsonl_contract",
+    "manifest_sha256",
+)
+
+G0_PANEL_COLUMNS = (
+    "date",
+    "code",
+    "name",
+    "oc_return_pct",
+    "common_training_eligible",
+    "common_score_eligible",
+    "feature_source_max_date",
+    *G0_FEATURES,
+)
+
+# Exact minimal projection consumed by v17.build_model_panel and its v16/G0
+# callees.  normalize_daily_prices deterministically reconstructs the unused
+# session/trade state from OHLC.  Activation additionally requires exact
+# real-corpus equality against all 31 parsed columns.
+MODEL_PRICE_COLUMNS = (
+    "date",
+    "code",
+    "name",
+    "open",
+    "high",
+    "low",
+    "close",
+    "volume",
+    "turnover",
+    "vwap",
+    "trading_unit",
+    "source_format",
+)
+MODEL_PRICE_REQUIRED_BY_CONSUMERS = {
+    "build_forward_c00_panel": {"date", "code", "name"},
+    "normalize_daily_prices": {
+        "date", "code", "open", "high", "low", "close",
+    },
+    "v16.build_exact_liquidity_features": {
+        "date", "code", "name", "close", "volume", "turnover", "vwap",
+        "trading_unit", "source_format",
+    },
+    "v17.build_reliability_features": {
+        "date", "code", "open", "high", "low", "close", "volume",
+        "turnover", "vwap", "trading_unit", "source_format",
+    },
+}
+if set().union(*MODEL_PRICE_REQUIRED_BY_CONSUMERS.values()) != set(
+    MODEL_PRICE_COLUMNS
+):  # pragma: no cover - import-time invariant
+    raise RuntimeError("model-price projection no longer equals its consumer union")
+
+MODEL_PRICE_CSV_CONTRACT = {
+    "format": "RFC4180-compatible canonical CSV",
+    "encoding": "UTF-8 without BOM",
+    "line_ending": "LF",
+    "final_lf": True,
+    "columns": list(MODEL_PRICE_COLUMNS),
+    "row_order": ["date", "code"],
+    "null": "empty field only in numeric columns",
+    "float": "finite IEEE-754 round-trip text preserving negative zero",
+    "reader": "pandas.read_csv(float_precision=round_trip)",
+}
+
+MODEL_PRICE_SNAPSHOT_FIELDS = (
+    "schema_version",
+    "cache_contract_id",
+    "target_month",
+    "latest_source_session",
+    "raw_source_set_sha256",
+    "parsed_shard_set_sha256",
+    "raw_source_count",
+    "parsed_row_count",
+    "columns",
+    "columns_sha256",
+    "data_object_key",
+    "data_byte_count",
+    "data_sha256",
+    "row_count",
+    "unique_date_count",
+    "duplicate_date_code_count",
+    "model_price_semantic_sha256",
+    "previous_snapshot_manifest_sha256",
+    "previous_snapshot_target_month",
+    "previous_snapshot_latest_source_session",
+    "previous_snapshot_manifest_object_key",
+    "previous_snapshot_manifest_byte_count",
+    "previous_snapshot_manifest_file_sha256",
+    "previous_snapshot_raw_source_count",
+    "previous_snapshot_raw_source_set_sha256",
+    "previous_snapshot_parsed_shard_set_sha256",
+    "runtime_lock_sha256",
+    "runtime_lock_verified_at",
+    "protocol_sha256",
+    "runner_sha256",
+    "parser_sha256",
+    "created_at",
+    "sealed_at",
+    "canonical_csv_contract",
+    "snapshot_manifest_sha256",
+)
+
+G0_CACHE_MANIFEST_FIELDS = (
+    "schema_version",
+    "cache_contract_id",
+    "scope",
+    "target_session",
+    "latest_required_source_session",
+    "source_set_sha256",
+    "parsed_shard_set_sha256",
+    "parsed_row_count",
+    "columns",
+    "columns_sha256",
+    "data_object_key",
+    "data_byte_count",
+    "data_sha256",
+    "row_count",
+    "unique_date_count",
+    "duplicate_date_code_count",
+    "data_semantic_sha256",
+    "target_row_count",
+    "target_date_scoring_input_semantic_sha256",
+    "target_slice_semantic_sha256",
+    "target_outcome_nonnull_count",
+    "max_feature_source_date",
+    "v17_protocol_sha256",
+    "v17_runner_sha256",
+    "runtime_lock_sha256",
+    "runtime_lock_verified_at",
+    "protocol_sha256",
+    "runner_sha256",
+    "parser_sha256",
+    "created_at",
+    "sealed_at",
+    "canonical_jsonl_contract",
+    "cache_manifest_sha256",
+)
+
+CACHE_ANCHOR_FIELDS = (
+    "schema_version",
+    "cache_contract_id",
+    "latest_source_session",
+    "raw_source_set_sha256",
+    "raw_source_count",
+    "raw_sources",
+    "ordered_shard_set_sha256",
+    "ordered_shard_count",
+    "parsed_shards",
+    "columns",
+    "columns_sha256",
+    "cumulative_snapshot_object_key",
+    "cumulative_snapshot_byte_count",
+    "cumulative_snapshot_file_sha256",
+    "cumulative_snapshot_semantic_sha256",
+    "model_price_snapshot_target_month",
+    "model_price_snapshot_object_key",
+    "model_price_snapshot_byte_count",
+    "model_price_snapshot_file_sha256",
+    "model_price_snapshot_semantic_sha256",
+    "model_price_snapshot_manifest_object_key",
+    "model_price_snapshot_manifest_byte_count",
+    "model_price_snapshot_manifest_file_sha256",
+    "model_price_snapshot_manifest_sha256",
+    "snapshot_manifest_object_key",
+    "snapshot_manifest_sha256",
+    "direct_reparse_started_at",
+    "direct_reparse_completed_at",
+    "direct_clean_room_verification_receipt_sha256",
+    "compact_consumer_equivalence_receipt",
+    "runtime_lock_sha256",
+    "runtime_lock_verified_at",
+    "created_at",
+    "sealed_at",
+    "protocol_sha256",
+    "runner_sha256",
+    "parser_sha256",
+    "canonical_jsonl_contract",
+    "verified_at",
+    "anchor_manifest_sha256",
+)
+
+CACHE_ANCHOR_SUMMARY_FIELDS = (
+    "latest_source_session",
+    "raw_source_set_sha256",
+    "raw_source_count",
+    "ordered_shard_set_sha256",
+    "ordered_shard_count",
+    "cumulative_snapshot_object_key",
+    "cumulative_snapshot_byte_count",
+    "cumulative_snapshot_file_sha256",
+    "cumulative_snapshot_semantic_sha256",
+    "model_price_snapshot_target_month",
+    "model_price_snapshot_object_key",
+    "model_price_snapshot_byte_count",
+    "model_price_snapshot_file_sha256",
+    "model_price_snapshot_semantic_sha256",
+    "model_price_snapshot_manifest_object_key",
+    "model_price_snapshot_manifest_byte_count",
+    "model_price_snapshot_manifest_file_sha256",
+    "model_price_snapshot_manifest_sha256",
+    "snapshot_manifest_object_key",
+    "snapshot_manifest_file_sha256",
+    "snapshot_manifest_sha256",
+    "direct_clean_room_verification_receipt_sha256",
+    "compact_consumer_equivalence_receipt_sha256",
+    "sealed_at",
+    "verified_at",
+)
+
+COMPACT_CONSUMER_EQUIVALENCE_RECEIPT_FIELDS = (
+    "schema_version",
+    "consumer_projection_columns",
+    "consumer_projection_columns_sha256",
+    "consumer_union_contract_sha256",
+    "raw_date_code_identity_sha256",
+    "historical_session_registry_sha256",
+    "synthetic_target_session",
+    "latest_feature_source_session",
+    "full_g0_exact_digest",
+    "compact_g0_exact_digest",
+    "synthetic_target_exact_digest_sha256",
+    "synthetic_target_row_count",
+    "synthetic_target_outcome_nonnull_count",
+    "synthetic_target_max_feature_source_date",
+    "exact_columns_order_dtypes_nulls_ieee_strings_bools_equal",
+    "canonical_json_contract",
+    "receipt_sha256",
 )
 
 V16_BINDINGS = {
@@ -493,6 +877,9 @@ DECISION_FIELDS = (
     "c00_fold_manifest_sha256",
     "fold_model_bundle_file_sha256",
     "state_manifest_sha256",
+    "score_session_file_sha256",
+    "score_session_semantic_sha256",
+    "score_session_set_sha256",
     "decision_cutoff",
     "computed_at",
     "source_complete",
@@ -560,6 +947,12 @@ class ShoulderDecision(str, Enum):
 
 def sha256_file(path: str | Path) -> str:
     candidate = Path(path)
+    if _is_registered_local_authority_path(candidate):
+        return hashlib.sha256(
+            _read_local_authority_bytes(
+                candidate, label=f"SHA authority {candidate}"
+            )
+        ).hexdigest()
     try:
         require_single_link = candidate.resolve(strict=True).is_relative_to(ROOT.resolve())
     except (FileNotFoundError, OSError):
@@ -573,9 +966,392 @@ def sha256_file(path: str | Path) -> str:
     ).hexdigest()
 
 
+def _registered_local_authority_directories() -> tuple[Path, ...]:
+    """Return local create-once authority parents using live patched constants."""
+
+    return (
+        SOURCE_MANIFEST_DIR,
+        MONTH_SOURCE_MANIFEST_DIR,
+        OUTCOME_MANIFEST_DIR,
+        FOLD_MANIFEST_DIR,
+        FOLD_MODEL_DIR,
+        STATE_MANIFEST_DIR,
+        SCORE_SESSION_DIR,
+        DECISION_RECORD_DIR,
+        OUTCOME_RECORD_DIR,
+        COMPLETED_MONTH_RECORD_DIR,
+    )
+
+
+def _registered_local_authority_files() -> tuple[Path, ...]:
+    """Return create-once authorities whose parent also holds nonauthority files."""
+
+    return (
+        ACTIVATION_PAYLOAD,
+        ACTIVATION_RECEIPT,
+        ACTIVATION_CONTEXT,
+        RESULT_OUTPUT,
+    )
+
+
+def _is_registered_local_authority_directory(path: str | Path) -> bool:
+    candidate = Path(os.path.abspath(os.fspath(path)))
+    return any(
+        candidate == Path(os.path.abspath(os.fspath(directory)))
+        for directory in _registered_local_authority_directories()
+    )
+
+
+def _is_registered_local_authority_path(path: str | Path) -> bool:
+    exact = Path(os.path.abspath(os.fspath(Path(path))))
+    candidate = exact.parent
+    return exact in {
+        Path(os.path.abspath(os.fspath(authority)))
+        for authority in _registered_local_authority_files()
+    } or _is_registered_local_authority_directory(candidate)
+
+
+def _read_local_authority_bytes(path: str | Path, *, label: str) -> bytes:
+    """Read one private local authority and heal only its proven link crash.
+
+    The only mutation is removal of the canonical staging name when final and
+    stage are both private names for the same pinned two-link inode.  A
+    distinct/unpublished stage is never interpreted as authority.
+    """
+
+    target = Path(path)
+    parent_path = Path(os.path.abspath(os.fspath(target.parent)))
+    try:
+        resolved_parent = parent_path.resolve(strict=True)
+    except OSError as exc:
+        raise V18Error(f"{label} parent cannot be resolved") from exc
+    if resolved_parent != parent_path or target.parent.is_symlink():
+        raise V18Error(f"{label} parent must not use a symlink")
+    file_name = target.name
+    if file_name in {"", ".", ".."} or "/" in file_name or "\x00" in file_name:
+        raise V18Error(f"{label} name is not a plain component")
+    stage_name = f".{file_name}.staging"
+    exact_target = Path(os.path.abspath(os.fspath(target)))
+    git_activation_files = {
+        Path(os.path.abspath(os.fspath(ACTIVATION_PAYLOAD))),
+        Path(os.path.abspath(os.fspath(ACTIVATION_RECEIPT))),
+    }
+    completed_final_modes = (
+        {0o600, 0o644} if exact_target in git_activation_files else {0o600}
+    )
+    parent_fd = os.open(
+        resolved_parent,
+        os.O_RDONLY
+        | os.O_DIRECTORY
+        | os.O_CLOEXEC
+        | getattr(os, "O_NOFOLLOW", 0),
+    )
+    fcntl.flock(parent_fd, fcntl.LOCK_EX)
+    try:
+        parent_stat = os.fstat(parent_fd)
+        registered_private_parent = _is_registered_local_authority_directory(
+            resolved_parent
+        )
+        if (
+            not stat.S_ISDIR(parent_stat.st_mode)
+            or parent_stat.st_uid != os.geteuid()
+            or (
+                stat.S_IMODE(parent_stat.st_mode) != 0o700
+                if registered_private_parent
+                else bool(stat.S_IMODE(parent_stat.st_mode) & 0o022)
+            )
+        ):
+            raise V18Error(f"{label} parent owner/permissions are not private")
+
+        def observed(name: str) -> os.stat_result | None:
+            try:
+                return os.stat(name, dir_fd=parent_fd, follow_symlinks=False)
+            except FileNotFoundError:
+                return None
+
+        def private_regular(
+            value: os.stat_result | None, *, nlink: int, modes: set[int]
+        ) -> bool:
+            return bool(
+                value is not None
+                and stat.S_ISREG(value.st_mode)
+                and value.st_uid == os.geteuid()
+                and stat.S_IMODE(value.st_mode) in modes
+                and value.st_nlink == nlink
+            )
+
+        final_stat = observed(file_name)
+        if final_stat is None:
+            raise FileNotFoundError(os.fspath(target))
+        stage_stat = observed(stage_name)
+        if stage_stat is not None:
+            if (
+                not private_regular(final_stat, nlink=2, modes={0o600})
+                or not private_regular(stage_stat, nlink=2, modes={0o600})
+                or (stage_stat.st_dev, stage_stat.st_ino)
+                != (final_stat.st_dev, final_stat.st_ino)
+            ):
+                raise V18Error(f"{label} has a conflicting crash stage")
+        elif not private_regular(
+            final_stat, nlink=1, modes=completed_final_modes
+        ):
+            raise V18Error(f"{label} owner/mode/link changed")
+
+        descriptor = os.open(
+            stage_name if stage_stat is not None else file_name,
+            os.O_RDONLY | os.O_CLOEXEC | getattr(os, "O_NOFOLLOW", 0),
+            dir_fd=parent_fd,
+        )
+        try:
+            before = os.fstat(descriptor)
+            expected_links = 2 if stage_stat is not None else 1
+            expected_modes = {0o600} if stage_stat is not None else completed_final_modes
+            if not private_regular(
+                before, nlink=expected_links, modes=expected_modes
+            ):
+                raise V18Error(f"{label} pinned inode is not private")
+            chunks: list[bytes] = []
+            while True:
+                chunk = os.read(descriptor, 1024 * 1024)
+                if not chunk:
+                    break
+                chunks.append(chunk)
+            after = os.fstat(descriptor)
+            if (
+                not private_regular(after, nlink=expected_links, modes=expected_modes)
+                or (
+                    after.st_dev,
+                    after.st_ino,
+                    after.st_nlink,
+                    after.st_size,
+                    after.st_uid,
+                    stat.S_IMODE(after.st_mode),
+                    after.st_mtime_ns,
+                    after.st_ctime_ns,
+                )
+                != (
+                    before.st_dev,
+                    before.st_ino,
+                    before.st_nlink,
+                    before.st_size,
+                    before.st_uid,
+                    stat.S_IMODE(before.st_mode),
+                    before.st_mtime_ns,
+                    before.st_ctime_ns,
+                )
+            ):
+                raise V18Error(f"{label} changed while being read")
+            payload = b"".join(chunks)
+            if len(payload) != before.st_size:
+                raise V18Error(f"{label} changed length while being read")
+            current_final = observed(file_name)
+            if (
+                not private_regular(
+                    current_final, nlink=expected_links, modes=expected_modes
+                )
+                or (
+                    current_final.st_dev,
+                    current_final.st_ino,
+                    current_final.st_size,
+                    current_final.st_mtime_ns,
+                    current_final.st_ctime_ns,
+                )
+                != (
+                    before.st_dev,
+                    before.st_ino,
+                    before.st_size,
+                    before.st_mtime_ns,
+                    before.st_ctime_ns,
+                )
+            ):
+                raise V18Error(f"{label} final changed while pinned")
+            if stage_stat is not None:
+                current_stage = observed(stage_name)
+                if (
+                    not private_regular(current_stage, nlink=2, modes={0o600})
+                    or (
+                        current_stage.st_dev,
+                        current_stage.st_ino,
+                        current_stage.st_size,
+                        current_stage.st_mtime_ns,
+                        current_stage.st_ctime_ns,
+                    )
+                    != (
+                        before.st_dev,
+                        before.st_ino,
+                        before.st_size,
+                        before.st_mtime_ns,
+                        before.st_ctime_ns,
+                    )
+                ):
+                    raise V18Error(f"{label} stage changed before recovery")
+                os.unlink(stage_name, dir_fd=parent_fd)
+                os.fsync(parent_fd)
+                recovered = observed(file_name)
+                if (
+                    not private_regular(recovered, nlink=1, modes={0o600})
+                    or (recovered.st_dev, recovered.st_ino)
+                    != (before.st_dev, before.st_ino)
+                ):
+                    raise V18Error(f"{label} final changed after recovery")
+            return payload
+        finally:
+            os.close(descriptor)
+    finally:
+        try:
+            fcntl.flock(parent_fd, fcntl.LOCK_UN)
+        except OSError:
+            pass
+        os.close(parent_fd)
+
+
+def _local_authority_presence_state(path: str | Path, *, label: str) -> str:
+    """Classify a final authority without opening or healing its content."""
+
+    target = Path(path)
+    exact_target = Path(os.path.abspath(os.fspath(target)))
+    git_activation_files = {
+        Path(os.path.abspath(os.fspath(ACTIVATION_PAYLOAD))),
+        Path(os.path.abspath(os.fspath(ACTIVATION_RECEIPT))),
+    }
+    completed_final_modes = (
+        {0o600, 0o644} if exact_target in git_activation_files else {0o600}
+    )
+    try:
+        final = os.stat(target, follow_symlinks=False)
+    except FileNotFoundError:
+        return "absent"
+    parent = Path(os.path.abspath(os.fspath(target.parent)))
+    if parent.resolve(strict=True) != parent or target.parent.is_symlink():
+        raise V18Error(f"{label} parent must not use a symlink")
+    parent_stat = os.stat(parent, follow_symlinks=False)
+    if (
+        not stat.S_ISDIR(parent_stat.st_mode)
+        or parent_stat.st_uid != os.geteuid()
+        or stat.S_IMODE(parent_stat.st_mode) & 0o022
+    ):
+        raise V18Error(f"{label} parent owner/permissions are not private")
+    if (
+        not stat.S_ISREG(final.st_mode)
+        or final.st_uid != os.geteuid()
+        or stat.S_IMODE(final.st_mode) not in completed_final_modes
+    ):
+        raise V18Error(f"{label} final owner/type/mode changed")
+    stage = target.parent / f".{target.name}.staging"
+    try:
+        staged = os.stat(stage, follow_symlinks=False)
+    except FileNotFoundError:
+        staged = None
+    if staged is None:
+        if final.st_nlink != 1:
+            raise V18Error(f"{label} final has an unexplained hard-link alias")
+        return "completed"
+    if (
+        not stat.S_ISREG(staged.st_mode)
+        or staged.st_uid != os.geteuid()
+        or stat.S_IMODE(staged.st_mode) != 0o600
+        or stat.S_IMODE(final.st_mode) != 0o600
+        or (staged.st_dev, staged.st_ino, staged.st_nlink)
+        != (final.st_dev, final.st_ino, 2)
+        or final.st_nlink != 2
+    ):
+        raise V18Error(f"{label} final/stage crash marker is inconsistent")
+    return "crash_linked"
+
+
+def _result_status_token_without_performance_read(
+    path: str | Path, *, presence: str
+) -> str:
+    """Read only the final sorted-JSON status line from a retained result.
+
+    ``write_json`` sorts top-level keys, so ``status`` is the final member of
+    every canonical result.  This classifier deliberately walks backward only
+    across that one line and the closing brace.  It therefore distinguishes an
+    irreversible integrity-abort result before any performance-bearing result
+    member, ledger, cache, checkpoint, or network authority is opened.
+    """
+
+    if presence not in {"completed", "crash_linked"}:
+        raise V18Error("retained result status requires an existing authority")
+    target = Path(path)
+    flags = os.O_RDONLY | os.O_CLOEXEC
+    if hasattr(os, "O_NOFOLLOW"):
+        flags |= os.O_NOFOLLOW
+    try:
+        descriptor = os.open(target, flags)
+    except OSError as exc:
+        raise V18Error("canonical result could not be pinned for status") from exc
+    try:
+        before = os.fstat(descriptor)
+        expected_links = 1 if presence == "completed" else 2
+        if (
+            not stat.S_ISREG(before.st_mode)
+            or before.st_uid != os.geteuid()
+            or stat.S_IMODE(before.st_mode) != 0o600
+            or before.st_nlink != expected_links
+            or before.st_size < 5
+        ):
+            raise V18Error("canonical result status authority metadata changed")
+        fcntl.flock(descriptor, fcntl.LOCK_SH)
+        if os.pread(descriptor, 3, before.st_size - 3) != b"\n}\n":
+            raise V18Error("canonical result status suffix is not canonical")
+        cursor = before.st_size - 4
+        reversed_line = bytearray()
+        while cursor >= 0:
+            observed = os.pread(descriptor, 1, cursor)
+            if len(observed) != 1:
+                raise V18Error("canonical result status read was truncated")
+            if observed == b"\n":
+                break
+            reversed_line.extend(observed)
+            if len(reversed_line) > 96:
+                raise V18Error("canonical result status line is too long")
+            cursor -= 1
+        if cursor < 0:
+            raise V18Error("canonical result status line is not delimited")
+        line = bytes(reversed(reversed_line))
+        match = re.fullmatch(rb'  "status": "([a-z0-9_]+)"', line)
+        if match is None:
+            raise V18Error("canonical result status line is malformed")
+        after = os.fstat(descriptor)
+        if any(
+            getattr(before, field) != getattr(after, field)
+            for field in (
+                "st_dev",
+                "st_ino",
+                "st_uid",
+                "st_mode",
+                "st_nlink",
+                "st_size",
+                "st_mtime_ns",
+                "st_ctime_ns",
+            )
+        ):
+            raise V18Error("canonical result changed during status classification")
+        status_token = match.group(1).decode("ascii")
+        if status_token not in {
+            "aborted_integrity_failure",
+            "forward_passed_one_v19_research_nominee",
+            "forward_rejected_candidate",
+        }:
+            raise V18Error("canonical result status is not registered")
+        return status_token
+    finally:
+        try:
+            fcntl.flock(descriptor, fcntl.LOCK_UN)
+        except OSError:
+            pass
+        os.close(descriptor)
+
+
 def read_json(path: str | Path) -> dict[str, Any]:
     try:
-        payload = _plain_file_bytes(path, label=f"JSON artifact {Path(path)}")
+        label = f"JSON artifact {Path(path)}"
+        payload = (
+            _read_local_authority_bytes(path, label=label)
+            if _is_registered_local_authority_path(path)
+            else _plain_file_bytes(path, label=label)
+        )
         value = json.loads(payload.decode("utf-8"))
     except UnicodeDecodeError as exc:
         raise V18Error(f"{path} is not UTF-8 JSON") from exc
@@ -698,6 +1474,39 @@ def _first_registered_session_in_month(target_month: pd.Period) -> pd.Timestamp:
     return pd.Timestamp(matches[0])
 
 
+def _latest_registered_source_before_month(target_month: pd.Period) -> pd.Timestamp:
+    calendar = load_registered_calendar()
+    previous = calendar[calendar < target_month.start_time.normalize()]
+    if len(previous):
+        return pd.Timestamp(previous[-1])
+    if target_month == pd.Period("2026-08", freq="M"):
+        # The forward target calendar starts on 2026-08-05.  The August
+        # monthly training prefix nevertheless ends at the final registered
+        # JPX source session of July; 2026-08-04 is D-1 for the first daily
+        # target and must never leak into the M-1 snapshot/fold.
+        return pd.Timestamp("2026-07-31")
+    raise V18Error(f"registered calendar has no prior source session for {target_month}")
+
+
+def _latest_required_predictor_source_session(
+    target_session: Any,
+    calendar: pd.DatetimeIndex | None = None,
+) -> pd.Timestamp:
+    """Return the protocol-registered D-1 predictor source for one target."""
+
+    target = _date(target_session, "predictor target session")
+    scheduled = load_registered_calendar() if calendar is None else calendar
+    positions = np.flatnonzero(scheduled == target)
+    if len(positions) != 1:
+        raise V18Error("predictor target is outside the registered calendar")
+    position = int(positions[0])
+    if position == 0:
+        if target != pd.Timestamp("2026-08-05"):
+            raise V18Error("registered predictor calendar first-session contract changed")
+        return pd.Timestamp("2026-08-04")
+    return pd.Timestamp(scheduled[position - 1])
+
+
 def _strict_bool(value: Any) -> bool:
     if isinstance(value, (bool, np.bool_)):
         return bool(value)
@@ -714,57 +1523,458 @@ def _ieee_float_equal(left: Any, right: Any) -> bool:
     return struct.pack(">d", float(left)) == struct.pack(">d", float(right))
 
 
+def _atomic_local_bytes_once(path: str | Path, payload: bytes) -> None:
+    """Create one local authority file with deterministic crash recovery.
+
+    A deterministic same-directory staging inode is completed only when its
+    retained bytes are an exact prefix of ``payload``.  ``link(2)`` is the
+    no-replace publication point.  A crash after link and before staging-name
+    cleanup is healed only when both names still identify the pinned inode.
+    The directory descriptor is the single cooperative writer lock; no
+    unregistered lock-file namespace is created.
+    """
+
+    if not isinstance(payload, bytes) or not payload:
+        raise V18Error("canonical local artifact payload must be non-empty bytes")
+    target = Path(path)
+    parent_path = Path(os.path.abspath(os.fspath(target.parent)))
+    try:
+        resolved_parent = parent_path.resolve(strict=True)
+    except OSError as exc:
+        raise V18Error("canonical artifact parent cannot be resolved") from exc
+    if resolved_parent != parent_path or target.parent.is_symlink():
+        raise V18Error("canonical artifact parent must not use a symlink")
+    parent_fd = os.open(
+        resolved_parent,
+        os.O_RDONLY
+        | os.O_DIRECTORY
+        | os.O_CLOEXEC
+        | getattr(os, "O_NOFOLLOW", 0),
+    )
+    file_name = target.name
+    if file_name in {"", ".", ".."} or "/" in file_name or "\x00" in file_name:
+        os.close(parent_fd)
+        raise V18Error("canonical artifact file name is not a plain component")
+    stage_name = f".{file_name}.staging"
+    fcntl.flock(parent_fd, fcntl.LOCK_EX)
+    try:
+        parent_stat = os.fstat(parent_fd)
+        registered_private_parent = _is_registered_local_authority_directory(
+            resolved_parent
+        )
+        if (
+            not stat.S_ISDIR(parent_stat.st_mode)
+            or parent_stat.st_uid != os.geteuid()
+            or (
+                stat.S_IMODE(parent_stat.st_mode) != 0o700
+                if registered_private_parent
+                else bool(stat.S_IMODE(parent_stat.st_mode) & 0o022)
+            )
+        ):
+            raise V18Error("canonical artifact parent owner/permissions are not private")
+
+        def observed(name: str) -> os.stat_result | None:
+            try:
+                return os.stat(name, dir_fd=parent_fd, follow_symlinks=False)
+            except FileNotFoundError:
+                return None
+
+        def private_regular(value: os.stat_result | None, *, nlink: int) -> bool:
+            return bool(
+                value is not None
+                and stat.S_ISREG(value.st_mode)
+                and value.st_uid == os.geteuid()
+                and stat.S_IMODE(value.st_mode) == 0o600
+                and value.st_nlink == nlink
+            )
+
+        def exact_pinned_bytes(descriptor: int, *, label: str) -> os.stat_result:
+            before = os.fstat(descriptor)
+            if (
+                not stat.S_ISREG(before.st_mode)
+                or before.st_uid != os.geteuid()
+                or stat.S_IMODE(before.st_mode) != 0o600
+            ):
+                raise V18Error(f"{label} is not a private regular file")
+            os.lseek(descriptor, 0, os.SEEK_SET)
+            chunks: list[bytes] = []
+            while True:
+                chunk = os.read(descriptor, 1024 * 1024)
+                if not chunk:
+                    break
+                chunks.append(chunk)
+            after = os.fstat(descriptor)
+            if (
+                (
+                    after.st_dev,
+                    after.st_ino,
+                    after.st_nlink,
+                    after.st_size,
+                    after.st_uid,
+                    stat.S_IMODE(after.st_mode),
+                    after.st_mtime_ns,
+                    after.st_ctime_ns,
+                )
+                != (
+                    before.st_dev,
+                    before.st_ino,
+                    before.st_nlink,
+                    before.st_size,
+                    before.st_uid,
+                    stat.S_IMODE(before.st_mode),
+                    before.st_mtime_ns,
+                    before.st_ctime_ns,
+                )
+                or b"".join(chunks) != payload
+            ):
+                raise V18Error(f"{label} differs from exact retry bytes")
+            return after
+
+        final_stat = observed(file_name)
+        stage_stat = observed(stage_name)
+        if final_stat is not None:
+            expected_final_links = 2 if stage_stat is not None else 1
+            if not private_regular(final_stat, nlink=expected_final_links):
+                raise V18Error("canonical artifact final is not private")
+            if stage_stat is not None:
+                if (
+                    not private_regular(stage_stat, nlink=2)
+                    or (stage_stat.st_dev, stage_stat.st_ino, stage_stat.st_nlink)
+                    != (final_stat.st_dev, final_stat.st_ino, 2)
+                ):
+                    raise V18Error("canonical artifact has a conflicting stranded stage")
+                stage_fd = os.open(
+                    stage_name,
+                    os.O_RDONLY | os.O_CLOEXEC | getattr(os, "O_NOFOLLOW", 0),
+                    dir_fd=parent_fd,
+                )
+                try:
+                    pinned = exact_pinned_bytes(
+                        stage_fd, label="canonical artifact crash stage"
+                    )
+                    expected_inode = (pinned.st_dev, pinned.st_ino, 2)
+                    current_stage = observed(stage_name)
+                    current_final = observed(file_name)
+                    if (
+                        not private_regular(current_stage, nlink=2)
+                        or not private_regular(current_final, nlink=2)
+                        or (
+                            current_stage.st_dev,
+                            current_stage.st_ino,
+                            current_stage.st_nlink,
+                        )
+                        != expected_inode
+                        or (
+                            current_final.st_dev,
+                            current_final.st_ino,
+                            current_final.st_nlink,
+                        )
+                        != expected_inode
+                    ):
+                        raise V18Error("canonical crash publication changed before cleanup")
+                    os.unlink(stage_name, dir_fd=parent_fd)
+                    os.fsync(parent_fd)
+                    recovered = observed(file_name)
+                    if not private_regular(recovered, nlink=1) or (
+                        recovered.st_dev,
+                        recovered.st_ino,
+                        recovered.st_nlink,
+                    ) != (pinned.st_dev, pinned.st_ino, 1):
+                        raise V18Error("canonical recovered final changed after cleanup")
+                finally:
+                    os.close(stage_fd)
+            final_fd = os.open(
+                file_name,
+                os.O_RDONLY | os.O_CLOEXEC | getattr(os, "O_NOFOLLOW", 0),
+                dir_fd=parent_fd,
+            )
+            try:
+                retained = exact_pinned_bytes(
+                    final_fd, label="canonical completed retry"
+                )
+                path_stat = observed(file_name)
+                if not private_regular(path_stat, nlink=1) or (
+                    path_stat.st_dev,
+                    path_stat.st_ino,
+                    path_stat.st_nlink,
+                ) != (retained.st_dev, retained.st_ino, 1):
+                    raise V18Error("canonical completed retry changed during validation")
+            finally:
+                os.close(final_fd)
+            return
+
+        if stage_stat is None:
+            stage_fd = os.open(
+                stage_name,
+                os.O_RDWR
+                | os.O_CREAT
+                | os.O_EXCL
+                | os.O_CLOEXEC
+                | getattr(os, "O_NOFOLLOW", 0),
+                0o600,
+                dir_fd=parent_fd,
+            )
+            os.fsync(parent_fd)
+        else:
+            if not private_regular(stage_stat, nlink=1):
+                raise V18Error("canonical stranded stage is not recoverable")
+            stage_fd = os.open(
+                stage_name,
+                os.O_RDWR | os.O_CLOEXEC | getattr(os, "O_NOFOLLOW", 0),
+                dir_fd=parent_fd,
+            )
+        try:
+            pinned_before = os.fstat(stage_fd)
+            current_before = observed(stage_name)
+            if (
+                not private_regular(pinned_before, nlink=1)
+                or not private_regular(current_before, nlink=1)
+                or (
+                    current_before.st_dev,
+                    current_before.st_ino,
+                    current_before.st_nlink,
+                )
+                != (pinned_before.st_dev, pinned_before.st_ino, 1)
+            ):
+                raise V18Error("canonical stage changed during open")
+            os.lseek(stage_fd, 0, os.SEEK_SET)
+            retained_chunks: list[bytes] = []
+            while True:
+                chunk = os.read(stage_fd, 1024 * 1024)
+                if not chunk:
+                    break
+                retained_chunks.append(chunk)
+            retained_prefix = b"".join(retained_chunks)
+            if not payload.startswith(retained_prefix):
+                # A staging name is explicitly nonauthority until the
+                # no-replace final link exists.  Under the private parent and
+                # retained directory lock, abandon/rebuild a conflicting
+                # unpublished dynamic timestamp/nonce payload.
+                os.ftruncate(stage_fd, 0)
+                os.fsync(stage_fd)
+                retained_prefix = b""
+            os.lseek(stage_fd, len(retained_prefix), os.SEEK_SET)
+            remaining = memoryview(payload)[len(retained_prefix) :]
+            while remaining:
+                written = os.write(stage_fd, remaining)
+                if written <= 0:  # pragma: no cover - kernel invariant
+                    raise OSError("short write while publishing canonical artifact")
+                remaining = remaining[written:]
+            os.ftruncate(stage_fd, len(payload))
+            os.fchmod(stage_fd, 0o600)
+            os.fsync(stage_fd)
+            pinned = exact_pinned_bytes(stage_fd, label="canonical completed stage")
+            if not private_regular(pinned, nlink=1):
+                raise V18Error("canonical completed stage acquired a hard-link alias")
+            current_stage = observed(stage_name)
+            if not private_regular(current_stage, nlink=1) or (
+                current_stage.st_dev,
+                current_stage.st_ino,
+                current_stage.st_nlink,
+            ) != (pinned.st_dev, pinned.st_ino, 1):
+                raise V18Error("canonical completed stage changed before publication")
+            try:
+                os.link(
+                    stage_name,
+                    file_name,
+                    src_dir_fd=parent_fd,
+                    dst_dir_fd=parent_fd,
+                    follow_symlinks=False,
+                )
+            except FileExistsError as exc:
+                raise V18Error("canonical artifact appeared during publication") from exc
+            os.fsync(parent_fd)
+            expected_inode = (pinned.st_dev, pinned.st_ino, 2)
+            current_stage = observed(stage_name)
+            current_final = observed(file_name)
+            if (
+                not private_regular(current_stage, nlink=2)
+                or not private_regular(current_final, nlink=2)
+                or (
+                    current_stage.st_dev,
+                    current_stage.st_ino,
+                    current_stage.st_nlink,
+                )
+                != expected_inode
+                or (
+                    current_final.st_dev,
+                    current_final.st_ino,
+                    current_final.st_nlink,
+                )
+                != expected_inode
+            ):
+                raise V18Error("canonical publication changed before stage cleanup")
+            os.unlink(stage_name, dir_fd=parent_fd)
+            os.fsync(parent_fd)
+            sealed = observed(file_name)
+            if not private_regular(sealed, nlink=1) or (
+                sealed.st_dev,
+                sealed.st_ino,
+                sealed.st_nlink,
+            ) != (pinned.st_dev, pinned.st_ino, 1):
+                raise V18Error("canonical final changed after publication")
+        finally:
+            os.close(stage_fd)
+    finally:
+        try:
+            fcntl.flock(parent_fd, fcntl.LOCK_UN)
+        except OSError:
+            pass
+        os.close(parent_fd)
+
+
+def _atomic_local_derived_bytes(path: str | Path, payload: bytes) -> None:
+    """Replace a derived local view only from an exact retained prefix.
+
+    Immutable per-session artifacts remain authority.  This helper is only
+    for a deterministic concatenated view (currently the score CSV).  A torn
+    prior view or staging file is recoverable iff its bytes are an exact
+    prefix of the freshly reconstructed payload; any divergent byte aborts.
+    """
+
+    if not isinstance(payload, bytes) or not payload:
+        raise V18Error("derived local artifact payload must be non-empty bytes")
+    target = Path(path)
+    parent_path = Path(os.path.abspath(os.fspath(target.parent)))
+    if parent_path.resolve(strict=True) != parent_path or target.parent.is_symlink():
+        raise V18Error("derived artifact parent must not use a symlink")
+    parent_fd = os.open(
+        parent_path,
+        os.O_RDONLY
+        | os.O_DIRECTORY
+        | os.O_CLOEXEC
+        | getattr(os, "O_NOFOLLOW", 0),
+    )
+    file_name = target.name
+    stage_name = f".{file_name}.derived-staging"
+    fcntl.flock(parent_fd, fcntl.LOCK_EX)
+    try:
+        parent_stat = os.fstat(parent_fd)
+        if (
+            parent_stat.st_uid != os.geteuid()
+            or stat.S_IMODE(parent_stat.st_mode) & 0o022
+        ):
+            raise V18Error("derived artifact parent owner/permissions are not private")
+
+        def read_name(name: str) -> bytes | None:
+            try:
+                descriptor = os.open(
+                    name,
+                    os.O_RDONLY | os.O_CLOEXEC | getattr(os, "O_NOFOLLOW", 0),
+                    dir_fd=parent_fd,
+                )
+            except FileNotFoundError:
+                return None
+            try:
+                before = os.fstat(descriptor)
+                if not stat.S_ISREG(before.st_mode) or before.st_nlink != 1:
+                    raise V18Error("derived artifact/stage is not single-link regular")
+                chunks: list[bytes] = []
+                while True:
+                    chunk = os.read(descriptor, 1024 * 1024)
+                    if not chunk:
+                        break
+                    chunks.append(chunk)
+                after = os.fstat(descriptor)
+                if (
+                    after.st_dev,
+                    after.st_ino,
+                    after.st_nlink,
+                    after.st_size,
+                ) != (
+                    before.st_dev,
+                    before.st_ino,
+                    before.st_nlink,
+                    before.st_size,
+                ):
+                    raise V18Error("derived artifact changed while being read")
+                return b"".join(chunks)
+            finally:
+                os.close(descriptor)
+
+        retained = read_name(file_name)
+        if retained == payload:
+            stranded = read_name(stage_name)
+            if stranded is not None:
+                if not payload.startswith(stranded):
+                    raise V18Error("derived completed view has a conflicting stage")
+                os.unlink(stage_name, dir_fd=parent_fd)
+                os.fsync(parent_fd)
+            return
+        if retained is not None and not payload.startswith(retained):
+            raise V18Error("derived retained view is not an exact authority prefix")
+        staged = read_name(stage_name)
+        if staged is not None and not payload.startswith(staged):
+            raise V18Error("derived stranded stage is not an exact authority prefix")
+        descriptor = os.open(
+            stage_name,
+            os.O_RDWR
+            | os.O_CREAT
+            | os.O_CLOEXEC
+            | getattr(os, "O_NOFOLLOW", 0),
+            0o600,
+            dir_fd=parent_fd,
+        )
+        try:
+            pinned = os.fstat(descriptor)
+            if not stat.S_ISREG(pinned.st_mode) or pinned.st_nlink != 1:
+                raise V18Error("derived stage changed during open")
+            os.lseek(descriptor, 0, os.SEEK_SET)
+            os.ftruncate(descriptor, 0)
+            remaining = memoryview(payload)
+            while remaining:
+                written = os.write(descriptor, remaining)
+                if written <= 0:  # pragma: no cover - kernel invariant
+                    raise OSError("short derived artifact write")
+                remaining = remaining[written:]
+            os.fchmod(descriptor, 0o600)
+            os.fsync(descriptor)
+            sealed = os.fstat(descriptor)
+            if (
+                sealed.st_dev,
+                sealed.st_ino,
+                sealed.st_nlink,
+                sealed.st_size,
+            ) != (pinned.st_dev, pinned.st_ino, 1, len(payload)):
+                raise V18Error("derived stage metadata changed")
+        finally:
+            os.close(descriptor)
+        os.fsync(parent_fd)
+        os.replace(
+            stage_name,
+            file_name,
+            src_dir_fd=parent_fd,
+            dst_dir_fd=parent_fd,
+        )
+        os.fsync(parent_fd)
+        if read_name(file_name) != payload:
+            raise V18Error("derived final differs after atomic replacement")
+    finally:
+        try:
+            fcntl.flock(parent_fd, fcntl.LOCK_UN)
+        except OSError:
+            pass
+        os.close(parent_fd)
+
+
 def _atomic_text(path: str | Path, payload: str, *, exclusive: bool = False) -> None:
     target = Path(path)
+    encoded = payload.encode("utf-8")
+    if exclusive:
+        _atomic_local_bytes_once(target, encoded)
+        return
     target.parent.mkdir(parents=True, exist_ok=True)
     descriptor, temporary_name = tempfile.mkstemp(
         prefix=f".{target.name}.", suffix=".tmp", dir=target.parent
     )
-    temporary_identity: tuple[int, int] | None = None
     try:
-        with os.fdopen(descriptor, "w", encoding="utf-8", newline="") as stream:
-            stream.write(payload)
+        with os.fdopen(descriptor, "wb") as stream:
+            stream.write(encoded)
             stream.flush()
             os.fsync(stream.fileno())
-            temporary = os.fstat(stream.fileno())
-            if not stat.S_ISREG(temporary.st_mode) or temporary.st_nlink != 1:
-                raise V18Error("temporary artifact is not a single-link regular file")
-            temporary_identity = (int(temporary.st_dev), int(temporary.st_ino))
-        if exclusive:
-            try:
-                # temp and target share a directory/filesystem.  link(2)
-                # supplies atomic create-if-absent semantics; unlike replace,
-                # a racing writer can never be overwritten.
-                os.link(temporary_name, target)
-            except FileExistsError as exc:
-                raise V18Error(
-                    f"refusing to overwrite canonical artifact: {target}"
-                ) from exc
-            os.unlink(temporary_name)
-        else:
-            os.replace(temporary_name, target)
-        try:
-            target_fd = os.open(
-                target,
-                os.O_RDONLY | os.O_CLOEXEC | getattr(os, "O_NOFOLLOW", 0),
-            )
-        except OSError as exc:
-            raise V18Error("sealed artifact cannot be pinned after write") from exc
-        try:
-            sealed = os.fstat(target_fd)
-            if (
-                not stat.S_ISREG(sealed.st_mode)
-                or sealed.st_nlink != 1
-                or (int(sealed.st_dev), int(sealed.st_ino)) != temporary_identity
-                or sealed.st_size != len(payload.encode("utf-8"))
-            ):
-                raise V18Error("sealed artifact changed or acquired a hard-link alias")
-            os.fsync(target_fd)
-        finally:
-            os.close(target_fd)
+        os.replace(temporary_name, target)
         directory_fd = os.open(
-            target.parent,
-            os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC,
+            target.parent, os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC
         )
         try:
             os.fsync(directory_fd)
@@ -784,6 +1994,24 @@ def write_json(value: Mapping[str, Any], path: str | Path, *, exclusive: bool = 
         + "\n",
         exclusive=exclusive,
     )
+
+
+def _write_json_once_exact(
+    value: Mapping[str, Any], path: str | Path, *, label: str
+) -> bytes:
+    """Seal canonical JSON once, accepting only an exact completed retry."""
+
+    target = Path(path)
+    expected = _json_file_bytes(value)
+    write_json(value, target, exclusive=True)
+    retained = (
+        _read_local_authority_bytes(target, label=label)
+        if _is_registered_local_authority_path(target)
+        else _plain_file_bytes(target, label=label)
+    )
+    if retained != expected:
+        raise V18Error(f"{label} changed immediately after seal")
+    return retained
 
 
 def _runtime_relative_path(value: Any, name: str) -> str:
@@ -1001,6 +2229,7 @@ def _build_live_module_closure_state(lock: Mapping[str, Any]) -> dict[str, Any]:
         or site_root_values != sorted(set(str(item) for item in site_root_values))
         or direct_relatives
         != [
+            "research/model_v18_a2_rehearsal.py",
             "research/model_v18_shoulder_state_audit.py",
             "research/model_v18_shoulder_state_runner.py",
         ]
@@ -1072,7 +2301,7 @@ def _build_live_module_closure_state(lock: Mapping[str, Any]) -> dict[str, Any]:
             ROOT / canonical_relative,
             name=f"direct activation module {canonical_relative}",
         )
-        # These two files cannot be self-bound by the runtime lock.  Capture
+        # These direct entry points cannot be self-bound by the runtime lock. Capture
         # their exact bytes at strict startup; activation subsequently binds
         # the same bytes to commit A, and every phase re-hashes them here.
         register_file(
@@ -2045,8 +3274,8 @@ def validate_runtime_lock(
         raise V18Error("runtime-lock top-level schema changed")
     if (
         value["schema_version"] != 1
-        or value["lock_id"] != "model_v18_runtime_lock_20260804"
-        or value["registered_on"] != "2026-08-04"
+        or value["lock_id"] != "model_v18_runtime_lock_20260805_a2"
+        or value["registered_on"] != "2026-08-05"
         or value["canonical_json_contract"] != CANONICAL_JSON_CONTRACT
     ):
         raise V18Error("runtime-lock identity changed")
@@ -2097,9 +3326,39 @@ def _operation_timestamp(value: Any | None, name: str) -> datetime:
     return datetime.now(TOKYO) if value is None else _timestamp(value, name)
 
 
+def _require_active_a2_rehearsal_contract(
+    value: _A2RehearsalContract | None,
+) -> _A2RehearsalContract:
+    if (
+        value is None
+        or not isinstance(value, _A2RehearsalContract)
+        or value is not _ACTIVE_A2_REHEARSAL_CONTRACT
+    ):
+        raise V18Error("A2 rehearsal capability is absent, forged, or expired")
+    return value
+
+
 @contextmanager
-def _numeric_execution() -> Iterable[None]:
+def _numeric_execution(
+    *, _a2_rehearsal_contract: _A2RehearsalContract | None = None
+) -> Iterable[None]:
     """Run registered numerical work with one native thread and verify it."""
+
+    if _a2_rehearsal_contract is not None:
+        rehearsal = _require_active_a2_rehearsal_contract(
+            _a2_rehearsal_contract
+        )
+        if rehearsal.numeric_threadpool_limit != 1:
+            raise V18Error("A2 rehearsal numeric thread limit changed")
+        # The locked runtime and loaded native backends are validated by the
+        # untimed capability preflight and postflight.  The timed seam performs
+        # only the same one-thread numerical dispatch; it must not reopen the
+        # runtime lock or any project/module file.
+        with threadpoolctl.threadpool_limits(
+            limits=rehearsal.numeric_threadpool_limit
+        ):
+            yield
+        return
 
     lock = read_json(RUNTIME_LOCK)
     expected_limit = int(lock["runtime"]["numeric_execution_contract"]["threadpoolctl_limit"])
@@ -2179,6 +3438,377 @@ def _validate_required_array_uniqueness(value: Any, *, path: str = "protocol") -
             _validate_required_array_uniqueness(child, path=f"{path}[{index}]")
 
 
+def _validate_additional_test_artifact_paths(value: Any) -> tuple[str, ...]:
+    if not isinstance(value, list):
+        raise V18Error("additional test artifact paths must be an ordered array")
+    paths = tuple(value)
+    if paths != ADDITIONAL_TEST_ARTIFACT_PATHS:
+        raise V18Error("additional test artifact path registry changed")
+    if len(paths) != len(set(paths)) or "tests/test_model_v18_shoulder_state.py" in paths:
+        raise V18Error("additional test artifact paths overlap or duplicate")
+    return paths
+
+
+def _protocol_additional_test_artifact_paths(
+    protocol: Mapping[str, Any],
+) -> tuple[str, ...]:
+    activation = protocol.get("activation", {})
+    paths = _validate_additional_test_artifact_paths(
+        activation.get("preregistration_commit", {}).get(
+            "additional_test_artifact_paths"
+        )
+    )
+    payload_contract = activation.get("payload", {})
+    if "additional_test_artifacts" not in payload_contract.get(
+        "required_fields", ()
+    ):
+        raise V18Error("activation payload omits additional test artifacts")
+    if "additional_test_artifacts" in payload_contract.get("fixed_values", {}):
+        raise V18Error("protocol must not bind cyclic additional test hashes")
+    return paths
+
+
+def _validate_additional_test_artifacts(
+    value: Any,
+    *,
+    expected_paths: Sequence[str] = ADDITIONAL_TEST_ARTIFACT_PATHS,
+    verify_worktree: bool,
+) -> tuple[dict[str, str], ...]:
+    if not isinstance(value, list) or len(value) != len(expected_paths):
+        raise V18Error("additional test artifact records changed")
+    records: list[dict[str, str]] = []
+    for expected_path, item in zip(expected_paths, value, strict=True):
+        if not isinstance(item, Mapping) or tuple(item) != ADDITIONAL_TEST_ARTIFACT_FIELDS:
+            raise V18Error("additional test artifact record schema changed")
+        path = item.get("path")
+        digest = item.get("sha256")
+        if path != expected_path or not isinstance(digest, str) or SHA256_RE.fullmatch(
+            digest
+        ) is None:
+            raise V18Error("additional test artifact path/hash changed")
+        if verify_worktree:
+            test_path = ROOT / expected_path
+            if not test_path.is_file() or sha256_file(test_path) != digest:
+                raise V18Error(
+                    f"additional test artifact working-tree bytes changed: {expected_path}"
+                )
+        records.append({"path": expected_path, "sha256": digest})
+    if len({item["path"] for item in records}) != len(records):
+        raise V18Error("additional test artifact records contain duplicate paths")
+    return tuple(records)
+
+
+def _additional_test_artifacts_from_worktree(
+    paths: Sequence[str] = ADDITIONAL_TEST_ARTIFACT_PATHS,
+) -> list[dict[str, str]]:
+    if tuple(paths) != ADDITIONAL_TEST_ARTIFACT_PATHS:
+        raise V18Error("additional test artifact construction path registry changed")
+    records: list[dict[str, str]] = []
+    for relative in paths:
+        path = ROOT / relative
+        if not path.is_file():
+            raise V18Error(f"additional test artifact is missing: {relative}")
+        records.append({"path": relative, "sha256": sha256_file(path)})
+    return list(
+        _validate_additional_test_artifacts(
+            records, expected_paths=paths, verify_worktree=True
+        )
+    )
+
+
+def _validate_a2_protocol_contract(protocol: Mapping[str, Any]) -> None:
+    """Bind the finite A2 correction, evidence schemas, and operational surface."""
+
+    correction = protocol.get("a2_correction", {})
+    if set(correction) != {
+        "correction_id",
+        "superseded_unactivated_preregistration_commit_sha",
+        "superseded_protocol_sha256",
+        "superseded_runtime_lock_sha256",
+        "superseded_state",
+        "reasons",
+        "unchanged",
+        "activation_rule",
+    } or {
+        "correction_id": correction.get("correction_id"),
+        "superseded_unactivated_preregistration_commit_sha": correction.get(
+            "superseded_unactivated_preregistration_commit_sha"
+        ),
+        "superseded_protocol_sha256": correction.get(
+            "superseded_protocol_sha256"
+        ),
+        "superseded_runtime_lock_sha256": correction.get(
+            "superseded_runtime_lock_sha256"
+        ),
+    } != {
+        "correction_id": "model_v18_shoulder_state_a2_20260805",
+        "superseded_unactivated_preregistration_commit_sha": (
+            "0c2f1633ca7f8584f6550b1d858402e20fc55d6b"
+        ),
+        "superseded_protocol_sha256": (
+            "c623fabfa8e94381bce27d359cefc6e51a9a80f1c18f62f6098cfdfc8e9f6112"
+        ),
+        "superseded_runtime_lock_sha256": (
+            "95a867e2f8f187528a7ba3d24f4db4f1bf0964531b6e0e2b85d88d0c758f1e32"
+        ),
+    }:
+        raise V18Error("A2 correction identity changed")
+    if "never activated" not in str(correction["superseded_state"]) or tuple(
+        correction["reasons"]
+    ) != (
+        "zstandard 0.25.0/backend_c transitive runtime closure was missing",
+        "one full raw parse exceeded the 11-minute pre-open publication window",
+    ):
+        raise V18Error("A2 correction history changed")
+
+    activation = protocol.get("activation", {})
+    payload = activation.get("payload", {})
+    receipt = activation.get("receipt", {})
+    payload_fixed = payload.get("fixed_values", {})
+    receipt_fixed = receipt.get("fixed_values", {})
+    required_prereg_paths = tuple(
+        activation.get("preregistration_commit", {}).get("required_paths", ())
+    )
+    if (
+        activation.get("status")
+        != "pending_three_commit_activation_a2_correction"
+        or activation.get("not_before_session") != "2026-08-06"
+        or activation.get(
+            "expected_earliest_session_if_receipt_workflow_is_observed_before_cutoff"
+        )
+        != "2026-08-06"
+        or payload_fixed.get("activation_id")
+        != "model_v18_shoulder_state_activation_a2_20260805"
+        or payload_fixed.get("not_before_session") != "2026-08-06"
+        or receipt_fixed.get("activation_id")
+        != "model_v18_shoulder_state_activation_a2_20260805"
+        or receipt_fixed.get("not_before_session") != "2026-08-06"
+        or payload_fixed.get("iteration_report_path")
+        != "research/model_v18_postmerge_hypothesis_iteration_report.md"
+        or payload_fixed.get("validation_report_path") != "VALIDATION.md"
+        or payload_fixed.get("rehearsal_path")
+        != "research/model_v18_a2_rehearsal.py"
+        or "research/model_v18_postmerge_hypothesis_iteration_report.md"
+        not in required_prereg_paths
+        or "VALIDATION.md" not in required_prereg_paths
+        or "research/model_v18_a2_rehearsal.py" not in required_prereg_paths
+        or "iteration_report_path" not in payload.get("required_fields", ())
+        or "iteration_report_sha256" not in payload.get("required_fields", ())
+        or "validation_report_path" not in payload.get("required_fields", ())
+        or "validation_report_sha256" not in payload.get("required_fields", ())
+        or "rehearsal_path" not in payload.get("required_fields", ())
+        or "rehearsal_sha256" not in payload.get("required_fields", ())
+        or "predictor_cache_anchor" not in payload.get("required_fields", ())
+    ):
+        raise V18Error("A2 activation/preregistration contract changed")
+    periods = protocol.get("periods", {})
+    expected_period = periods.get(
+        "expected_if_first_counted_session_is_2026_08_06", {}
+    )
+    if periods.get("not_before_session") != "2026-08-06" or expected_period != {
+        "session_120": "2027-02-03",
+        "sessions_through_2027_01_29": 117,
+        "terminal_session": "2027-02-26",
+        "terminal_scheduled_sessions": 135,
+        "represented_calendar_months": 7,
+        "early_slice_sessions": 67,
+        "late_slice_sessions": 68,
+        "required_positive_months_net40": 6,
+        "required_executed_days": 122,
+    }:
+        raise V18Error("A2 not-before/terminal example changed")
+
+    a2 = protocol.get("a2_operational_repair_contract", {})
+    expected_schema_arrays = {
+        "parsed_shard_manifest_required_fields": PARSED_SHARD_MANIFEST_FIELDS,
+        "parsed_shard_binding_required_fields": PARSED_SHARD_BINDING_FIELDS,
+        "model_price_snapshot_manifest_required_fields": MODEL_PRICE_SNAPSHOT_FIELDS,
+        "g0_target_cache_manifest_required_fields": G0_CACHE_MANIFEST_FIELDS,
+        "cache_anchor_manifest_required_fields": CACHE_ANCHOR_FIELDS,
+        "cache_anchor_summary_required_fields": CACHE_ANCHOR_SUMMARY_FIELDS,
+        "compact_consumer_equivalence_receipt_required_fields": (
+            COMPACT_CONSUMER_EQUIVALENCE_RECEIPT_FIELDS
+        ),
+        "month_source_manifest_required_fields": MONTH_SOURCE_MANIFEST_FIELDS,
+    }
+    if a2.get("schema_version") != 1 or a2.get("cache_contract_id") != (
+        PREDICTOR_CACHE_CONTRACT_ID
+    ):
+        raise V18Error("A2 predictor-cache contract identity changed")
+    for name, expected in expected_schema_arrays.items():
+        if tuple(a2.get(name, ())) != expected:
+            raise V18Error(f"A2 protocol schema differs from runner: {name}")
+    if (
+        tuple(a2.get("compact_model_price_columns", ())) != MODEL_PRICE_COLUMNS
+        or tuple(a2.get("canonical_cli_order", ()))
+        != (
+            "prepare-day",
+            "publish-checkpoint",
+            "decide",
+            "finalize-terminal",
+            "evaluate",
+        )
+        or tuple(a2.get("forbidden_split_mutation_commands", ()))
+        != (
+            "prepare-source-manifest",
+            "prepare-month",
+            "prepare-top2",
+            "prepare-state",
+            "prepare-checkpoint",
+            "prepare-outcome-manifest",
+            "attach-outcomes",
+            "close-month",
+        )
+        or tuple(a2.get("root_arguments", ()))
+        != (
+            "--predictor-raw-store-root",
+            "--predictor-derived-store-root",
+            "--outcome-raw-store-root",
+            "--checkpoint-core-store-root",
+        )
+    ):
+        raise V18Error("A2 operational surface changed")
+    timing = a2.get("timing_activation_gate", {})
+    if timing != {
+        "cold_runs": 3,
+        "intramonth_local_e2e_seconds_max": 120,
+        "month_boundary_local_e2e_seconds_max": 300,
+        "measured_compact_e2e_seconds": 69.1,
+        "measured_peak_gib": 3.815,
+        "fixed_synthetic_target_session": "2026-08-05",
+        "untimed_reference_input_kind": "full31_reference",
+        "month_boundary_input_kind": "month_boundary_compact",
+        "intramonth_input_kind": "intramonth_fold_reuse_upper_bound_proxy",
+        "preflight_api": "prepare_a2_nonauthority_rehearsal_contract",
+        "runner_api": "build_a2_nonauthority_rehearsal_day",
+        "postflight_api": "validate_a2_nonauthority_rehearsal_postflight",
+        "authority": False,
+        "comparison_rule": "The input-kind/snapshot/suffix/timing envelope is documentary. Only the nested comparison object is exact-compared: source-manifest/source-set/parsed-shard-set identities, model-price CSV/semantics, one full G0 digest, exact pre-month training semantic/count, target-cache bytes/semantics, real fold/bundle bytes, real score bytes/semantics, IEEE top-two scores, and panel call count. Reference and boundary calls freshly compute every proof field and bind them into a process-local, nonserialisable fold token together with the exact canonical full-prefix CSV byte count/SHA, row count, target/latest sessions, and source/shard identities. The intramonth proxy must freshly strict-decode its compact snapshot, project its suffix, canonical-encode the merged full prefix once, and require every exact identity to equal that token before reusing only the sealed model-semantic/full-G0/training-semantic proof fields. It must still freshly build exactly one panel, encode/round-trip the target cache, recompute current fold row/target/feature hashes, validate the reused fold/bundle, and score; it may not fit inside its timed call. Any prefix or token mismatch aborts before proof reuse.",
+        "rule": "A slow full-raw reference build is outside the daily timing gate and fixes exact comparison hashes. The untimed preflight creates one process-local opaque capability after strict runtime/project/canonical-authority-absence validation; timed calls accept only that exact capability and perform no canonical repository read/write, network call, calendar lookup, or module-closure scan; untimed postflight revalidates the same closure and revokes the capability. Production intramonth preparation uses the same causal optimization: after exact retained month-source, snapshot data-byte/canonical-decode/self/source/shard bindings are validated, the already sealed model/training semantic fields may be reused without caller-supplied frames or hashes, while current fold row/target/feature hashes and target score remain fresh; boundary creation and terminal independently compute all semantics. Three fresh compact nonauthority runs for each registered boundary and intramonth case must exact-match that reference; any compact run over its budget forbids activation.",
+    }:
+        raise V18Error("A2 cold timing gate changed")
+
+    source_contract = protocol.get("source_contract", {})
+    provenance = source_contract.get("raw_source_provenance", {})
+    provenance_policy = source_contract.get("raw_source_provenance_policy", {})
+    if provenance != _raw_source_provenance_envelope() or (
+        provenance_policy.get("caveat") != RAW_SOURCE_PROVENANCE_CAVEAT
+        or len(provenance_policy.get("trusted_claims", ())) != 2
+        or len(provenance_policy.get("nonclaims", ())) != 4
+        or not isinstance(provenance_policy.get("upgrade_rule"), str)
+        or not provenance_policy["upgrade_rule"]
+    ):
+        raise V18Error("A2 manual source-provenance contract changed")
+    if tuple(a2.get("result_input_fields", ())) != tuple(
+        protocol.get("result_contract", {}).get("required_input_fields", ())
+    ):
+        raise V18Error("A2 result-input registry changed")
+    c00_contract = protocol.get("c00_contract", {})
+    if tuple(
+        c00_contract.get("fold_model_bundle_contract", {}).get(
+            "required_fields", ()
+        )
+    ) != (
+        "schema_version",
+        "target_month",
+        "created_at",
+        "runtime_lock_sha256",
+        "runtime_lock_verified_at",
+        "input_feature_order",
+        "input_feature_dtype",
+        "input_feature_shape",
+        "transformed_feature_order",
+        "transformed_feature_dtype",
+        "transformed_feature_shape",
+        "imputer_strategy",
+        "imputer_add_indicator",
+        "imputer_keep_empty_features",
+        "imputer_statistics",
+        "imputer_indicator_features",
+        "scaler_with_mean",
+        "scaler_with_std",
+        "scaler_mean",
+        "scaler_scale",
+        "ridge_alpha",
+        "ridge_fit_intercept",
+        "ridge_coef",
+        "ridge_intercept",
+        "protocol_sha256",
+        "runner_sha256",
+        "python_version",
+        "numpy_version",
+        "scikit_learn_version",
+        "canonical_json_contract",
+        "fold_model_bundle_sha256",
+    ) or tuple(c00_contract.get("fold_manifest_required_fields", ())) != (
+        "schema_version",
+        "target_month",
+        "fit_started_at",
+        "fit_completed_at",
+        "sealed_at",
+        "runtime_lock_sha256",
+        "runtime_lock_verified_at",
+        "training_first_session",
+        "training_last_session",
+        "training_session_count",
+        "training_row_identity_sha256",
+        "training_target_sha256",
+        "feature_matrix_sha256",
+        "feature_names",
+        "month_source_manifest_path",
+        "month_source_manifest_sha256",
+        "training_source_set_sha256",
+        "training_parsed_shard_set_sha256",
+        "training_g0_panel_semantic_sha256",
+        "ridge_alpha",
+        "fold_model_bundle_path",
+        "fold_model_bundle_schema_version",
+        "fold_model_bundle_file_sha256",
+        "fold_model_bundle_sha256",
+        "input_feature_order_sha256",
+        "transformed_feature_order_sha256",
+        "imputer_statistics_sha256",
+        "imputer_indicator_features_sha256",
+        "scaler_mean_sha256",
+        "scaler_scale_sha256",
+        "ridge_coef_sha256",
+        "ridge_intercept",
+        "universe_contract_sha256",
+        "protocol_sha256",
+        "runner_sha256",
+        "python_version",
+        "numpy_version",
+        "pandas_version",
+        "scikit_learn_version",
+        "canonical_json_contract",
+        "fold_manifest_sha256",
+    ):
+        raise V18Error("A2 fold/bundle protocol schema changed")
+    state_contract = protocol.get("state_contract", {})
+    if tuple(
+        state_contract.get("target_month_state_manifest_required_fields", ())
+    ) != (
+        "schema_version",
+        "target_month",
+        "created_at",
+        "three_prior_calendar_months",
+        "three_complete_pair_day_counts",
+        "three_month_medians_pct",
+        "state_available",
+        "state_value_pct",
+        "selected_source_rank",
+        "c00_fold_manifest_sha256",
+        "fold_model_bundle_file_sha256",
+        "protocol_sha256",
+        "activation_payload_sha256",
+        "activation_receipt_sha256",
+        "state_manifest_sha256",
+    ) or tuple(
+        state_contract.get("completed_month_record_required_fields", ())
+    ) != COMPLETED_MONTH_FIELDS:
+        raise V18Error("A2 state/completed-month protocol schema changed")
+
+
 def validate_protocol(path: str | Path = PROTOCOL) -> tuple[dict[str, Any], str]:
     observed = sha256_file(path)
     if PROTOCOL_SHA256 == "__PENDING_PROTOCOL_SHA256__":
@@ -2191,10 +3821,12 @@ def validate_protocol(path: str | Path = PROTOCOL) -> tuple[dict[str, Any], str]
         raise V18Error("v1.8 protocol identity changed")
     if (
         protocol.get("repository") != "rokuroku-066/TSE-Session-Ranker"
-        or protocol.get("branch") != "agent/v16-real-data-model-eval-20260728"
+        or protocol.get("branch") != GITHUB_BRANCH
     ):
         raise V18Error("v1.8 repository/branch changed")
+    _validate_a2_protocol_contract(protocol)
     activation_contract = protocol.get("activation", {})
+    _protocol_additional_test_artifact_paths(protocol)
     observation_contract = activation_contract.get("github_observation_contract", {})
     workflow_observation_contract = activation_contract.get(
         "github_workflow_run_observation_contract", {}
@@ -2297,10 +3929,6 @@ def validate_protocol(path: str | Path = PROTOCOL) -> tuple[dict[str, Any], str]
         "selected_rank2",
         "cash_state_zero",
         "cash_state_unavailable",
-        "fail_closed_source_empty",
-        "fail_closed_source_partial",
-        "fail_closed_model_fold",
-        "fail_closed_model_pair",
     )
     if (
         checkpoint.get("proposal_directory")
@@ -2503,9 +4131,8 @@ def validate_protocol(path: str | Path = PROTOCOL) -> tuple[dict[str, Any], str]
         "predictor_raw_source_set_sha256",
         "predictor_unique_raw_object_count",
         "predictor_parser_sha256",
-        "predictor_parsed_panel_semantic_set_sha256",
-        "predictor_g0_panel_semantic_set_sha256",
-        "predictor_common_universe_semantic_set_sha256",
+        "predictor_parsed_shard_binding_set_sha256",
+        "predictor_target_slice_semantic_set_sha256",
         "predictor_target_date_scoring_input_semantic_set_sha256",
         "c00_fold_manifest_set_sha256",
         "c00_fold_model_bundle_file_set_sha256",
@@ -2705,6 +4332,62 @@ SOURCE_MANIFEST_FIELDS = (
     "schema_version",
     "target_session",
     "latest_required_source_session",
+    "previous_counted_target_session",
+    "previous_counted_source_manifest_sha256",
+    "created_at",
+    "sealed_at",
+    "runtime_lock_sha256",
+    "runtime_lock_verified_at",
+    "source_files",
+    "source_urls",
+    "source_object_keys",
+    "source_byte_counts",
+    "source_sha256",
+    "source_set_sha256",
+    "parsed_shards",
+    "parsed_shard_set_sha256",
+    "month_source_manifest_sha256",
+    "model_price_snapshot_target_month",
+    "model_price_snapshot_latest_source_session",
+    "model_price_snapshot_object_key",
+    "model_price_snapshot_byte_count",
+    "model_price_snapshot_file_sha256",
+    "model_price_snapshot_semantic_sha256",
+    "model_price_snapshot_manifest_object_key",
+    "model_price_snapshot_manifest_byte_count",
+    "model_price_snapshot_manifest_file_sha256",
+    "model_price_snapshot_manifest_sha256",
+    "source_received_at",
+    "parser_path",
+    "parser_version",
+    "parser_sha256",
+    "parsed_row_count",
+    "rejected_row_count",
+    "duplicate_date_code_count",
+    "target_date_scoring_input_semantic_sha256",
+    "target_slice_semantic_sha256",
+    "g0_panel_cache_object_key",
+    "g0_panel_cache_byte_count",
+    "g0_panel_cache_sha256",
+    "g0_panel_cache_manifest_object_key",
+    "g0_panel_cache_manifest_byte_count",
+    "g0_panel_cache_manifest_file_sha256",
+    "g0_panel_cache_manifest_sha256",
+    "source_complete",
+    "failure_reason",
+    "python_version",
+    "canonical_json_contract",
+    "source_manifest_sha256",
+)
+SOURCE_MANIFEST_REQUIRED = frozenset(SOURCE_MANIFEST_FIELDS)
+
+MONTH_SOURCE_MANIFEST_FIELDS = (
+    "schema_version",
+    "target_month",
+    "first_counted_session",
+    "seal_session",
+    "activation_observed_at",
+    "latest_required_source_session",
     "created_at",
     "sealed_at",
     "runtime_lock_sha256",
@@ -2716,23 +4399,38 @@ SOURCE_MANIFEST_FIELDS = (
     "source_sha256",
     "source_set_sha256",
     "source_received_at",
-    "parser_path",
-    "parser_version",
-    "parser_sha256",
+    "parsed_shards",
+    "parsed_shard_set_sha256",
+    "model_price_snapshot_origin",
+    "previous_model_price_snapshot_target_month",
+    "previous_model_price_snapshot_latest_source_session",
+    "previous_model_price_snapshot_manifest_object_key",
+    "previous_model_price_snapshot_manifest_file_sha256",
+    "previous_model_price_snapshot_manifest_sha256",
+    "model_price_suffix_shard_count",
+    "model_price_suffix_shard_set_sha256",
+    "model_price_snapshot_target_month",
+    "model_price_snapshot_latest_source_session",
+    "model_price_snapshot_object_key",
+    "model_price_snapshot_byte_count",
+    "model_price_snapshot_file_sha256",
+    "model_price_snapshot_semantic_sha256",
+    "model_price_snapshot_manifest_object_key",
+    "model_price_snapshot_manifest_byte_count",
+    "model_price_snapshot_manifest_file_sha256",
+    "model_price_snapshot_manifest_sha256",
     "parsed_row_count",
-    "rejected_row_count",
-    "duplicate_date_code_count",
-    "parsed_panel_semantic_sha256",
-    "g0_panel_semantic_sha256",
-    "common_universe_semantic_sha256",
-    "target_date_scoring_input_semantic_sha256",
-    "source_complete",
-    "failure_reason",
-    "python_version",
+    "model_price_full_prefix_semantic_sha256",
+    "g0_training_panel_semantic_sha256",
+    "g0_training_row_count",
+    "activation_payload_sha256",
+    "activation_receipt_sha256",
+    "protocol_sha256",
+    "runner_sha256",
+    "parser_sha256",
     "canonical_json_contract",
-    "source_manifest_sha256",
+    "month_source_manifest_sha256",
 )
-SOURCE_MANIFEST_REQUIRED = frozenset(SOURCE_MANIFEST_FIELDS)
 
 OUTCOME_MANIFEST_FIELDS = (
     "schema_version",
@@ -2778,13 +4476,55 @@ def _official_jpx_url(value: Any, name: str) -> str:
     parsed = urlparse(token)
     if (
         parsed.scheme != "https"
-        or parsed.hostname not in {"www.jpx.co.jp", "jpx.co.jp"}
+        or parsed.hostname != "www.jpx.co.jp"
+        or parsed.netloc != "www.jpx.co.jp"
         or parsed.username is not None
         or parsed.password is not None
         or not parsed.path.startswith("/")
+        or parsed.query
+        or parsed.fragment
+        or parsed.params
+        or "%" in parsed.path
+        or "//" in parsed.path
+        or any(part in {".", ".."} for part in parsed.path.split("/"))
     ):
         raise V18Error(f"{name} is not an absolute official JPX HTTPS URL")
     return token
+
+
+def _official_jpx_daily_url(
+    value: Any,
+    name: str,
+    *,
+    file_name: Any,
+    source_session: Any,
+) -> str:
+    """Validate an operator-attested daily JPX URL label (not origin proof)."""
+
+    token = _official_jpx_url(value, name)
+    file_token = str(file_name)
+    session = _date(source_session, f"{name} source session")
+    if file_token != f"stq_{session.strftime('%Y%m%d')}.pdf":
+        raise V18Error(f"{name} filename differs from its source session")
+    parsed = urlparse(token)
+    pattern = re.compile(
+        r"^/markets/statistics-equities/daily/"
+        r"[a-z0-9]+-att/"
+        + re.escape(file_token)
+        + r"$"
+    )
+    if pattern.fullmatch(parsed.path) is None:
+        raise V18Error(f"{name} is not the canonical daily JPX URL label")
+    return token
+
+
+def _raw_source_provenance_envelope() -> dict[str, Any]:
+    return {
+        "mode": RAW_SOURCE_PROVENANCE_MODE,
+        "official_source_verified": False,
+        "caveat_id": RAW_SOURCE_PROVENANCE_CAVEAT_ID,
+        "caveat_text_sha256": RAW_SOURCE_PROVENANCE_CAVEAT_SHA256,
+    }
 
 
 def _source_file_date(name: str, kind: str) -> pd.Timestamp:
@@ -2907,6 +4647,13 @@ def _external_parent_fd(
             expected_root.st_ino,
         ):
             raise V18Error(f"{label} raw store root changed during open")
+        if (
+            observed_root.st_uid != os.geteuid()
+            or stat.S_IMODE(observed_root.st_mode) & 0o022
+        ):
+            raise V18Error(
+                f"{label} raw store root owner/permissions are not private"
+            )
         for component in components[:-1]:
             try:
                 before = os.stat(
@@ -2943,6 +4690,11 @@ def _external_parent_fd(
             if (after.st_dev, after.st_ino) != (before.st_dev, before.st_ino):
                 os.close(next_fd)
                 raise V18Error(f"{label} raw object parent changed during open")
+            if after.st_uid != os.geteuid() or stat.S_IMODE(after.st_mode) & 0o022:
+                os.close(next_fd)
+                raise V18Error(
+                    f"{label} raw object parent owner/permissions are not private"
+                )
             os.close(current_fd)
             current_fd = next_fd
         yield current_fd, components[-1]
@@ -2972,6 +4724,13 @@ def _external_object_fd(
             raise V18Error(f"{label} raw evidence object is not a plain file")
         if before.st_nlink != 1:
             raise V18Error(f"{label} raw evidence object has a hard-link alias")
+        if (
+            before.st_uid != os.geteuid()
+            or stat.S_IMODE(before.st_mode) != 0o600
+        ):
+            raise V18Error(
+                f"{label} raw evidence object owner/mode/link contract changed"
+            )
         try:
             descriptor = os.open(
                 file_name,
@@ -2985,11 +4744,28 @@ def _external_object_fd(
             if (
                 (after.st_dev, after.st_ino) != (before.st_dev, before.st_ino)
                 or after.st_nlink != 1
+                or after.st_uid != os.geteuid()
+                or stat.S_IMODE(after.st_mode) != 0o600
             ):
                 raise V18Error(f"{label} raw evidence object changed during open")
             yield descriptor
         finally:
             os.close(descriptor)
+
+
+def _external_stat_is_private_regular(
+    observed: os.stat_result | None,
+    *,
+    nlink: int,
+) -> bool:
+    """Return whether a retained external file has the exact private contract."""
+
+    return observed is not None and (
+        stat.S_ISREG(observed.st_mode)
+        and observed.st_uid == os.geteuid()
+        and stat.S_IMODE(observed.st_mode) == 0o600
+        and observed.st_nlink == nlink
+    )
 
 
 def _stream_stable_file(
@@ -3059,6 +4835,533 @@ def _external_object_metadata(
             label=f"{label} raw object",
             required_signature=required_signature,
         )
+
+
+def _external_object_bytes(
+    store_root: str | Path,
+    object_key: Any,
+    *,
+    prefix: str,
+    label: str,
+) -> bytes:
+    """Read exact create-once external bytes through a pinned descriptor."""
+
+    with _external_object_fd(
+        store_root, object_key, prefix=prefix, label=label
+    ) as descriptor:
+        before = os.fstat(descriptor)
+        os.lseek(descriptor, 0, os.SEEK_SET)
+        chunks: list[bytes] = []
+        while True:
+            chunk = os.read(descriptor, 1024 * 1024)
+            if not chunk:
+                break
+            chunks.append(chunk)
+        after = os.fstat(descriptor)
+        if any(
+            getattr(before, field) != getattr(after, field)
+            for field in (
+                "st_dev",
+                "st_ino",
+                "st_nlink",
+                "st_size",
+                "st_mtime_ns",
+                "st_ctime_ns",
+            )
+        ):
+            raise V18Error(f"{label} object changed while being read")
+        payload = b"".join(chunks)
+        if len(payload) != before.st_size or after.st_nlink != 1:
+            raise V18Error(f"{label} object changed length or link count")
+        return payload
+
+
+def _external_object_identity(
+    store_root: str | Path,
+    object_key: Any,
+    *,
+    prefix: str,
+    label: str,
+) -> tuple[int, int]:
+    with _external_object_fd(
+        store_root, object_key, prefix=prefix, label=label
+    ) as descriptor:
+        observed = os.fstat(descriptor)
+        return int(observed.st_dev), int(observed.st_ino)
+
+
+def _external_object_exists(
+    store_root: str | Path,
+    object_key: Any,
+    *,
+    prefix: str,
+    label: str,
+) -> bool:
+    """Return existence, healing only a proven link-before-unlink crash state."""
+
+    try:
+        with _external_parent_fd(
+            store_root,
+            object_key,
+            prefix=prefix,
+            label=label,
+        ) as (parent_fd, file_name):
+            fcntl.flock(parent_fd, fcntl.LOCK_EX)
+            try:
+                try:
+                    observed = os.stat(
+                        file_name, dir_fd=parent_fd, follow_symlinks=False
+                    )
+                except FileNotFoundError:
+                    return False
+                if not stat.S_ISREG(observed.st_mode):
+                    raise V18Error(f"{label} existing object is not regular")
+                if (
+                    observed.st_uid != os.geteuid()
+                    or stat.S_IMODE(observed.st_mode) != 0o600
+                ):
+                    raise V18Error(
+                        f"{label} existing object owner/mode contract changed"
+                    )
+                if observed.st_nlink == 2:
+                    stage_name = f".{file_name}.staging"
+                    try:
+                        stage = os.stat(
+                            stage_name, dir_fd=parent_fd, follow_symlinks=False
+                        )
+                    except FileNotFoundError as exc:
+                        raise V18Error(
+                            f"{label} final has an unexplained hard-link alias"
+                        ) from exc
+                    if (
+                        not _external_stat_is_private_regular(stage, nlink=2)
+                        or (stage.st_dev, stage.st_ino, stage.st_nlink)
+                        != (observed.st_dev, observed.st_ino, 2)
+                    ):
+                        raise V18Error(
+                            f"{label} final/stage crash state is inconsistent"
+                        )
+                    stage_fd = os.open(
+                        stage_name,
+                        os.O_RDONLY
+                        | os.O_CLOEXEC
+                        | getattr(os, "O_NOFOLLOW", 0),
+                        dir_fd=parent_fd,
+                    )
+                    try:
+                        pinned = os.fstat(stage_fd)
+                        current_stage = os.stat(
+                            stage_name, dir_fd=parent_fd, follow_symlinks=False
+                        )
+                        current_final = os.stat(
+                            file_name, dir_fd=parent_fd, follow_symlinks=False
+                        )
+                        expected_inode = (pinned.st_dev, pinned.st_ino, 2)
+                        if (
+                            not _external_stat_is_private_regular(pinned, nlink=2)
+                            or not _external_stat_is_private_regular(
+                                current_stage, nlink=2
+                            )
+                            or not _external_stat_is_private_regular(
+                                current_final, nlink=2
+                            )
+                            or
+                            (
+                                current_stage.st_dev,
+                                current_stage.st_ino,
+                                current_stage.st_nlink,
+                            )
+                            != expected_inode
+                            or (
+                                current_final.st_dev,
+                                current_final.st_ino,
+                                current_final.st_nlink,
+                            )
+                            != expected_inode
+                        ):
+                            raise V18Error(
+                                f"{label} crash publication changed before cleanup"
+                            )
+                        os.unlink(stage_name, dir_fd=parent_fd)
+                        os.fsync(parent_fd)
+                    finally:
+                        os.close(stage_fd)
+                    observed = os.stat(
+                        file_name, dir_fd=parent_fd, follow_symlinks=False
+                    )
+                    if (
+                        not _external_stat_is_private_regular(observed, nlink=1)
+                        or (
+                            observed.st_dev,
+                            observed.st_ino,
+                            observed.st_nlink,
+                        )
+                        != (pinned.st_dev, pinned.st_ino, 1)
+                    ):
+                        raise V18Error(
+                            f"{label} recovered final changed after stage cleanup"
+                        )
+                if observed.st_nlink != 1:
+                    raise V18Error(
+                        f"{label} existing object is not single-link regular"
+                    )
+                return True
+            finally:
+                try:
+                    fcntl.flock(parent_fd, fcntl.LOCK_UN)
+                except OSError:
+                    pass
+    except V18Error as exc:
+        if "object parent is missing" in str(exc):
+            return False
+        raise
+
+
+
+def _write_external_bytes_once(
+    payload: bytes,
+    *,
+    store_root: str | Path,
+    object_key: str,
+    prefix: str,
+    label: str,
+    replace_unpublished_stage: bool = False,
+) -> tuple[int, str]:
+    """Atomically publish immutable bytes with deterministic crash recovery."""
+
+    if not isinstance(payload, bytes) or not payload:
+        raise V18Error(f"{label} payload must be non-empty exact bytes")
+    expected = len(payload), hashlib.sha256(payload).hexdigest()
+    with _external_parent_fd(
+        store_root,
+        object_key,
+        prefix=prefix,
+        label=label,
+        create_parents=True,
+    ) as (parent_fd, file_name):
+        stage_name = f".{file_name}.staging"
+        fcntl.flock(parent_fd, fcntl.LOCK_EX)
+        try:
+
+            def observed(name: str) -> os.stat_result | None:
+                try:
+                    return os.stat(name, dir_fd=parent_fd, follow_symlinks=False)
+                except FileNotFoundError:
+                    return None
+
+            final_stat = observed(file_name)
+            stage_stat = observed(stage_name)
+            if final_stat is not None:
+                if not stat.S_ISREG(final_stat.st_mode):
+                    raise V18Error(f"{label} final object is not regular")
+                if (
+                    final_stat.st_uid != os.geteuid()
+                    or stat.S_IMODE(final_stat.st_mode) != 0o600
+                ):
+                    raise V18Error(
+                        f"{label} final object owner/mode contract changed"
+                    )
+                if stage_stat is not None:
+                    if (
+                        not _external_stat_is_private_regular(stage_stat, nlink=2)
+                        or (stage_stat.st_dev, stage_stat.st_ino)
+                        != (final_stat.st_dev, final_stat.st_ino)
+                        or stage_stat.st_nlink != 2
+                        or final_stat.st_nlink != 2
+                    ):
+                        raise V18Error(
+                            f"{label} publication has a conflicting stranded stage"
+                        )
+                    stage_fd = os.open(
+                        stage_name,
+                        os.O_RDONLY
+                        | os.O_CLOEXEC
+                        | getattr(os, "O_NOFOLLOW", 0),
+                        dir_fd=parent_fd,
+                    )
+                    try:
+                        pinned = os.fstat(stage_fd)
+                        current = observed(stage_name)
+                        current_final = observed(file_name)
+                        expected_inode = (pinned.st_dev, pinned.st_ino, 2)
+                        if (
+                            not _external_stat_is_private_regular(pinned, nlink=2)
+                            or not _external_stat_is_private_regular(
+                                current, nlink=2
+                            )
+                            or not _external_stat_is_private_regular(
+                                current_final, nlink=2
+                            )
+                            or
+                            current is None
+                            or current_final is None
+                            or (
+                                current.st_dev,
+                                current.st_ino,
+                                current.st_nlink,
+                            )
+                            != expected_inode
+                            or (
+                                current_final.st_dev,
+                                current_final.st_ino,
+                                current_final.st_nlink,
+                            )
+                            != expected_inode
+                        ):
+                            raise V18Error(
+                                f"{label} stranded stage changed before cleanup"
+                            )
+                        os.unlink(stage_name, dir_fd=parent_fd)
+                        os.fsync(parent_fd)
+                        recovered = observed(file_name)
+                        if (
+                            recovered is None
+                            or not _external_stat_is_private_regular(
+                                recovered, nlink=1
+                            )
+                            or (
+                                recovered.st_dev,
+                                recovered.st_ino,
+                                recovered.st_nlink,
+                            )
+                            != (pinned.st_dev, pinned.st_ino, 1)
+                        ):
+                            raise V18Error(
+                                f"{label} recovered final changed after cleanup"
+                            )
+                    finally:
+                        os.close(stage_fd)
+                    final_stat = observed(file_name)
+                if final_stat is None or final_stat.st_nlink != 1:
+                    raise V18Error(f"{label} final object has a hard-link alias")
+            else:
+                if stage_stat is None:
+                    try:
+                        stage_fd = os.open(
+                            stage_name,
+                            os.O_RDWR
+                            | os.O_CREAT
+                            | os.O_EXCL
+                            | os.O_CLOEXEC
+                            | getattr(os, "O_NOFOLLOW", 0),
+                            0o600,
+                            dir_fd=parent_fd,
+                        )
+                    except OSError as exc:
+                        raise V18Error(
+                            f"{label} staging object cannot be created"
+                        ) from exc
+                else:
+                    if not _external_stat_is_private_regular(stage_stat, nlink=1):
+                        raise V18Error(
+                            f"{label} stranded staging object is not recoverable"
+                        )
+                    stage_fd = os.open(
+                        stage_name,
+                        os.O_RDWR
+                        | os.O_CLOEXEC
+                        | getattr(os, "O_NOFOLLOW", 0),
+                        dir_fd=parent_fd,
+                    )
+                try:
+                    pinned = os.fstat(stage_fd)
+                    current = observed(stage_name)
+                    if (
+                        current is None
+                        or not _external_stat_is_private_regular(pinned, nlink=1)
+                        or not _external_stat_is_private_regular(current, nlink=1)
+                        or (current.st_dev, current.st_ino, current.st_nlink)
+                        != (pinned.st_dev, pinned.st_ino, 1)
+                    ):
+                        raise V18Error(f"{label} staging object changed during recovery")
+                    os.lseek(stage_fd, 0, os.SEEK_SET)
+                    existing_chunks: list[bytes] = []
+                    while True:
+                        chunk = os.read(stage_fd, 1024 * 1024)
+                        if not chunk:
+                            break
+                        existing_chunks.append(chunk)
+                    existing = b"".join(existing_chunks)
+                    if len(existing) > len(payload) or existing != payload[: len(existing)]:
+                        if not replace_unpublished_stage:
+                            raise V18Error(
+                                f"{label} stranded staging bytes conflict with payload"
+                            )
+                        # No registered final name exists, so this inode has
+                        # never become authority.  Timestamp/nonce-bearing
+                        # manifests may restart their exact unpublished bytes
+                        # while holding the same retained-parent lock.
+                        os.ftruncate(stage_fd, 0)
+                        os.fsync(stage_fd)
+                        existing = b""
+                    os.lseek(stage_fd, len(existing), os.SEEK_SET)
+                    remaining = memoryview(payload)[len(existing) :]
+                    while remaining:
+                        written = os.write(stage_fd, remaining)
+                        if written <= 0:  # pragma: no cover - kernel invariant
+                            raise OSError("short write while sealing staged evidence")
+                        remaining = remaining[written:]
+                    os.fchmod(stage_fd, 0o600)
+                    os.fsync(stage_fd)
+                    sealed = os.fstat(stage_fd)
+                    if (
+                        not _external_stat_is_private_regular(sealed, nlink=1)
+                        or sealed.st_size != len(payload)
+                    ):
+                        raise V18Error(f"{label} staged bytes changed before publish")
+                    os.lseek(stage_fd, 0, os.SEEK_SET)
+                    digest = hashlib.sha256()
+                    count = 0
+                    while True:
+                        chunk = os.read(stage_fd, 1024 * 1024)
+                        if not chunk:
+                            break
+                        digest.update(chunk)
+                        count += len(chunk)
+                    if (count, digest.hexdigest()) != expected:
+                        raise V18Error(f"{label} staged exact bytes changed")
+                    os.fsync(parent_fd)
+                    try:
+                        os.link(
+                            stage_name,
+                            file_name,
+                            src_dir_fd=parent_fd,
+                            dst_dir_fd=parent_fd,
+                            follow_symlinks=False,
+                        )
+                    except FileExistsError as exc:
+                        raise V18Error(
+                            f"{label} final object appeared during no-replace publish"
+                        ) from exc
+                    published = observed(file_name)
+                    staged = observed(stage_name)
+                    if (
+                        published is None
+                        or staged is None
+                        or not _external_stat_is_private_regular(
+                            published, nlink=2
+                        )
+                        or not _external_stat_is_private_regular(staged, nlink=2)
+                        or (published.st_dev, published.st_ino)
+                        != (sealed.st_dev, sealed.st_ino)
+                        or (staged.st_dev, staged.st_ino)
+                        != (sealed.st_dev, sealed.st_ino)
+                        or published.st_nlink != 2
+                        or staged.st_nlink != 2
+                    ):
+                        raise V18Error(f"{label} no-replace publication changed inode")
+                    os.fsync(parent_fd)
+                    current = observed(stage_name)
+                    current_final = observed(file_name)
+                    expected_inode = (sealed.st_dev, sealed.st_ino, 2)
+                    if (
+                        current is None
+                        or current_final is None
+                        or not _external_stat_is_private_regular(current, nlink=2)
+                        or not _external_stat_is_private_regular(
+                            current_final, nlink=2
+                        )
+                        or (
+                            current.st_dev,
+                            current.st_ino,
+                            current.st_nlink,
+                        )
+                        != expected_inode
+                        or (
+                            current_final.st_dev,
+                            current_final.st_ino,
+                            current_final.st_nlink,
+                        )
+                        != expected_inode
+                    ):
+                        raise V18Error(f"{label} stage changed before final unlink")
+                    os.unlink(stage_name, dir_fd=parent_fd)
+                    os.fsync(parent_fd)
+                    published = observed(file_name)
+                    if (
+                        published is None
+                        or not _external_stat_is_private_regular(
+                            published, nlink=1
+                        )
+                        or (published.st_dev, published.st_ino)
+                        != (sealed.st_dev, sealed.st_ino)
+                        or published.st_nlink != 1
+                    ):
+                        raise V18Error(f"{label} final publication is not single-link")
+                finally:
+                    os.close(stage_fd)
+        finally:
+            try:
+                fcntl.flock(parent_fd, fcntl.LOCK_UN)
+            except OSError:
+                pass
+    retained = _external_object_metadata(
+        store_root,
+        object_key,
+        prefix=prefix,
+        label=label,
+        required_signature=None,
+    )
+    if retained != expected:
+        raise V18Error(f"{label} create-once object conflicts with exact bytes")
+    observed_payload = _external_object_bytes(
+        store_root, object_key, prefix=prefix, label=label
+    )
+    if observed_payload != payload:
+        raise V18Error(f"{label} create-once object has a byte collision")
+    return retained
+
+
+def _validate_external_root_pair_disjoint(
+    left_root: str | Path,
+    left_label: str,
+    right_root: str | Path,
+    right_label: str,
+) -> None:
+    left = _external_store_root(left_root, left_label)
+    right = _external_store_root(right_root, right_label)
+    if left == right or left in right.parents or right in left.parents:
+        raise V18Error(f"{left_label} and {right_label} store roots overlap")
+    left_stat = os.stat(left, follow_symlinks=False)
+    right_stat = os.stat(right, follow_symlinks=False)
+    if (left_stat.st_dev, left_stat.st_ino) == (
+        right_stat.st_dev,
+        right_stat.st_ino,
+    ):
+        raise V18Error(f"{left_label} and {right_label} roots alias one inode")
+
+
+def _validate_external_store_disjointness(
+    predictor_raw_store_root: str | Path,
+    predictor_derived_store_root: str | Path,
+) -> None:
+    _validate_external_root_pair_disjoint(
+        predictor_raw_store_root,
+        "predictor",
+        predictor_derived_store_root,
+        "predictor derived",
+    )
+
+
+def _assert_external_objects_nonalias(
+    left_root: str | Path,
+    left_key: str,
+    left_prefix: str,
+    right_root: str | Path,
+    right_key: str,
+    right_prefix: str,
+) -> None:
+    """Prove two separately sealed authorities are distinct retained inodes."""
+
+    with _external_object_fd(
+        left_root, left_key, prefix=left_prefix, label="predictor rollover raw"
+    ) as left_fd, _external_object_fd(
+        right_root, right_key, prefix=right_prefix, label="outcome rollover raw"
+    ) as right_fd:
+        left = os.fstat(left_fd)
+        right = os.fstat(right_fd)
+        if (left.st_dev, left.st_ino) == (right.st_dev, right.st_ino):
+            raise V18Error("predictor and outcome raw authorities alias one inode")
 
 
 @contextmanager
@@ -3245,7 +5548,11 @@ def _plain_file_bytes(
 
 
 def _read_csv_plain(path: str | Path, *, label: str, **kwargs: Any) -> pd.DataFrame:
-    payload = _plain_file_bytes(path, label=label)
+    payload = (
+        _read_local_authority_bytes(path, label=label)
+        if _is_registered_local_authority_path(path)
+        else _plain_file_bytes(path, label=label)
+    )
     return pd.read_csv(io.BytesIO(payload), **kwargs)
 
 
@@ -3257,64 +5564,28 @@ def _seal_external_object(
     prefix: str,
     label: str,
 ) -> tuple[int, str]:
-    source_metadata = _source_file_metadata(source, label=label)
-    with _external_parent_fd(
+    payload = _plain_file_bytes(source, label=f"{label} source")
+    if payload[:4] != b"%PDF":
+        raise V18Error(f"{label} source signature changed")
+    expected = len(payload), hashlib.sha256(payload).hexdigest()
+    retained = _write_external_bytes_once(
+        payload,
+        store_root=store_root,
+        object_key=object_key,
+        prefix=prefix,
+        label=label,
+    )
+    if retained != expected:
+        raise V18Error(f"{label} create-once object conflicts with supplied bytes")
+    verified = _external_object_metadata(
         store_root,
         object_key,
         prefix=prefix,
         label=label,
-        create_parents=True,
-    ) as (parent_fd, file_name):
-        try:
-            destination = os.open(
-                file_name,
-                os.O_WRONLY
-                | os.O_CREAT
-                | os.O_EXCL
-                | os.O_CLOEXEC
-                | getattr(os, "O_NOFOLLOW", 0),
-                0o600,
-                dir_fd=parent_fd,
-            )
-        except FileExistsError:
-            destination = None
-        if destination is not None:
-            source_fd = os.open(
-                Path(source),
-                os.O_RDONLY | os.O_CLOEXEC | getattr(os, "O_NOFOLLOW", 0),
-            )
-            try:
-                copied = _stream_stable_file(
-                    source_fd,
-                    label=label,
-                    destination_fd=destination,
-                )
-                os.fsync(destination)
-                os.fsync(parent_fd)
-            except BaseException:
-                os.close(destination)
-                try:
-                    os.unlink(file_name, dir_fd=parent_fd)
-                except FileNotFoundError:
-                    pass
-                raise
-            else:
-                os.close(destination)
-            finally:
-                os.close(source_fd)
-            if copied != source_metadata:
-                try:
-                    os.unlink(file_name, dir_fd=parent_fd)
-                    os.fsync(parent_fd)
-                except FileNotFoundError:
-                    pass
-                raise V18Error(f"{label} source changed between validation and seal")
-    retained = _external_object_metadata(
-        store_root, object_key, prefix=prefix, label=label
     )
-    if retained != source_metadata:
-        raise V18Error(f"{label} create-once object conflicts with supplied bytes")
-    return retained
+    if verified != expected:
+        raise V18Error(f"{label} retained PDF bytes changed after publication")
+    return verified
 
 
 def _predictor_object_key(file_name: str, kind: str) -> str:
@@ -3341,13 +5612,219 @@ def _source_set_records(value: Mapping[str, Any]) -> list[dict[str, Any]]:
     ]
 
 
+def _model_price_snapshot_binding_from_anchor(
+    anchor_summary: Mapping[str, Any],
+) -> dict[str, Any]:
+    summary = validate_predictor_cache_anchor_summary(anchor_summary)
+    target_month = _month(
+        summary["model_price_snapshot_target_month"],
+        "anchor model-price target month",
+    )
+    return {
+        "model_price_snapshot_target_month": str(target_month),
+        "model_price_snapshot_latest_source_session": str(
+            _latest_registered_source_before_month(target_month).date()
+        ),
+        "model_price_snapshot_object_key": summary[
+            "model_price_snapshot_object_key"
+        ],
+        "model_price_snapshot_byte_count": int(
+            summary["model_price_snapshot_byte_count"]
+        ),
+        "model_price_snapshot_file_sha256": summary[
+            "model_price_snapshot_file_sha256"
+        ],
+        "model_price_snapshot_semantic_sha256": summary[
+            "model_price_snapshot_semantic_sha256"
+        ],
+        "model_price_snapshot_manifest_object_key": summary[
+            "model_price_snapshot_manifest_object_key"
+        ],
+        "model_price_snapshot_manifest_byte_count": int(
+            summary["model_price_snapshot_manifest_byte_count"]
+        ),
+        "model_price_snapshot_manifest_file_sha256": summary[
+            "model_price_snapshot_manifest_file_sha256"
+        ],
+        "model_price_snapshot_manifest_sha256": summary[
+            "model_price_snapshot_manifest_sha256"
+        ],
+    }
+
+
+def _model_price_snapshot_binding_from_month_source(
+    month_source: Mapping[str, Any],
+) -> dict[str, Any]:
+    value = dict(month_source)
+    if set(value) != set(MONTH_SOURCE_MANIFEST_FIELDS):
+        raise V18Error("month-source snapshot binding schema changed")
+    return {
+        field: value[field]
+        for field in SOURCE_MANIFEST_FIELDS
+        if field.startswith("model_price_snapshot_")
+    }
+
+
+def _validate_model_price_snapshot_binding(
+    binding: Mapping[str, Any],
+    *,
+    predictor_derived_store_root: str | Path,
+    raw_records: Sequence[Mapping[str, Any]],
+    shard_bindings: Sequence[Mapping[str, Any]],
+    _reuse_sealed_semantic: bool = False,
+) -> tuple[dict[str, Any], pd.DataFrame, bytes]:
+    expected_fields = {
+        field
+        for field in SOURCE_MANIFEST_FIELDS
+        if field.startswith("model_price_snapshot_")
+    }
+    value = dict(binding)
+    if set(value) != expected_fields:
+        raise V18Error("model-price snapshot binding fields changed")
+    month = _month(value["model_price_snapshot_target_month"], "snapshot month")
+    latest = _date(
+        value["model_price_snapshot_latest_source_session"], "snapshot latest"
+    )
+    if latest != _latest_registered_source_before_month(month):
+        raise V18Error("model-price snapshot binding latest is not exact M-1")
+    manifest, manifest_payload = _read_external_canonical_json(
+        predictor_derived_store_root,
+        value["model_price_snapshot_manifest_object_key"],
+        prefix=MODEL_PRICE_SNAPSHOT_OBJECT_PREFIX,
+        label="bound model-price snapshot manifest",
+    )
+    prefix_count = int(manifest.get("raw_source_count", 0))
+    if prefix_count <= 0 or prefix_count > len(raw_records):
+        raise V18Error("bound model-price snapshot prefix count is invalid")
+    snapshot, frame, manifest_key, _ = _validate_model_price_snapshot_manifest(
+        manifest,
+        predictor_derived_store_root=predictor_derived_store_root,
+        expected_target_month=month,
+        expected_latest_source_session=latest,
+        expected_raw_source_set_sha256=canonical_json_sha256(
+            [dict(item) for item in raw_records[:prefix_count]]
+        ),
+        expected_parsed_shard_set_sha256=_parsed_shard_set_sha256(
+            shard_bindings[:prefix_count]
+        ),
+        _reuse_sealed_semantic=_reuse_sealed_semantic,
+    )
+    exact = {
+        "model_price_snapshot_target_month": str(month),
+        "model_price_snapshot_latest_source_session": str(latest.date()),
+        "model_price_snapshot_object_key": snapshot["data_object_key"],
+        "model_price_snapshot_byte_count": int(snapshot["data_byte_count"]),
+        "model_price_snapshot_file_sha256": snapshot["data_sha256"],
+        "model_price_snapshot_semantic_sha256": snapshot[
+            "model_price_semantic_sha256"
+        ],
+        "model_price_snapshot_manifest_object_key": manifest_key,
+        "model_price_snapshot_manifest_byte_count": len(manifest_payload),
+        "model_price_snapshot_manifest_file_sha256": hashlib.sha256(
+            manifest_payload
+        ).hexdigest(),
+        "model_price_snapshot_manifest_sha256": snapshot[
+            "snapshot_manifest_sha256"
+        ],
+    }
+    if value != exact:
+        raise V18Error("model-price snapshot exact binding changed")
+    return snapshot, frame, manifest_payload
+
+
+def _daily_source_predecessor(
+    target: pd.Timestamp,
+    *,
+    first_counted_session_value: Any,
+) -> dict[str, Any] | None:
+    first = _date(first_counted_session_value, "cache-chain first counted session")
+    if target < first:
+        raise V18Error("cache-chain target predates first counted session")
+    calendar = load_registered_calendar()
+    positions = np.flatnonzero(calendar == target)
+    first_positions = np.flatnonzero(calendar == first)
+    if len(positions) != 1 or len(first_positions) != 1:
+        raise V18Error("cache-chain target/first is outside registered calendar")
+    for prior in reversed(
+        calendar[int(first_positions[0]) : int(positions[0])]
+    ):
+        path = SOURCE_MANIFEST_DIR / f"{pd.Timestamp(prior).date()}.json"
+        if not path.is_file():
+            raise V18Error("cache-chain has a missing counted source manifest")
+        candidate = read_json(path)
+        validate_source_manifest(
+            candidate,
+            session_date=prior,
+            first_counted_session_value=first,
+            require_predecessor_decision=False,
+        )
+        if _strict_bool(candidate["source_complete"]):
+            return candidate
+    return None
+
+
+def _source_manifest_predecessor_binding(
+    target_session: Any,
+    *,
+    first_counted_session_value: Any,
+    require_decision_binding: bool,
+) -> tuple[str | None, str | None]:
+    """Bind the immediate counted source to its already sealed decision."""
+
+    target = _date(target_session, "source-chain target")
+    first = _date(first_counted_session_value, "source-chain first counted session")
+    calendar = load_registered_calendar()
+    target_positions = np.flatnonzero(calendar == target)
+    first_positions = np.flatnonzero(calendar == first)
+    if len(target_positions) != 1 or len(first_positions) != 1 or target < first:
+        raise V18Error("source-chain target/first is outside its counted calendar")
+    if target == first:
+        return None, None
+    position = int(target_positions[0])
+    previous = pd.Timestamp(calendar[position - 1])
+    if previous < first:
+        raise V18Error("source-chain predecessor predates the counted denominator")
+    path = SOURCE_MANIFEST_DIR / f"{previous.date()}.json"
+    if not path.is_file() or path.is_symlink():
+        raise V18Error("source-chain immediate predecessor manifest is missing")
+    predecessor = read_json(path)
+    if (
+        set(predecessor) != SOURCE_MANIFEST_REQUIRED
+        or predecessor.get("target_session") != str(previous.date())
+        or predecessor.get("source_manifest_sha256")
+        != canonical_json_sha256(
+            predecessor, exclude_fields={"source_manifest_sha256"}
+        )
+    ):
+        raise V18Error("source-chain immediate predecessor manifest changed")
+    predecessor_hash = _require_sha(
+        predecessor["source_manifest_sha256"],
+        "source-chain predecessor manifest SHA",
+    )
+    if require_decision_binding:
+        if not DECISION_LEDGER.is_file():
+            raise V18Error("source-chain predecessor decision ledger is missing")
+        decisions = _load_decision_record_authority(heal_derived=True)
+        matches = [
+            item for item in decisions if item["session_date"] == str(previous.date())
+        ]
+        if len(matches) != 1 or matches[0]["source_manifest_sha256"] != (
+            predecessor_hash
+        ):
+            raise V18Error("source-chain predecessor differs from sealed decision")
+    return str(previous.date()), predecessor_hash
+
+
 def validate_source_manifest(
     manifest: Mapping[str, Any],
     *,
     session_date: Any,
     predictor_raw_store_root: str | Path | None = None,
+    predictor_derived_store_root: str | Path | None = None,
     parsed_prices: pd.DataFrame | None = None,
     panel: pd.DataFrame | None = None,
+    first_counted_session_value: Any | None = None,
+    require_predecessor_decision: bool = False,
 ) -> tuple[dict[str, Any], str]:
     if not isinstance(manifest, Mapping):
         raise V18Error("source manifest must be an object")
@@ -3372,16 +5849,30 @@ def validate_source_manifest(
     if verified > created or created > sealed or sealed > _cutoff(target):
         raise V18Error("source manifest timestamp DAG is invalid")
     latest = _date(value["latest_required_source_session"], "latest source")
-    calendar = load_registered_calendar()
-    locations = np.flatnonzero(calendar == target)
-    if len(locations) != 1:
-        raise V18Error("source target is outside registered calendar")
-    position = int(locations[0])
-    expected_latest = (
-        pd.Timestamp("2026-08-04") if position == 0 else pd.Timestamp(calendar[position - 1])
-    )
+    expected_latest = _latest_required_predictor_source_session(target)
     if latest != expected_latest:
         raise V18Error("source manifest latest session is not exact registered D-1")
+    predecessor_target = value["previous_counted_target_session"]
+    predecessor_hash = value["previous_counted_source_manifest_sha256"]
+    if (predecessor_target is None) != (predecessor_hash is None):
+        raise V18Error("source predecessor target/hash nullability differs")
+    if first_counted_session_value is not None:
+        expected_predecessor = _source_manifest_predecessor_binding(
+            target,
+            first_counted_session_value=first_counted_session_value,
+            require_decision_binding=require_predecessor_decision,
+        )
+        if (predecessor_target, predecessor_hash) != expected_predecessor:
+            raise V18Error("source manifest immediate predecessor binding changed")
+    elif predecessor_target is not None:
+        predecessor = _date(predecessor_target, "source predecessor target")
+        calendar = load_registered_calendar()
+        positions = np.flatnonzero(calendar == target)
+        if len(positions) != 1 or int(positions[0]) == 0 or predecessor != (
+            pd.Timestamp(calendar[int(positions[0]) - 1])
+        ):
+            raise V18Error("source predecessor is not the immediate calendar session")
+        _require_sha(predecessor_hash, "source predecessor manifest SHA")
     files, urls, object_keys, byte_counts, hashes = (
         value["source_files"],
         value["source_urls"],
@@ -3423,7 +5914,15 @@ def validate_source_manifest(
         name = str(file_name)
         if Path(name).name != name:
             raise V18Error(f"source_files[{index}] is not a plain official filename")
-        _official_jpx_url(source_url, f"source_urls[{index}]")
+        if name.startswith("stq_"):
+            _official_jpx_daily_url(
+                source_url,
+                f"source_urls[{index}]",
+                file_name=name,
+                source_session=_source_file_date(name, source_kinds[name]),
+            )
+        else:
+            _official_jpx_url(source_url, f"source_urls[{index}]")
         bound = historical_metadata.get(name)
         if bound is not None:
             if hashes[index] != str(bound["sha256"]):
@@ -3454,15 +5953,104 @@ def validate_source_manifest(
     _require_sha(value["source_set_sha256"], "source_set_sha256")
     if value["source_set_sha256"] != expected_source_set_hash:
         raise V18Error("source manifest source-set self-hash mismatch")
-    received = (
-        None
-        if value["source_received_at"] is None
-        else _timestamp(value["source_received_at"], "source_received_at")
-    )
-    if received is not None and received > _cutoff(target):
+    shard_bindings = value["parsed_shards"]
+    if not isinstance(shard_bindings, list) or len(shard_bindings) != len(source_set):
+        raise V18Error("source manifest raw/shard binding vectors are misaligned")
+    for index, (raw_record, binding) in enumerate(
+        zip(source_set, shard_bindings, strict=True)
+    ):
+        if not isinstance(binding, Mapping) or set(binding) != set(
+            PARSED_SHARD_BINDING_FIELDS
+        ):
+            raise V18Error(f"source parsed_shards[{index}] schema changed")
+        for field, raw_field in (
+            ("raw_object_key", "object_key"),
+            ("raw_file", "file"),
+            ("raw_url", "url"),
+            ("raw_byte_count", "byte_count"),
+            ("raw_sha256", "sha256"),
+        ):
+            expected = (
+                int(raw_record[raw_field])
+                if raw_field == "byte_count"
+                else str(raw_record[raw_field])
+            )
+            if binding[field] != expected:
+                raise V18Error(
+                    f"source parsed_shards[{index}] raw binding changed: {field}"
+                )
+        _, expected_data_key, expected_manifest_key = _predictor_shard_identity(
+            raw_record
+        )
+        if (
+            binding["shard_object_key"] != expected_data_key
+            or binding["shard_manifest_object_key"] != expected_manifest_key
+        ):
+            raise V18Error(f"source parsed_shards[{index}] key is not derived")
+        for field in (
+            "raw_sha256",
+            "shard_manifest_file_sha256",
+            "shard_manifest_sha256",
+            "shard_sha256",
+            "parsed_semantic_sha256",
+            "pdftotext_text_sha256",
+            "parser_report_sha256",
+        ):
+            _require_sha(binding[field], f"source parsed_shards[{index}].{field}")
+        for field in (
+            "raw_byte_count",
+            "shard_manifest_byte_count",
+            "shard_byte_count",
+            "parsed_row_count",
+            "pdftotext_text_byte_count",
+        ):
+            if isinstance(binding[field], bool) or int(binding[field]) <= 0:
+                raise V18Error(
+                    f"source parsed_shards[{index}].{field} must be positive"
+                )
+    expected_shard_set_hash = _parsed_shard_set_sha256(shard_bindings)
+    if value["parsed_shard_set_sha256"] != expected_shard_set_hash:
+        raise V18Error("source manifest parsed-shard-set self-hash mismatch")
+    if value["source_received_at"] is None:
+        raise V18Error("complete source manifest requires its actual receipt")
+    received = _timestamp(value["source_received_at"], "source_received_at")
+    if received > _cutoff(target):
         raise V18Error("source manifest arrived after cutoff")
-    if received is not None and received > created:
+    if received > created:
         raise V18Error("source manifest creation predates source receipt")
+    shard_manifests: list[dict[str, Any]] = []
+    if predictor_derived_store_root is not None and source_set:
+        if predictor_raw_store_root is None:
+            raise V18Error("parsed-shard validation also requires the raw store")
+        shard_manifests = _validate_bound_predictor_shard_metadata(
+            source_set,
+            shard_bindings,
+            predictor_raw_store_root=predictor_raw_store_root,
+            predictor_derived_store_root=predictor_derived_store_root,
+        )
+        forward_receipts: list[datetime] = []
+        for index, shard in enumerate(shard_manifests):
+            shard_created = _timestamp(
+                shard["created_at"], f"source parsed shard[{index}] created_at"
+            )
+            shard_sealed = _timestamp(
+                shard["sealed_at"], f"source parsed shard[{index}] sealed_at"
+            )
+            if shard_sealed > created:
+                raise V18Error("source manifest predates a bound parsed-shard seal")
+            if shard["chronology_class"] == "forward":
+                forward_receipts.append(
+                    _timestamp(
+                        shard["raw_received_at"],
+                        f"source parsed shard[{index}] raw_received_at",
+                    )
+                )
+                if forward_receipts[-1] > shard_created:
+                    raise V18Error("source shard creation predates its raw receipt")
+        if not forward_receipts or max(forward_receipts) != received:
+            raise V18Error(
+                "source receipt differs from the latest bound forward shard"
+            )
     if value["parser_path"] != JPX_PARSER_PATH:
         raise V18Error("source parser path changed")
     if value["parser_version"] != JPX_PARSER_VERSION:
@@ -3476,55 +6064,183 @@ def validate_source_manifest(
     if int(value["duplicate_date_code_count"]) != 0:
         raise V18Error("source duplicate date/code aborts v1.8")
     source_complete = _strict_bool(value["source_complete"])
-    if source_complete and not files:
+    if not source_complete:
+        raise V18Error(
+            "incomplete/missing source evidence is an experiment integrity abort"
+        )
+    if not files:
         raise V18Error("complete source manifest has no source files")
-    if source_complete and [str(item) for item in files] != expected_files:
+    if [str(item) for item in files] != expected_files:
         raise V18Error("complete source manifest lacks the cumulative registered history")
-    if source_complete and (received is None or value["failure_reason"] is not None):
+    if value["failure_reason"] is not None:
         raise V18Error("complete source manifest receipt/failure state is invalid")
-    if not source_complete and (
-        not isinstance(value["failure_reason"], str)
-        or not value["failure_reason"].strip()
-    ):
-        raise V18Error("incomplete source manifest requires a failure reason")
-    expected_source_failure = (
-        "source_partial_or_late_before_cutoff"
-        if files
-        else "source_missing_before_cutoff"
-    )
-    if not source_complete and value["failure_reason"] != expected_source_failure:
-        raise V18Error("incomplete source failure reason does not match retained bytes")
-    if not source_complete and ((files and received is None) or (not files and received is not None)):
-        raise V18Error("incomplete source receipt must match retained partial bytes")
     semantic_fields = (
-        "parsed_panel_semantic_sha256",
-        "g0_panel_semantic_sha256",
-        "common_universe_semantic_sha256",
         "target_date_scoring_input_semantic_sha256",
+        "target_slice_semantic_sha256",
     )
-    if source_complete:
-        for field in semantic_fields:
-            _require_sha(value[field], field)
-            if value[field] == ZERO_SHA256:
-                raise V18Error(f"complete source manifest uses zero sentinel for {field}")
-        if int(value["parsed_row_count"]) <= 0:
-            raise V18Error("complete source manifest has no parsed rows")
-    else:
-        if any(value[field] is not None for field in semantic_fields):
-            raise V18Error("incomplete source manifest must null all semantic hashes")
-        if int(value["parsed_row_count"]) != 0:
-            raise V18Error("incomplete source manifest parsed_row_count must be zero")
+    snapshot_fields = tuple(
+        field
+        for field in SOURCE_MANIFEST_FIELDS
+        if field.startswith("model_price_snapshot_")
+    )
+    normal_month_hash = value["month_source_manifest_sha256"]
+    _require_sha(normal_month_hash, "source month-source manifest SHA")
+    for field in semantic_fields:
+        _require_sha(value[field], field)
+        if value[field] == ZERO_SHA256:
+            raise V18Error(f"complete source manifest uses zero sentinel for {field}")
+    if int(value["parsed_row_count"]) <= 0:
+        raise V18Error("complete source manifest has no parsed rows")
+    if any(value[field] is None for field in snapshot_fields):
+        raise V18Error("complete source manifest lacks its model-price snapshot")
+    if _month(
+        value["model_price_snapshot_target_month"],
+        "source model-price target month",
+    ) != target.to_period("M"):
+        raise V18Error("source model-price snapshot targets another month")
+    for field in snapshot_fields:
+        if field.endswith("sha256"):
+            _require_sha(value[field], f"source {field}")
+    cache_fields = (
+        "g0_panel_cache_object_key",
+        "g0_panel_cache_byte_count",
+        "g0_panel_cache_sha256",
+        "g0_panel_cache_manifest_object_key",
+        "g0_panel_cache_manifest_byte_count",
+        "g0_panel_cache_manifest_file_sha256",
+        "g0_panel_cache_manifest_sha256",
+    )
+    if any(value[field] is None for field in cache_fields):
+        raise V18Error("complete source manifest must bind its G0 cache")
+    for field in (
+        "g0_panel_cache_sha256",
+        "g0_panel_cache_manifest_file_sha256",
+        "g0_panel_cache_manifest_sha256",
+    ):
+        _require_sha(value[field], field)
+    for field in (
+        "g0_panel_cache_byte_count",
+        "g0_panel_cache_manifest_byte_count",
+    ):
+        if isinstance(value[field], bool) or int(value[field]) <= 0:
+            raise V18Error(f"complete source manifest {field} must be positive")
     if (parsed_prices is None) != (panel is None):
         raise V18Error("source semantic validation requires parsed prices and panel together")
     if parsed_prices is not None and panel is not None:
         if not source_complete:
             raise V18Error("an incomplete source manifest cannot bind a parsed panel")
-        hashes_observed = predictor_semantic_hashes(parsed_prices, panel, target)
+        panel_dates = pd.to_datetime(panel["date"], errors="coerce", format="mixed")
+        if panel_dates.isna().any():
+            raise V18Error("source supplied panel contains invalid dates")
+        if not panel_dates.eq(target).all():
+            raise V18Error("daily source panel must be the exact target slice")
+        scoring_columns = (
+            "date",
+            "code",
+            "name",
+            "common_score_eligible",
+            "feature_source_max_date",
+            *G0_FEATURES,
+        )
+        hashes_observed = {
+            "target_date_scoring_input_semantic_sha256": semantic_frame_sha256(
+                panel, scoring_columns
+            ),
+            "target_slice_semantic_sha256": semantic_frame_sha256(
+                panel, G0_PANEL_COLUMNS
+            ),
+        }
         for field, observed_hash in hashes_observed.items():
             if value[field] != observed_hash:
                 raise V18Error(f"source manifest semantic mismatch: {field}")
-        if int(value["parsed_row_count"]) != len(parsed_prices):
-            raise V18Error("source manifest parsed row count differs from panel source")
+    if predictor_derived_store_root is not None:
+        if predictor_raw_store_root is None:
+            raise V18Error("derived source validation also requires the raw store")
+        month_path = MONTH_SOURCE_MANIFEST_DIR / f"{target.to_period('M')}.json"
+        if month_path.is_symlink() or not month_path.is_file():
+            raise V18Error("source canonical month-source context is missing")
+        month_value, _, observed_month_hash = validate_month_source_manifest(
+            read_json(month_path),
+            predictor_raw_store_root=predictor_raw_store_root,
+            predictor_derived_store_root=predictor_derived_store_root,
+        )
+        if observed_month_hash != normal_month_hash:
+            raise V18Error("source month-source context hash changed")
+        context_snapshot_binding = _model_price_snapshot_binding_from_month_source(
+            month_value
+        )
+        context_sealed = _timestamp(
+            month_value["sealed_at"], "source month context sealed"
+        )
+        bound_snapshot = {field: value[field] for field in snapshot_fields}
+        if bound_snapshot != context_snapshot_binding:
+            raise V18Error("source swapped its monthly context snapshot")
+        _validate_model_price_snapshot_binding(
+            bound_snapshot,
+            predictor_derived_store_root=predictor_derived_store_root,
+            raw_records=source_set,
+            shard_bindings=shard_bindings,
+        )
+        cache_manifest, cache_manifest_payload = _read_external_canonical_json(
+            predictor_derived_store_root,
+            str(value["g0_panel_cache_manifest_object_key"]),
+            prefix=G0_PANEL_CACHE_OBJECT_PREFIX,
+            label="G0 cache manifest",
+        )
+        cache_value, cache_panel, expected_cache_manifest_key, _ = (
+            _validate_g0_cache_manifest(
+                cache_manifest,
+                predictor_derived_store_root=predictor_derived_store_root,
+                expected_target_session=target,
+                expected_latest_source_session=latest,
+                expected_source_set_sha256=value["source_set_sha256"],
+                expected_parsed_shard_set_sha256=value[
+                    "parsed_shard_set_sha256"
+                ],
+            )
+        )
+        cache_created = _timestamp(cache_value["created_at"], "G0 cache created_at")
+        if context_sealed > cache_created:
+            raise V18Error("G0 cache predates its monthly predictor context")
+        if any(
+            _timestamp(shard["sealed_at"], "bound parsed shard sealed_at")
+            > cache_created
+            for shard in shard_manifests
+        ):
+            raise V18Error("G0 cache predates a bound parsed-shard seal")
+        if _timestamp(cache_value["sealed_at"], "G0 cache sealed_at") > created:
+            raise V18Error("source manifest predates its G0 cache seal")
+        exact_cache_fields = {
+            "g0_panel_cache_object_key": cache_value["data_object_key"],
+            "g0_panel_cache_byte_count": int(cache_value["data_byte_count"]),
+            "g0_panel_cache_sha256": cache_value["data_sha256"],
+            "g0_panel_cache_manifest_object_key": expected_cache_manifest_key,
+            "g0_panel_cache_manifest_byte_count": len(cache_manifest_payload),
+            "g0_panel_cache_manifest_file_sha256": hashlib.sha256(
+                cache_manifest_payload
+            ).hexdigest(),
+            "g0_panel_cache_manifest_sha256": cache_value[
+                "cache_manifest_sha256"
+            ],
+        }
+        for field, expected in exact_cache_fields.items():
+            if value[field] != expected:
+                raise V18Error(f"source G0 cache binding changed: {field}")
+        if int(cache_value["parsed_row_count"]) != int(value["parsed_row_count"]):
+            raise V18Error("source/G0 parsed row count differs")
+        for field in (
+            "target_date_scoring_input_semantic_sha256",
+            "target_slice_semantic_sha256",
+        ):
+            if value[field] != cache_value[field]:
+                raise V18Error(f"source/G0 semantic differs: {field}")
+        cache_target = cache_panel.loc[
+            pd.to_datetime(cache_panel["date"]).eq(target)
+        ].reset_index(drop=True)
+        if parsed_prices is not None and not _coerce_jsonl_frame(
+            panel, G0_PANEL_COLUMNS, label="source supplied G0 panel"
+        ).equals(cache_target):
+            raise V18Error("source supplied panel differs exactly from G0 cache")
     locked_python = read_json(RUNTIME_LOCK)["runtime"]["python"]["version"]
     if value["python_version"] != locked_python:
         raise V18Error("source manifest Python version differs from runtime lock")
@@ -3589,6 +6305,2581 @@ def _semantic_cell(value: Any, *, column: str) -> Any:
     if isinstance(value, str):
         return value
     raise V18Error(f"unsupported semantic value in {column}: {type(value).__name__}")
+
+
+_JSONL_DATE_COLUMNS = frozenset({"date", "feature_source_max_date"})
+_JSONL_BOOL_COLUMNS = frozenset(
+    {
+        "traded",
+        "partial_session",
+        "common_training_eligible",
+        "common_score_eligible",
+    }
+)
+_JSONL_INTEGER_COLUMNS = frozenset({"source_line"})
+_JSONL_NULLABLE_INTEGER_COLUMNS = frozenset({"trading_unit"})
+_JSONL_STRING_COLUMNS = frozenset(
+    {
+        "code",
+        "name",
+        "raw_name",
+        "volume_unit",
+        "turnover_unit",
+        "source_volume_unit",
+        "source_turnover_unit",
+        "source_file",
+        "source_format",
+    }
+)
+_JSONL_NULLABLE_STRING_COLUMNS = frozenset(
+    {
+        "volume_unit",
+        "turnover_unit",
+        "source_volume_unit",
+        "source_turnover_unit",
+    }
+)
+_PARSED_OPTIONAL_COLUMNS = frozenset(
+    {
+        "trading_unit",
+        "final_special_quote",
+        "net_change",
+        "vwap",
+        "volume_unit",
+        "turnover_unit",
+        "source_volume_unit",
+        "source_turnover_unit",
+    }
+)
+
+
+def _coerce_jsonl_frame(
+    frame: pd.DataFrame,
+    columns: Sequence[str],
+    *,
+    label: str,
+) -> pd.DataFrame:
+    """Reconstruct the exact registered in-memory dtypes for cache rows."""
+
+    if not isinstance(frame, pd.DataFrame):
+        raise V18Error(f"{label} must be a DataFrame")
+    registered = tuple(str(column) for column in columns)
+    if len(registered) != len(set(registered)) or not {"date", "code"}.issubset(
+        registered
+    ):
+        raise V18Error(f"{label} registered columns are invalid")
+    source = frame.copy()
+    for column in registered:
+        if column not in source and column in _PARSED_OPTIONAL_COLUMNS:
+            source[column] = None
+    missing = [column for column in registered if column not in source]
+    if missing:
+        raise V18Error(f"{label} lacks registered columns: {missing}")
+    value = source.loc[:, list(registered)].copy()
+    for column in registered:
+        if column in _JSONL_DATE_COLUMNS:
+            original_nonnull = value[column].notna()
+            parsed = pd.to_datetime(value[column], errors="coerce", format="mixed")
+            if parsed.loc[original_nonnull].isna().any():
+                raise V18Error(f"{label} date {column} loses a non-null value")
+            if column == "date" and parsed.isna().any():
+                raise V18Error(f"{label} contains a null/invalid primary date")
+            if getattr(parsed.dt, "tz", None) is not None:
+                parsed = parsed.dt.tz_convert(TOKYO).dt.tz_localize(None)
+            nonnull = parsed.dropna()
+            if not nonnull.eq(nonnull.dt.normalize()).all():
+                raise V18Error(f"{label} date contains a time component")
+            value[column] = parsed.dt.normalize()
+        elif column in _JSONL_BOOL_COLUMNS:
+            if value[column].isna().any():
+                raise V18Error(f"{label} boolean {column} contains null")
+            value[column] = value[column].map(_strict_bool).astype(bool)
+        elif column in _JSONL_INTEGER_COLUMNS:
+            numeric = pd.to_numeric(value[column], errors="coerce")
+            if numeric.isna().any() or not np.equal(
+                numeric.to_numpy(dtype=float),
+                np.floor(numeric.to_numpy(dtype=float)),
+            ).all():
+                raise V18Error(f"{label} integer {column} is null or fractional")
+            value[column] = numeric.astype("int64")
+        elif column in _JSONL_NULLABLE_INTEGER_COLUMNS:
+            original_nonnull = value[column].notna()
+            numeric = pd.to_numeric(value[column], errors="coerce")
+            if numeric.loc[original_nonnull].isna().any():
+                raise V18Error(
+                    f"{label} nullable integer {column} loses a non-null value"
+                )
+            finite = numeric.dropna().to_numpy(dtype=float)
+            if not np.isfinite(finite).all() or not np.equal(
+                finite, np.floor(finite)
+            ).all():
+                raise V18Error(f"{label} nullable integer {column} is invalid")
+            # The cumulative direct parser promotes this column to float64
+            # because monthly warmup rows legitimately contain null.
+            value[column] = numeric.astype("float64")
+        elif column in _JSONL_STRING_COLUMNS:
+            if (
+                column not in _JSONL_NULLABLE_STRING_COLUMNS
+                and value[column].isna().any()
+            ):
+                raise V18Error(f"{label} string {column} contains null")
+            if column in _JSONL_NULLABLE_STRING_COLUMNS:
+                value[column] = value[column].map(
+                    lambda child: None if pd.isna(child) else str(child)
+                ).astype(object)
+            else:
+                value[column] = value[column].map(str).astype(object)
+            if value[column].dropna().eq("").any():
+                raise V18Error(f"{label} string {column} is empty")
+        else:
+            original_nonnull = value[column].notna()
+            numeric = pd.to_numeric(value[column], errors="coerce")
+            if numeric.loc[original_nonnull].isna().any():
+                raise V18Error(f"{label} numeric {column} loses a non-null value")
+            finite = numeric.dropna().to_numpy(dtype=float)
+            if not np.isfinite(finite).all():
+                raise V18Error(f"{label} numeric {column} is non-finite")
+            value[column] = numeric.astype("float64")
+    value["code"] = value["code"].astype(object)
+    if value["code"].eq("").any():
+        raise V18Error(f"{label} contains an empty code")
+    if value[["date", "code"]].duplicated().any():
+        raise V18Error(f"{label} contains duplicate date/code rows")
+    return value.sort_values(["date", "code"], kind="stable").reset_index(drop=True)
+
+
+def canonical_frame_jsonl_bytes(
+    frame: pd.DataFrame,
+    columns: Sequence[str],
+    *,
+    label: str,
+) -> bytes:
+    """Encode strict UTF-8/LF canonical JSON arrays in registered column order."""
+
+    value = _coerce_jsonl_frame(frame, columns, label=label)
+    rows: list[bytes] = []
+    for record in value.to_dict(orient="records"):
+        row = []
+        for column in columns:
+            child = _semantic_cell(record[column], column=column)
+            if column in _JSONL_NULLABLE_INTEGER_COLUMNS and child is not None:
+                child = int(child)
+            row.append(child)
+        rows.append(canonical_json_bytes(row) + b"\n")
+    if not rows:
+        raise V18Error(f"{label} cannot encode an empty JSONL artifact")
+    payload = b"".join(rows)
+    if payload.startswith(b"\xef\xbb\xbf") or b"\r" in payload or not payload.endswith(b"\n"):
+        raise V18Error(f"{label} JSONL encoder violated its byte contract")
+    return payload
+
+
+def decode_canonical_frame_jsonl(
+    payload: bytes,
+    columns: Sequence[str],
+    *,
+    label: str,
+) -> pd.DataFrame:
+    """Strictly decode and byte-reproduce a registered canonical JSONL frame."""
+
+    if (
+        not isinstance(payload, bytes)
+        or not payload
+        or payload.startswith(b"\xef\xbb\xbf")
+        or b"\r" in payload
+        or not payload.endswith(b"\n")
+        or b"\n\n" in payload
+    ):
+        raise V18Error(f"{label} is not canonical UTF-8 final-LF JSONL")
+    try:
+        text = payload.decode("utf-8", errors="strict")
+    except UnicodeDecodeError as exc:
+        raise V18Error(f"{label} is not strict UTF-8") from exc
+    registered = tuple(str(column) for column in columns)
+    records: list[dict[str, Any]] = []
+    for index, line in enumerate(text.splitlines(), start=1):
+        if not line:
+            raise V18Error(f"{label} contains a blank row")
+        try:
+            row = json.loads(
+                line,
+                parse_constant=lambda token: (_ for _ in ()).throw(
+                    ValueError(f"non-finite JSON token {token}")
+                ),
+            )
+        except (json.JSONDecodeError, ValueError) as exc:
+            raise V18Error(f"{label} row {index} is not strict JSON") from exc
+        if not isinstance(row, list) or len(row) != len(registered):
+            raise V18Error(f"{label} row {index} has the wrong schema width")
+        record: dict[str, Any] = {}
+        canonical_row: list[Any] = []
+        for column, cell in zip(registered, row, strict=True):
+            if cell is None:
+                if column not in _JSONL_DATE_COLUMNS and column in (
+                    _JSONL_BOOL_COLUMNS
+                    | _JSONL_INTEGER_COLUMNS
+                    | (_JSONL_STRING_COLUMNS - _JSONL_NULLABLE_STRING_COLUMNS)
+                ):
+                    raise V18Error(f"{label} row {index} nulls {column}")
+                if column == "date" or column == "code":
+                    raise V18Error(f"{label} row {index} nulls its identity")
+                parsed = None
+            elif column in _JSONL_BOOL_COLUMNS:
+                if not isinstance(cell, bool):
+                    raise V18Error(f"{label} row {index} boolean type changed")
+                parsed = cell
+            elif column in _JSONL_INTEGER_COLUMNS:
+                if isinstance(cell, bool) or not isinstance(cell, int):
+                    raise V18Error(f"{label} row {index} integer type changed")
+                parsed = cell
+            elif column in _JSONL_NULLABLE_INTEGER_COLUMNS:
+                if isinstance(cell, bool) or not isinstance(cell, int):
+                    raise V18Error(
+                        f"{label} row {index} nullable integer type changed"
+                    )
+                parsed = cell
+            elif column in _JSONL_STRING_COLUMNS or column in _JSONL_DATE_COLUMNS:
+                if not isinstance(cell, str):
+                    raise V18Error(f"{label} row {index} string/date type changed")
+                parsed = cell
+            else:
+                if isinstance(cell, bool) or not isinstance(cell, (int, float)):
+                    raise V18Error(f"{label} row {index} numeric type changed")
+                parsed = float(cell)
+                if not math.isfinite(parsed):
+                    raise V18Error(f"{label} row {index} numeric value is non-finite")
+            canonical = _semantic_cell(parsed, column=column)
+            if column in _JSONL_NULLABLE_INTEGER_COLUMNS and canonical is not None:
+                canonical = int(canonical)
+            canonical_row.append(canonical)
+            record[column] = parsed
+        if canonical_json_bytes(canonical_row) != line.encode("utf-8"):
+            raise V18Error(f"{label} row {index} is not canonical exact JSON")
+        records.append(record)
+    frame = _coerce_jsonl_frame(pd.DataFrame(records), registered, label=label)
+    if canonical_frame_jsonl_bytes(frame, registered, label=label) != payload:
+        raise V18Error(f"{label} row order or dtype reconstruction changed bytes")
+    return frame
+
+
+_MODEL_PRICE_STRING_COLUMNS = frozenset({"code", "name", "source_format"})
+_MODEL_PRICE_NUMERIC_COLUMNS = frozenset(MODEL_PRICE_COLUMNS) - {
+    "date",
+    *_MODEL_PRICE_STRING_COLUMNS,
+}
+
+
+def _coerce_model_price_frame(frame: pd.DataFrame, *, label: str) -> pd.DataFrame:
+    """Reconstruct the exact compact v17 input projection and dtypes."""
+
+    if not isinstance(frame, pd.DataFrame):
+        raise V18Error(f"{label} must be a DataFrame")
+    missing = [column for column in MODEL_PRICE_COLUMNS if column not in frame]
+    if missing:
+        raise V18Error(f"{label} lacks model-price columns: {missing}")
+    value = frame.loc[:, list(MODEL_PRICE_COLUMNS)].copy()
+    parsed_dates = pd.to_datetime(value["date"], errors="coerce", format="mixed")
+    if parsed_dates.isna().any():
+        raise V18Error(f"{label} contains a null/invalid date")
+    if getattr(parsed_dates.dt, "tz", None) is not None:
+        parsed_dates = parsed_dates.dt.tz_convert(TOKYO).dt.tz_localize(None)
+    if not parsed_dates.eq(parsed_dates.dt.normalize()).all():
+        raise V18Error(f"{label} date contains a time component")
+    value["date"] = parsed_dates.dt.normalize()
+    for column in _MODEL_PRICE_STRING_COLUMNS:
+        if value[column].isna().any():
+            raise V18Error(f"{label} string {column} contains null")
+        value[column] = value[column].map(str).astype(object)
+        if value[column].eq("").any():
+            raise V18Error(f"{label} string {column} is empty")
+        if value[column].map(lambda child: any(mark in child for mark in ("\r", "\n", "\x00"))).any():
+            raise V18Error(f"{label} string {column} contains a control separator")
+    if value["code"].eq("").any():
+        raise V18Error(f"{label} contains an empty code")
+    for column in _MODEL_PRICE_NUMERIC_COLUMNS:
+        original_nonnull = value[column].notna()
+        numeric = pd.to_numeric(value[column], errors="coerce").astype("float64")
+        if numeric.loc[original_nonnull].isna().any():
+            raise V18Error(f"{label} numeric {column} loses a non-null value")
+        if not np.isfinite(numeric.dropna().to_numpy(dtype=float)).all():
+            raise V18Error(f"{label} numeric {column} is non-finite")
+        value[column] = numeric
+    if value[["date", "code"]].duplicated().any():
+        raise V18Error(f"{label} contains duplicate date/code rows")
+    return value.sort_values(["date", "code"], kind="stable").reset_index(drop=True)
+
+
+def canonical_model_price_csv_bytes(frame: pd.DataFrame, *, label: str) -> bytes:
+    """Encode the compact full-prefix model input as strict round-trip CSV."""
+
+    value = _coerce_model_price_frame(frame, label=label)
+    payload = value.to_csv(
+        index=False,
+        lineterminator="\n",
+        na_rep="",
+        date_format="%Y-%m-%d",
+    ).encode("utf-8")
+    if (
+        not payload
+        or payload.startswith(b"\xef\xbb\xbf")
+        or b"\r" in payload
+        or not payload.endswith(b"\n")
+    ):
+        raise V18Error(f"{label} encoder violated canonical CSV bytes")
+    return payload
+
+
+def decode_canonical_model_price_csv(payload: bytes, *, label: str) -> pd.DataFrame:
+    """Decode, dtype-reconstruct, and exactly re-encode a compact snapshot."""
+
+    if (
+        not isinstance(payload, bytes)
+        or not payload
+        or payload.startswith(b"\xef\xbb\xbf")
+        or b"\r" in payload
+        or not payload.endswith(b"\n")
+    ):
+        raise V18Error(f"{label} is not canonical UTF-8 final-LF CSV")
+    try:
+        payload.decode("utf-8", errors="strict")
+    except UnicodeDecodeError as exc:
+        raise V18Error(f"{label} is not strict UTF-8") from exc
+    dtype: dict[str, Any] = {
+        "code": "string",
+        "name": "string",
+        "source_format": "string",
+        **{column: "float64" for column in _MODEL_PRICE_NUMERIC_COLUMNS},
+    }
+    try:
+        decoded = pd.read_csv(
+            io.BytesIO(payload),
+            dtype=dtype,
+            keep_default_na=False,
+            na_values=[""],
+            float_precision="round_trip",
+        )
+    except (UnicodeDecodeError, ValueError, pd.errors.ParserError) as exc:
+        raise V18Error(f"{label} cannot be decoded under the CSV contract") from exc
+    if decoded.columns.tolist() != list(MODEL_PRICE_COLUMNS):
+        raise V18Error(f"{label} CSV column order changed")
+    value = _coerce_model_price_frame(decoded, label=label)
+    if canonical_model_price_csv_bytes(value, label=label) != payload:
+        raise V18Error(f"{label} CSV bytes/dtypes/order are not canonical")
+    return value
+
+
+def model_price_semantic_sha256(frame: pd.DataFrame) -> str:
+    return semantic_frame_sha256(
+        _coerce_model_price_frame(frame, label="model-price semantic frame"),
+        MODEL_PRICE_COLUMNS,
+    )
+
+
+def _pdftotext_cache_contract() -> dict[str, Any]:
+    lock = read_json(RUNTIME_LOCK)
+    pdftotext = lock["pdftotext"]
+    argv_environment = {
+        "argv": [str(pdftotext["executable_path"]), "-layout", "{source}", "{target}"],
+        "environment": _external_process_environment("pdftotext"),
+        "shell": False,
+        "stdin": "DEVNULL",
+    }
+    return {
+        "file_sha256": str(pdftotext["executable_sha256"]),
+        "elf_closure_sha256": canonical_json_sha256(lock["elf_closure"]),
+        "argv_environment_contract_sha256": canonical_json_sha256(argv_environment),
+    }
+
+
+def _predictor_shard_identity(
+    raw_record: Mapping[str, Any],
+) -> tuple[str, str, str]:
+    converter = _pdftotext_cache_contract()
+    identity = {
+        "cache_contract_id": PREDICTOR_CACHE_CONTRACT_ID,
+        "official_source_file_name": str(raw_record["file"]),
+        "official_source_url": str(raw_record["url"]),
+        "raw_byte_count": int(raw_record["byte_count"]),
+        "raw_sha256": str(raw_record["sha256"]),
+        "parser_path": JPX_PARSER_PATH,
+        "parser_version": JPX_PARSER_VERSION,
+        "parser_sha256": JPX_PARSER_SHA256,
+        "pdftotext_file_sha256": converter["file_sha256"],
+        "pdftotext_elf_closure_sha256": converter["elf_closure_sha256"],
+        "pdftotext_argv_environment_contract_sha256": converter[
+            "argv_environment_contract_sha256"
+        ],
+        "runtime_lock_sha256": RUNTIME_LOCK_SHA256,
+        "columns_sha256": canonical_json_sha256(list(PARSED_PRICE_COLUMNS)),
+        "canonical_jsonl_contract": PARSED_SHARD_JSONL_CONTRACT,
+    }
+    token = canonical_json_sha256(identity)
+    return (
+        token,
+        f"{PREDICTOR_SHARD_OBJECT_PREFIX}{token}.jsonl",
+        f"{PREDICTOR_SHARD_OBJECT_PREFIX}{token}.manifest.json",
+    )
+
+
+def _read_external_canonical_json(
+    store_root: str | Path,
+    object_key: str,
+    *,
+    prefix: str,
+    label: str,
+) -> tuple[dict[str, Any], bytes]:
+    payload = _external_object_bytes(
+        store_root, object_key, prefix=prefix, label=label
+    )
+    try:
+        value = json.loads(payload.decode("utf-8", errors="strict"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise V18Error(f"{label} manifest is not strict JSON") from exc
+    if not isinstance(value, dict) or _json_file_bytes(value) != payload:
+        raise V18Error(f"{label} manifest bytes are not canonical")
+    return value, payload
+
+
+def _validate_parsed_shard_manifest(
+    manifest: Mapping[str, Any],
+    *,
+    raw_record: Mapping[str, Any],
+    predictor_derived_store_root: str | Path,
+    expected_chronology_class: str | None = None,
+    expected_raw_received_at: Any | None = None,
+    decode_data: bool = True,
+) -> tuple[dict[str, Any], pd.DataFrame | None, dict[str, Any]]:
+    value = dict(manifest)
+    if set(value) != set(PARSED_SHARD_MANIFEST_FIELDS):
+        raise V18Error("parsed shard manifest fields differ from A2 contract")
+    if value["schema_version"] != 1 or value["cache_contract_id"] != (
+        PREDICTOR_CACHE_CONTRACT_ID
+    ):
+        raise V18Error("parsed shard manifest schema/contract changed")
+    _, expected_data_key, expected_manifest_key = _predictor_shard_identity(raw_record)
+    source_file_name = str(raw_record["file"])
+    if source_file_name.startswith("stq_"):
+        source_kind = "daily"
+        source_session = _source_file_date(source_file_name, source_kind)
+        official_source_url = _official_jpx_daily_url(
+            raw_record["url"],
+            "parsed shard official URL",
+            file_name=source_file_name,
+            source_session=source_session,
+        )
+    else:
+        source_kind = "price_warmup"
+        source_session = _source_file_date(source_file_name, source_kind)
+        official_source_url = _official_jpx_url(
+            raw_record["url"], "parsed shard official URL"
+        )
+    fixed = {
+        "official_source_file_name": str(raw_record["file"]),
+        "official_source_url": official_source_url,
+        "raw_byte_count": int(raw_record["byte_count"]),
+        "raw_sha256": str(raw_record["sha256"]),
+        "parser_path": JPX_PARSER_PATH,
+        "parser_version": JPX_PARSER_VERSION,
+        "parser_sha256": JPX_PARSER_SHA256,
+        "runtime_lock_sha256": RUNTIME_LOCK_SHA256,
+        "data_object_key": expected_data_key,
+        "columns": list(PARSED_PRICE_COLUMNS),
+        "columns_sha256": canonical_json_sha256(list(PARSED_PRICE_COLUMNS)),
+        "canonical_jsonl_contract": PARSED_SHARD_JSONL_CONTRACT,
+    }
+    converter = _pdftotext_cache_contract()
+    fixed.update(
+        {
+            "pdftotext_file_sha256": converter["file_sha256"],
+            "pdftotext_elf_closure_sha256": converter["elf_closure_sha256"],
+            "pdftotext_argv_environment_contract_sha256": converter[
+                "argv_environment_contract_sha256"
+            ],
+        }
+    )
+    for field, expected in fixed.items():
+        if value[field] != expected:
+            raise V18Error(f"parsed shard manifest binding changed: {field}")
+    _require_sha(value["manifest_sha256"], "parsed shard manifest_sha256")
+    if value["manifest_sha256"] != canonical_json_sha256(
+        value, exclude_fields={"manifest_sha256"}
+    ):
+        raise V18Error("parsed shard manifest self-hash mismatch")
+    chronology = str(value["chronology_class"])
+    if chronology not in {"anchor", "forward"}:
+        raise V18Error("parsed shard chronology class is invalid")
+    if expected_chronology_class is not None and chronology != expected_chronology_class:
+        raise V18Error("parsed shard chronology differs from caller contract")
+    received = (
+        None
+        if value["raw_received_at"] is None
+        else _timestamp(value["raw_received_at"], "parsed shard raw_received_at")
+    )
+    if chronology == "anchor":
+        if received is not None:
+            raise V18Error("historical anchor shard must null raw receipt time")
+    elif received is None:
+        raise V18Error("forward shard requires raw receipt time")
+    if expected_raw_received_at is not None:
+        expected_received = _timestamp(
+            expected_raw_received_at, "expected parsed shard raw_received_at"
+        )
+        if received != expected_received:
+            raise V18Error("parsed shard raw receipt differs from sealed source")
+    verified = _timestamp(
+        value["runtime_lock_verified_at"], "parsed shard runtime_lock_verified_at"
+    )
+    created = _timestamp(value["created_at"], "parsed shard created_at")
+    sealed = _timestamp(value["sealed_at"], "parsed shard sealed_at")
+    if verified > created or created > sealed or (
+        chronology == "forward" and received is not None and received > created
+    ):
+        raise V18Error("parsed shard timestamp DAG is invalid")
+    for field in (
+        "data_sha256",
+        "pdftotext_text_sha256",
+        "parser_report_sha256",
+        "parsed_semantic_sha256",
+    ):
+        _require_sha(value[field], f"parsed shard {field}")
+    for field in (
+        "data_byte_count",
+        "row_count",
+        "pdftotext_text_byte_count",
+        "unique_date_count",
+    ):
+        if isinstance(value[field], bool) or int(value[field]) <= 0:
+            raise V18Error(f"parsed shard {field} must be positive")
+    if int(value["rejected_row_count"]) != 0 or int(
+        value["duplicate_date_code_count"]
+    ) != 0:
+        raise V18Error("parsed shard rejection/duplicate count is nonzero")
+    manifest_min = _date(value["min_date"], "parsed shard min_date")
+    manifest_max = _date(value["max_date"], "parsed shard max_date")
+    if source_kind == "daily":
+        if (
+            manifest_min != source_session
+            or manifest_max != source_session
+            or int(value["unique_date_count"]) != 1
+        ):
+            raise V18Error("daily parsed shard dates differ from its filename")
+    elif (
+        manifest_min.to_period("M") != source_session.to_period("M")
+        or manifest_max.to_period("M") != source_session.to_period("M")
+    ):
+        raise V18Error("monthly parsed shard dates differ from its filename")
+    observed_data = _external_object_metadata(
+        predictor_derived_store_root,
+        expected_data_key,
+        prefix=PREDICTOR_SHARD_OBJECT_PREFIX,
+        label="predictor shard data",
+        required_signature=None,
+    )
+    if observed_data != (int(value["data_byte_count"]), value["data_sha256"]):
+        raise V18Error("parsed shard data bytes differ from manifest")
+    frame: pd.DataFrame | None = None
+    if decode_data:
+        payload = _external_object_bytes(
+            predictor_derived_store_root,
+            expected_data_key,
+            prefix=PREDICTOR_SHARD_OBJECT_PREFIX,
+            label="predictor shard data",
+        )
+        frame = decode_canonical_frame_jsonl(
+            payload, PARSED_PRICE_COLUMNS, label="predictor parsed shard"
+        )
+        dates = pd.to_datetime(frame["date"], errors="coerce")
+        if source_kind == "daily":
+            if not dates.eq(source_session).all():
+                raise V18Error("daily parsed shard rows differ from its filename date")
+        elif not dates.dt.to_period("M").eq(source_session.to_period("M")).all():
+            raise V18Error("monthly parsed shard rows differ from its filename month")
+        expected_frame_fields = {
+            "row_count": int(len(frame)),
+            "unique_date_count": int(dates.nunique()),
+            "duplicate_date_code_count": int(
+                frame[["date", "code"]].duplicated(keep=False).sum()
+            ),
+            "min_date": str(dates.min().date()),
+            "max_date": str(dates.max().date()),
+            "parsed_semantic_sha256": parsed_panel_semantic_sha256(frame),
+        }
+        for field, expected in expected_frame_fields.items():
+            if value[field] != expected:
+                raise V18Error(f"parsed shard decoded value changed: {field}")
+    binding = {
+        "raw_object_key": str(raw_record["object_key"]),
+        "raw_file": str(raw_record["file"]),
+        "raw_url": str(raw_record["url"]),
+        "raw_byte_count": int(raw_record["byte_count"]),
+        "raw_sha256": str(raw_record["sha256"]),
+        "shard_manifest_object_key": expected_manifest_key,
+        "shard_manifest_byte_count": len(_json_file_bytes(value)),
+        "shard_manifest_file_sha256": hashlib.sha256(
+            _json_file_bytes(value)
+        ).hexdigest(),
+        "shard_manifest_sha256": value["manifest_sha256"],
+        "shard_object_key": expected_data_key,
+        "shard_byte_count": int(value["data_byte_count"]),
+        "shard_sha256": value["data_sha256"],
+        "parsed_row_count": int(value["row_count"]),
+        "parsed_semantic_sha256": value["parsed_semantic_sha256"],
+        "pdftotext_text_byte_count": int(value["pdftotext_text_byte_count"]),
+        "pdftotext_text_sha256": value["pdftotext_text_sha256"],
+        "parser_report_sha256": value["parser_report_sha256"],
+    }
+    if set(binding) != set(PARSED_SHARD_BINDING_FIELDS):  # pragma: no cover
+        raise V18Error("internal parsed shard binding schema changed")
+    return value, frame, binding
+
+
+def ensure_predictor_parsed_shard(
+    raw_record: Mapping[str, Any],
+    *,
+    predictor_raw_store_root: str | Path,
+    predictor_derived_store_root: str | Path,
+    chronology_class: str,
+    raw_received_at: Any | None,
+    runtime_lock_verified_at: Any | None = None,
+    created_at: Any | None = None,
+    sealed_at: Any | None = None,
+) -> tuple[dict[str, Any], pd.DataFrame, dict[str, Any]]:
+    """Validate or create one content-addressed, time-free quotation shard."""
+
+    _validate_external_store_disjointness(
+        predictor_raw_store_root, predictor_derived_store_root
+    )
+    chronology = str(chronology_class)
+    if chronology not in {"anchor", "forward"}:
+        raise V18Error("parsed shard chronology class must be anchor or forward")
+    if chronology == "anchor" and raw_received_at is not None:
+        raise V18Error("historical anchor shard cannot claim a raw receipt time")
+    if chronology == "forward" and raw_received_at is None:
+        raise V18Error("forward parsed shard requires raw receipt time")
+    source_file_name = str(raw_record["file"])
+    if source_file_name.startswith("stq_"):
+        source_kind = "daily"
+        source_session = _source_file_date(source_file_name, source_kind)
+        official_source_url = _official_jpx_daily_url(
+            raw_record["url"],
+            "parsed shard official URL",
+            file_name=source_file_name,
+            source_session=source_session,
+        )
+    else:
+        source_kind = "price_warmup"
+        source_session = _source_file_date(source_file_name, source_kind)
+        official_source_url = _official_jpx_url(
+            raw_record["url"], "parsed shard official URL"
+        )
+    raw_count, raw_hash = _external_object_metadata(
+        predictor_raw_store_root,
+        raw_record["object_key"],
+        prefix=PREDICTOR_OBJECT_PREFIX,
+        label="predictor",
+    )
+    if raw_count != int(raw_record["byte_count"]) or raw_hash != str(
+        raw_record["sha256"]
+    ):
+        raise V18Error("predictor raw bytes differ before shard creation")
+    _, data_key, manifest_key = _predictor_shard_identity(raw_record)
+    if _external_object_exists(
+        predictor_derived_store_root,
+        manifest_key,
+        prefix=PREDICTOR_SHARD_OBJECT_PREFIX,
+        label="predictor shard manifest",
+    ):
+        existing, exact_manifest_bytes = _read_external_canonical_json(
+            predictor_derived_store_root,
+            manifest_key,
+            prefix=PREDICTOR_SHARD_OBJECT_PREFIX,
+            label="predictor shard manifest",
+        )
+        value, frame, binding = _validate_parsed_shard_manifest(
+            existing,
+            raw_record=raw_record,
+            predictor_derived_store_root=predictor_derived_store_root,
+            expected_chronology_class=chronology,
+            expected_raw_received_at=raw_received_at,
+        )
+        if binding["shard_manifest_byte_count"] != len(exact_manifest_bytes) or binding[
+            "shard_manifest_file_sha256"
+        ] != hashlib.sha256(exact_manifest_bytes).hexdigest():
+            raise V18Error("parsed shard manifest exact-byte binding changed")
+        return value, frame, binding
+
+    verified = _runtime_verified_timestamp(runtime_lock_verified_at)
+    snapshot_record = {
+        "object_key": str(raw_record["object_key"]),
+        "file": str(raw_record["file"]),
+        "byte_count": int(raw_record["byte_count"]),
+        "sha256": str(raw_record["sha256"]),
+    }
+    with _external_snapshot_paths(
+        predictor_raw_store_root,
+        [snapshot_record],
+        prefix=PREDICTOR_OBJECT_PREFIX,
+        label="predictor",
+    ) as (raw_paths, _):
+        try:
+            prices, report = _collect_jpx_registered(raw_paths)
+        except Exception as exc:
+            raise V18Error(f"predictor per-file shard parse failed: {exc}") from exc
+        text_path = raw_paths[0].with_suffix(".txt")
+        if text_path.is_file() and not text_path.is_symlink():
+            text_payload = _plain_file_bytes(
+                text_path, label="locked pdftotext shard output"
+            )
+            text_count = len(text_payload)
+            text_hash = hashlib.sha256(text_payload).hexdigest()
+        else:
+            inputs = report.get("inputs")
+            if (
+                not isinstance(inputs, list)
+                or len(inputs) != 1
+                or not isinstance(inputs[0].get("text_byte_count"), int)
+            ):
+                raise V18Error("parsed shard report lacks exact converted text bytes")
+            text_count = int(inputs[0]["text_byte_count"])
+            text_hash = _require_sha(
+                inputs[0].get("text_sha256"), "parsed shard text SHA"
+            )
+    inputs = report.get("inputs")
+    if not isinstance(inputs, list) or len(inputs) != 1:
+        raise V18Error("parsed shard report does not bind exactly one source")
+    parser_input = dict(inputs[0])
+    if int(parser_input.get("rejected_rows", -1)) != 0:
+        raise V18Error("parsed shard parser rejected a source row")
+    reported_text_hash = str(parser_input.get("sha256", ""))
+    if reported_text_hash != text_hash:
+        raise V18Error("parsed shard report differs from converted text hash")
+    parser_input["path"] = Path(str(raw_record["file"])).with_suffix(".txt").name
+    report_projection = {**dict(report), "inputs": [parser_input]}
+    rejected = int(parser_input["rejected_rows"])
+    duplicates = int(prices[["date", "code"]].duplicated(keep=False).sum())
+    if rejected != 0 or duplicates != 0:
+        raise V18Error("parsed shard rejection/duplicate aborts A2")
+    canonical_prices = _coerce_jsonl_frame(
+        prices, PARSED_PRICE_COLUMNS, label="predictor parsed shard"
+    )
+    payload = canonical_frame_jsonl_bytes(
+        canonical_prices, PARSED_PRICE_COLUMNS, label="predictor parsed shard"
+    )
+    decoded_preflight = decode_canonical_frame_jsonl(
+        payload, PARSED_PRICE_COLUMNS, label="predictor parsed shard preflight"
+    )
+    if not decoded_preflight.equals(canonical_prices):
+        raise V18Error("predictor parsed shard codec is not exactly reversible")
+    dates = pd.to_datetime(canonical_prices["date"], errors="coerce")
+    if dates.isna().any():
+        raise V18Error("predictor parsed shard contains an invalid date")
+    if source_kind == "daily":
+        if not dates.eq(source_session).all() or int(dates.nunique()) != 1:
+            raise V18Error("daily parsed shard rows differ from its filename date")
+    elif not dates.dt.to_period("M").eq(source_session.to_period("M")).all():
+        raise V18Error("monthly parsed shard rows differ from its filename month")
+    data_count, data_hash = _write_external_bytes_once(
+        payload,
+        store_root=predictor_derived_store_root,
+        object_key=data_key,
+        prefix=PREDICTOR_SHARD_OBJECT_PREFIX,
+        label="predictor shard data",
+    )
+    created = _operation_timestamp(created_at, "parsed shard created_at")
+    sealed = _operation_timestamp(sealed_at, "parsed shard sealed_at")
+    received = (
+        None
+        if raw_received_at is None
+        else _timestamp(raw_received_at, "parsed shard raw_received_at")
+    )
+    converter = _pdftotext_cache_contract()
+    value: dict[str, Any] = {
+        "schema_version": 1,
+        "cache_contract_id": PREDICTOR_CACHE_CONTRACT_ID,
+        "official_source_file_name": source_file_name,
+        "official_source_url": official_source_url,
+        "raw_byte_count": int(raw_record["byte_count"]),
+        "raw_sha256": str(raw_record["sha256"]),
+        "chronology_class": chronology,
+        "raw_received_at": received,
+        "parser_path": JPX_PARSER_PATH,
+        "parser_version": JPX_PARSER_VERSION,
+        "parser_sha256": JPX_PARSER_SHA256,
+        "pdftotext_file_sha256": converter["file_sha256"],
+        "pdftotext_elf_closure_sha256": converter["elf_closure_sha256"],
+        "pdftotext_argv_environment_contract_sha256": converter[
+            "argv_environment_contract_sha256"
+        ],
+        "runtime_lock_sha256": RUNTIME_LOCK_SHA256,
+        "runtime_lock_verified_at": verified,
+        "created_at": created,
+        "sealed_at": sealed,
+        "data_object_key": data_key,
+        "data_byte_count": data_count,
+        "data_sha256": data_hash,
+        "columns": list(PARSED_PRICE_COLUMNS),
+        "columns_sha256": canonical_json_sha256(list(PARSED_PRICE_COLUMNS)),
+        "row_count": int(len(canonical_prices)),
+        "rejected_row_count": rejected,
+        "duplicate_date_code_count": duplicates,
+        "unique_date_count": int(dates.nunique()),
+        "min_date": str(dates.min().date()),
+        "max_date": str(dates.max().date()),
+        "pdftotext_text_byte_count": text_count,
+        "pdftotext_text_sha256": text_hash,
+        "parser_report_sha256": canonical_json_sha256(report_projection),
+        "parsed_semantic_sha256": parsed_panel_semantic_sha256(canonical_prices),
+        "canonical_jsonl_contract": PARSED_SHARD_JSONL_CONTRACT,
+    }
+    value["manifest_sha256"] = canonical_json_sha256(
+        value, exclude_fields={"manifest_sha256"}
+    )
+    manifest_payload = _json_file_bytes(value)
+    _write_external_bytes_once(
+        manifest_payload,
+        store_root=predictor_derived_store_root,
+        object_key=manifest_key,
+        prefix=PREDICTOR_SHARD_OBJECT_PREFIX,
+        label="predictor shard manifest",
+        replace_unpublished_stage=True,
+    )
+    validated, frame, binding = _validate_parsed_shard_manifest(
+        value,
+        raw_record=raw_record,
+        predictor_derived_store_root=predictor_derived_store_root,
+        expected_chronology_class=chronology,
+        expected_raw_received_at=raw_received_at,
+    )
+    if binding["shard_manifest_byte_count"] != len(manifest_payload) or binding[
+        "shard_manifest_file_sha256"
+    ] != hashlib.sha256(manifest_payload).hexdigest():
+        raise V18Error("new parsed shard manifest exact-byte binding changed")
+    raw_identity = _external_object_identity(
+        predictor_raw_store_root,
+        raw_record["object_key"],
+        prefix=PREDICTOR_OBJECT_PREFIX,
+        label="predictor",
+    )
+    for key in (data_key, manifest_key):
+        if raw_identity == _external_object_identity(
+            predictor_derived_store_root,
+            key,
+            prefix=PREDICTOR_SHARD_OBJECT_PREFIX,
+            label="predictor shard",
+        ):
+            raise V18Error("predictor raw and shard objects alias one inode")
+    return validated, frame, binding
+
+
+def _parsed_shard_set_sha256(bindings: Sequence[Mapping[str, Any]]) -> str:
+    records = [dict(item) for item in bindings]
+    if any(set(item) != set(PARSED_SHARD_BINDING_FIELDS) for item in records):
+        raise V18Error("parsed shard binding set has an invalid schema")
+    return canonical_json_sha256(records)
+
+
+def _load_bound_predictor_shards(
+    raw_records: Sequence[Mapping[str, Any]],
+    bindings: Sequence[Mapping[str, Any]],
+    *,
+    predictor_raw_store_root: str | Path,
+    predictor_derived_store_root: str | Path,
+) -> pd.DataFrame:
+    """Validate the aligned raw->manifest->shard set, then merge exact rows."""
+
+    _validate_external_store_disjointness(
+        predictor_raw_store_root, predictor_derived_store_root
+    )
+    if len(raw_records) != len(bindings) or not raw_records:
+        raise V18Error("raw and parsed-shard binding sets are empty or misaligned")
+    frames: list[pd.DataFrame] = []
+    raw_identities: set[tuple[int, int]] = set()
+    derived_identities: set[tuple[int, int]] = set()
+    for index, (raw_record, binding) in enumerate(
+        zip(raw_records, bindings, strict=True)
+    ):
+        if set(binding) != set(PARSED_SHARD_BINDING_FIELDS):
+            raise V18Error(f"parsed shard binding {index} has an invalid schema")
+        for field, raw_field in (
+            ("raw_object_key", "object_key"),
+            ("raw_file", "file"),
+            ("raw_url", "url"),
+            ("raw_byte_count", "byte_count"),
+            ("raw_sha256", "sha256"),
+        ):
+            expected = (
+                int(raw_record[raw_field])
+                if raw_field == "byte_count"
+                else str(raw_record[raw_field])
+            )
+            if binding[field] != expected:
+                raise V18Error(f"parsed shard binding {index} swaps raw field {field}")
+        observed_count, observed_hash = _external_object_metadata(
+            predictor_raw_store_root,
+            raw_record["object_key"],
+            prefix=PREDICTOR_OBJECT_PREFIX,
+            label="predictor",
+        )
+        if (observed_count, observed_hash) != (
+            int(raw_record["byte_count"]),
+            str(raw_record["sha256"]),
+        ):
+            raise V18Error("bound predictor raw bytes changed")
+        _, expected_data_key, expected_manifest_key = _predictor_shard_identity(
+            raw_record
+        )
+        if (
+            binding["shard_object_key"] != expected_data_key
+            or binding["shard_manifest_object_key"] != expected_manifest_key
+        ):
+            raise V18Error("parsed shard binding uses a caller-selected key")
+        manifest, manifest_payload = _read_external_canonical_json(
+            predictor_derived_store_root,
+            expected_manifest_key,
+            prefix=PREDICTOR_SHARD_OBJECT_PREFIX,
+            label="predictor shard manifest",
+        )
+        if (
+            len(manifest_payload) != int(binding["shard_manifest_byte_count"])
+            or hashlib.sha256(manifest_payload).hexdigest()
+            != binding["shard_manifest_file_sha256"]
+            or manifest["manifest_sha256"] != binding["shard_manifest_sha256"]
+        ):
+            raise V18Error("parsed shard manifest exact bytes differ from binding")
+        _, frame, observed_binding = _validate_parsed_shard_manifest(
+            manifest,
+            raw_record=raw_record,
+            predictor_derived_store_root=predictor_derived_store_root,
+        )
+        if observed_binding != dict(binding):
+            raise V18Error("parsed shard binding differs from validated artifact")
+        raw_identity = _external_object_identity(
+            predictor_raw_store_root,
+            raw_record["object_key"],
+            prefix=PREDICTOR_OBJECT_PREFIX,
+            label="predictor",
+        )
+        if raw_identity in raw_identities:
+            raise V18Error("predictor raw set aliases one inode")
+        raw_identities.add(raw_identity)
+        for key in (expected_data_key, expected_manifest_key):
+            derived_identity = _external_object_identity(
+                predictor_derived_store_root,
+                key,
+                prefix=PREDICTOR_SHARD_OBJECT_PREFIX,
+                label="predictor shard",
+            )
+            if derived_identity in raw_identities or derived_identity in derived_identities:
+                raise V18Error("predictor shard/raw evidence aliases an inode")
+            derived_identities.add(derived_identity)
+        frames.append(frame)
+    try:
+        merged = merge_daily_prices(frames)
+    except Exception as exc:
+        raise V18Error(f"parsed shard merge failed: {exc}") from exc
+    return _coerce_jsonl_frame(
+        merged, PARSED_PRICE_COLUMNS, label="merged predictor parsed shards"
+    )
+
+
+def _model_price_snapshot_identity(
+    *,
+    target_month: pd.Period,
+    latest_source_session: pd.Timestamp,
+    raw_source_set_sha256: str,
+    parsed_shard_set_sha256: str,
+    previous_snapshot_manifest_sha256: str | None,
+) -> tuple[str, str, str]:
+    identity = {
+        "cache_contract_id": PREDICTOR_CACHE_CONTRACT_ID,
+        "target_month": str(target_month),
+        "latest_source_session": str(latest_source_session.date()),
+        "raw_source_set_sha256": raw_source_set_sha256,
+        "parsed_shard_set_sha256": parsed_shard_set_sha256,
+        "previous_snapshot_manifest_sha256": previous_snapshot_manifest_sha256,
+        "columns_sha256": canonical_json_sha256(list(MODEL_PRICE_COLUMNS)),
+        "runtime_lock_sha256": RUNTIME_LOCK_SHA256,
+        "protocol_sha256": PROTOCOL_SHA256,
+        "runner_sha256": sha256_file(__file__),
+        "parser_sha256": JPX_PARSER_SHA256,
+        "canonical_csv_contract": MODEL_PRICE_CSV_CONTRACT,
+    }
+    token = canonical_json_sha256(identity)
+    return (
+        token,
+        f"{MODEL_PRICE_SNAPSHOT_OBJECT_PREFIX}{target_month}/{token}.csv",
+        f"{MODEL_PRICE_SNAPSHOT_OBJECT_PREFIX}{target_month}/{token}.manifest.json",
+    )
+
+
+def _validate_model_price_snapshot_manifest(
+    manifest: Mapping[str, Any],
+    *,
+    predictor_derived_store_root: str | Path,
+    expected_target_month: Any,
+    expected_latest_source_session: Any,
+    expected_raw_source_set_sha256: str,
+    expected_parsed_shard_set_sha256: str,
+    decode_data: bool = True,
+    _reuse_sealed_semantic: bool = False,
+) -> tuple[dict[str, Any], pd.DataFrame, str, bytes]:
+    value = dict(manifest)
+    if set(value) != set(MODEL_PRICE_SNAPSHOT_FIELDS):
+        raise V18Error("model-price snapshot manifest fields differ from A2")
+    if value["schema_version"] != 1 or value["cache_contract_id"] != (
+        PREDICTOR_CACHE_CONTRACT_ID
+    ):
+        raise V18Error("model-price snapshot schema/contract changed")
+    month = _month(expected_target_month, "model-price snapshot target month")
+    latest = _date(
+        expected_latest_source_session, "model-price snapshot latest source"
+    )
+    fixed = {
+        "target_month": str(month),
+        "latest_source_session": str(latest.date()),
+        "raw_source_set_sha256": _require_sha(
+            expected_raw_source_set_sha256, "model-price raw set SHA"
+        ),
+        "parsed_shard_set_sha256": _require_sha(
+            expected_parsed_shard_set_sha256, "model-price shard set SHA"
+        ),
+        "columns": list(MODEL_PRICE_COLUMNS),
+        "columns_sha256": canonical_json_sha256(list(MODEL_PRICE_COLUMNS)),
+        "runtime_lock_sha256": RUNTIME_LOCK_SHA256,
+        "protocol_sha256": PROTOCOL_SHA256,
+        "runner_sha256": sha256_file(__file__),
+        "parser_sha256": JPX_PARSER_SHA256,
+        "canonical_csv_contract": MODEL_PRICE_CSV_CONTRACT,
+    }
+    for field, expected in fixed.items():
+        if value[field] != expected:
+            raise V18Error(f"model-price snapshot binding changed: {field}")
+    previous = value["previous_snapshot_manifest_sha256"]
+    previous_detail_fields = (
+        "previous_snapshot_target_month",
+        "previous_snapshot_latest_source_session",
+        "previous_snapshot_manifest_object_key",
+        "previous_snapshot_manifest_byte_count",
+        "previous_snapshot_manifest_file_sha256",
+        "previous_snapshot_raw_source_count",
+        "previous_snapshot_raw_source_set_sha256",
+        "previous_snapshot_parsed_shard_set_sha256",
+    )
+    if previous is None:
+        if any(value[field] is not None for field in previous_detail_fields):
+            raise V18Error("initial model-price snapshot has predecessor details")
+    else:
+        _require_sha(previous, "previous model-price snapshot SHA")
+        if any(value[field] is None for field in previous_detail_fields):
+            raise V18Error("model-price snapshot predecessor details are incomplete")
+        previous_month = _month(
+            value["previous_snapshot_target_month"],
+            "previous model-price snapshot target month",
+        )
+        previous_latest = _date(
+            value["previous_snapshot_latest_source_session"],
+            "previous model-price snapshot latest source",
+        )
+        if previous_month != month - 1 or previous_latest != (
+            _latest_registered_source_before_month(previous_month)
+        ):
+            raise V18Error("model-price snapshot predecessor is not immediate")
+        previous_manifest, previous_payload = _read_external_canonical_json(
+            predictor_derived_store_root,
+            value["previous_snapshot_manifest_object_key"],
+            prefix=MODEL_PRICE_SNAPSHOT_OBJECT_PREFIX,
+            label="previous model-price snapshot manifest",
+        )
+        if (
+            len(previous_payload)
+            != int(value["previous_snapshot_manifest_byte_count"])
+            or hashlib.sha256(previous_payload).hexdigest()
+            != value["previous_snapshot_manifest_file_sha256"]
+            or previous_manifest.get("snapshot_manifest_sha256") != previous
+            or int(previous_manifest.get("raw_source_count", 0))
+            != int(value["previous_snapshot_raw_source_count"])
+            or previous_manifest.get("raw_source_set_sha256")
+            != value["previous_snapshot_raw_source_set_sha256"]
+            or previous_manifest.get("parsed_shard_set_sha256")
+            != value["previous_snapshot_parsed_shard_set_sha256"]
+        ):
+            raise V18Error("model-price snapshot predecessor exact binding changed")
+        previous_value, _, previous_key, _ = _validate_model_price_snapshot_manifest(
+            previous_manifest,
+            predictor_derived_store_root=predictor_derived_store_root,
+            expected_target_month=previous_month,
+            expected_latest_source_session=previous_latest,
+            expected_raw_source_set_sha256=value[
+                "previous_snapshot_raw_source_set_sha256"
+            ],
+            expected_parsed_shard_set_sha256=value[
+                "previous_snapshot_parsed_shard_set_sha256"
+            ],
+            decode_data=decode_data,
+            _reuse_sealed_semantic=_reuse_sealed_semantic,
+        )
+        if previous_key != value["previous_snapshot_manifest_object_key"]:
+            raise V18Error("model-price snapshot predecessor key changed")
+    _, expected_data_key, expected_manifest_key = _model_price_snapshot_identity(
+        target_month=month,
+        latest_source_session=latest,
+        raw_source_set_sha256=expected_raw_source_set_sha256,
+        parsed_shard_set_sha256=expected_parsed_shard_set_sha256,
+        previous_snapshot_manifest_sha256=previous,
+    )
+    if value["data_object_key"] != expected_data_key:
+        raise V18Error("model-price snapshot data key is caller-selectable")
+    if value["snapshot_manifest_sha256"] != canonical_json_sha256(
+        value, exclude_fields={"snapshot_manifest_sha256"}
+    ):
+        raise V18Error("model-price snapshot self-hash mismatch")
+    verified = _timestamp(
+        value["runtime_lock_verified_at"], "model-price runtime verified"
+    )
+    created = _timestamp(value["created_at"], "model-price created_at")
+    sealed = _timestamp(value["sealed_at"], "model-price sealed_at")
+    if verified > created or created > sealed:
+        raise V18Error("model-price snapshot timestamp DAG is invalid")
+    if previous is not None and _timestamp(
+        previous_value["sealed_at"], "previous model-price snapshot sealed"
+    ) > created:
+        raise V18Error("model-price snapshot predates its predecessor seal")
+    for field in ("raw_source_count", "parsed_row_count", "row_count"):
+        if isinstance(value[field], bool) or int(value[field]) <= 0:
+            raise V18Error(f"model-price snapshot {field} must be positive")
+    if int(value["duplicate_date_code_count"]) != 0 or int(
+        value["unique_date_count"]
+    ) <= 0:
+        raise V18Error("model-price snapshot date/code counts are invalid")
+    retained_metadata = _external_object_metadata(
+        predictor_derived_store_root,
+        expected_data_key,
+        prefix=MODEL_PRICE_SNAPSHOT_OBJECT_PREFIX,
+        label="model-price snapshot data",
+        required_signature=None,
+    )
+    if retained_metadata != (
+        int(value["data_byte_count"]),
+        str(value["data_sha256"]),
+    ):
+        raise V18Error("model-price snapshot exact bytes changed")
+    manifest_payload = _json_file_bytes(value)
+    if not decode_data:
+        return value, pd.DataFrame(), expected_manifest_key, manifest_payload
+    payload = _external_object_bytes(
+        predictor_derived_store_root,
+        expected_data_key,
+        prefix=MODEL_PRICE_SNAPSHOT_OBJECT_PREFIX,
+        label="model-price snapshot data",
+    )
+    frame = decode_canonical_model_price_csv(
+        payload, label="model-price snapshot"
+    )
+    dates = pd.to_datetime(frame["date"])
+    observed: dict[str, Any] = {
+        "row_count": int(len(frame)),
+        "parsed_row_count": int(len(frame)),
+        "unique_date_count": int(dates.nunique()),
+        "duplicate_date_code_count": int(
+            frame[["date", "code"]].duplicated(keep=False).sum()
+        ),
+    }
+    if _reuse_sealed_semantic:
+        _require_sha(
+            value["model_price_semantic_sha256"],
+            "sealed model-price semantic SHA",
+        )
+    else:
+        observed["model_price_semantic_sha256"] = model_price_semantic_sha256(
+            frame
+        )
+    for field, expected in observed.items():
+        if value[field] != expected:
+            raise V18Error(f"model-price snapshot decoded value changed: {field}")
+    if dates.max().normalize() != latest or dates.ge(month.start_time).any():
+        raise V18Error("model-price snapshot is not the exact prior-month prefix")
+    return value, frame, expected_manifest_key, manifest_payload
+
+
+def materialize_model_price_snapshot(
+    model_prices: pd.DataFrame,
+    *,
+    predictor_derived_store_root: str | Path,
+    target_month: Any,
+    latest_source_session: Any,
+    raw_records: Sequence[Mapping[str, Any]],
+    shard_bindings: Sequence[Mapping[str, Any]],
+    previous_snapshot_manifest_sha256: str | None,
+    previous_snapshot_binding: Mapping[str, Any] | None = None,
+    runtime_lock_verified_at: Any | None = None,
+) -> tuple[dict[str, Any], pd.DataFrame, str, bytes]:
+    """Seal one cumulative compact full-prefix snapshot for a target month."""
+
+    month = _month(target_month, "model-price snapshot target month")
+    latest = _date(latest_source_session, "model-price snapshot latest source")
+    if latest != _latest_registered_source_before_month(month):
+        raise V18Error("model-price snapshot latest is not exact M-1")
+    if len(raw_records) != len(shard_bindings) or not raw_records:
+        raise V18Error("model-price snapshot raw/shard sets are misaligned")
+    raw_hash = canonical_json_sha256([dict(item) for item in raw_records])
+    shard_hash = _parsed_shard_set_sha256(shard_bindings)
+    previous_fields: dict[str, Any]
+    if previous_snapshot_manifest_sha256 is None:
+        if previous_snapshot_binding is not None:
+            raise V18Error("initial model-price snapshot cannot bind a predecessor")
+        previous_fields = {
+            "previous_snapshot_target_month": None,
+            "previous_snapshot_latest_source_session": None,
+            "previous_snapshot_manifest_object_key": None,
+            "previous_snapshot_manifest_byte_count": None,
+            "previous_snapshot_manifest_file_sha256": None,
+            "previous_snapshot_raw_source_count": None,
+            "previous_snapshot_raw_source_set_sha256": None,
+            "previous_snapshot_parsed_shard_set_sha256": None,
+        }
+    else:
+        if previous_snapshot_binding is None:
+            raise V18Error("forward model-price snapshot lacks predecessor binding")
+        previous, _, previous_payload = _validate_model_price_snapshot_binding(
+            previous_snapshot_binding,
+            predictor_derived_store_root=predictor_derived_store_root,
+            raw_records=raw_records,
+            shard_bindings=shard_bindings,
+        )
+        if previous["snapshot_manifest_sha256"] != (
+            previous_snapshot_manifest_sha256
+        ):
+            raise V18Error("model-price predecessor self-hash changed")
+        previous_fields = {
+            "previous_snapshot_target_month": previous["target_month"],
+            "previous_snapshot_latest_source_session": previous[
+                "latest_source_session"
+            ],
+            "previous_snapshot_manifest_object_key": previous_snapshot_binding[
+                "model_price_snapshot_manifest_object_key"
+            ],
+            "previous_snapshot_manifest_byte_count": len(previous_payload),
+            "previous_snapshot_manifest_file_sha256": hashlib.sha256(
+                previous_payload
+            ).hexdigest(),
+            "previous_snapshot_raw_source_count": int(previous["raw_source_count"]),
+            "previous_snapshot_raw_source_set_sha256": previous[
+                "raw_source_set_sha256"
+            ],
+            "previous_snapshot_parsed_shard_set_sha256": previous[
+                "parsed_shard_set_sha256"
+            ],
+        }
+    canonical = _coerce_model_price_frame(
+        model_prices, label="model-price snapshot source"
+    )
+    if pd.to_datetime(canonical["date"]).max().normalize() != latest:
+        raise V18Error("model-price snapshot source does not end at exact M-1")
+    payload = canonical_model_price_csv_bytes(
+        canonical, label="model-price snapshot source"
+    )
+    decoded_preflight = decode_canonical_model_price_csv(
+        payload, label="model-price snapshot preflight"
+    )
+    if not decoded_preflight.equals(canonical):
+        raise V18Error("model-price snapshot codec is not exactly reversible")
+    _, data_key, manifest_key = _model_price_snapshot_identity(
+        target_month=month,
+        latest_source_session=latest,
+        raw_source_set_sha256=raw_hash,
+        parsed_shard_set_sha256=shard_hash,
+        previous_snapshot_manifest_sha256=previous_snapshot_manifest_sha256,
+    )
+    if _external_object_exists(
+        predictor_derived_store_root,
+        manifest_key,
+        prefix=MODEL_PRICE_SNAPSHOT_OBJECT_PREFIX,
+        label="model-price snapshot manifest",
+    ):
+        existing, _ = _read_external_canonical_json(
+            predictor_derived_store_root,
+            manifest_key,
+            prefix=MODEL_PRICE_SNAPSHOT_OBJECT_PREFIX,
+            label="model-price snapshot manifest",
+        )
+        validated, retained_frame, retained_key, retained_payload = (
+            _validate_model_price_snapshot_manifest(
+                existing,
+                predictor_derived_store_root=predictor_derived_store_root,
+                expected_target_month=month,
+                expected_latest_source_session=latest,
+                expected_raw_source_set_sha256=raw_hash,
+                expected_parsed_shard_set_sha256=shard_hash,
+            )
+        )
+        if retained_key != manifest_key:
+            raise V18Error("model-price snapshot retry resolved another identity")
+        if not retained_frame.equals(canonical):
+            raise V18Error("model-price snapshot retry changes exact rows/dtypes")
+        if int(validated["raw_source_count"]) != len(raw_records):
+            raise V18Error("model-price snapshot retry changes raw-source count")
+        return validated, retained_frame, retained_key, retained_payload
+    data_count, data_hash = _write_external_bytes_once(
+        payload,
+        store_root=predictor_derived_store_root,
+        object_key=data_key,
+        prefix=MODEL_PRICE_SNAPSHOT_OBJECT_PREFIX,
+        label="model-price snapshot data",
+    )
+    verified = _runtime_verified_timestamp(runtime_lock_verified_at)
+    created = datetime.now(TOKYO)
+    sealed = datetime.now(TOKYO)
+    dates = pd.to_datetime(canonical["date"])
+    value: dict[str, Any] = {
+        "schema_version": 1,
+        "cache_contract_id": PREDICTOR_CACHE_CONTRACT_ID,
+        "target_month": str(month),
+        "latest_source_session": str(latest.date()),
+        "raw_source_set_sha256": raw_hash,
+        "parsed_shard_set_sha256": shard_hash,
+        "raw_source_count": len(raw_records),
+        "parsed_row_count": int(len(canonical)),
+        "columns": list(MODEL_PRICE_COLUMNS),
+        "columns_sha256": canonical_json_sha256(list(MODEL_PRICE_COLUMNS)),
+        "data_object_key": data_key,
+        "data_byte_count": data_count,
+        "data_sha256": data_hash,
+        "row_count": int(len(canonical)),
+        "unique_date_count": int(dates.nunique()),
+        "duplicate_date_code_count": 0,
+        "model_price_semantic_sha256": model_price_semantic_sha256(canonical),
+        "previous_snapshot_manifest_sha256": previous_snapshot_manifest_sha256,
+        **previous_fields,
+        "runtime_lock_sha256": RUNTIME_LOCK_SHA256,
+        "runtime_lock_verified_at": verified,
+        "protocol_sha256": PROTOCOL_SHA256,
+        "runner_sha256": sha256_file(__file__),
+        "parser_sha256": JPX_PARSER_SHA256,
+        "created_at": created,
+        "sealed_at": sealed,
+        "canonical_csv_contract": MODEL_PRICE_CSV_CONTRACT,
+    }
+    value["snapshot_manifest_sha256"] = canonical_json_sha256(
+        value, exclude_fields={"snapshot_manifest_sha256"}
+    )
+    manifest_payload = _json_file_bytes(value)
+    _write_external_bytes_once(
+        manifest_payload,
+        store_root=predictor_derived_store_root,
+        object_key=manifest_key,
+        prefix=MODEL_PRICE_SNAPSHOT_OBJECT_PREFIX,
+        label="model-price snapshot manifest",
+        replace_unpublished_stage=True,
+    )
+    return _validate_model_price_snapshot_manifest(
+        value,
+        predictor_derived_store_root=predictor_derived_store_root,
+        expected_target_month=month,
+        expected_latest_source_session=latest,
+        expected_raw_source_set_sha256=raw_hash,
+        expected_parsed_shard_set_sha256=shard_hash,
+    )
+
+
+def _validate_bound_predictor_shard_metadata(
+    raw_records: Sequence[Mapping[str, Any]],
+    bindings: Sequence[Mapping[str, Any]],
+    *,
+    predictor_raw_store_root: str | Path,
+    predictor_derived_store_root: str | Path,
+) -> list[dict[str, Any]]:
+    """Hash and inode-pin a complete aligned set without decoding shard rows."""
+
+    if len(raw_records) != len(bindings) or not raw_records:
+        raise V18Error("predictor shard metadata set is empty or misaligned")
+    manifests: list[dict[str, Any]] = []
+    identities: set[tuple[int, int]] = set()
+    for index, (raw_record, binding) in enumerate(
+        zip(raw_records, bindings, strict=True)
+    ):
+        raw_metadata = _external_object_metadata(
+            predictor_raw_store_root,
+            raw_record["object_key"],
+            prefix=PREDICTOR_OBJECT_PREFIX,
+            label="predictor",
+        )
+        if raw_metadata != (
+            int(raw_record["byte_count"]),
+            str(raw_record["sha256"]),
+        ):
+            raise V18Error(f"predictor shard raw binding changed at index {index}")
+        manifest, manifest_payload = _read_external_canonical_json(
+            predictor_derived_store_root,
+            binding["shard_manifest_object_key"],
+            prefix=PREDICTOR_SHARD_OBJECT_PREFIX,
+            label="predictor shard manifest",
+        )
+        if (
+            len(manifest_payload) != int(binding["shard_manifest_byte_count"])
+            or hashlib.sha256(manifest_payload).hexdigest()
+            != binding["shard_manifest_file_sha256"]
+        ):
+            raise V18Error("predictor shard manifest exact bytes changed")
+        _, _, observed_binding = _validate_parsed_shard_manifest(
+            manifest,
+            raw_record=raw_record,
+            predictor_derived_store_root=predictor_derived_store_root,
+            decode_data=False,
+        )
+        if observed_binding != dict(binding):
+            raise V18Error("predictor shard binding differs from its manifest")
+        for root, key, prefix, label in (
+            (
+                predictor_raw_store_root,
+                raw_record["object_key"],
+                PREDICTOR_OBJECT_PREFIX,
+                "predictor",
+            ),
+            (
+                predictor_derived_store_root,
+                binding["shard_object_key"],
+                PREDICTOR_SHARD_OBJECT_PREFIX,
+                "predictor shard",
+            ),
+            (
+                predictor_derived_store_root,
+                binding["shard_manifest_object_key"],
+                PREDICTOR_SHARD_OBJECT_PREFIX,
+                "predictor shard manifest",
+            ),
+        ):
+            identity = _external_object_identity(
+                root, key, prefix=prefix, label=label
+            )
+            if identity in identities:
+                raise V18Error("predictor raw/shard set aliases an inode")
+            identities.add(identity)
+        manifests.append(manifest)
+    return manifests
+
+
+def _load_model_price_prefix(
+    raw_records: Sequence[Mapping[str, Any]],
+    bindings: Sequence[Mapping[str, Any]],
+    *,
+    snapshot_target_month: Any,
+    latest_required_source_session: Any,
+    snapshot_manifest_object_key: str,
+    predictor_raw_store_root: str | Path,
+    predictor_derived_store_root: str | Path,
+) -> tuple[pd.DataFrame, dict[str, Any], bytes]:
+    """Decode one M-1 compact snapshot plus only its ordered forward suffix."""
+
+    month = _month(snapshot_target_month, "model-price prefix snapshot month")
+    latest = _date(latest_required_source_session, "model-price prefix latest")
+    manifests = _validate_bound_predictor_shard_metadata(
+        raw_records,
+        bindings,
+        predictor_raw_store_root=predictor_raw_store_root,
+        predictor_derived_store_root=predictor_derived_store_root,
+    )
+    snapshot_manifest, snapshot_manifest_payload = _read_external_canonical_json(
+        predictor_derived_store_root,
+        snapshot_manifest_object_key,
+        prefix=MODEL_PRICE_SNAPSHOT_OBJECT_PREFIX,
+        label="model-price snapshot manifest",
+    )
+    prefix_count = int(snapshot_manifest.get("raw_source_count", 0))
+    if prefix_count <= 0 or prefix_count > len(raw_records):
+        raise V18Error("model-price snapshot prefix count is invalid")
+    prefix_raw = [dict(item) for item in raw_records[:prefix_count]]
+    prefix_bindings = [dict(item) for item in bindings[:prefix_count]]
+    snapshot, base, expected_key, _ = _validate_model_price_snapshot_manifest(
+        snapshot_manifest,
+        predictor_derived_store_root=predictor_derived_store_root,
+        expected_target_month=month,
+        expected_latest_source_session=snapshot_manifest["latest_source_session"],
+        expected_raw_source_set_sha256=canonical_json_sha256(prefix_raw),
+        expected_parsed_shard_set_sha256=_parsed_shard_set_sha256(prefix_bindings),
+    )
+    if snapshot_manifest_object_key != expected_key:
+        raise V18Error("model-price snapshot manifest key changed")
+    base_latest = _date(snapshot["latest_source_session"], "snapshot base latest")
+    if base_latest > latest:
+        raise V18Error("model-price snapshot is ahead of the daily source")
+    suffix_frames: list[pd.DataFrame] = []
+    for index in range(prefix_count, len(raw_records)):
+        manifest = manifests[index]
+        min_date = _date(manifest["min_date"], "model-price suffix min date")
+        if min_date <= base_latest:
+            raise V18Error("model-price snapshot suffix overlaps/rewrites its prefix")
+        _, shard_frame, _ = _validate_parsed_shard_manifest(
+            manifest,
+            raw_record=raw_records[index],
+            predictor_derived_store_root=predictor_derived_store_root,
+            decode_data=True,
+        )
+        assert shard_frame is not None
+        suffix_frames.append(
+            _coerce_model_price_frame(
+                shard_frame, label="model-price ordered forward shard"
+            )
+        )
+    combined = _coerce_model_price_frame(
+        pd.concat([base, *suffix_frames], ignore_index=True),
+        label="model-price full prefix",
+    )
+    if pd.to_datetime(combined["date"]).max().normalize() != latest:
+        raise V18Error("model-price full prefix does not end at exact D-1")
+    return combined, snapshot, snapshot_manifest_payload
+
+
+def _g0_cache_identity(
+    *,
+    target_session: pd.Timestamp,
+    latest_required_source_session: pd.Timestamp,
+    source_set_sha256: str,
+    parsed_shard_set_sha256: str,
+) -> tuple[str, str, str]:
+    identity = {
+        "cache_contract_id": PREDICTOR_CACHE_CONTRACT_ID,
+        "scope": "target_slice",
+        "target_session": str(target_session.date()),
+        "latest_required_source_session": str(latest_required_source_session.date()),
+        "source_set_sha256": source_set_sha256,
+        "parsed_shard_set_sha256": parsed_shard_set_sha256,
+        "columns_sha256": canonical_json_sha256(list(G0_PANEL_COLUMNS)),
+        "v17_protocol_sha256": V17_BINDINGS["protocol"][1],
+        "v17_runner_sha256": V17_BINDINGS["runner"][1],
+        "runtime_lock_sha256": RUNTIME_LOCK_SHA256,
+        "protocol_sha256": PROTOCOL_SHA256,
+        "runner_sha256": sha256_file(__file__),
+        "parser_sha256": JPX_PARSER_SHA256,
+        "canonical_jsonl_contract": G0_CACHE_JSONL_CONTRACT,
+    }
+    token = canonical_json_sha256(identity)
+    return (
+        token,
+        f"{G0_PANEL_CACHE_OBJECT_PREFIX}target-slice/{token}.jsonl",
+        f"{G0_PANEL_CACHE_OBJECT_PREFIX}target-slice/{token}.manifest.json",
+    )
+
+
+def _validate_g0_cache_manifest(
+    manifest: Mapping[str, Any],
+    *,
+    predictor_derived_store_root: str | Path,
+    expected_target_session: Any,
+    expected_latest_source_session: Any,
+    expected_source_set_sha256: str,
+    expected_parsed_shard_set_sha256: str,
+) -> tuple[dict[str, Any], pd.DataFrame, str, bytes]:
+    """Validate the only persisted G0 accelerator: one outcome-null target slice."""
+
+    value = dict(manifest)
+    if set(value) != set(G0_CACHE_MANIFEST_FIELDS):
+        raise V18Error("G0 target-slice manifest fields differ from A2 contract")
+    target = _date(expected_target_session, "expected G0 target session")
+    latest = _date(expected_latest_source_session, "expected G0 latest source")
+    if latest >= target:
+        raise V18Error("G0 target-slice source is not strictly prior")
+    fixed = {
+        "schema_version": 1,
+        "cache_contract_id": PREDICTOR_CACHE_CONTRACT_ID,
+        "scope": "target_slice",
+        "target_session": str(target.date()),
+        "latest_required_source_session": str(latest.date()),
+        "source_set_sha256": _require_sha(
+            expected_source_set_sha256, "G0 source-set SHA"
+        ),
+        "parsed_shard_set_sha256": _require_sha(
+            expected_parsed_shard_set_sha256, "G0 shard-set SHA"
+        ),
+        "columns": list(G0_PANEL_COLUMNS),
+        "columns_sha256": canonical_json_sha256(list(G0_PANEL_COLUMNS)),
+        "v17_protocol_sha256": V17_BINDINGS["protocol"][1],
+        "v17_runner_sha256": V17_BINDINGS["runner"][1],
+        "runtime_lock_sha256": RUNTIME_LOCK_SHA256,
+        "protocol_sha256": PROTOCOL_SHA256,
+        "runner_sha256": sha256_file(__file__),
+        "parser_sha256": JPX_PARSER_SHA256,
+        "canonical_jsonl_contract": G0_CACHE_JSONL_CONTRACT,
+    }
+    for field, expected in fixed.items():
+        if value[field] != expected:
+            raise V18Error(f"G0 target-slice binding changed: {field}")
+    _, expected_data_key, expected_manifest_key = _g0_cache_identity(
+        target_session=target,
+        latest_required_source_session=latest,
+        source_set_sha256=expected_source_set_sha256,
+        parsed_shard_set_sha256=expected_parsed_shard_set_sha256,
+    )
+    if value["data_object_key"] != expected_data_key:
+        raise V18Error("G0 target-slice key is caller-selectable")
+    if value["cache_manifest_sha256"] != canonical_json_sha256(
+        value, exclude_fields={"cache_manifest_sha256"}
+    ):
+        raise V18Error("G0 target-slice self-hash mismatch")
+    verified = _timestamp(
+        value["runtime_lock_verified_at"], "G0 target-slice runtime verified"
+    )
+    created = _timestamp(value["created_at"], "G0 target-slice created")
+    sealed = _timestamp(value["sealed_at"], "G0 target-slice sealed")
+    if verified > created or created > sealed or sealed > _cutoff(target):
+        raise V18Error("G0 target-slice timestamp DAG is invalid")
+    payload = _external_object_bytes(
+        predictor_derived_store_root,
+        expected_data_key,
+        prefix=G0_PANEL_CACHE_OBJECT_PREFIX,
+        label="G0 target-slice data",
+    )
+    if len(payload) != int(value["data_byte_count"]) or hashlib.sha256(
+        payload
+    ).hexdigest() != value["data_sha256"]:
+        raise V18Error("G0 target-slice exact bytes changed")
+    frame = decode_canonical_frame_jsonl(
+        payload, G0_PANEL_COLUMNS, label="G0 target-slice"
+    )
+    dates = pd.to_datetime(frame["date"], errors="coerce")
+    feature_dates = pd.to_datetime(
+        frame["feature_source_max_date"], errors="coerce"
+    )
+    if (
+        frame.empty
+        or not dates.eq(target).all()
+        or frame["oc_return_pct"].notna().any()
+        or feature_dates.isna().any()
+        or feature_dates.ge(target).any()
+    ):
+        raise V18Error("G0 target-slice contains outcome/future/non-target rows")
+    scoring_columns = (
+        "date",
+        "code",
+        "name",
+        "common_score_eligible",
+        "feature_source_max_date",
+        *G0_FEATURES,
+    )
+    observed = {
+        "row_count": int(len(frame)),
+        "unique_date_count": 1,
+        "duplicate_date_code_count": int(
+            frame[["date", "code"]].duplicated(keep=False).sum()
+        ),
+        "data_semantic_sha256": semantic_frame_sha256(frame, G0_PANEL_COLUMNS),
+        "target_row_count": int(len(frame)),
+        "target_date_scoring_input_semantic_sha256": semantic_frame_sha256(
+            frame, scoring_columns
+        ),
+        "target_slice_semantic_sha256": semantic_frame_sha256(
+            frame, G0_PANEL_COLUMNS
+        ),
+        "target_outcome_nonnull_count": 0,
+        "max_feature_source_date": str(feature_dates.max().date()),
+    }
+    for field, expected in observed.items():
+        if value[field] != expected:
+            raise V18Error(f"G0 target-slice decoded value changed: {field}")
+    for field in (
+        "data_sha256",
+        "data_semantic_sha256",
+        "target_date_scoring_input_semantic_sha256",
+        "target_slice_semantic_sha256",
+        "cache_manifest_sha256",
+    ):
+        _require_sha(value[field], f"G0 target-slice {field}")
+    return value, frame, expected_manifest_key, _json_file_bytes(value)
+
+
+def materialize_g0_panel_cache(
+    parsed_prices: pd.DataFrame,
+    *,
+    predictor_derived_store_root: str | Path,
+    target_session: Any,
+    latest_required_source_session: Any,
+    source_set_sha256: str,
+    parsed_shard_set_sha256: str,
+    total_parsed_row_count: int,
+    prepared_full_panel: pd.DataFrame | None = None,
+    runtime_lock_verified_at: Any | None = None,
+    created_at: Any | None = None,
+    sealed_at: Any | None = None,
+) -> tuple[dict[str, Any], pd.DataFrame, str, bytes]:
+    """Persist a tiny target slice; the cumulative panel remains in memory only."""
+
+    target = _date(target_session, "G0 target session")
+    latest = _date(latest_required_source_session, "G0 latest source")
+    if latest >= target or isinstance(total_parsed_row_count, bool) or int(
+        total_parsed_row_count
+    ) <= 0:
+        raise V18Error("G0 target-slice input identity is invalid")
+    panel = (
+        build_forward_c00_panel(parsed_prices, target)
+        if prepared_full_panel is None
+        else prepared_full_panel
+    )
+    target_rows = _coerce_jsonl_frame(
+        panel.loc[pd.to_datetime(panel["date"], errors="coerce").eq(target)],
+        G0_PANEL_COLUMNS,
+        label="G0 target-slice source",
+    )
+    payload = canonical_frame_jsonl_bytes(
+        target_rows, G0_PANEL_COLUMNS, label="G0 target-slice source"
+    )
+    decoded_preflight = decode_canonical_frame_jsonl(
+        payload, G0_PANEL_COLUMNS, label="G0 target-slice preflight"
+    )
+    if not decoded_preflight.equals(target_rows):
+        raise V18Error("G0 target-slice codec is not exactly reversible")
+    _, data_key, manifest_key = _g0_cache_identity(
+        target_session=target,
+        latest_required_source_session=latest,
+        source_set_sha256=source_set_sha256,
+        parsed_shard_set_sha256=parsed_shard_set_sha256,
+    )
+    if _external_object_exists(
+        predictor_derived_store_root,
+        manifest_key,
+        prefix=G0_PANEL_CACHE_OBJECT_PREFIX,
+        label="G0 target-slice manifest",
+    ):
+        existing, _ = _read_external_canonical_json(
+            predictor_derived_store_root,
+            manifest_key,
+            prefix=G0_PANEL_CACHE_OBJECT_PREFIX,
+            label="G0 target-slice manifest",
+        )
+        validated, retained_frame, retained_key, retained_payload = (
+            _validate_g0_cache_manifest(
+                existing,
+                predictor_derived_store_root=predictor_derived_store_root,
+                expected_target_session=target,
+                expected_latest_source_session=latest,
+                expected_source_set_sha256=source_set_sha256,
+                expected_parsed_shard_set_sha256=parsed_shard_set_sha256,
+            )
+        )
+        if retained_key != manifest_key:
+            raise V18Error("G0 target-slice retry resolved another identity")
+        if not retained_frame.equals(target_rows):
+            raise V18Error("G0 target-slice retry changes exact rows/dtypes")
+        if int(validated["parsed_row_count"]) != int(total_parsed_row_count):
+            raise V18Error("G0 target-slice retry changes parsed-row count")
+        return validated, retained_frame, retained_key, retained_payload
+    data_count, data_hash = _write_external_bytes_once(
+        payload,
+        store_root=predictor_derived_store_root,
+        object_key=data_key,
+        prefix=G0_PANEL_CACHE_OBJECT_PREFIX,
+        label="G0 target-slice data",
+    )
+    verified = _runtime_verified_timestamp(runtime_lock_verified_at)
+    created = _operation_timestamp(created_at, "G0 target-slice created_at")
+    sealed = _operation_timestamp(sealed_at, "G0 target-slice sealed_at")
+    feature_dates = pd.to_datetime(
+        target_rows["feature_source_max_date"], errors="coerce"
+    )
+    scoring_columns = (
+        "date",
+        "code",
+        "name",
+        "common_score_eligible",
+        "feature_source_max_date",
+        *G0_FEATURES,
+    )
+    value: dict[str, Any] = {
+        "schema_version": 1,
+        "cache_contract_id": PREDICTOR_CACHE_CONTRACT_ID,
+        "scope": "target_slice",
+        "target_session": str(target.date()),
+        "latest_required_source_session": str(latest.date()),
+        "source_set_sha256": _require_sha(source_set_sha256, "G0 source-set SHA"),
+        "parsed_shard_set_sha256": _require_sha(
+            parsed_shard_set_sha256, "G0 shard-set SHA"
+        ),
+        "parsed_row_count": int(total_parsed_row_count),
+        "columns": list(G0_PANEL_COLUMNS),
+        "columns_sha256": canonical_json_sha256(list(G0_PANEL_COLUMNS)),
+        "data_object_key": data_key,
+        "data_byte_count": data_count,
+        "data_sha256": data_hash,
+        "row_count": int(len(target_rows)),
+        "unique_date_count": 1,
+        "duplicate_date_code_count": 0,
+        "data_semantic_sha256": semantic_frame_sha256(
+            target_rows, G0_PANEL_COLUMNS
+        ),
+        "target_row_count": int(len(target_rows)),
+        "target_date_scoring_input_semantic_sha256": semantic_frame_sha256(
+            target_rows, scoring_columns
+        ),
+        "target_slice_semantic_sha256": semantic_frame_sha256(
+            target_rows, G0_PANEL_COLUMNS
+        ),
+        "target_outcome_nonnull_count": int(
+            target_rows["oc_return_pct"].notna().sum()
+        ),
+        "max_feature_source_date": (
+            None if feature_dates.isna().all() else str(feature_dates.max().date())
+        ),
+        "v17_protocol_sha256": V17_BINDINGS["protocol"][1],
+        "v17_runner_sha256": V17_BINDINGS["runner"][1],
+        "runtime_lock_sha256": RUNTIME_LOCK_SHA256,
+        "runtime_lock_verified_at": verified,
+        "protocol_sha256": PROTOCOL_SHA256,
+        "runner_sha256": sha256_file(__file__),
+        "parser_sha256": JPX_PARSER_SHA256,
+        "created_at": created,
+        "sealed_at": sealed,
+        "canonical_jsonl_contract": G0_CACHE_JSONL_CONTRACT,
+    }
+    value["cache_manifest_sha256"] = canonical_json_sha256(
+        value, exclude_fields={"cache_manifest_sha256"}
+    )
+    manifest_payload = _json_file_bytes(value)
+    _write_external_bytes_once(
+        manifest_payload,
+        store_root=predictor_derived_store_root,
+        object_key=manifest_key,
+        prefix=G0_PANEL_CACHE_OBJECT_PREFIX,
+        label="G0 target-slice manifest",
+        replace_unpublished_stage=True,
+    )
+    return _validate_g0_cache_manifest(
+        value,
+        predictor_derived_store_root=predictor_derived_store_root,
+        expected_target_session=target,
+        expected_latest_source_session=latest,
+        expected_source_set_sha256=source_set_sha256,
+        expected_parsed_shard_set_sha256=parsed_shard_set_sha256,
+    )
+
+
+def _direct_parse_predictor_raw_records(
+    raw_records: Sequence[Mapping[str, Any]],
+    *,
+    predictor_raw_store_root: str | Path,
+) -> tuple[pd.DataFrame, dict[str, Any]]:
+    with _external_snapshot_paths(
+        predictor_raw_store_root,
+        raw_records,
+        prefix=PREDICTOR_OBJECT_PREFIX,
+        label="predictor",
+    ) as (raw_paths, _):
+        try:
+            prices, report = _collect_jpx_registered(raw_paths)
+        except Exception as exc:
+            raise V18Error(f"predictor raw clean-room parse failed: {exc}") from exc
+    inputs = report.get("inputs")
+    if not isinstance(inputs, list) or len(inputs) != len(raw_records):
+        raise V18Error("predictor clean-room parser did not bind every raw object")
+    if any(int(item.get("rejected_rows", -1)) != 0 for item in inputs):
+        raise V18Error("predictor clean-room parser rejected a row")
+    canonical = _coerce_jsonl_frame(
+        prices, PARSED_PRICE_COLUMNS, label="predictor clean-room raw parse"
+    )
+    if canonical[["date", "code"]].duplicated().any():
+        raise V18Error("predictor clean-room parse produced duplicates")
+    return canonical, dict(report)
+
+
+def _terminal_reparse_predictor_shards_once(
+    raw_records: Sequence[Mapping[str, Any]],
+    bindings: Sequence[Mapping[str, Any]],
+    *,
+    predictor_raw_store_root: str | Path,
+    predictor_derived_store_root: str | Path,
+    identity_registry: dict[tuple[int, int], str] | None = None,
+) -> pd.DataFrame:
+    """Reparse each unique raw once and verify every standalone shard claim."""
+
+    if len(raw_records) != len(bindings) or not raw_records:
+        raise V18Error("terminal raw/shard union is empty or misaligned")
+    frames: list[pd.DataFrame] = []
+    for raw_record, binding in zip(raw_records, bindings, strict=True):
+        manifest, _ = _read_external_canonical_json(
+            predictor_derived_store_root,
+            binding["shard_manifest_object_key"],
+            prefix=PREDICTOR_SHARD_OBJECT_PREFIX,
+            label="terminal parsed-shard manifest",
+        )
+        validated, cached_frame, observed_binding = _validate_parsed_shard_manifest(
+            manifest,
+            raw_record=raw_record,
+            predictor_derived_store_root=predictor_derived_store_root,
+            decode_data=True,
+        )
+        if observed_binding != dict(binding) or cached_frame is None:
+            raise V18Error("terminal parsed-shard binding changed")
+        with _external_snapshot_paths(
+            predictor_raw_store_root,
+            [raw_record],
+            prefix=PREDICTOR_OBJECT_PREFIX,
+            label="terminal predictor shard",
+            identity_registry=identity_registry,
+        ) as (raw_paths, _):
+            try:
+                direct_prices, report = _collect_jpx_registered(raw_paths)
+            except Exception as exc:
+                raise V18Error(
+                    f"terminal standalone predictor parse failed: {exc}"
+                ) from exc
+            text_path = raw_paths[0].with_suffix(".txt")
+            if text_path.is_file() and not text_path.is_symlink():
+                text_payload = _plain_file_bytes(
+                    text_path, label="terminal locked pdftotext output"
+                )
+                text_count = len(text_payload)
+                text_hash = hashlib.sha256(text_payload).hexdigest()
+            else:
+                report_inputs = report.get("inputs")
+                if not isinstance(report_inputs, list) or len(report_inputs) != 1:
+                    raise V18Error("terminal standalone parser report is incomplete")
+                text_count = int(report_inputs[0].get("text_byte_count", -1))
+                text_hash = _require_sha(
+                    report_inputs[0].get("text_sha256"),
+                    "terminal standalone text SHA",
+                )
+        report_inputs = report.get("inputs")
+        if not isinstance(report_inputs, list) or len(report_inputs) != 1:
+            raise V18Error("terminal standalone parser report count changed")
+        parser_input = dict(report_inputs[0])
+        if int(parser_input.get("rejected_rows", -1)) != 0:
+            raise V18Error("terminal standalone parser rejected a row")
+        if str(parser_input.get("sha256", "")) != text_hash:
+            raise V18Error("terminal standalone text/report SHA changed")
+        parser_input["path"] = Path(str(raw_record["file"])).with_suffix(
+            ".txt"
+        ).name
+        report_projection = {**dict(report), "inputs": [parser_input]}
+        direct = _coerce_jsonl_frame(
+            direct_prices,
+            PARSED_PRICE_COLUMNS,
+            label="terminal standalone parsed shard",
+        )
+        direct_payload = canonical_frame_jsonl_bytes(
+            direct,
+            PARSED_PRICE_COLUMNS,
+            label="terminal standalone parsed shard",
+        )
+        exact = {
+            "row_count": int(len(direct)),
+            "rejected_row_count": 0,
+            "duplicate_date_code_count": int(
+                direct[["date", "code"]].duplicated(keep=False).sum()
+            ),
+            "pdftotext_text_byte_count": text_count,
+            "pdftotext_text_sha256": text_hash,
+            "parser_report_sha256": canonical_json_sha256(report_projection),
+            "data_byte_count": len(direct_payload),
+            "data_sha256": hashlib.sha256(direct_payload).hexdigest(),
+            "parsed_semantic_sha256": parsed_panel_semantic_sha256(direct),
+        }
+        for field, expected in exact.items():
+            if validated[field] != expected:
+                raise V18Error(f"terminal standalone shard changed: {field}")
+        if not direct.equals(cached_frame):
+            raise V18Error("terminal standalone raw differs exactly from shard")
+        frames.append(direct)
+    try:
+        merged = merge_daily_prices(frames)
+    except Exception as exc:
+        raise V18Error(f"terminal standalone shard merge failed: {exc}") from exc
+    return _coerce_jsonl_frame(
+        merged, PARSED_PRICE_COLUMNS, label="terminal predictor raw union"
+    )
+
+
+def _cache_anchor_identity(
+    *,
+    latest_source_session: pd.Timestamp,
+    raw_source_set_sha256: str,
+    ordered_shard_set_sha256: str,
+) -> tuple[str, str, str]:
+    identity = {
+        "cache_contract_id": PREDICTOR_CACHE_CONTRACT_ID,
+        "latest_source_session": str(latest_source_session.date()),
+        "raw_source_set_sha256": raw_source_set_sha256,
+        "ordered_shard_set_sha256": ordered_shard_set_sha256,
+        "columns_sha256": canonical_json_sha256(list(PARSED_PRICE_COLUMNS)),
+        "runtime_lock_sha256": RUNTIME_LOCK_SHA256,
+        "protocol_sha256": PROTOCOL_SHA256,
+        "runner_sha256": sha256_file(__file__),
+        "parser_sha256": JPX_PARSER_SHA256,
+        "canonical_jsonl_contract": PARSED_SHARD_JSONL_CONTRACT,
+    }
+    token = canonical_json_sha256(identity)
+    return (
+        token,
+        f"{CACHE_ANCHOR_OBJECT_PREFIX}{token}.jsonl",
+        f"{CACHE_ANCHOR_OBJECT_PREFIX}{token}.manifest.json",
+    )
+
+
+def validate_predictor_cache_anchor(
+    anchor: Mapping[str, Any],
+    *,
+    predictor_raw_store_root: str | Path,
+    predictor_derived_store_root: str | Path,
+    require_direct_clean_room_reparse: bool,
+) -> tuple[dict[str, Any], dict[str, Any], bytes]:
+    """Validate the immutable historical anchor; optionally recompute raw first."""
+
+    value = dict(anchor)
+    if set(value) != set(CACHE_ANCHOR_FIELDS):
+        raise V18Error("predictor cache anchor fields differ from A2 contract")
+    if value["schema_version"] != 1 or value["cache_contract_id"] != (
+        PREDICTOR_CACHE_CONTRACT_ID
+    ):
+        raise V18Error("predictor cache anchor schema/contract changed")
+    latest = _date(value["latest_source_session"], "cache anchor latest session")
+    raw_records = value["raw_sources"]
+    bindings = value["parsed_shards"]
+    if not isinstance(raw_records, list) or not isinstance(bindings, list):
+        raise V18Error("cache anchor raw/shard sets must be arrays")
+    expected_files, _ = _expected_predictor_files(latest)
+    if [str(item.get("file")) for item in raw_records] != expected_files:
+        raise V18Error("cache anchor does not cover exact cumulative registry")
+    if len(raw_records) != int(value["raw_source_count"]) or len(bindings) != int(
+        value["ordered_shard_count"]
+    ):
+        raise V18Error("cache anchor raw/shard counts differ")
+    raw_set_hash = canonical_json_sha256(raw_records)
+    shard_set_hash = _parsed_shard_set_sha256(bindings)
+    if (
+        value["raw_source_set_sha256"] != raw_set_hash
+        or value["ordered_shard_set_sha256"] != shard_set_hash
+    ):
+        raise V18Error("cache anchor ordered set hash changed")
+    _, expected_data_key, expected_manifest_key = _cache_anchor_identity(
+        latest_source_session=latest,
+        raw_source_set_sha256=raw_set_hash,
+        ordered_shard_set_sha256=shard_set_hash,
+    )
+    fixed = {
+        "cumulative_snapshot_object_key": expected_data_key,
+        "snapshot_manifest_object_key": expected_manifest_key,
+        "columns": list(PARSED_PRICE_COLUMNS),
+        "columns_sha256": canonical_json_sha256(list(PARSED_PRICE_COLUMNS)),
+        "runtime_lock_sha256": RUNTIME_LOCK_SHA256,
+        "protocol_sha256": PROTOCOL_SHA256,
+        "runner_sha256": sha256_file(__file__),
+        "parser_sha256": JPX_PARSER_SHA256,
+        "canonical_jsonl_contract": PARSED_SHARD_JSONL_CONTRACT,
+    }
+    for field, expected in fixed.items():
+        if value[field] != expected:
+            raise V18Error(f"cache anchor binding changed: {field}")
+    for field in (
+        "raw_source_set_sha256",
+        "ordered_shard_set_sha256",
+        "cumulative_snapshot_file_sha256",
+        "cumulative_snapshot_semantic_sha256",
+        "model_price_snapshot_file_sha256",
+        "model_price_snapshot_semantic_sha256",
+        "model_price_snapshot_manifest_file_sha256",
+        "model_price_snapshot_manifest_sha256",
+        "snapshot_manifest_sha256",
+        "direct_clean_room_verification_receipt_sha256",
+        "anchor_manifest_sha256",
+    ):
+        _require_sha(value[field], f"cache anchor {field}")
+    equivalence_receipt = validate_compact_consumer_equivalence_receipt(
+        value["compact_consumer_equivalence_receipt"]
+    )
+    if value["snapshot_manifest_sha256"] != value["anchor_manifest_sha256"]:
+        raise V18Error("cache anchor nested/self manifest hashes differ")
+    expected_self = canonical_json_sha256(
+        value, exclude_fields={"anchor_manifest_sha256", "snapshot_manifest_sha256"}
+    )
+    if value["anchor_manifest_sha256"] != expected_self:
+        raise V18Error("cache anchor self-hash mismatch")
+    verified = _timestamp(
+        value["runtime_lock_verified_at"], "cache anchor runtime verified"
+    )
+    direct_started = _timestamp(
+        value["direct_reparse_started_at"], "cache anchor direct reparse started"
+    )
+    direct_completed = _timestamp(
+        value["direct_reparse_completed_at"], "cache anchor direct reparse completed"
+    )
+    created = _timestamp(value["created_at"], "cache anchor created_at")
+    sealed = _timestamp(value["sealed_at"], "cache anchor sealed_at")
+    observed_verified = _timestamp(value["verified_at"], "cache anchor verified_at")
+    if not (
+        verified <= direct_started <= direct_completed <= created <= sealed
+        and observed_verified == direct_completed
+    ):
+        raise V18Error("cache anchor timestamp DAG is invalid")
+    shard_prices: pd.DataFrame | None
+    if require_direct_clean_room_reparse:
+        shard_prices = _load_bound_predictor_shards(
+            raw_records,
+            bindings,
+            predictor_raw_store_root=predictor_raw_store_root,
+            predictor_derived_store_root=predictor_derived_store_root,
+        )
+    else:
+        _validate_bound_predictor_shard_metadata(
+            raw_records,
+            bindings,
+            predictor_raw_store_root=predictor_raw_store_root,
+            predictor_derived_store_root=predictor_derived_store_root,
+        )
+        shard_prices = None
+    anchor_shard_sealed_at: list[datetime] = []
+    for raw_record, binding in zip(raw_records, bindings, strict=True):
+        shard_manifest, _ = _read_external_canonical_json(
+            predictor_derived_store_root,
+            str(binding["shard_manifest_object_key"]),
+            prefix=PREDICTOR_SHARD_OBJECT_PREFIX,
+            label="anchor parsed shard manifest",
+        )
+        if shard_manifest["chronology_class"] != "anchor" or shard_manifest[
+            "raw_received_at"
+        ] is not None:
+            raise V18Error("cache anchor contains a forward-chronology shard")
+        shard_sealed = _timestamp(
+            shard_manifest["sealed_at"], "anchor shard sealed_at"
+        )
+        anchor_shard_sealed_at.append(shard_sealed)
+        if shard_sealed > direct_started:
+            raise V18Error("cache anchor direct verification predates shard seal")
+    snapshot_metadata = _external_object_metadata(
+        predictor_derived_store_root,
+        expected_data_key,
+        prefix=CACHE_ANCHOR_OBJECT_PREFIX,
+        label="predictor cache anchor snapshot",
+        required_signature=None,
+    )
+    if snapshot_metadata != (
+        int(value["cumulative_snapshot_byte_count"]),
+        str(value["cumulative_snapshot_file_sha256"]),
+    ):
+        raise V18Error("cache anchor cumulative snapshot bytes changed")
+    snapshot: pd.DataFrame | None = None
+    if require_direct_clean_room_reparse:
+        snapshot_payload = _external_object_bytes(
+            predictor_derived_store_root,
+            expected_data_key,
+            prefix=CACHE_ANCHOR_OBJECT_PREFIX,
+            label="predictor cache anchor snapshot",
+        )
+        snapshot = decode_canonical_frame_jsonl(
+            snapshot_payload, PARSED_PRICE_COLUMNS, label="cache anchor snapshot"
+        )
+        if shard_prices is None or not snapshot.equals(shard_prices):
+            raise V18Error("cache anchor snapshot differs exactly from parsed shards")
+        if value["cumulative_snapshot_semantic_sha256"] != (
+            parsed_panel_semantic_sha256(snapshot)
+        ):
+            raise V18Error("cache anchor snapshot semantic hash changed")
+    model_month = _month(
+        value["model_price_snapshot_target_month"],
+        "cache anchor model-price target month",
+    )
+    model_latest = _latest_registered_source_before_month(model_month)
+    model_files, _ = _expected_predictor_files(model_latest)
+    model_prefix_count = len(model_files)
+    if [item["file"] for item in raw_records[:model_prefix_count]] != model_files:
+        raise V18Error("cache anchor compact snapshot raw prefix changed")
+    model_manifest, model_manifest_payload = _read_external_canonical_json(
+        predictor_derived_store_root,
+        value["model_price_snapshot_manifest_object_key"],
+        prefix=MODEL_PRICE_SNAPSHOT_OBJECT_PREFIX,
+        label="cache anchor model-price snapshot manifest",
+    )
+    model_snapshot, model_prices, model_manifest_key, _ = (
+        _validate_model_price_snapshot_manifest(
+            model_manifest,
+            predictor_derived_store_root=predictor_derived_store_root,
+            expected_target_month=model_month,
+            expected_latest_source_session=model_latest,
+            expected_raw_source_set_sha256=canonical_json_sha256(
+                raw_records[:model_prefix_count]
+            ),
+            expected_parsed_shard_set_sha256=_parsed_shard_set_sha256(
+                bindings[:model_prefix_count]
+            ),
+            decode_data=require_direct_clean_room_reparse,
+        )
+    )
+    model_snapshot_created = _timestamp(
+        model_snapshot["created_at"], "anchor compact snapshot created_at"
+    )
+    model_snapshot_sealed = _timestamp(
+        model_snapshot["sealed_at"], "anchor compact snapshot sealed_at"
+    )
+    if (
+        max(anchor_shard_sealed_at[:model_prefix_count]) > model_snapshot_created
+        or model_snapshot_created > model_snapshot_sealed
+        or model_snapshot_sealed > created
+    ):
+        raise V18Error("cache anchor compact snapshot timestamp DAG is invalid")
+    exact_model_bindings = {
+        "model_price_snapshot_object_key": model_snapshot["data_object_key"],
+        "model_price_snapshot_byte_count": int(model_snapshot["data_byte_count"]),
+        "model_price_snapshot_file_sha256": model_snapshot["data_sha256"],
+        "model_price_snapshot_semantic_sha256": model_snapshot[
+            "model_price_semantic_sha256"
+        ],
+        "model_price_snapshot_manifest_object_key": model_manifest_key,
+        "model_price_snapshot_manifest_byte_count": len(model_manifest_payload),
+        "model_price_snapshot_manifest_file_sha256": hashlib.sha256(
+            model_manifest_payload
+        ).hexdigest(),
+        "model_price_snapshot_manifest_sha256": model_snapshot[
+            "snapshot_manifest_sha256"
+        ],
+    }
+    for field, expected in exact_model_bindings.items():
+        if value[field] != expected:
+            raise V18Error(f"cache anchor compact snapshot changed: {field}")
+    if require_direct_clean_room_reparse:
+        if snapshot is None:
+            raise V18Error("cache anchor direct validation lacks its snapshot")
+        direct_model_prices = _coerce_model_price_frame(
+            snapshot.loc[pd.to_datetime(snapshot["date"]).le(model_latest)],
+            label="cache anchor direct compact model-price projection",
+        )
+        if not direct_model_prices.equals(model_prices):
+            raise V18Error(
+                "cache anchor compact snapshot differs from exact raw projection"
+            )
+    receipt = {
+        "cache_contract_id": PREDICTOR_CACHE_CONTRACT_ID,
+        "raw_source_set_sha256": raw_set_hash,
+        "ordered_shard_set_sha256": shard_set_hash,
+        "direct_reparse_started_at": value["direct_reparse_started_at"],
+        "direct_reparse_completed_at": value["direct_reparse_completed_at"],
+        "direct_parsed_semantic_sha256": value[
+            "cumulative_snapshot_semantic_sha256"
+        ],
+        "snapshot_semantic_sha256": value["cumulative_snapshot_semantic_sha256"],
+        "model_price_snapshot_semantic_sha256": value[
+            "model_price_snapshot_semantic_sha256"
+        ],
+        "exact_frame_and_dtype_equal": True,
+        "runtime_lock_sha256": RUNTIME_LOCK_SHA256,
+    }
+    if canonical_json_sha256(receipt) != value[
+        "direct_clean_room_verification_receipt_sha256"
+    ]:
+        raise V18Error("cache anchor clean-room receipt hash changed")
+    if require_direct_clean_room_reparse:
+        fresh, _ = _direct_parse_predictor_raw_records(
+            raw_records, predictor_raw_store_root=predictor_raw_store_root
+        )
+        if snapshot is None or not fresh.equals(snapshot):
+            raise V18Error(
+                "activation clean-room raw parse differs exactly from cache anchor"
+            )
+        if parsed_panel_semantic_sha256(fresh) != value[
+            "cumulative_snapshot_semantic_sha256"
+        ]:
+            raise V18Error("activation clean-room raw semantic differs from anchor")
+        fresh_model_prices = _coerce_model_price_frame(
+            fresh.loc[pd.to_datetime(fresh["date"]).le(model_latest)],
+            label="activation clean-room compact model-price projection",
+        )
+        if not fresh_model_prices.equals(model_prices):
+            raise V18Error(
+                "activation clean-room raw differs from compact model-price snapshot"
+            )
+        fresh_equivalence = build_compact_consumer_equivalence_receipt(
+            fresh,
+            _coerce_model_price_frame(
+                fresh, label="activation compact-consumer full prefix"
+            ),
+            synthetic_target_session=equivalence_receipt[
+                "synthetic_target_session"
+            ],
+        )
+        if fresh_equivalence != equivalence_receipt:
+            raise V18Error(
+                "activation compact-consumer proof differs from anchor receipt"
+            )
+    manifest_payload = _json_file_bytes(value)
+    summary = {
+        "latest_source_session": value["latest_source_session"],
+        "raw_source_set_sha256": raw_set_hash,
+        "raw_source_count": len(raw_records),
+        "ordered_shard_set_sha256": shard_set_hash,
+        "ordered_shard_count": len(bindings),
+        "cumulative_snapshot_object_key": expected_data_key,
+        "cumulative_snapshot_byte_count": int(value["cumulative_snapshot_byte_count"]),
+        "cumulative_snapshot_file_sha256": value[
+            "cumulative_snapshot_file_sha256"
+        ],
+        "cumulative_snapshot_semantic_sha256": value[
+            "cumulative_snapshot_semantic_sha256"
+        ],
+        "model_price_snapshot_target_month": value[
+            "model_price_snapshot_target_month"
+        ],
+        **exact_model_bindings,
+        "snapshot_manifest_object_key": expected_manifest_key,
+        "snapshot_manifest_file_sha256": hashlib.sha256(
+            manifest_payload
+        ).hexdigest(),
+        "snapshot_manifest_sha256": value["snapshot_manifest_sha256"],
+        "direct_clean_room_verification_receipt_sha256": value[
+            "direct_clean_room_verification_receipt_sha256"
+        ],
+        "compact_consumer_equivalence_receipt_sha256": equivalence_receipt[
+            "receipt_sha256"
+        ],
+        "sealed_at": value["sealed_at"],
+        "verified_at": value["verified_at"],
+    }
+    return value, summary, manifest_payload
+
+
+def build_predictor_cache_anchor(
+    source_pdfs: Sequence[str | Path],
+    source_file_names: Sequence[str],
+    source_urls: Sequence[str],
+    *,
+    through_session: Any,
+    predictor_raw_store_root: str | Path,
+    predictor_derived_store_root: str | Path,
+    runtime_lock_verified_at: Any | None = None,
+    output_object_key: str | None = None,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Build and twice-check the historical cache anchor before payload B."""
+
+    latest = _date(through_session, "cache anchor through session")
+    expected_files, kinds = _expected_predictor_files(latest)
+    names = [str(item) for item in source_file_names]
+    if (
+        names != expected_files
+        or len(source_pdfs) != len(names)
+        or len(source_urls) != len(names)
+    ):
+        raise V18Error("cache anchor inputs differ from exact cumulative registry")
+    _validate_external_store_disjointness(
+        predictor_raw_store_root, predictor_derived_store_root
+    )
+    verified = _runtime_verified_timestamp(runtime_lock_verified_at)
+    historical_metadata = _historical_predictor_metadata()
+    raw_records: list[dict[str, Any]] = []
+    for index, (source_pdf, name, source_url) in enumerate(
+        zip(source_pdfs, names, source_urls, strict=True)
+    ):
+        if kinds[name] == "daily":
+            official = _official_jpx_daily_url(
+                source_url,
+                f"cache anchor source_urls[{index}]",
+                file_name=name,
+                source_session=_source_file_date(name, "daily"),
+            )
+        else:
+            official = _official_jpx_url(
+                source_url, f"cache anchor source_urls[{index}]"
+            )
+        count, digest = _source_file_metadata(source_pdf, label="cache anchor predictor")
+        bound = historical_metadata.get(name)
+        if bound is not None:
+            if digest != str(bound["sha256"]) or (
+                "bytes" in bound and count != int(bound["bytes"])
+            ):
+                raise V18Error(f"cache anchor historical raw changed: {name}")
+            if bound.get("source_url") is not None and official != str(
+                bound["source_url"]
+            ):
+                raise V18Error(f"cache anchor historical URL changed: {name}")
+        key = _predictor_object_key(name, kinds[name])
+        retained_count, retained_hash = _seal_predictor_object(
+            source_pdf,
+            predictor_raw_store_root=predictor_raw_store_root,
+            object_key=key,
+        )
+        raw_records.append(
+            {
+                "object_key": key,
+                "file": name,
+                "url": official,
+                "byte_count": retained_count,
+                "sha256": retained_hash,
+            }
+        )
+    bindings: list[dict[str, Any]] = []
+    for raw_record in raw_records:
+        shard, _, binding = ensure_predictor_parsed_shard(
+            raw_record,
+            predictor_raw_store_root=predictor_raw_store_root,
+            predictor_derived_store_root=predictor_derived_store_root,
+            chronology_class="anchor",
+            raw_received_at=None,
+            runtime_lock_verified_at=verified,
+        )
+        if shard["chronology_class"] != "anchor":  # pragma: no cover
+            raise V18Error("cache anchor unexpectedly reused a forward shard")
+        bindings.append(binding)
+    shard_prices = _load_bound_predictor_shards(
+        raw_records,
+        bindings,
+        predictor_raw_store_root=predictor_raw_store_root,
+        predictor_derived_store_root=predictor_derived_store_root,
+    )
+    raw_set_hash = canonical_json_sha256(raw_records)
+    shard_set_hash = _parsed_shard_set_sha256(bindings)
+    _, snapshot_key, manifest_key = _cache_anchor_identity(
+        latest_source_session=latest,
+        raw_source_set_sha256=raw_set_hash,
+        ordered_shard_set_sha256=shard_set_hash,
+    )
+    if output_object_key is not None and str(output_object_key) != manifest_key:
+        raise V18Error("cache anchor output key is caller-selected")
+    snapshot_payload = canonical_frame_jsonl_bytes(
+        shard_prices, PARSED_PRICE_COLUMNS, label="cache anchor snapshot"
+    )
+    snapshot_count, snapshot_hash = _write_external_bytes_once(
+        snapshot_payload,
+        store_root=predictor_derived_store_root,
+        object_key=snapshot_key,
+        prefix=CACHE_ANCHOR_OBJECT_PREFIX,
+        label="predictor cache anchor snapshot",
+    )
+    direct_started = datetime.now(TOKYO)
+    direct_prices, _ = _direct_parse_predictor_raw_records(
+        raw_records, predictor_raw_store_root=predictor_raw_store_root
+    )
+    direct_completed = datetime.now(TOKYO)
+    if not direct_prices.equals(shard_prices):
+        raise V18Error("cache anchor direct raw parse differs from parsed shards")
+    semantic_hash = parsed_panel_semantic_sha256(direct_prices)
+    calendar = load_registered_calendar()
+    future_sessions = calendar[calendar > latest]
+    if len(future_sessions) == 0:
+        raise V18Error("cache anchor has no registered target month after its prefix")
+    synthetic_target = pd.Timestamp(future_sessions[0])
+    initial_target_month = synthetic_target.to_period("M")
+    equivalence_receipt = build_compact_consumer_equivalence_receipt(
+        direct_prices,
+        _coerce_model_price_frame(
+            direct_prices, label="cache anchor compact-consumer full prefix"
+        ),
+        synthetic_target_session=synthetic_target,
+    )
+    model_latest = _latest_registered_source_before_month(initial_target_month)
+    model_prefix_files, _ = _expected_predictor_files(model_latest)
+    model_prefix_count = len(model_prefix_files)
+    if names[:model_prefix_count] != model_prefix_files:
+        raise V18Error("cache anchor model-price prefix is not an exact raw prefix")
+    model_prices = _coerce_model_price_frame(
+        direct_prices.loc[
+            pd.to_datetime(direct_prices["date"]).le(model_latest)
+        ],
+        label="cache anchor model-price prefix",
+    )
+    (
+        model_snapshot,
+        validated_model_prices,
+        model_snapshot_manifest_key,
+        model_snapshot_manifest_payload,
+    ) = materialize_model_price_snapshot(
+        model_prices,
+        predictor_derived_store_root=predictor_derived_store_root,
+        target_month=initial_target_month,
+        latest_source_session=model_latest,
+        raw_records=raw_records[:model_prefix_count],
+        shard_bindings=bindings[:model_prefix_count],
+        previous_snapshot_manifest_sha256=None,
+        runtime_lock_verified_at=verified,
+    )
+    if not validated_model_prices.equals(model_prices):
+        raise V18Error("cache anchor compact model-price snapshot changed rows/dtypes")
+    receipt = {
+        "cache_contract_id": PREDICTOR_CACHE_CONTRACT_ID,
+        "raw_source_set_sha256": raw_set_hash,
+        "ordered_shard_set_sha256": shard_set_hash,
+        "direct_reparse_started_at": direct_started,
+        "direct_reparse_completed_at": direct_completed,
+        "direct_parsed_semantic_sha256": semantic_hash,
+        "snapshot_semantic_sha256": semantic_hash,
+        "model_price_snapshot_semantic_sha256": model_snapshot[
+            "model_price_semantic_sha256"
+        ],
+        "exact_frame_and_dtype_equal": True,
+        "runtime_lock_sha256": RUNTIME_LOCK_SHA256,
+    }
+    created = datetime.now(TOKYO)
+    sealed = datetime.now(TOKYO)
+    value: dict[str, Any] = {
+        "schema_version": 1,
+        "cache_contract_id": PREDICTOR_CACHE_CONTRACT_ID,
+        "latest_source_session": str(latest.date()),
+        "raw_source_set_sha256": raw_set_hash,
+        "raw_source_count": len(raw_records),
+        "raw_sources": raw_records,
+        "ordered_shard_set_sha256": shard_set_hash,
+        "ordered_shard_count": len(bindings),
+        "parsed_shards": bindings,
+        "columns": list(PARSED_PRICE_COLUMNS),
+        "columns_sha256": canonical_json_sha256(list(PARSED_PRICE_COLUMNS)),
+        "cumulative_snapshot_object_key": snapshot_key,
+        "cumulative_snapshot_byte_count": snapshot_count,
+        "cumulative_snapshot_file_sha256": snapshot_hash,
+        "cumulative_snapshot_semantic_sha256": semantic_hash,
+        "model_price_snapshot_target_month": str(initial_target_month),
+        "model_price_snapshot_object_key": model_snapshot["data_object_key"],
+        "model_price_snapshot_byte_count": model_snapshot["data_byte_count"],
+        "model_price_snapshot_file_sha256": model_snapshot["data_sha256"],
+        "model_price_snapshot_semantic_sha256": model_snapshot[
+            "model_price_semantic_sha256"
+        ],
+        "model_price_snapshot_manifest_object_key": model_snapshot_manifest_key,
+        "model_price_snapshot_manifest_byte_count": len(
+            model_snapshot_manifest_payload
+        ),
+        "model_price_snapshot_manifest_file_sha256": hashlib.sha256(
+            model_snapshot_manifest_payload
+        ).hexdigest(),
+        "model_price_snapshot_manifest_sha256": model_snapshot[
+            "snapshot_manifest_sha256"
+        ],
+        "snapshot_manifest_object_key": manifest_key,
+        "snapshot_manifest_sha256": ZERO_SHA256,
+        "direct_reparse_started_at": direct_started,
+        "direct_reparse_completed_at": direct_completed,
+        "direct_clean_room_verification_receipt_sha256": canonical_json_sha256(receipt),
+        "compact_consumer_equivalence_receipt": equivalence_receipt,
+        "runtime_lock_sha256": RUNTIME_LOCK_SHA256,
+        "runtime_lock_verified_at": verified,
+        "created_at": created,
+        "sealed_at": sealed,
+        "protocol_sha256": PROTOCOL_SHA256,
+        "runner_sha256": sha256_file(__file__),
+        "parser_sha256": JPX_PARSER_SHA256,
+        "canonical_jsonl_contract": PARSED_SHARD_JSONL_CONTRACT,
+        "verified_at": direct_completed,
+    }
+    self_hash = canonical_json_sha256(
+        value,
+        exclude_fields={"anchor_manifest_sha256", "snapshot_manifest_sha256"},
+    )
+    value["snapshot_manifest_sha256"] = self_hash
+    value["anchor_manifest_sha256"] = self_hash
+    manifest_payload = _json_file_bytes(value)
+    _write_external_bytes_once(
+        manifest_payload,
+        store_root=predictor_derived_store_root,
+        object_key=manifest_key,
+        prefix=CACHE_ANCHOR_OBJECT_PREFIX,
+        label="predictor cache anchor manifest",
+        replace_unpublished_stage=True,
+    )
+    persisted, persisted_payload = _read_external_canonical_json(
+        predictor_derived_store_root,
+        manifest_key,
+        prefix=CACHE_ANCHOR_OBJECT_PREFIX,
+        label="predictor cache anchor manifest",
+    )
+    if persisted_payload != manifest_payload:
+        raise V18Error("persisted cache anchor manifest bytes changed")
+    validated, summary, _ = validate_predictor_cache_anchor(
+        persisted,
+        predictor_raw_store_root=predictor_raw_store_root,
+        predictor_derived_store_root=predictor_derived_store_root,
+        require_direct_clean_room_reparse=True,
+    )
+    return validated, summary
 
 
 def semantic_frame_sha256(frame: pd.DataFrame, columns: Sequence[str]) -> str:
@@ -3677,6 +8968,281 @@ def build_forward_c00_panel(
     return panel
 
 
+def _date_code_identity_sha256(frame: pd.DataFrame, *, label: str) -> str:
+    view = frame.loc[:, ["date", "code"]].copy()
+    view["date"] = pd.to_datetime(view["date"], errors="coerce", format="mixed")
+    view["code"] = view["code"].astype("string")
+    if (
+        view["date"].isna().any()
+        or view["code"].isna().any()
+        or view["code"].eq("").any()
+        or view.duplicated().any()
+    ):
+        raise V18Error(f"{label} date/code identity is invalid")
+    view = view.sort_values(["date", "code"], kind="stable").reset_index(drop=True)
+    digest = hashlib.sha256()
+    dates = view["date"].astype("datetime64[ns]").astype("<i8").to_numpy()
+    for date_bits, code in zip(dates, view["code"].astype(str), strict=True):
+        encoded = code.encode("utf-8", errors="strict")
+        digest.update(struct.pack("<qI", int(date_bits), len(encoded)))
+        digest.update(encoded)
+    return digest.hexdigest()
+
+
+def _exact_g0_frame_digest(frame: pd.DataFrame) -> dict[str, Any]:
+    """Digest an exact stable G0 frame without materializing JSON row objects."""
+
+    value = frame.loc[:, list(G0_PANEL_COLUMNS)].copy()
+    value["date"] = pd.to_datetime(value["date"], errors="coerce", format="mixed")
+    value["code"] = value["code"].astype("string")
+    if (
+        value["date"].isna().any()
+        or value["code"].isna().any()
+        or value["code"].eq("").any()
+        or value[["date", "code"]].duplicated().any()
+    ):
+        raise V18Error("compact-consumer G0 frame identity is invalid")
+    value = value.sort_values(["date", "code"], kind="stable").reset_index(
+        drop=True
+    )
+    identity_hash = _date_code_identity_sha256(value, label="exact G0 digest")
+    column_digests: list[dict[str, Any]] = []
+    for column in G0_PANEL_COLUMNS:
+        series = value[column]
+        nulls = series.isna().to_numpy(dtype=np.uint8)
+        null_sha = hashlib.sha256(nulls.tobytes(order="C")).hexdigest()
+        dtype_token = str(series.dtype)
+        metadata: dict[str, Any] | None = None
+        payload_hash = hashlib.sha256()
+        if isinstance(series.dtype, pd.CategoricalDtype):
+            metadata = {
+                "ordered": bool(series.dtype.ordered),
+                "categories": [
+                    _semantic_cell(item, column=column)
+                    for item in series.dtype.categories.tolist()
+                ],
+            }
+            codes_array = series.cat.codes.to_numpy(dtype="<i8", copy=True)
+            payload_hash.update(codes_array.tobytes(order="C"))
+        elif pd.api.types.is_datetime64_any_dtype(series.dtype):
+            array = pd.to_datetime(series).astype("datetime64[ns]").astype("<i8")
+            payload_hash.update(array.to_numpy().tobytes(order="C"))
+        elif pd.api.types.is_bool_dtype(series.dtype):
+            array = np.zeros(len(series), dtype=np.uint8)
+            present = nulls == 0
+            array[present] = series.loc[present].astype(bool).to_numpy(
+                dtype=np.uint8
+            )
+            payload_hash.update(array.tobytes(order="C"))
+        elif pd.api.types.is_float_dtype(series.dtype):
+            array = series.to_numpy(dtype="<f8", na_value=np.nan, copy=True)
+            # Null payload bits are not semantic; their exact positions are
+            # already committed above.  Every present float retains its
+            # little-endian IEEE bytes, including negative zero.
+            array[nulls.astype(bool)] = 0.0
+            payload_hash.update(array.tobytes(order="C"))
+        elif pd.api.types.is_integer_dtype(series.dtype):
+            array = np.zeros(len(series), dtype="<i8")
+            present = nulls == 0
+            array[present] = series.loc[present].astype("int64").to_numpy()
+            payload_hash.update(array.tobytes(order="C"))
+        else:
+            for item, is_null in zip(series.tolist(), nulls, strict=True):
+                if is_null:
+                    payload_hash.update(b"N")
+                    continue
+                encoded = canonical_json_bytes(
+                    {"v": _semantic_cell(item, column=column)}
+                )
+                payload_hash.update(b"V" + struct.pack("<I", len(encoded)))
+                payload_hash.update(encoded)
+        column_digests.append(
+            {
+                "column": column,
+                "dtype": dtype_token,
+                "null_bitmap_sha256": null_sha,
+                "value_bytes_sha256": payload_hash.hexdigest(),
+                "dtype_metadata": metadata,
+            }
+        )
+    digest: dict[str, Any] = {
+        "columns": list(G0_PANEL_COLUMNS),
+        "row_count": int(len(value)),
+        "row_identity_sha256": identity_hash,
+        "column_digests": column_digests,
+    }
+    digest["exact_digest_sha256"] = canonical_json_sha256(
+        digest, exclude_fields={"exact_digest_sha256"}
+    )
+    return digest
+
+
+def validate_compact_consumer_equivalence_receipt(
+    receipt: Mapping[str, Any],
+) -> dict[str, Any]:
+    value = dict(receipt)
+    if set(value) != set(COMPACT_CONSUMER_EQUIVALENCE_RECEIPT_FIELDS):
+        raise V18Error("compact-consumer equivalence receipt fields changed")
+    fixed = {
+        "schema_version": 1,
+        "consumer_projection_columns": list(MODEL_PRICE_COLUMNS),
+        "consumer_projection_columns_sha256": canonical_json_sha256(
+            list(MODEL_PRICE_COLUMNS)
+        ),
+        "consumer_union_contract_sha256": canonical_json_sha256(
+            {
+                key: sorted(columns)
+                for key, columns in sorted(MODEL_PRICE_REQUIRED_BY_CONSUMERS.items())
+            }
+        ),
+        "exact_columns_order_dtypes_nulls_ieee_strings_bools_equal": True,
+        "canonical_json_contract": CANONICAL_JSON_CONTRACT,
+    }
+    for field, expected in fixed.items():
+        if value[field] != expected:
+            raise V18Error(f"compact-consumer receipt changed: {field}")
+    for field in (
+        "raw_date_code_identity_sha256",
+        "historical_session_registry_sha256",
+        "synthetic_target_exact_digest_sha256",
+    ):
+        _require_sha(value[field], f"compact-consumer {field}")
+    full_digest = value["full_g0_exact_digest"]
+    compact_digest = value["compact_g0_exact_digest"]
+    if not isinstance(full_digest, Mapping) or dict(full_digest) != dict(
+        compact_digest
+    ):
+        raise V18Error("full/compact G0 exact digests differ")
+    if full_digest.get("columns") != list(G0_PANEL_COLUMNS) or int(
+        full_digest.get("row_count", -1)
+    ) <= 0:
+        raise V18Error("compact-consumer G0 digest shape changed")
+    if full_digest.get("exact_digest_sha256") != canonical_json_sha256(
+        full_digest, exclude_fields={"exact_digest_sha256"}
+    ):
+        raise V18Error("compact-consumer G0 digest self-hash changed")
+    target = _date(
+        value["synthetic_target_session"], "compact-consumer synthetic target"
+    )
+    latest = _date(
+        value["latest_feature_source_session"],
+        "compact-consumer latest feature source",
+    )
+    if latest >= target or int(value["synthetic_target_row_count"]) <= 0:
+        raise V18Error("compact-consumer synthetic target chronology changed")
+    if int(value["synthetic_target_outcome_nonnull_count"]) != 0:
+        raise V18Error("compact-consumer synthetic target contains an outcome")
+    max_feature = _date(
+        value["synthetic_target_max_feature_source_date"],
+        "compact-consumer synthetic feature max",
+    )
+    if max_feature > latest:
+        raise V18Error("compact-consumer feature source exceeds D-1")
+    if value["receipt_sha256"] != canonical_json_sha256(
+        value, exclude_fields={"receipt_sha256"}
+    ):
+        raise V18Error("compact-consumer equivalence receipt self-hash changed")
+    return value
+
+
+def build_compact_consumer_equivalence_receipt(
+    full_prices: pd.DataFrame,
+    compact_prices: pd.DataFrame,
+    *,
+    synthetic_target_session: Any,
+) -> dict[str, Any]:
+    """Prove the registered 12-column projection preserves every G0 consumer."""
+
+    target = _date(
+        synthetic_target_session, "compact-consumer synthetic target session"
+    )
+    full_input = _coerce_jsonl_frame(
+        full_prices, PARSED_PRICE_COLUMNS, label="compact-consumer full31 input"
+    )
+    compact_input = _coerce_model_price_frame(
+        compact_prices, label="compact-consumer compact12 input"
+    )
+    if not _coerce_model_price_frame(
+        full_input, label="compact-consumer full31 projection"
+    ).equals(compact_input):
+        raise V18Error("compact-consumer input is not exact full31 projection")
+    latest = pd.to_datetime(full_input["date"]).max().normalize()
+    if latest >= target:
+        raise V18Error("compact-consumer synthetic target is not after its prefix")
+    full_panel = build_forward_c00_panel(full_input, target)
+    full_digest = _exact_g0_frame_digest(full_panel)
+    target_rows = full_panel.loc[pd.to_datetime(full_panel["date"]).eq(target)]
+    target_digest = _exact_g0_frame_digest(target_rows)["exact_digest_sha256"]
+    target_count = int(len(target_rows))
+    target_outcomes = int(target_rows["oc_return_pct"].notna().sum())
+    feature_dates = pd.to_datetime(
+        target_rows["feature_source_max_date"], errors="coerce"
+    )
+    if feature_dates.isna().any():
+        raise V18Error("compact-consumer target has a null feature source date")
+    feature_max = feature_dates.max().normalize()
+    del full_panel, target_rows
+    gc.collect()
+    compact_panel = build_forward_c00_panel(compact_input, target)
+    compact_digest = _exact_g0_frame_digest(compact_panel)
+    del compact_panel
+    gc.collect()
+    if full_digest != compact_digest:
+        raise V18Error("full31 and compact12 G0 consumers are not bit-exact")
+    calendar = load_registered_calendar()
+    registry = [str(pd.Timestamp(item).date()) for item in calendar if item <= target]
+    receipt: dict[str, Any] = {
+        "schema_version": 1,
+        "consumer_projection_columns": list(MODEL_PRICE_COLUMNS),
+        "consumer_projection_columns_sha256": canonical_json_sha256(
+            list(MODEL_PRICE_COLUMNS)
+        ),
+        "consumer_union_contract_sha256": canonical_json_sha256(
+            {
+                key: sorted(columns)
+                for key, columns in sorted(MODEL_PRICE_REQUIRED_BY_CONSUMERS.items())
+            }
+        ),
+        "raw_date_code_identity_sha256": _date_code_identity_sha256(
+            full_input, label="compact-consumer raw input"
+        ),
+        "historical_session_registry_sha256": canonical_json_sha256(registry),
+        "synthetic_target_session": str(target.date()),
+        "latest_feature_source_session": str(latest.date()),
+        "full_g0_exact_digest": full_digest,
+        "compact_g0_exact_digest": compact_digest,
+        "synthetic_target_exact_digest_sha256": target_digest,
+        "synthetic_target_row_count": target_count,
+        "synthetic_target_outcome_nonnull_count": target_outcomes,
+        "synthetic_target_max_feature_source_date": str(feature_max.date()),
+        "exact_columns_order_dtypes_nulls_ieee_strings_bools_equal": True,
+        "canonical_json_contract": CANONICAL_JSON_CONTRACT,
+    }
+    receipt["receipt_sha256"] = canonical_json_sha256(
+        receipt, exclude_fields={"receipt_sha256"}
+    )
+    return validate_compact_consumer_equivalence_receipt(receipt)
+
+
+def build_forward_c00_target_slice(
+    parsed_prices: pd.DataFrame,
+    session_date: Any,
+) -> pd.DataFrame:
+    """Build the target slice from the exact cumulative compact/full prefix."""
+
+    target = _date(session_date, "target-slice session")
+    full_prefix = _coerce_model_price_frame(
+        parsed_prices, label="target-slice cumulative model-price prefix"
+    )
+    panel = build_forward_c00_panel(full_prefix, target)
+    target_rows = panel.loc[pd.to_datetime(panel["date"]).eq(target)].copy()
+    if target_rows.empty:
+        raise V18Error("target-slice panel is empty")
+    return _coerce_jsonl_frame(
+        target_rows, G0_PANEL_COLUMNS, label="C00 target-slice panel"
+    )
+
+
 def predictor_semantic_hashes(
     parsed_prices: pd.DataFrame,
     panel: pd.DataFrame,
@@ -3727,13 +9293,126 @@ def predictor_semantic_hashes(
     }
 
 
+def _load_source_cache_artifacts(
+    source: Mapping[str, Any],
+    *,
+    session_date: Any,
+    predictor_raw_store_root: str | Path,
+    predictor_derived_store_root: str | Path,
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, Any]]:
+    raw_records = _source_set_records(source)
+    bindings = source["parsed_shards"]
+    snapshot_binding = {
+        field: source[field]
+        for field in SOURCE_MANIFEST_FIELDS
+        if field.startswith("model_price_snapshot_")
+    }
+    _validate_model_price_snapshot_binding(
+        snapshot_binding,
+        predictor_derived_store_root=predictor_derived_store_root,
+        raw_records=raw_records,
+        shard_bindings=bindings,
+    )
+    prices, _, _ = _load_model_price_prefix(
+        raw_records,
+        bindings,
+        snapshot_target_month=_date(
+            session_date, "source cache target"
+        ).to_period("M"),
+        latest_required_source_session=source["latest_required_source_session"],
+        snapshot_manifest_object_key=source[
+            "model_price_snapshot_manifest_object_key"
+        ],
+        predictor_raw_store_root=predictor_raw_store_root,
+        predictor_derived_store_root=predictor_derived_store_root,
+    )
+    cache_manifest, manifest_payload = _read_external_canonical_json(
+        predictor_derived_store_root,
+        str(source["g0_panel_cache_manifest_object_key"]),
+        prefix=G0_PANEL_CACHE_OBJECT_PREFIX,
+        label="G0 cache manifest",
+    )
+    cache, cached_rows, expected_manifest_key, _ = _validate_g0_cache_manifest(
+        cache_manifest,
+        predictor_derived_store_root=predictor_derived_store_root,
+        expected_target_session=session_date,
+        expected_latest_source_session=source["latest_required_source_session"],
+        expected_source_set_sha256=source["source_set_sha256"],
+        expected_parsed_shard_set_sha256=source["parsed_shard_set_sha256"],
+    )
+    target = _date(session_date, "source cache target")
+    panel = cached_rows.loc[
+        pd.to_datetime(cached_rows["date"]).eq(target)
+    ].reset_index(drop=True)
+    cache_created = _timestamp(cache["created_at"], "G0 cache created_at")
+    cache_sealed = _timestamp(cache["sealed_at"], "G0 cache sealed_at")
+    source_created = _timestamp(source["created_at"], "source manifest created_at")
+    if cache_sealed > source_created:
+        raise V18Error("source manifest predates its G0 cache seal")
+    for raw_record, binding in zip(raw_records, bindings, strict=True):
+        shard_manifest, _ = _read_external_canonical_json(
+            predictor_derived_store_root,
+            str(binding["shard_manifest_object_key"]),
+            prefix=PREDICTOR_SHARD_OBJECT_PREFIX,
+            label="predictor shard manifest",
+        )
+        if _timestamp(shard_manifest["sealed_at"], "parsed shard sealed_at") > (
+            cache_created
+        ):
+            raise V18Error("G0 cache predates a parsed shard seal")
+    exact = {
+        "g0_panel_cache_object_key": cache["data_object_key"],
+        "g0_panel_cache_byte_count": int(cache["data_byte_count"]),
+        "g0_panel_cache_sha256": cache["data_sha256"],
+        "g0_panel_cache_manifest_object_key": expected_manifest_key,
+        "g0_panel_cache_manifest_byte_count": len(manifest_payload),
+        "g0_panel_cache_manifest_file_sha256": hashlib.sha256(
+            manifest_payload
+        ).hexdigest(),
+        "g0_panel_cache_manifest_sha256": cache["cache_manifest_sha256"],
+    }
+    for field, expected in exact.items():
+        if source[field] != expected:
+            raise V18Error(f"source cache exact binding changed: {field}")
+    if int(cache["parsed_row_count"]) != int(source["parsed_row_count"]):
+        raise V18Error("source/cache parsed row count differs")
+    for field in (
+        "target_date_scoring_input_semantic_sha256",
+        "target_slice_semantic_sha256",
+    ):
+        if source[field] != cache[field]:
+            raise V18Error(f"source/cache semantic differs: {field}")
+    scoring_columns = (
+        "date",
+        "code",
+        "name",
+        "common_score_eligible",
+        "feature_source_max_date",
+        *G0_FEATURES,
+    )
+    observed = {
+        "target_date_scoring_input_semantic_sha256": semantic_frame_sha256(
+            panel, scoring_columns
+        ),
+        "target_slice_semantic_sha256": semantic_frame_sha256(
+            panel, G0_PANEL_COLUMNS
+        ),
+    }
+    for field, digest in observed.items():
+        if source[field] != digest:
+            raise V18Error(f"cache replay semantic differs: {field}")
+    return prices, panel, cache
+
+
 def replay_predictor_source_manifest(
     manifest: Mapping[str, Any],
     *,
     session_date: Any,
     predictor_raw_store_root: str | Path,
+    predictor_derived_store_root: str | Path | None = None,
+    terminal_clean_room: bool = False,
 ) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, Any], str]:
-    """Reparse a complete source manifest and reproduce all semantic digests."""
+    """Use bound caches preterminal; terminal mode computes from raw first."""
 
     value, digest = validate_source_manifest(
         manifest,
@@ -3742,6 +9421,21 @@ def replay_predictor_source_manifest(
     )
     if not _strict_bool(value["source_complete"]):
         raise V18Error("cannot replay an incomplete predictor source manifest")
+    if predictor_derived_store_root is not None and not terminal_clean_room:
+        prices, panel, _ = _load_source_cache_artifacts(
+            value,
+            session_date=session_date,
+            predictor_raw_store_root=predictor_raw_store_root,
+            predictor_derived_store_root=predictor_derived_store_root,
+        )
+        validate_source_manifest(
+            value,
+            session_date=session_date,
+            predictor_raw_store_root=predictor_raw_store_root,
+            parsed_prices=prices,
+            panel=panel,
+        )
+        return prices, panel, value, digest
     snapshot_objects = _source_set_records(value)
     with _external_snapshot_paths(
         predictor_raw_store_root,
@@ -3771,13 +9465,45 @@ def replay_predictor_source_manifest(
     if latest != _date(value["latest_required_source_session"], "latest source"):
         raise V18Error("predictor clean-room parse does not end at exact D-1")
     panel = build_forward_c00_panel(prices, session_date)
+    target = _date(session_date, "terminal target session")
+    direct_target_slice = _coerce_jsonl_frame(
+        panel.loc[pd.to_datetime(panel["date"]).eq(target)],
+        G0_PANEL_COLUMNS,
+        label="terminal direct G0 target slice",
+    )
     validate_source_manifest(
         value,
         session_date=session_date,
         predictor_raw_store_root=predictor_raw_store_root,
         parsed_prices=prices,
-        panel=panel,
+        panel=direct_target_slice,
     )
+    if predictor_derived_store_root is not None:
+        cached_model_prices, cached_panel, _ = _load_source_cache_artifacts(
+            value,
+            session_date=session_date,
+            predictor_raw_store_root=predictor_raw_store_root,
+            predictor_derived_store_root=predictor_derived_store_root,
+        )
+        direct_prices = _coerce_jsonl_frame(
+            prices, PARSED_PRICE_COLUMNS, label="terminal direct predictor parse"
+        )
+        cached_prices = _load_bound_predictor_shards(
+            _source_set_records(value),
+            value["parsed_shards"],
+            predictor_raw_store_root=predictor_raw_store_root,
+            predictor_derived_store_root=predictor_derived_store_root,
+        )
+        if not direct_prices.equals(cached_prices):
+            raise V18Error("terminal raw parse differs exactly from parsed shards")
+        if not _coerce_model_price_frame(
+            direct_prices, label="terminal direct compact model-price projection"
+        ).equals(cached_model_prices):
+            raise V18Error(
+                "terminal raw parse differs from compact model-price prefix"
+            )
+        if not direct_target_slice.equals(cached_panel):
+            raise V18Error("terminal raw G0 target slice differs exactly from cache")
     return prices, panel, value, digest
 
 
@@ -3802,50 +9528,233 @@ def build_predictor_source_manifest(
     source_urls: Sequence[str],
     *,
     session_date: Any,
-    source_received_at: Any,
+    source_received_at: Any | Sequence[Any],
     predictor_raw_store_root: str | Path,
+    predictor_derived_store_root: str | Path,
+    cache_chronology_class: str = "forward",
+    predictor_cache_anchor: Mapping[str, Any] | None = None,
+    month_source_manifest: Mapping[str, Any] | None = None,
+    _month_source_factory: Any | None = None,
+    model_price_snapshot_binding: Mapping[str, Any] | None = None,
+    first_counted_session_value: Any | None = None,
     runtime_lock_verified_at: Any | None = None,
     created_at: Any | None = None,
     sealed_at: Any | None = None,
     output: str | Path | None = None,
+    _resume_exact_timestamps: bool = False,
 ) -> tuple[dict[str, Any], pd.DataFrame]:
-    """Seal cumulative predictor PDFs, reparse them, and bind the PIT panel."""
+    """Seal raw bytes, extend parsed shards, and build the C00 panel exactly once."""
 
     target = _date(session_date, "session_date")
-    verified = _runtime_verified_timestamp(runtime_lock_verified_at)
+    if _resume_exact_timestamps and output is not None:
+        raise V18Error("source exact-timestamp resume cannot publish a new manifest")
+    verified = _runtime_verified_timestamp(
+        runtime_lock_verified_at,
+        allow_historical_replay=_resume_exact_timestamps,
+    )
     calendar = load_registered_calendar()
     positions = np.flatnonzero(calendar == target)
     if len(positions) != 1:
         raise V18Error("predictor manifest target is outside registered calendar")
     position = int(positions[0])
-    latest = pd.Timestamp("2026-08-04") if position == 0 else pd.Timestamp(
-        calendar[position - 1]
-    )
+    latest = _latest_required_predictor_source_session(target, calendar)
     expected_files, kinds = _expected_predictor_files(latest)
-    if not (
-        len(source_pdfs) == len(source_file_names) == len(source_urls) == len(expected_files)
-    ):
-        raise V18Error("predictor source vectors do not cover the cumulative registry")
+    if not (len(source_pdfs) == len(source_file_names) == len(source_urls)):
+        raise V18Error("new predictor source vectors are misaligned")
     names = [str(item) for item in source_file_names]
-    if names != expected_files:
-        raise V18Error("predictor source files differ from canonical cumulative order")
-    received = _timestamp(source_received_at, "source_received_at")
+    if len(names) != len(set(names)) or any(name not in kinds for name in names):
+        raise V18Error("new predictor inputs contain duplicates/unregistered files")
+    if names != [name for name in expected_files if name in set(names)]:
+        raise V18Error("new predictor inputs are not in canonical registry order")
+    if isinstance(source_received_at, Sequence) and not isinstance(
+        source_received_at, (str, bytes, bytearray)
+    ):
+        received_values = list(source_received_at)
+        if len(received_values) != len(names):
+            raise V18Error("new predictor receipt vector is misaligned")
+    else:
+        received_values = [source_received_at] * len(names)
+    received_times = [
+        _timestamp(item, f"source_received_at[{index}]")
+        for index, item in enumerate(received_values)
+    ]
+    if not received_times:
+        raise V18Error("canonical predictor preparation requires a post-anchor source")
+    received: datetime | None = max(received_times)
     if received > _cutoff(target):
         raise V18Error("predictor source arrived after target cutoff")
-    if _STRICT_RUNTIME_ACTIVE and received > datetime.now(TOKYO):
+    if _STRICT_RUNTIME_ACTIVE and received is not None and received > datetime.now(TOKYO):
         raise V18Error("predictor source receipt is in the future")
+    _validate_external_store_disjointness(
+        predictor_raw_store_root, predictor_derived_store_root
+    )
+    chronology_mode = str(cache_chronology_class)
+    if chronology_mode not in {"anchor", "forward"}:
+        raise V18Error("predictor cache chronology must be anchor or forward")
+    anchor_latest: pd.Timestamp | None = None
+    daily_snapshot_binding: dict[str, Any] | None = None
+    month_source_hash: str | None = None
+    predecessor_source: dict[str, Any] | None = None
+    predecessor_target_session: str | None = None
+    predecessor_manifest_sha256: str | None = None
+    retained_raw_by_file: dict[str, dict[str, Any]] = {}
+    retained_binding_by_file: dict[str, dict[str, Any]] = {}
+    if chronology_mode == "anchor":
+        if (
+            predictor_cache_anchor is not None
+            or month_source_manifest is not None
+            or _month_source_factory is not None
+            or model_price_snapshot_binding is not None
+            or first_counted_session_value is not None
+        ):
+            raise V18Error("historical anchor cache cannot extend a forward chain")
+    else:
+        if (
+            predictor_cache_anchor is None
+            or first_counted_session_value is None
+            or (month_source_manifest is None and _month_source_factory is None)
+        ):
+            raise V18Error(
+                "forward predictor cache requires activated anchor/month context"
+            )
+        anchor_summary = validate_predictor_cache_anchor_summary(
+            predictor_cache_anchor
+        )
+        (
+            predecessor_target_session,
+            predecessor_manifest_sha256,
+        ) = _source_manifest_predecessor_binding(
+            target,
+            first_counted_session_value=first_counted_session_value,
+            require_decision_binding=False,
+        )
+        anchor_manifest, anchor_payload = _read_external_canonical_json(
+            predictor_derived_store_root,
+            anchor_summary["snapshot_manifest_object_key"],
+            prefix=CACHE_ANCHOR_OBJECT_PREFIX,
+            label="forward predictor cache anchor manifest",
+        )
+        _, observed_anchor_summary, _ = validate_predictor_cache_anchor(
+            anchor_manifest,
+            predictor_raw_store_root=predictor_raw_store_root,
+            predictor_derived_store_root=predictor_derived_store_root,
+            require_direct_clean_room_reparse=False,
+        )
+        if observed_anchor_summary != anchor_summary or hashlib.sha256(
+            anchor_payload
+        ).hexdigest() != anchor_summary["snapshot_manifest_file_sha256"]:
+            raise V18Error("forward predictor anchor differs from payload B")
+        anchor_latest = _date(
+            anchor_summary["latest_source_session"], "anchor latest source session"
+        )
+        if latest <= anchor_latest:
+            raise V18Error(
+                "first counted predecessor must strictly follow the activated anchor"
+            )
+        if month_source_manifest is None:
+            target_month = target.to_period("M")
+            first_month = _date(
+                first_counted_session_value, "first counted session"
+            ).to_period("M")
+            if target_month == first_month:
+                canonical_snapshot_binding = _model_price_snapshot_binding_from_anchor(
+                    anchor_summary
+                )
+            else:
+                previous_path = MONTH_SOURCE_MANIFEST_DIR / f"{target_month - 1}.json"
+                if not previous_path.is_file():
+                    raise V18Error("prepare-day compact snapshot predecessor is missing")
+                canonical_snapshot_binding = _model_price_snapshot_binding_from_month_source(
+                    read_json(previous_path)
+                )
+        else:
+            month_source_value = dict(month_source_manifest)
+            if set(month_source_value) != set(MONTH_SOURCE_MANIFEST_FIELDS):
+                raise V18Error("daily source month-source schema changed")
+            if month_source_value["target_month"] != str(target.to_period("M")):
+                raise V18Error("daily source month-source targets another month")
+            month_source_hash = canonical_json_sha256(
+                month_source_value, exclude_fields={"month_source_manifest_sha256"}
+            )
+            if month_source_value["month_source_manifest_sha256"] != month_source_hash:
+                raise V18Error("daily source month-source self-hash changed")
+            canonical_snapshot_binding = _model_price_snapshot_binding_from_month_source(
+                month_source_value
+            )
+        if model_price_snapshot_binding is not None and dict(
+            model_price_snapshot_binding
+        ) != canonical_snapshot_binding:
+            raise V18Error("daily source caller swapped its monthly snapshot")
+        daily_snapshot_binding = canonical_snapshot_binding
+        snapshot_month = _month(
+            daily_snapshot_binding["model_price_snapshot_target_month"],
+            "daily model-price snapshot target month",
+        )
+        if month_source_manifest is not None and snapshot_month != target.to_period("M"):
+            raise V18Error(
+                "daily source requires its target-month model-price snapshot"
+            )
+        predecessor_source = _daily_source_predecessor(
+            target,
+            first_counted_session_value=first_counted_session_value,
+        )
+        for raw_record, binding in zip(
+            anchor_manifest["raw_sources"],
+            anchor_manifest["parsed_shards"],
+            strict=True,
+        ):
+            retained_raw_by_file[str(raw_record["file"])] = dict(raw_record)
+            retained_binding_by_file[str(raw_record["file"])] = dict(binding)
+        first = _date(first_counted_session_value, "first counted session")
+        first_position = int(np.flatnonzero(calendar == first)[0])
+        for prior in calendar[first_position:position]:
+            prior_path = SOURCE_MANIFEST_DIR / f"{pd.Timestamp(prior).date()}.json"
+            if not prior_path.is_file():
+                raise V18Error("incremental predictor chain lacks a prior source manifest")
+            prior_source, _ = validate_source_manifest(
+                read_json(prior_path),
+                session_date=prior,
+                first_counted_session_value=first_counted_session_value,
+                require_predecessor_decision=False,
+            )
+            for raw_record, binding in zip(
+                _source_set_records(prior_source),
+                prior_source["parsed_shards"],
+                strict=True,
+            ):
+                name = str(raw_record["file"])
+                if name in retained_raw_by_file and (
+                    retained_raw_by_file[name] != raw_record
+                    or retained_binding_by_file[name] != dict(binding)
+                ):
+                    raise V18Error("incremental predictor retained prefix conflicts")
+                retained_raw_by_file[name] = dict(raw_record)
+                retained_binding_by_file[name] = dict(binding)
+        if any(name in retained_raw_by_file for name in names):
+            raise V18Error("incremental predictor input repeats a retained source")
+    if received is None:
+        raise V18Error("predictor source lacks a causal receipt timestamp")
     object_keys: list[str] = []
     byte_counts: list[int] = []
     digests: list[str] = []
     official_urls: list[str] = []
     historical_metadata = _historical_predictor_metadata()
+    new_received_by_file = dict(zip(names, received_times, strict=True))
     # Validate the entire cumulative batch before the first irreversible
     # create-once write.  A late bad historical object must not strand a
     # partially sealed prefix.
     for index, (source_pdf, file_name, source_url) in enumerate(
         zip(source_pdfs, names, source_urls, strict=True)
     ):
-        official = _official_jpx_url(source_url, f"source_urls[{index}]")
+        if file_name.startswith("stq_"):
+            official = _official_jpx_daily_url(
+                source_url,
+                f"source_urls[{index}]",
+                file_name=file_name,
+                source_session=_source_file_date(file_name, kinds[file_name]),
+            )
+        else:
+            official = _official_jpx_url(source_url, f"source_urls[{index}]")
         supplied_count, supplied_hash = _source_file_metadata(
             source_pdf, label="predictor"
         )
@@ -3872,42 +9781,7 @@ def build_predictor_source_manifest(
         object_keys.append(key)
         byte_counts.append(retained_count)
         digests.append(retained_hash)
-    snapshot_objects = [
-        {
-            "object_key": key,
-            "file": file_name,
-            "byte_count": count,
-            "sha256": digest,
-        }
-        for key, file_name, count, digest in zip(
-            object_keys, names, byte_counts, digests, strict=True
-        )
-    ]
-    with _external_snapshot_paths(
-        predictor_raw_store_root,
-        snapshot_objects,
-        prefix=PREDICTOR_OBJECT_PREFIX,
-        label="predictor",
-    ) as (retained_paths, _):
-        try:
-            prices, report = _collect_jpx_registered(retained_paths)
-        except Exception as exc:
-            raise V18Error(f"predictor PDF parse failed: {exc}") from exc
-    inputs = report.get("inputs")
-    if not isinstance(inputs, list) or len(inputs) != len(retained_paths):
-        raise V18Error("predictor parser report does not bind every retained object")
-    rejected = int(sum(int(item.get("rejected_rows", -1)) for item in inputs))
-    duplicates = int(prices[["date", "code"]].duplicated(keep=False).sum())
-    if rejected != 0 or duplicates != 0:
-        raise V18Error("predictor parser rejection/duplicate aborts v1.8")
-    parsed_latest = pd.to_datetime(prices["date"], errors="coerce").max().normalize()
-    if parsed_latest != latest:
-        raise V18Error("predictor parsed data does not end at exact D-1")
-    panel = build_forward_c00_panel(prices, target)
-    semantics = predictor_semantic_hashes(prices, panel, target)
-    created = _operation_timestamp(created_at, "source manifest created_at")
-    sealed = _operation_timestamp(sealed_at, "source manifest sealed_at")
-    source_set = [
+    new_source_records = [
         {
             "object_key": key,
             "file": name,
@@ -3919,28 +9793,233 @@ def build_predictor_source_manifest(
             object_keys, names, official_urls, byte_counts, digests, strict=True
         )
     ]
+    new_by_file = {str(item["file"]): item for item in new_source_records}
+    source_set = [
+        dict(retained_raw_by_file.get(name, new_by_file.get(name)))
+        for name in expected_files
+        if name in retained_raw_by_file or name in new_by_file
+    ]
+    if [str(item["file"]) for item in source_set] != expected_files:
+        missing = [name for name in expected_files if name not in {
+            str(item["file"]) for item in source_set
+        }]
+        raise V18Error(f"complete predictor preparation still lacks sources: {missing}")
+    if chronology_mode == "forward":
+        assert predictor_cache_anchor is not None
+        if predecessor_source is not None:
+            predecessor_raw = _source_set_records(predecessor_source)
+            predecessor_shards = predecessor_source["parsed_shards"]
+        else:
+            predecessor_raw = anchor_manifest["raw_sources"]
+            predecessor_shards = anchor_manifest["parsed_shards"]
+        if source_set[: len(predecessor_raw)] != predecessor_raw:
+            raise V18Error("forward predictor raw set forks/revises its predecessor")
+    shard_bindings: list[dict[str, Any]] = []
+    for raw_record in source_set:
+        _, _, shard_manifest_key = _predictor_shard_identity(raw_record)
+        if _external_object_exists(
+            predictor_derived_store_root,
+            shard_manifest_key,
+            prefix=PREDICTOR_SHARD_OBJECT_PREFIX,
+            label="predictor shard manifest",
+        ):
+            existing, _ = _read_external_canonical_json(
+                predictor_derived_store_root,
+                shard_manifest_key,
+                prefix=PREDICTOR_SHARD_OBJECT_PREFIX,
+                label="predictor shard manifest",
+            )
+            shard_value, _, binding = _validate_parsed_shard_manifest(
+                existing,
+                raw_record=raw_record,
+                predictor_derived_store_root=predictor_derived_store_root,
+                expected_raw_received_at=new_received_by_file.get(
+                    str(raw_record["file"])
+                ),
+                decode_data=False,
+            )
+        else:
+            source_date = _source_file_date(
+                str(raw_record["file"]), kinds[str(raw_record["file"])]
+            )
+            shard_chronology = (
+                "anchor"
+                if chronology_mode == "anchor"
+                or (anchor_latest is not None and source_date <= anchor_latest)
+                else "forward"
+            )
+            if chronology_mode == "forward" and shard_chronology == "anchor":
+                raise V18Error(
+                    "activated historical shard is missing; post-B repair is forbidden"
+                )
+            raw_received = new_received_by_file.get(str(raw_record["file"]))
+            if chronology_mode == "forward" and raw_received is None:
+                raise V18Error("retained forward source is missing its sealed shard")
+            shard_value, _, binding = ensure_predictor_parsed_shard(
+                raw_record,
+                predictor_raw_store_root=predictor_raw_store_root,
+                predictor_derived_store_root=predictor_derived_store_root,
+                chronology_class=shard_chronology,
+                raw_received_at=None if shard_chronology == "anchor" else raw_received,
+                runtime_lock_verified_at=verified,
+            )
+        if chronology_mode == "forward" and anchor_latest is not None:
+            source_date = _source_file_date(
+                str(raw_record["file"]), kinds[str(raw_record["file"])]
+            )
+            expected_chronology = "anchor" if source_date <= anchor_latest else "forward"
+            if shard_value["chronology_class"] != expected_chronology:
+                raise V18Error("parsed shard chronology crosses activated anchor boundary")
+        shard_bindings.append(binding)
+    if chronology_mode == "forward" and shard_bindings[
+        : len(predecessor_shards)
+    ] != predecessor_shards:
+        raise V18Error("forward parsed-shard set forks/reorders its predecessor")
+    if daily_snapshot_binding is None:
+        raise V18Error("predictor source lacks a compact model-price snapshot")
+    _validate_model_price_snapshot_binding(
+        daily_snapshot_binding,
+        predictor_derived_store_root=predictor_derived_store_root,
+        raw_records=source_set,
+        shard_bindings=shard_bindings,
+    )
+    source_set_hash = canonical_json_sha256(source_set)
+    shard_set_hash = _parsed_shard_set_sha256(shard_bindings)
+    prices, _, _ = _load_model_price_prefix(
+        source_set,
+        shard_bindings,
+        snapshot_target_month=daily_snapshot_binding[
+            "model_price_snapshot_target_month"
+        ],
+        latest_required_source_session=latest,
+        snapshot_manifest_object_key=daily_snapshot_binding[
+            "model_price_snapshot_manifest_object_key"
+        ],
+        predictor_raw_store_root=predictor_raw_store_root,
+        predictor_derived_store_root=predictor_derived_store_root,
+    )
+    prepared_full_panel = None
+    rejected = 0
+    duplicates = int(prices[["date", "code"]].duplicated(keep=False).sum())
+    if duplicates != 0:
+        raise V18Error("predictor parsed-shard merge produced duplicates")
+    parsed_latest = pd.to_datetime(prices["date"], errors="coerce").max().normalize()
+    if parsed_latest != latest:
+        raise V18Error("predictor parsed data does not end at exact D-1")
+    if _month_source_factory is not None:
+        prepared_full_panel = build_forward_c00_panel(prices, target)
+        produced = _month_source_factory(
+            source_set,
+            shard_bindings,
+            prices,
+            prepared_full_panel,
+            daily_snapshot_binding,
+        )
+        if (
+            not isinstance(produced, tuple)
+            or len(produced) != 2
+            or not isinstance(produced[0], Mapping)
+            or not isinstance(produced[1], Mapping)
+        ):
+            raise V18Error("prepare-day month factory returned an invalid binding")
+        month_source_value = dict(produced[0])
+        daily_snapshot_binding = dict(produced[1])
+        month_source_hash = canonical_json_sha256(
+            month_source_value, exclude_fields={"month_source_manifest_sha256"}
+        )
+        if (
+            set(month_source_value) != set(MONTH_SOURCE_MANIFEST_FIELDS)
+            or month_source_value["month_source_manifest_sha256"]
+            != month_source_hash
+            or month_source_value["target_month"] != str(target.to_period("M"))
+        ):
+            raise V18Error("prepare-day month factory produced invalid authority")
+        if month_source_manifest is not None and month_source_value != dict(
+            month_source_manifest
+        ):
+            raise V18Error("prepare-day month factory changed existing authority")
+        if daily_snapshot_binding != _model_price_snapshot_binding_from_month_source(
+            month_source_value
+        ):
+            raise V18Error("prepare-day month factory swapped its snapshot")
+        _validate_model_price_snapshot_binding(
+            daily_snapshot_binding,
+            predictor_derived_store_root=predictor_derived_store_root,
+            raw_records=source_set,
+            shard_bindings=shard_bindings,
+        )
+    if month_source_hash is None:
+        raise V18Error("complete daily source lacks a sealed monthly authority")
+    total_parsed_rows = int(
+        sum(int(binding["parsed_row_count"]) for binding in shard_bindings)
+    )
+    cache_value, panel, cache_manifest_key, cache_manifest_payload = (
+        materialize_g0_panel_cache(
+            prices,
+            predictor_derived_store_root=predictor_derived_store_root,
+            target_session=target,
+            latest_required_source_session=latest,
+            source_set_sha256=source_set_hash,
+            parsed_shard_set_sha256=shard_set_hash,
+            total_parsed_row_count=total_parsed_rows,
+            prepared_full_panel=prepared_full_panel,
+            runtime_lock_verified_at=verified,
+        )
+    )
+    semantics = {
+        field: cache_value[field]
+        for field in (
+            "target_date_scoring_input_semantic_sha256",
+            "target_slice_semantic_sha256",
+        )
+    }
+    created = (
+        _timestamp(created_at, "source manifest created_at")
+        if _resume_exact_timestamps
+        else _operation_timestamp(created_at, "source manifest created_at")
+    )
+    sealed = (
+        _timestamp(sealed_at, "source manifest sealed_at")
+        if _resume_exact_timestamps
+        else _operation_timestamp(sealed_at, "source manifest sealed_at")
+    )
     value: dict[str, Any] = {
         "schema_version": 1,
         "target_session": str(target.date()),
         "latest_required_source_session": str(latest.date()),
+        "previous_counted_target_session": predecessor_target_session,
+        "previous_counted_source_manifest_sha256": predecessor_manifest_sha256,
         "created_at": created,
         "sealed_at": sealed,
         "runtime_lock_sha256": RUNTIME_LOCK_SHA256,
         "runtime_lock_verified_at": verified,
-        "source_files": names,
-        "source_urls": official_urls,
-        "source_object_keys": object_keys,
-        "source_byte_counts": byte_counts,
-        "source_sha256": digests,
-        "source_set_sha256": canonical_json_sha256(source_set),
+        "source_files": [item["file"] for item in source_set],
+        "source_urls": [item["url"] for item in source_set],
+        "source_object_keys": [item["object_key"] for item in source_set],
+        "source_byte_counts": [item["byte_count"] for item in source_set],
+        "source_sha256": [item["sha256"] for item in source_set],
+        "source_set_sha256": source_set_hash,
+        "parsed_shards": shard_bindings,
+        "parsed_shard_set_sha256": shard_set_hash,
+        "month_source_manifest_sha256": month_source_hash,
+        **daily_snapshot_binding,
         "source_received_at": received,
         "parser_path": JPX_PARSER_PATH,
         "parser_version": JPX_PARSER_VERSION,
         "parser_sha256": JPX_PARSER_SHA256,
-        "parsed_row_count": int(len(prices)),
+        "parsed_row_count": total_parsed_rows,
         "rejected_row_count": rejected,
         "duplicate_date_code_count": duplicates,
         **semantics,
+        "g0_panel_cache_object_key": cache_value["data_object_key"],
+        "g0_panel_cache_byte_count": int(cache_value["data_byte_count"]),
+        "g0_panel_cache_sha256": cache_value["data_sha256"],
+        "g0_panel_cache_manifest_object_key": cache_manifest_key,
+        "g0_panel_cache_manifest_byte_count": len(cache_manifest_payload),
+        "g0_panel_cache_manifest_file_sha256": hashlib.sha256(
+            cache_manifest_payload
+        ).hexdigest(),
+        "g0_panel_cache_manifest_sha256": cache_value["cache_manifest_sha256"],
         "source_complete": True,
         "failure_reason": None,
         "python_version": platform.python_version(),
@@ -3953,163 +10032,1744 @@ def build_predictor_source_manifest(
         value,
         session_date=target,
         predictor_raw_store_root=predictor_raw_store_root,
+        predictor_derived_store_root=predictor_derived_store_root,
         parsed_prices=prices,
         panel=panel,
+        first_counted_session_value=(
+            None if chronology_mode == "anchor" else first_counted_session_value
+        ),
+        require_predecessor_decision=False,
     )
     if output is not None:
         write_json(value, output, exclusive=True)
     return value, panel
 
 
-def build_source_failure_manifest(
+def _validate_month_source_manifest_impl(
+    manifest: Mapping[str, Any],
     *,
-    session_date: Any,
-    failure_reason: str | None = None,
-    source_pdfs: Sequence[str | Path] = (),
-    source_file_names: Sequence[str] = (),
-    source_urls: Sequence[str] = (),
-    source_received_at: Any | None = None,
-    predictor_raw_store_root: str | Path | None = None,
-    runtime_lock_verified_at: Any | None = None,
-    created_at: Any | None = None,
-    sealed_at: Any | None = None,
-    output: str | Path | None = None,
-) -> dict[str, Any]:
-    """Seal an empty/partial, non-repairable pre-open source-failure record."""
+    predictor_raw_store_root: str | Path,
+    predictor_derived_store_root: str | Path,
+    training_panel: pd.DataFrame | None = None,
+    model_prices: pd.DataFrame | None = None,
+    precomputed_model_semantic_sha256: str | None = None,
+    precomputed_training_semantic_sha256: str | None = None,
+    reuse_sealed_snapshot_semantic: bool = False,
+) -> tuple[dict[str, Any], pd.DataFrame, str]:
+    """Validate one independent M-1 source and compact snapshot extension."""
 
-    target = _date(session_date, "session_date")
-    verified = _runtime_verified_timestamp(runtime_lock_verified_at)
-    calendar = load_registered_calendar()
-    positions = np.flatnonzero(calendar == target)
-    if len(positions) != 1:
-        raise V18Error("source-failure target is outside registered calendar")
-    position = int(positions[0])
-    latest = pd.Timestamp("2026-08-04") if position == 0 else pd.Timestamp(
-        calendar[position - 1]
+    if reuse_sealed_snapshot_semantic and any(
+        item is not None
+        for item in (
+            training_panel,
+            model_prices,
+            precomputed_model_semantic_sha256,
+            precomputed_training_semantic_sha256,
+        )
+    ):
+        raise V18Error(
+            "retained month-source semantic reuse cannot accept caller frames/hashes"
+        )
+    value = dict(manifest)
+    if set(value) != set(MONTH_SOURCE_MANIFEST_FIELDS):
+        raise V18Error("month-source manifest fields differ from A2 contract")
+    if value["schema_version"] != 1:
+        raise V18Error("month-source manifest schema changed")
+    month = _month(value["target_month"], "month-source target_month")
+    first_counted = _date(
+        value["first_counted_session"], "month-source first counted session"
     )
-    if predictor_raw_store_root is not None:
-        _external_store_root(predictor_raw_store_root, "predictor")
-    if not (len(source_pdfs) == len(source_file_names) == len(source_urls)):
-        raise V18Error("source-failure retained vectors have different lengths")
+    seal_session = _date(value["seal_session"], "month-source seal session")
+    if seal_session != _month_seal_session(
+        month, first_counted_session_value=first_counted
+    ):
+        raise V18Error("month-source seal session differs from activation calendar")
+    latest = _latest_registered_source_before_month(month)
+    if _date(value["latest_required_source_session"], "month-source latest") != latest:
+        raise V18Error("month-source latest session is not exact M-1 session")
+    created = _timestamp(value["created_at"], "month-source created_at")
+    sealed = _timestamp(value["sealed_at"], "month-source sealed_at")
+    verified = _timestamp(
+        value["runtime_lock_verified_at"], "month-source runtime verified"
+    )
+    received = _timestamp(value["source_received_at"], "month-source receipt")
+    activation_observed = _timestamp(
+        value["activation_observed_at"], "month-source activation observed"
+    )
+    if max(verified, received, activation_observed) > created or created > sealed:
+        raise V18Error("month-source timestamp DAG is invalid")
+    if sealed > _cutoff(seal_session):
+        raise V18Error("month-source was not sealed before its monthly cutoff")
+    fixed = {
+        "runtime_lock_sha256": RUNTIME_LOCK_SHA256,
+        "protocol_sha256": PROTOCOL_SHA256,
+        "runner_sha256": sha256_file(__file__),
+        "parser_sha256": JPX_PARSER_SHA256,
+        "canonical_json_contract": CANONICAL_JSON_CONTRACT,
+    }
+    for field, expected in fixed.items():
+        if value[field] != expected:
+            raise V18Error(f"month-source binding changed: {field}")
+    _require_sha(value["activation_payload_sha256"], "month-source payload SHA")
+    _require_sha(value["activation_receipt_sha256"], "month-source receipt SHA")
+    vectors = (
+        value["source_files"],
+        value["source_urls"],
+        value["source_object_keys"],
+        value["source_byte_counts"],
+        value["source_sha256"],
+    )
+    if not all(isinstance(item, list) for item in vectors) or len(
+        {len(item) for item in vectors}
+    ) != 1:
+        raise V18Error("month-source vectors are not aligned arrays")
+    expected_files, kinds = _expected_predictor_files(latest)
+    if [str(item) for item in value["source_files"]] != expected_files:
+        raise V18Error("month-source does not cover exact registered prefix")
+    raw_records = _source_set_records(value)
+    if value["source_set_sha256"] != canonical_json_sha256(raw_records):
+        raise V18Error("month-source raw set hash changed")
+    bindings = value["parsed_shards"]
+    if not isinstance(bindings, list) or len(bindings) != len(raw_records):
+        raise V18Error("month-source raw/shard arrays are misaligned")
+    if value["parsed_shard_set_sha256"] != _parsed_shard_set_sha256(bindings):
+        raise V18Error("month-source shard set hash changed")
+    for index, (raw_record, kind) in enumerate(
+        zip(raw_records, (kinds[name] for name in expected_files), strict=True)
+    ):
+        if raw_record["object_key"] != _predictor_object_key(
+            str(raw_record["file"]), kind
+        ):
+            raise V18Error(f"month-source raw key changed at index {index}")
+    shard_manifests = _validate_bound_predictor_shard_metadata(
+        raw_records,
+        bindings,
+        predictor_raw_store_root=predictor_raw_store_root,
+        predictor_derived_store_root=predictor_derived_store_root,
+    )
+    snapshot_binding = _model_price_snapshot_binding_from_month_source(value)
+    snapshot, snapshot_prices, _ = _validate_model_price_snapshot_binding(
+        snapshot_binding,
+        predictor_derived_store_root=predictor_derived_store_root,
+        raw_records=raw_records,
+        shard_bindings=bindings,
+        _reuse_sealed_semantic=reuse_sealed_snapshot_semantic,
+    )
+    if snapshot["target_month"] != str(month) or snapshot[
+        "latest_source_session"
+    ] != str(latest.date()):
+        raise V18Error("month-source compact snapshot does not end at exact M-1")
+    prices = (
+        snapshot_prices
+        if model_prices is None
+        else _coerce_model_price_frame(
+            model_prices, label="month-source supplied model-price prefix"
+        )
+    )
+    if not prices.equals(snapshot_prices):
+        raise V18Error("month-source supplied prefix differs from compact snapshot")
+    if pd.to_datetime(prices["date"]).max().normalize() != latest:
+        raise V18Error("month-source model-price prefix does not end at exact M-1")
+    origin = str(value["model_price_snapshot_origin"])
+    if origin not in {"activation_anchor", "forward_extension"}:
+        raise V18Error("month-source compact snapshot origin changed")
+    previous_fields = (
+        "previous_model_price_snapshot_target_month",
+        "previous_model_price_snapshot_latest_source_session",
+        "previous_model_price_snapshot_manifest_object_key",
+        "previous_model_price_snapshot_manifest_file_sha256",
+        "previous_model_price_snapshot_manifest_sha256",
+    )
+    suffix_count = int(value["model_price_suffix_shard_count"])
+    suffix = bindings[len(bindings) - suffix_count :] if suffix_count else []
+    if value["model_price_suffix_shard_set_sha256"] != canonical_json_sha256(
+        [dict(item) for item in suffix]
+    ):
+        raise V18Error("month-source compact suffix set hash changed")
+    if origin == "activation_anchor":
+        if any(value[field] is not None for field in previous_fields) or suffix_count != 0:
+            raise V18Error("initial month snapshot must be the activated anchor")
+        if month != first_counted.to_period("M"):
+            raise V18Error("only the first counted month may use the activated snapshot")
+        if snapshot["previous_snapshot_manifest_sha256"] is not None:
+            raise V18Error("activated compact snapshot unexpectedly has a predecessor")
+        expected_received = max(
+            _timestamp(snapshot["sealed_at"], "activated snapshot sealed"),
+            activation_observed,
+        )
+        if received != expected_received:
+            raise V18Error(
+                "initial month-source availability is not derived from anchor/C"
+            )
+    else:
+        if any(value[field] is None for field in previous_fields) or suffix_count <= 0:
+            raise V18Error("forward month snapshot lacks predecessor/suffix")
+        previous_manifest, previous_payload = _read_external_canonical_json(
+            predictor_derived_store_root,
+            value["previous_model_price_snapshot_manifest_object_key"],
+            prefix=MODEL_PRICE_SNAPSHOT_OBJECT_PREFIX,
+            label="previous model-price snapshot manifest",
+        )
+        previous_count = int(previous_manifest.get("raw_source_count", 0))
+        if previous_count != len(raw_records) - suffix_count:
+            raise V18Error("month-source compact suffix is not an exact append")
+        previous, _, previous_key, _ = _validate_model_price_snapshot_manifest(
+            previous_manifest,
+            predictor_derived_store_root=predictor_derived_store_root,
+            expected_target_month=value[
+                "previous_model_price_snapshot_target_month"
+            ],
+            expected_latest_source_session=value[
+                "previous_model_price_snapshot_latest_source_session"
+            ],
+            expected_raw_source_set_sha256=canonical_json_sha256(
+                raw_records[:previous_count]
+            ),
+            expected_parsed_shard_set_sha256=_parsed_shard_set_sha256(
+                bindings[:previous_count]
+            ),
+            _reuse_sealed_semantic=reuse_sealed_snapshot_semantic,
+        )
+        if (
+            previous_key
+            != value["previous_model_price_snapshot_manifest_object_key"]
+            or hashlib.sha256(previous_payload).hexdigest()
+            != value["previous_model_price_snapshot_manifest_file_sha256"]
+            or previous["snapshot_manifest_sha256"]
+            != value["previous_model_price_snapshot_manifest_sha256"]
+            or snapshot["previous_snapshot_manifest_sha256"]
+            != previous["snapshot_manifest_sha256"]
+        ):
+            raise V18Error("month-source compact predecessor binding changed")
+        previous_month = _month(
+            value["previous_model_price_snapshot_target_month"],
+            "month-source previous snapshot month",
+        )
+        previous_latest = _date(
+            value["previous_model_price_snapshot_latest_source_session"],
+            "month-source previous snapshot latest",
+        )
+        if (
+            previous_month != month - 1
+            or previous_latest != _latest_registered_source_before_month(previous_month)
+            or suffix_count != len(raw_records) - previous_count
+        ):
+            raise V18Error("month-source predecessor/suffix is not immediate")
+        previous_frame = _validate_model_price_snapshot_manifest(
+            previous_manifest,
+            predictor_derived_store_root=predictor_derived_store_root,
+            expected_target_month=previous_month,
+            expected_latest_source_session=previous_latest,
+            expected_raw_source_set_sha256=canonical_json_sha256(
+                raw_records[:previous_count]
+            ),
+            expected_parsed_shard_set_sha256=_parsed_shard_set_sha256(
+                bindings[:previous_count]
+            ),
+            _reuse_sealed_semantic=reuse_sealed_snapshot_semantic,
+        )[1]
+        suffix_frames: list[pd.DataFrame] = []
+        snapshot_created = _timestamp(
+            snapshot["created_at"], "month-source snapshot created"
+        )
+        if _timestamp(
+            previous["sealed_at"], "month-source previous snapshot sealed"
+        ) > snapshot_created:
+            raise V18Error("month-source snapshot predates its predecessor seal")
+        for index in range(previous_count, len(raw_records)):
+            shard_manifest = shard_manifests[index]
+            if (
+                shard_manifest["chronology_class"] != "forward"
+                or _date(shard_manifest["min_date"], "month suffix min")
+                <= previous_latest
+                or _date(shard_manifest["max_date"], "month suffix max") > latest
+                or _timestamp(shard_manifest["sealed_at"], "month suffix sealed")
+                > snapshot_created
+            ):
+                raise V18Error("month-source suffix chronology/date DAG changed")
+            _, shard_frame, _ = _validate_parsed_shard_manifest(
+                shard_manifest,
+                raw_record=raw_records[index],
+                predictor_derived_store_root=predictor_derived_store_root,
+                expected_chronology_class="forward",
+                decode_data=True,
+            )
+            assert shard_frame is not None
+            suffix_frames.append(
+                _coerce_model_price_frame(
+                    shard_frame, label="validated month-source suffix"
+                )
+            )
+        reconstructed = _coerce_model_price_frame(
+            pd.concat([previous_frame, *suffix_frames], ignore_index=True),
+            label="validated month-source predecessor plus suffix",
+        )
+        if not reconstructed.equals(snapshot_prices):
+            raise V18Error(
+                "month-source snapshot differs from predecessor plus exact suffix"
+            )
+        suffix_receipts = [
+            _timestamp(item["raw_received_at"], "month-source suffix receipt")
+            for item in shard_manifests[-suffix_count:]
+        ]
+        if not suffix_receipts or received != max(suffix_receipts):
+            raise V18Error(
+                "forward month-source availability is not exact suffix receipt max"
+            )
+    if _timestamp(snapshot["sealed_at"], "month-source snapshot sealed") > created:
+        raise V18Error("month-source manifest predates its snapshot seal")
+    if reuse_sealed_snapshot_semantic:
+        retained_model_semantic = _require_sha(
+            snapshot["model_price_semantic_sha256"],
+            "retained month-source model-price semantic SHA",
+        )
+    else:
+        retained_model_semantic = (
+            model_price_semantic_sha256(prices)
+            if precomputed_model_semantic_sha256 is None
+            else _require_sha(
+                precomputed_model_semantic_sha256,
+                "precomputed month-source model-price semantic SHA",
+            )
+        )
+    exact = {
+        "parsed_row_count": int(len(prices)),
+        "model_price_full_prefix_semantic_sha256": retained_model_semantic,
+    }
+    for field, expected in exact.items():
+        if value[field] != expected:
+            raise V18Error(f"month-source cache binding changed: {field}")
+    _require_sha(
+        value["g0_training_panel_semantic_sha256"],
+        "month-source G0 training semantic SHA",
+    )
+    if isinstance(value["g0_training_row_count"], bool) or int(
+        value["g0_training_row_count"]
+    ) <= 0:
+        raise V18Error("month-source G0 training row count must be positive")
+    if training_panel is not None:
+        canonical_panel = _coerce_jsonl_frame(
+            training_panel, G0_PANEL_COLUMNS, label="month-source training panel"
+        )
+        dates = pd.to_datetime(canonical_panel["date"])
+        if dates.ge(month.start_time.normalize()).any() or dates.max() > latest:
+            raise V18Error("month-source training panel contains target-month rows")
+        if len(canonical_panel) != int(value["g0_training_row_count"]):
+            raise V18Error("month-source G0 training row count changed")
+        observed_training_semantic = (
+            semantic_frame_sha256(canonical_panel, G0_PANEL_COLUMNS)
+            if precomputed_training_semantic_sha256 is None
+            else _require_sha(
+                precomputed_training_semantic_sha256,
+                "precomputed month-source training semantic SHA",
+            )
+        )
+        if observed_training_semantic != value[
+            "g0_training_panel_semantic_sha256"
+        ]:
+            raise V18Error("month-source G0 training semantic changed")
+    expected_hash = canonical_json_sha256(
+        value, exclude_fields={"month_source_manifest_sha256"}
+    )
+    if value["month_source_manifest_sha256"] != expected_hash:
+        raise V18Error("month-source self-hash mismatch")
+    return value, (
+        training_panel if training_panel is not None else pd.DataFrame()
+    ), expected_hash
+
+
+def validate_month_source_manifest(
+    manifest: Mapping[str, Any],
+    *,
+    predictor_raw_store_root: str | Path,
+    predictor_derived_store_root: str | Path,
+    training_panel: pd.DataFrame | None = None,
+    model_prices: pd.DataFrame | None = None,
+    precomputed_model_semantic_sha256: str | None = None,
+    precomputed_training_semantic_sha256: str | None = None,
+) -> tuple[dict[str, Any], pd.DataFrame, str]:
+    """Public/full validator; every supplied semantic is freshly proven."""
+
+    return _validate_month_source_manifest_impl(
+        manifest,
+        predictor_raw_store_root=predictor_raw_store_root,
+        predictor_derived_store_root=predictor_derived_store_root,
+        training_panel=training_panel,
+        model_prices=model_prices,
+        precomputed_model_semantic_sha256=precomputed_model_semantic_sha256,
+        precomputed_training_semantic_sha256=(
+            precomputed_training_semantic_sha256
+        ),
+        reuse_sealed_snapshot_semantic=False,
+    )
+
+
+def _validate_retained_intramonth_month_source(
+    manifest: Mapping[str, Any],
+    *,
+    predictor_raw_store_root: str | Path,
+    predictor_derived_store_root: str | Path,
+) -> tuple[dict[str, Any], pd.DataFrame, str]:
+    """Validate canonical retained context without a redundant semantic rehash.
+
+    The private call has no frame/hash input.  It still pins every raw/shard,
+    snapshot/predecessor manifest, exact data byte SHA, canonical CSV decode,
+    timestamp DAG, and self-hash.  Only the semantic digest already sealed by
+    those exact bytes at the month boundary is reused; terminal validation uses
+    the public/full path and recomputes it independently.
+    """
+
+    if not _STRICT_RUNTIME_ACTIVE:
+        raise V18Error("retained month-source reuse requires strict runtime")
+    return _validate_month_source_manifest_impl(
+        manifest,
+        predictor_raw_store_root=predictor_raw_store_root,
+        predictor_derived_store_root=predictor_derived_store_root,
+        reuse_sealed_snapshot_semantic=True,
+    )
+
+
+def build_month_source_manifest(
+    source_pdfs: Sequence[str | Path],
+    source_file_names: Sequence[str],
+    source_urls: Sequence[str],
+    *,
+    target_month: Any,
+    source_received_at: Any,
+    predictor_raw_store_root: str | Path,
+    predictor_derived_store_root: str | Path,
+    activation_payload_sha256: str,
+    activation_receipt_sha256: str,
+    anchor_latest_source_session: Any,
+    previous_model_price_snapshot_binding: Mapping[str, Any],
+    previous_prefix_raw_records: Sequence[Mapping[str, Any]],
+    previous_prefix_shard_bindings: Sequence[Mapping[str, Any]],
+    first_counted_session_value: Any,
+    activation_observed_at: Any,
+    runtime_lock_verified_at: Any | None = None,
+    output: str | Path | None = None,
+) -> tuple[dict[str, Any], pd.DataFrame]:
+    """Extend one compact M-1 prefix and build the monthly panel once.
+
+    The predecessor snapshot is the activated snapshot for the first counted
+    month and the immediately preceding month-source snapshot thereafter.
+    Only the registered suffix is decoded.  The resulting full-prefix panel is
+    constructed once and may be handed to the canonical daily orchestrator.
+    """
+
+    month = _month(target_month, "month-source target_month")
+    latest = _latest_registered_source_before_month(month)
+    first_counted = _date(
+        first_counted_session_value, "month-source first counted session"
+    )
+    seal_session = _month_seal_session(
+        month, first_counted_session_value=first_counted
+    )
+    activation_observed = _timestamp(
+        activation_observed_at, "month-source activation observed"
+    )
     expected_files, kinds = _expected_predictor_files(latest)
     names = [str(item) for item in source_file_names]
-    if len(names) != len(set(names)) or any(name not in kinds for name in names):
-        raise V18Error("source-failure manifest names an unregistered source")
-    expected_subset = [name for name in expected_files if name in set(names)]
-    if names != expected_subset:
-        raise V18Error("source-failure retained bytes are not in canonical order")
-    if names == expected_files:
-        raise V18Error(
-            "source-failure manifest cannot hide a complete pre-cutoff source set"
-        )
-    reason = (
-        "source_partial_or_late_before_cutoff"
-        if names
-        else "source_missing_before_cutoff"
+    if len(source_pdfs) != len(names) or len(source_urls) != len(names):
+        raise V18Error("new month-source input vectors are misaligned")
+    base_raw = [dict(item) for item in previous_prefix_raw_records]
+    base_bindings = [dict(item) for item in previous_prefix_shard_bindings]
+    if len(base_raw) != len(base_bindings):
+        raise V18Error("month-source predecessor raw/shard vectors are misaligned")
+    base_files = [str(item.get("file")) for item in base_raw]
+    if base_files != expected_files[: len(base_files)]:
+        raise V18Error("month-source predecessor is not an exact registry prefix")
+    missing_files = expected_files[len(base_files) :]
+    if names != missing_files:
+        raise V18Error("new month-source inputs are not the exact registered suffix")
+    _validate_external_store_disjointness(
+        predictor_raw_store_root, predictor_derived_store_root
     )
-    if failure_reason is not None and str(failure_reason) != reason:
-        raise V18Error("caller source failure reason differs from artifact state")
-    received = (
-        None
-        if source_received_at is None
-        else _timestamp(source_received_at, "source_received_at")
+    verified = _runtime_verified_timestamp(runtime_lock_verified_at)
+    received = _timestamp(source_received_at, "month-source source_received_at")
+    monthly_cutoff = _cutoff(seal_session)
+    if received > monthly_cutoff or (
+        _STRICT_RUNTIME_ACTIVE and received > datetime.now(TOKYO)
+    ):
+        raise V18Error("month-source receipt is late or in the future")
+    anchor_latest = _date(
+        anchor_latest_source_session, "month-source activated anchor latest"
     )
-    if bool(names) != (received is not None):
-        raise V18Error("source-failure receipt must match retained bytes")
-    if received is not None and received > _cutoff(target):
-        raise V18Error("source-failure retained receipt is after cutoff")
-    if _STRICT_RUNTIME_ACTIVE and received is not None and received > datetime.now(TOKYO):
-        raise V18Error("source-failure receipt is in the future")
+    raw_records: list[dict[str, Any]] = list(base_raw)
     historical_metadata = _historical_predictor_metadata()
-    official_urls: list[str] = []
-    for index, (source_pdf, file_name, source_url) in enumerate(
+    for index, (source_pdf, name, source_url) in enumerate(
         zip(source_pdfs, names, source_urls, strict=True)
     ):
-        official = _official_jpx_url(source_url, f"source_urls[{index}]")
+        if kinds[name] == "daily":
+            official = _official_jpx_daily_url(
+                source_url,
+                f"month-source URLs[{index}]",
+                file_name=name,
+                source_session=_source_file_date(name, "daily"),
+            )
+        else:
+            official = _official_jpx_url(
+                source_url, f"month-source URLs[{index}]"
+            )
         supplied_count, supplied_hash = _source_file_metadata(
-            source_pdf, label="predictor"
+            source_pdf, label="month-source predictor"
         )
-        bound = historical_metadata.get(file_name)
-        if bound is not None:
-            if supplied_hash != str(bound["sha256"]):
-                raise V18Error(f"historical retained predictor SHA changed: {file_name}")
-            if "bytes" in bound and supplied_count != int(bound["bytes"]):
-                raise V18Error(f"historical retained predictor bytes changed: {file_name}")
-            if bound.get("source_url") is not None and official != str(
-                bound["source_url"]
-            ):
-                raise V18Error(f"historical retained predictor URL changed: {file_name}")
-        official_urls.append(official)
-    object_keys: list[str] = []
-    byte_counts: list[int] = []
-    digests: list[str] = []
-    if names and predictor_raw_store_root is None:
-        raise V18Error("retained source-failure bytes require a predictor raw store")
-    for source_pdf, file_name in zip(source_pdfs, names, strict=True):
-        key = _predictor_object_key(file_name, kinds[file_name])
-        retained_count, retained_hash = _seal_predictor_object(
+        bound = historical_metadata.get(name)
+        if bound is not None and (
+            supplied_hash != str(bound["sha256"])
+            or ("bytes" in bound and supplied_count != int(bound["bytes"]))
+            or (
+                bound.get("source_url") is not None
+                and official != str(bound["source_url"])
+            )
+        ):
+            raise V18Error(f"month-source historical binding changed: {name}")
+        key = _predictor_object_key(name, kinds[name])
+        count, digest = _seal_predictor_object(
             source_pdf,
             predictor_raw_store_root=predictor_raw_store_root,
             object_key=key,
         )
-        object_keys.append(key)
-        byte_counts.append(retained_count)
-        digests.append(retained_hash)
-    source_set = [
-        {
-            "object_key": key,
-            "file": name,
-            "url": url,
-            "byte_count": count,
-            "sha256": digest,
-        }
-        for key, name, url, count, digest in zip(
-            object_keys, names, official_urls, byte_counts, digests, strict=True
+        raw_records.append(
+            {
+                "object_key": key,
+                "file": name,
+                "url": official,
+                "byte_count": count,
+                "sha256": digest,
+            }
         )
-    ]
-    created = _operation_timestamp(created_at, "source manifest created_at")
-    sealed = _operation_timestamp(sealed_at, "source manifest sealed_at")
+    bindings: list[dict[str, Any]] = list(base_bindings)
+    for raw_record in raw_records[len(base_raw) :]:
+        source_date = _source_file_date(
+            str(raw_record["file"]), kinds[str(raw_record["file"])]
+        )
+        expected_chronology = "anchor" if source_date <= anchor_latest else "forward"
+        _, _, shard_manifest_key = _predictor_shard_identity(raw_record)
+        if _external_object_exists(
+            predictor_derived_store_root,
+            shard_manifest_key,
+            prefix=PREDICTOR_SHARD_OBJECT_PREFIX,
+            label="month-source shard manifest",
+        ):
+            shard_manifest, _ = _read_external_canonical_json(
+                predictor_derived_store_root,
+                shard_manifest_key,
+                prefix=PREDICTOR_SHARD_OBJECT_PREFIX,
+                label="month-source shard manifest",
+            )
+            shard, _, binding = _validate_parsed_shard_manifest(
+                shard_manifest,
+                raw_record=raw_record,
+                predictor_derived_store_root=predictor_derived_store_root,
+            )
+            if shard["chronology_class"] != expected_chronology:
+                raise V18Error("month-source shard chronology crosses anchor")
+        else:
+            if expected_chronology == "anchor":
+                raise V18Error("month-source activated anchor shard is missing")
+            _, _, binding = ensure_predictor_parsed_shard(
+                raw_record,
+                predictor_raw_store_root=predictor_raw_store_root,
+                predictor_derived_store_root=predictor_derived_store_root,
+                chronology_class="forward",
+                raw_received_at=received,
+                runtime_lock_verified_at=verified,
+            )
+        bindings.append(binding)
+    shard_manifests = _validate_bound_predictor_shard_metadata(
+        raw_records,
+        bindings,
+        predictor_raw_store_root=predictor_raw_store_root,
+        predictor_derived_store_root=predictor_derived_store_root,
+    )
+    previous_binding = dict(previous_model_price_snapshot_binding)
+    previous_snapshot, previous_prices, previous_manifest_payload = (
+        _validate_model_price_snapshot_binding(
+            previous_binding,
+            predictor_derived_store_root=predictor_derived_store_root,
+            raw_records=raw_records,
+            shard_bindings=bindings,
+        )
+    )
+    previous_month = _month(
+        previous_binding["model_price_snapshot_target_month"],
+        "month-source predecessor snapshot month",
+    )
+    previous_latest = _date(
+        previous_binding["model_price_snapshot_latest_source_session"],
+        "month-source predecessor snapshot latest",
+    )
+    prefix_count = int(previous_snapshot["raw_source_count"])
+    if prefix_count > len(raw_records):
+        raise V18Error("month-source predecessor exceeds the registered prefix")
+    initial_snapshot = previous_month == month
+    if initial_snapshot:
+        if previous_latest != latest or prefix_count != len(raw_records):
+            raise V18Error("initial month must consume the exact activated M-1 snapshot")
+        suffix_bindings: list[dict[str, Any]] = []
+        prices = previous_prices
+    else:
+        if previous_month != month - 1 or previous_latest >= latest:
+            raise V18Error("month-source predecessor is not the immediately prior month")
+        suffix_frames: list[pd.DataFrame] = []
+        for index in range(prefix_count, len(raw_records)):
+            shard_manifest = shard_manifests[index]
+            if _date(
+                shard_manifest["min_date"], "month-source suffix min date"
+            ) <= previous_latest:
+                raise V18Error("month-source suffix overlaps its immutable predecessor")
+            _, shard_frame, _ = _validate_parsed_shard_manifest(
+                shard_manifest,
+                raw_record=raw_records[index],
+                predictor_derived_store_root=predictor_derived_store_root,
+                expected_chronology_class="forward",
+                decode_data=True,
+            )
+            assert shard_frame is not None
+            suffix_frames.append(
+                _coerce_model_price_frame(
+                    shard_frame, label="month-source compact forward suffix"
+                )
+            )
+        if not suffix_frames:
+            raise V18Error("forward month-source extension has an empty suffix")
+        suffix_bindings = [dict(item) for item in bindings[prefix_count:]]
+        prices = _coerce_model_price_frame(
+            pd.concat([previous_prices, *suffix_frames], ignore_index=True),
+            label="month-source compact full prefix",
+        )
+    if pd.to_datetime(prices["date"]).max().normalize() != latest or pd.to_datetime(
+        prices["date"]
+    ).ge(month.start_time.normalize()).any():
+        raise V18Error("month-source compact data is not the exact M-1 prefix")
+    source_set_hash = canonical_json_sha256(raw_records)
+    shard_set_hash = _parsed_shard_set_sha256(bindings)
+    # Panel construction is intentionally before the create-once snapshot
+    # write.  A model/codec failure cannot strand a newly reserved artifact.
+    full_panel = build_forward_c00_panel(prices, seal_session)
+    panel = _coerce_jsonl_frame(
+        full_panel.loc[
+            pd.to_datetime(full_panel["date"], errors="coerce").lt(
+                month.start_time.normalize()
+            )
+        ],
+        G0_PANEL_COLUMNS,
+        label="month-source training panel",
+    )
+    if initial_snapshot:
+        current_snapshot = previous_snapshot
+        current_binding = previous_binding
+        snapshot_origin = "activation_anchor"
+    else:
+        (
+            current_snapshot,
+            _,
+            current_manifest_key,
+            current_manifest_payload,
+        ) = materialize_model_price_snapshot(
+            prices,
+            predictor_derived_store_root=predictor_derived_store_root,
+            target_month=month,
+            latest_source_session=latest,
+            raw_records=raw_records,
+            shard_bindings=bindings,
+            previous_snapshot_manifest_sha256=previous_snapshot[
+                "snapshot_manifest_sha256"
+            ],
+            previous_snapshot_binding=previous_binding,
+            runtime_lock_verified_at=verified,
+        )
+        current_binding = {
+            "model_price_snapshot_target_month": str(month),
+            "model_price_snapshot_latest_source_session": str(latest.date()),
+            "model_price_snapshot_object_key": current_snapshot["data_object_key"],
+            "model_price_snapshot_byte_count": int(
+                current_snapshot["data_byte_count"]
+            ),
+            "model_price_snapshot_file_sha256": current_snapshot["data_sha256"],
+            "model_price_snapshot_semantic_sha256": current_snapshot[
+                "model_price_semantic_sha256"
+            ],
+            "model_price_snapshot_manifest_object_key": current_manifest_key,
+            "model_price_snapshot_manifest_byte_count": len(
+                current_manifest_payload
+            ),
+            "model_price_snapshot_manifest_file_sha256": hashlib.sha256(
+                current_manifest_payload
+            ).hexdigest(),
+            "model_price_snapshot_manifest_sha256": current_snapshot[
+                "snapshot_manifest_sha256"
+            ],
+        }
+        snapshot_origin = "forward_extension"
+    if initial_snapshot:
+        expected_received = max(
+            _timestamp(
+                current_snapshot["sealed_at"],
+                "activated month snapshot sealed_at",
+            ),
+            activation_observed,
+        )
+    else:
+        suffix_receipts = [
+            _timestamp(
+                item["raw_received_at"], "forward month-source suffix receipt"
+            )
+            for item in shard_manifests[prefix_count:]
+        ]
+        if not suffix_receipts:
+            raise V18Error("forward month-source has no receipt-bearing suffix")
+        expected_received = max(suffix_receipts)
+    if received != expected_received:
+        raise V18Error(
+            "month-source availability must be derived from its exact anchor/suffix"
+        )
+    created = datetime.now(TOKYO)
+    sealed = datetime.now(TOKYO)
+    if max(verified, received, activation_observed) > created or sealed > monthly_cutoff:
+        raise V18Error("month-source construction missed its causal cutoff")
+    for shard_manifest in shard_manifests:
+        if _timestamp(shard_manifest["sealed_at"], "month-source shard sealed") > created:
+            raise V18Error("month-source predates a contributing shard seal")
+    if _timestamp(
+        current_snapshot["sealed_at"], "month-source snapshot sealed"
+    ) > created:
+        raise V18Error("month-source predates its compact snapshot seal")
+    model_semantic_hash = model_price_semantic_sha256(prices)
+    training_semantic_hash = semantic_frame_sha256(panel, G0_PANEL_COLUMNS)
     value: dict[str, Any] = {
         "schema_version": 1,
-        "target_session": str(target.date()),
+        "target_month": str(month),
+        "first_counted_session": str(first_counted.date()),
+        "seal_session": str(seal_session.date()),
+        "activation_observed_at": activation_observed,
         "latest_required_source_session": str(latest.date()),
         "created_at": created,
         "sealed_at": sealed,
         "runtime_lock_sha256": RUNTIME_LOCK_SHA256,
         "runtime_lock_verified_at": verified,
-        "source_files": names,
-        "source_urls": official_urls,
-        "source_object_keys": object_keys,
-        "source_byte_counts": byte_counts,
-        "source_sha256": digests,
-        "source_set_sha256": canonical_json_sha256(source_set),
+        "source_files": [item["file"] for item in raw_records],
+        "source_urls": [item["url"] for item in raw_records],
+        "source_object_keys": [item["object_key"] for item in raw_records],
+        "source_byte_counts": [item["byte_count"] for item in raw_records],
+        "source_sha256": [item["sha256"] for item in raw_records],
+        "source_set_sha256": source_set_hash,
         "source_received_at": received,
-        "parser_path": JPX_PARSER_PATH,
-        "parser_version": JPX_PARSER_VERSION,
+        "parsed_shards": bindings,
+        "parsed_shard_set_sha256": shard_set_hash,
+        "model_price_snapshot_origin": snapshot_origin,
+        "previous_model_price_snapshot_target_month": (
+            None if initial_snapshot else str(previous_month)
+        ),
+        "previous_model_price_snapshot_latest_source_session": (
+            None if initial_snapshot else str(previous_latest.date())
+        ),
+        "previous_model_price_snapshot_manifest_object_key": (
+            None
+            if initial_snapshot
+            else previous_binding["model_price_snapshot_manifest_object_key"]
+        ),
+        "previous_model_price_snapshot_manifest_file_sha256": (
+            None
+            if initial_snapshot
+            else hashlib.sha256(previous_manifest_payload).hexdigest()
+        ),
+        "previous_model_price_snapshot_manifest_sha256": (
+            None
+            if initial_snapshot
+            else previous_snapshot["snapshot_manifest_sha256"]
+        ),
+        "model_price_suffix_shard_count": len(suffix_bindings),
+        "model_price_suffix_shard_set_sha256": canonical_json_sha256(
+            suffix_bindings
+        ),
+        **current_binding,
+        "parsed_row_count": int(len(prices)),
+        "model_price_full_prefix_semantic_sha256": model_semantic_hash,
+        "g0_training_panel_semantic_sha256": training_semantic_hash,
+        "g0_training_row_count": int(len(panel)),
+        "activation_payload_sha256": _require_sha(
+            activation_payload_sha256, "month-source payload SHA"
+        ),
+        "activation_receipt_sha256": _require_sha(
+            activation_receipt_sha256, "month-source receipt SHA"
+        ),
+        "protocol_sha256": PROTOCOL_SHA256,
+        "runner_sha256": sha256_file(__file__),
         "parser_sha256": JPX_PARSER_SHA256,
-        "parsed_row_count": 0,
-        "rejected_row_count": 0,
-        "duplicate_date_code_count": 0,
-        "parsed_panel_semantic_sha256": None,
-        "g0_panel_semantic_sha256": None,
-        "common_universe_semantic_sha256": None,
-        "target_date_scoring_input_semantic_sha256": None,
-        "source_complete": False,
-        "failure_reason": reason,
-        "python_version": platform.python_version(),
         "canonical_json_contract": CANONICAL_JSON_CONTRACT,
     }
-    value["source_manifest_sha256"] = canonical_json_sha256(
-        value, exclude_fields={"source_manifest_sha256"}
-    )
-    validate_source_manifest(
-        value,
-        session_date=target,
-        predictor_raw_store_root=predictor_raw_store_root,
+    value["month_source_manifest_sha256"] = canonical_json_sha256(
+        value, exclude_fields={"month_source_manifest_sha256"}
     )
     if output is not None:
         write_json(value, output, exclusive=True)
-    return value
+    return value, panel
+
+
+def _build_month_source_from_prepared_day(
+    raw_records: Sequence[Mapping[str, Any]],
+    shard_bindings: Sequence[Mapping[str, Any]],
+    model_prices: pd.DataFrame,
+    full_panel: pd.DataFrame,
+    base_snapshot_binding: Mapping[str, Any],
+    *,
+    target_month: pd.Period,
+    first_counted_session_value: Any,
+    predictor_raw_store_root: str | Path,
+    predictor_derived_store_root: str | Path,
+    activation_payload_sha256: str,
+    activation_receipt_sha256: str,
+    activation_observed_at: Any,
+    output: str | Path,
+) -> tuple[dict[str, Any], pd.DataFrame, dict[str, Any]]:
+    """Seal monthly authority from the canonical day's already-built panel."""
+
+    month = _month(target_month, "prepared month-source target")
+    first = _date(first_counted_session_value, "prepared first counted session")
+    seal_session = _month_seal_session(month, first_counted_session_value=first)
+    latest = _latest_registered_source_before_month(month)
+    expected_files, _ = _expected_predictor_files(latest)
+    all_raw = [dict(item) for item in raw_records]
+    all_bindings = [dict(item) for item in shard_bindings]
+    prefix_count = len(expected_files)
+    month_raw = all_raw[:prefix_count]
+    month_bindings = all_bindings[:prefix_count]
+    if [str(item["file"]) for item in month_raw] != expected_files:
+        raise V18Error("prepared month-source is not the exact M-1 raw prefix")
+    month_prices = _coerce_model_price_frame(
+        model_prices.loc[pd.to_datetime(model_prices["date"]).le(latest)],
+        label="prepared month-source compact M-1 prefix",
+    )
+    if pd.to_datetime(month_prices["date"]).max().normalize() != latest:
+        raise V18Error("prepared month-source compact prefix does not end at M-1")
+    base_binding = dict(base_snapshot_binding)
+    base_snapshot, _, base_payload = _validate_model_price_snapshot_binding(
+        base_binding,
+        predictor_derived_store_root=predictor_derived_store_root,
+        raw_records=month_raw,
+        shard_bindings=month_bindings,
+    )
+    base_month = _month(
+        base_binding["model_price_snapshot_target_month"],
+        "prepared base snapshot month",
+    )
+    base_count = int(base_snapshot["raw_source_count"])
+    initial = base_month == month
+    if initial:
+        if base_count != prefix_count or base_snapshot["latest_source_session"] != str(
+            latest.date()
+        ):
+            raise V18Error("prepared initial month snapshot is not exact")
+        snapshot = base_snapshot
+        current_binding = base_binding
+        snapshot_origin = "activation_anchor"
+        suffix_bindings: list[dict[str, Any]] = []
+    else:
+        if base_month != month - 1 or base_count >= prefix_count:
+            raise V18Error("prepared month snapshot predecessor is not immediate")
+        suffix_bindings = month_bindings[base_count:]
+        snapshot, _, manifest_key, manifest_payload = materialize_model_price_snapshot(
+            month_prices,
+            predictor_derived_store_root=predictor_derived_store_root,
+            target_month=month,
+            latest_source_session=latest,
+            raw_records=month_raw,
+            shard_bindings=month_bindings,
+            previous_snapshot_manifest_sha256=base_snapshot[
+                "snapshot_manifest_sha256"
+            ],
+            previous_snapshot_binding=base_binding,
+        )
+        current_binding = {
+            "model_price_snapshot_target_month": str(month),
+            "model_price_snapshot_latest_source_session": str(latest.date()),
+            "model_price_snapshot_object_key": snapshot["data_object_key"],
+            "model_price_snapshot_byte_count": int(snapshot["data_byte_count"]),
+            "model_price_snapshot_file_sha256": snapshot["data_sha256"],
+            "model_price_snapshot_semantic_sha256": snapshot[
+                "model_price_semantic_sha256"
+            ],
+            "model_price_snapshot_manifest_object_key": manifest_key,
+            "model_price_snapshot_manifest_byte_count": len(manifest_payload),
+            "model_price_snapshot_manifest_file_sha256": hashlib.sha256(
+                manifest_payload
+            ).hexdigest(),
+            "model_price_snapshot_manifest_sha256": snapshot[
+                "snapshot_manifest_sha256"
+            ],
+        }
+        snapshot_origin = "forward_extension"
+    training_panel = _coerce_jsonl_frame(
+        full_panel.loc[
+            pd.to_datetime(full_panel["date"], errors="coerce").lt(
+                month.start_time.normalize()
+            )
+        ],
+        G0_PANEL_COLUMNS,
+        label="prepared month-source training panel",
+    )
+    observed = _timestamp(activation_observed_at, "prepared activation observed")
+    if initial:
+        received = max(
+            _timestamp(snapshot["sealed_at"], "prepared anchor snapshot sealed"),
+            observed,
+        )
+    else:
+        shard_manifests = _validate_bound_predictor_shard_metadata(
+            month_raw,
+            month_bindings,
+            predictor_raw_store_root=predictor_raw_store_root,
+            predictor_derived_store_root=predictor_derived_store_root,
+        )
+        suffix_receipts = [
+            _timestamp(
+                item["raw_received_at"], "prepared month-source suffix receipt"
+            )
+            for item in shard_manifests[base_count:]
+        ]
+        if len(suffix_receipts) != len(suffix_bindings) or not suffix_receipts:
+            raise V18Error("prepared month-source suffix receipt set is incomplete")
+        received = max(suffix_receipts)
+    verified = _runtime_verified_timestamp()
+    created = datetime.now(TOKYO)
+    sealed = datetime.now(TOKYO)
+    if max(received, observed, verified) > created or sealed > _cutoff(seal_session):
+        raise V18Error("prepared month-source missed its causal cutoff")
+    source_set_hash = canonical_json_sha256(month_raw)
+    shard_set_hash = _parsed_shard_set_sha256(month_bindings)
+    value: dict[str, Any] = {
+        "schema_version": 1,
+        "target_month": str(month),
+        "first_counted_session": str(first.date()),
+        "seal_session": str(seal_session.date()),
+        "activation_observed_at": observed,
+        "latest_required_source_session": str(latest.date()),
+        "created_at": created,
+        "sealed_at": sealed,
+        "runtime_lock_sha256": RUNTIME_LOCK_SHA256,
+        "runtime_lock_verified_at": verified,
+        "source_files": [item["file"] for item in month_raw],
+        "source_urls": [item["url"] for item in month_raw],
+        "source_object_keys": [item["object_key"] for item in month_raw],
+        "source_byte_counts": [item["byte_count"] for item in month_raw],
+        "source_sha256": [item["sha256"] for item in month_raw],
+        "source_set_sha256": source_set_hash,
+        "source_received_at": received,
+        "parsed_shards": month_bindings,
+        "parsed_shard_set_sha256": shard_set_hash,
+        "model_price_snapshot_origin": snapshot_origin,
+        "previous_model_price_snapshot_target_month": (
+            None if initial else base_snapshot["target_month"]
+        ),
+        "previous_model_price_snapshot_latest_source_session": (
+            None if initial else base_snapshot["latest_source_session"]
+        ),
+        "previous_model_price_snapshot_manifest_object_key": (
+            None
+            if initial
+            else base_binding["model_price_snapshot_manifest_object_key"]
+        ),
+        "previous_model_price_snapshot_manifest_file_sha256": (
+            None if initial else hashlib.sha256(base_payload).hexdigest()
+        ),
+        "previous_model_price_snapshot_manifest_sha256": (
+            None if initial else base_snapshot["snapshot_manifest_sha256"]
+        ),
+        "model_price_suffix_shard_count": len(suffix_bindings),
+        "model_price_suffix_shard_set_sha256": canonical_json_sha256(
+            suffix_bindings
+        ),
+        **current_binding,
+        "parsed_row_count": int(len(month_prices)),
+        "model_price_full_prefix_semantic_sha256": model_price_semantic_sha256(
+            month_prices
+        ),
+        "g0_training_panel_semantic_sha256": semantic_frame_sha256(
+            training_panel, G0_PANEL_COLUMNS
+        ),
+        "g0_training_row_count": int(len(training_panel)),
+        "activation_payload_sha256": _require_sha(
+            activation_payload_sha256, "prepared month payload SHA"
+        ),
+        "activation_receipt_sha256": _require_sha(
+            activation_receipt_sha256, "prepared month receipt SHA"
+        ),
+        "protocol_sha256": PROTOCOL_SHA256,
+        "runner_sha256": sha256_file(__file__),
+        "parser_sha256": JPX_PARSER_SHA256,
+        "canonical_json_contract": CANONICAL_JSON_CONTRACT,
+    }
+    value["month_source_manifest_sha256"] = canonical_json_sha256(
+        value, exclude_fields={"month_source_manifest_sha256"}
+    )
+    validate_month_source_manifest(
+        value,
+        predictor_raw_store_root=predictor_raw_store_root,
+        predictor_derived_store_root=predictor_derived_store_root,
+        training_panel=training_panel,
+        model_prices=month_prices,
+        precomputed_model_semantic_sha256=value[
+            "model_price_full_prefix_semantic_sha256"
+        ],
+        precomputed_training_semantic_sha256=value[
+            "g0_training_panel_semantic_sha256"
+        ],
+    )
+    write_json(value, output, exclusive=True)
+    return value, training_panel, current_binding
+
+
+def prepare_day(
+    *,
+    session_date: Any,
+    new_predictor_pdfs: Sequence[str | Path],
+    new_predictor_file_names: Sequence[str],
+    new_predictor_urls: Sequence[str],
+    new_predictor_received_at: Sequence[Any],
+    predictor_raw_store_root: str | Path,
+    predictor_derived_store_root: str | Path,
+    outcome_raw_store_root: str | Path,
+    checkpoint_core_store_root: str | Path,
+    activation_context: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Canonical one-process prepare path; publication remains a separate command."""
+
+    if not _STRICT_RUNTIME_ACTIVE:
+        raise V18Error("prepare-day requires the strict operational runtime")
+    target = _date(session_date, "prepare-day session")
+    context = validate_activation_context(activation_context)
+    payload, payload_hash = validate_activation_payload(
+        ACTIVATION_PAYLOAD,
+        predictor_raw_store_root=predictor_raw_store_root,
+        predictor_derived_store_root=predictor_derived_store_root,
+    )
+    if context["activation_payload_sha256"] != payload_hash:
+        raise V18Error("prepare-day activation context differs from payload B")
+    _validate_external_store_disjointness(
+        predictor_raw_store_root, predictor_derived_store_root
+    )
+    _validate_external_root_pair_disjoint(
+        predictor_raw_store_root,
+        "predictor",
+        outcome_raw_store_root,
+        "outcome",
+    )
+    _validate_external_root_pair_disjoint(
+        predictor_derived_store_root,
+        "predictor derived",
+        outcome_raw_store_root,
+        "outcome",
+    )
+    month = target.to_period("M")
+    month_source_path = MONTH_SOURCE_MANIFEST_DIR / f"{month}.json"
+    month_source: dict[str, Any] | None = (
+        read_json(month_source_path) if month_source_path.is_file() else None
+    )
+    fold_holder: dict[str, Any] = {}
+    bundle_holder: dict[str, Any] = {}
+
+    receipts = [
+        _timestamp(item, f"prepare-day predictor receipt[{index}]")
+        for index, item in enumerate(new_predictor_received_at)
+    ]
+    if len(receipts) != len(new_predictor_file_names):
+        raise V18Error("prepare-day predictor receipt vector is misaligned")
+    if not receipts:
+        raise V18Error("prepare-day requires at least one post-anchor source")
+
+    def month_factory(
+        raw_records: Sequence[Mapping[str, Any]],
+        shard_bindings: Sequence[Mapping[str, Any]],
+        model_prices: pd.DataFrame,
+        full_panel: pd.DataFrame,
+        base_snapshot_binding: Mapping[str, Any],
+    ) -> tuple[dict[str, Any], dict[str, Any]]:
+        nonlocal month_source
+        if month_source is None:
+            if target != _month_seal_session(
+                month,
+                first_counted_session_value=context["first_counted_session"],
+            ):
+                raise V18Error(
+                    "monthly authority cannot first appear after its seal session"
+                )
+            month_source, training_panel, current_binding = (
+                _build_month_source_from_prepared_day(
+                    raw_records,
+                    shard_bindings,
+                    model_prices,
+                    full_panel,
+                    base_snapshot_binding,
+                    target_month=month,
+                    first_counted_session_value=context["first_counted_session"],
+                    predictor_raw_store_root=predictor_raw_store_root,
+                    predictor_derived_store_root=predictor_derived_store_root,
+                    activation_payload_sha256=context["activation_payload_sha256"],
+                    activation_receipt_sha256=context["activation_receipt_sha256"],
+                    activation_observed_at=context[
+                        "activation_receipt_commit_observed_at"
+                    ],
+                    output=month_source_path,
+                )
+            )
+        else:
+            month_latest = _latest_registered_source_before_month(month)
+            month_prices = _coerce_model_price_frame(
+                model_prices.loc[
+                    pd.to_datetime(model_prices["date"]).le(month_latest)
+                ],
+                label="prepare-day recovered month model-price prefix",
+            )
+            training_panel = _coerce_jsonl_frame(
+                full_panel.loc[
+                    pd.to_datetime(full_panel["date"]).lt(month.start_time)
+                ],
+                G0_PANEL_COLUMNS,
+                label="prepare-day recovered month training panel",
+            )
+            validated_month_source, _, _ = (
+                _validate_retained_intramonth_month_source(
+                    month_source,
+                    predictor_raw_store_root=predictor_raw_store_root,
+                    predictor_derived_store_root=predictor_derived_store_root,
+                )
+            )
+            if validated_month_source != month_source:
+                raise V18Error("prepare-day retained month-source bytes changed")
+            if _model_price_snapshot_binding_from_month_source(
+                validated_month_source
+            ) != dict(base_snapshot_binding):
+                raise V18Error(
+                    "prepare-day retained month-source snapshot binding changed"
+                )
+            if (
+                len(month_prices)
+                != int(validated_month_source["parsed_row_count"])
+                or len(training_panel)
+                != int(validated_month_source["g0_training_row_count"])
+            ):
+                raise V18Error("prepare-day retained month-source row counts changed")
+            # Boundary creation sealed the exact compact snapshot and full G0
+            # training semantic.  Intramonth validation above reopens that
+            # content-addressed snapshot, checks its exact bytes/canonical
+            # decode/source+shard/self bindings, and the fold loader below
+            # freshly recomputes row/target/feature-matrix identities.  Rehashing
+            # the unchanged 22-column training prefix here is redundant and was
+            # the measured daily timing blocker.
+            current_binding = _model_price_snapshot_binding_from_month_source(
+                validated_month_source
+            )
+        fold, bundle = _load_or_create_month_fold(
+            training_panel,
+            target_month=month,
+            month_source_manifest=month_source,
+            predictor_derived_store_root=predictor_derived_store_root,
+            first_counted_session_value=context["first_counted_session"],
+            activation_observed_at=context[
+                "activation_receipt_commit_observed_at"
+            ],
+        )
+        fold_holder.update(fold)
+        bundle_holder.update(bundle)
+        return month_source, current_binding
+
+    source_path = SOURCE_MANIFEST_DIR / f"{target.date()}.json"
+    retained_source: dict[str, Any] | None = None
+    if os.path.lexists(source_path):
+        if source_path.is_symlink() or not source_path.is_file():
+            raise V18Error("prepare-day retained source is not a plain file")
+        retained_source = read_json(source_path)
+        validate_source_manifest(
+            retained_source,
+            session_date=target,
+            predictor_raw_store_root=predictor_raw_store_root,
+            predictor_derived_store_root=predictor_derived_store_root,
+            first_counted_session_value=context["first_counted_session"],
+            require_predecessor_decision=False,
+        )
+    source, target_panel = build_predictor_source_manifest(
+        new_predictor_pdfs,
+        new_predictor_file_names,
+        new_predictor_urls,
+        session_date=target,
+        source_received_at=new_predictor_received_at,
+        predictor_raw_store_root=predictor_raw_store_root,
+        predictor_derived_store_root=predictor_derived_store_root,
+        predictor_cache_anchor=payload["predictor_cache_anchor"],
+        month_source_manifest=month_source,
+        _month_source_factory=month_factory,
+        first_counted_session_value=context["first_counted_session"],
+        runtime_lock_verified_at=(
+            None
+            if retained_source is None
+            else retained_source["runtime_lock_verified_at"]
+        ),
+        created_at=(None if retained_source is None else retained_source["created_at"]),
+        sealed_at=(None if retained_source is None else retained_source["sealed_at"]),
+        output=(source_path if retained_source is None else None),
+        _resume_exact_timestamps=retained_source is not None,
+    )
+    if retained_source is not None:
+        if canonical_json_bytes(source) != canonical_json_bytes(retained_source):
+            raise V18Error(
+                "prepare-day completed source retry changes exact caller/artifact identity"
+            )
+        source = retained_source
+
+    # The canonical rollover is intentionally outcome-blind until the current
+    # target source/cache above is sealed.  Only then may the exact D-1 PDF be
+    # copied to a physically distinct outcome authority, attached to the
+    # already published D-1 decision, and (at a boundary) close the prior
+    # month.  Failure at any stage aborts; it cannot create a counted cash day.
+    decision_rows = _load_decision_record_authority(heal_derived=True)
+    outcome_rows = _load_outcome_record_authority(
+        decision_rows, heal_derived=True
+    )
+    first_counted = _date(
+        context["first_counted_session"], "prepare-day first counted session"
+    )
+    calendar = load_registered_calendar()
+    target_positions = np.flatnonzero(calendar == target)
+    first_positions = np.flatnonzero(calendar == first_counted)
+    if (
+        len(target_positions) != 1
+        or len(first_positions) != 1
+        or target < first_counted
+    ):
+        raise V18Error("prepare-day target is outside its counted calendar")
+    prior_counted = calendar[int(first_positions[0]) : int(target_positions[0])]
+    if [str(item.date()) for item in prior_counted] != [
+        str(item["session_date"]) for item in decision_rows
+    ]:
+        raise V18Error("prepare-day prior decision prefix is incomplete")
+    if target == first_counted:
+        if (
+            source["previous_counted_target_session"] is not None
+            or source["previous_counted_source_manifest_sha256"] is not None
+        ):
+            raise V18Error("first prepare-day source has a predecessor binding")
+    else:
+        if not decision_rows or (
+            source["previous_counted_target_session"]
+            != decision_rows[-1]["session_date"]
+            or source["previous_counted_source_manifest_sha256"]
+            != decision_rows[-1]["source_manifest_sha256"]
+        ):
+            raise V18Error(
+                "prepare-day source predecessor differs from the sealed prior decision"
+            )
+    if target != first_counted:
+        previous_target = pd.Timestamp(calendar[int(target_positions[0]) - 1])
+        if not decision_rows or decision_rows[-1]["session_date"] != str(
+            previous_target.date()
+        ):
+            raise V18Error("prepare-day lacks the exact prior counted decision")
+        latest = _latest_required_predictor_source_session(target, calendar)
+        if latest != previous_target:
+            raise V18Error("prepare-day D-1 predictor/outcome session diverged")
+        expected_files, kinds = _expected_predictor_files(latest)
+        rollover_matches: list[tuple[str | Path, str, str, datetime]] = []
+        for pdf, file_name, url, receipt in zip(
+            new_predictor_pdfs,
+            new_predictor_file_names,
+            new_predictor_urls,
+            receipts,
+            strict=True,
+        ):
+            if file_name not in kinds:
+                raise V18Error("prepare-day rollover source is unregistered")
+            if _source_file_date(file_name, kinds[file_name]) == previous_target:
+                rollover_matches.append((pdf, file_name, url, receipt))
+        if len(rollover_matches) != 1:
+            raise V18Error("prepare-day requires exactly one supplied D-1 outcome PDF")
+        outcome_pdf, outcome_file, outcome_url, outcome_received = rollover_matches[0]
+        if outcome_file not in expected_files:
+            raise V18Error("prepare-day D-1 outcome file is outside the source registry")
+        predictor_record = next(
+            (
+                item
+                for item in _source_set_records(source)
+                if item["file"] == outcome_file
+            ),
+            None,
+        )
+        if predictor_record is None:
+            raise V18Error("prepare-day D-1 predictor raw binding is missing")
+        canonical_outcome_url = _official_jpx_daily_url(
+            outcome_url,
+            "prepare-day D-1 outcome URL",
+            file_name=outcome_file,
+            source_session=previous_target,
+        )
+        supplied_count, supplied_sha = _source_file_metadata(
+            outcome_pdf, label="prepare-day D-1 supplied input"
+        )
+        if (
+            predictor_record["file"] != outcome_file
+            or predictor_record["url"] != canonical_outcome_url
+            or int(predictor_record["byte_count"]) != supplied_count
+            or predictor_record["sha256"] != supplied_sha
+        ):
+            raise V18Error(
+                "prepare-day D-1 supplied input differs from sealed predictor bytes"
+            )
+        predictor_index = source["source_files"].index(outcome_file)
+        predictor_binding = source["parsed_shards"][predictor_index]
+        predictor_shard_manifest, _ = _read_external_canonical_json(
+            predictor_derived_store_root,
+            predictor_binding["shard_manifest_object_key"],
+            prefix=PREDICTOR_SHARD_OBJECT_PREFIX,
+            label="prepare-day D-1 predictor shard manifest",
+        )
+        _validate_parsed_shard_manifest(
+            predictor_shard_manifest,
+            raw_record=predictor_record,
+            predictor_derived_store_root=predictor_derived_store_root,
+            expected_chronology_class="forward",
+            expected_raw_received_at=outcome_received,
+            decode_data=False,
+        )
+        outcome_path = OUTCOME_MANIFEST_DIR / f"{previous_target.date()}.json"
+        if os.path.lexists(outcome_path):
+            if outcome_path.is_symlink() or not outcome_path.is_file():
+                raise V18Error("prepare-day retained outcome manifest is not plain")
+            outcome_manifest, _ = validate_outcome_manifest(
+                outcome_path,
+                decision_rows[-1],
+                outcome_raw_store_root=outcome_raw_store_root,
+            )
+        else:
+            # Copy only from the already sealed predictor object.  A caller
+            # mutation after the precheck therefore cannot strand a different
+            # outcome authority before the cross-role check.
+            with _external_snapshot_paths(
+                predictor_raw_store_root,
+                [predictor_record],
+                prefix=PREDICTOR_OBJECT_PREFIX,
+                label="prepare-day D-1 predictor rollover",
+            ) as (rollover_paths, _):
+                outcome_manifest = build_outcome_manifest(
+                    decision_rows[-1],
+                    rollover_paths[0],
+                    outcome_raw_store_root=outcome_raw_store_root,
+                    source_file_name=outcome_file,
+                    source_url=canonical_outcome_url,
+                    source_received_at=outcome_received,
+                    output=outcome_path,
+                )
+        expected_cross_role = {
+            "file": outcome_manifest["source_file_name"],
+            "url": outcome_manifest["source_url"],
+            "byte_count": int(outcome_manifest["source_byte_count"]),
+            "sha256": outcome_manifest["source_sha256"],
+        }
+        if any(
+            predictor_record[field] != expected
+            for field, expected in expected_cross_role.items()
+        ):
+            raise V18Error(
+                "prepare-day predictor/outcome roles do not bind identical D-1 bytes"
+            )
+        if _timestamp(
+            outcome_manifest["source_received_at"], "D-1 outcome received_at"
+        ) != outcome_received:
+            raise V18Error("prepare-day D-1 outcome receipt changed")
+        _assert_external_objects_nonalias(
+            predictor_raw_store_root,
+            str(predictor_record["object_key"]),
+            PREDICTOR_OBJECT_PREFIX,
+            outcome_raw_store_root,
+            str(outcome_manifest["raw_source_object_key"]),
+            OUTCOME_OBJECT_PREFIX,
+        )
+        if len(outcome_rows) == len(decision_rows) - 1:
+            combined_outcomes = attach_outcomes(
+                decision_rows,
+                outcome_path,
+                outcome_raw_store_root=outcome_raw_store_root,
+                existing_outcomes=outcome_rows,
+            )
+            append_jsonl_record(
+                OUTCOME_LEDGER,
+                combined_outcomes[-1],
+                required_fields=OUTCOME_FIELDS,
+                validator=lambda rows: validate_outcome_records(
+                    rows, decision_rows
+                ),
+            )
+            outcome_rows = _load_outcome_record_authority(
+                decision_rows, heal_derived=True
+            )
+        elif len(outcome_rows) == len(decision_rows):
+            if outcome_rows[-1]["outcome_manifest_sha256"] != outcome_manifest[
+                "outcome_manifest_sha256"
+            ]:
+                raise V18Error("prepare-day retained outcome ledger binding changed")
+        else:
+            raise V18Error("prepare-day outcome ledger is not the exact prior prefix")
+    elif outcome_rows:
+        raise V18Error("first counted prepare-day cannot prebind an outcome")
+
+    completed_rows = _load_completed_month_record_authority(heal_derived=True)
+    if target != first_counted:
+        previous_month = previous_target.to_period("M")
+        if previous_month != target.to_period("M"):
+            if completed_rows and completed_rows[-1]["completed_month"] == str(
+                previous_month
+            ):
+                rebuilt = build_completed_month_record(
+                    decision_rows,
+                    outcome_rows,
+                    completed_month=str(previous_month),
+                    created_at=completed_rows[-1]["created_at"],
+                    existing_records=completed_rows[:-1],
+                )
+                if canonical_json_bytes(rebuilt[-1]) != canonical_json_bytes(
+                    completed_rows[-1]
+                ):
+                    raise V18Error("prepare-day retained month close changed")
+            else:
+                combined_months = build_completed_month_record(
+                    decision_rows,
+                    outcome_rows,
+                    completed_month=str(previous_month),
+                    capture_operational_timestamp=True,
+                    existing_records=completed_rows,
+                )
+                append_jsonl_record(
+                    COMPLETED_MONTH_LEDGER,
+                    combined_months[-1],
+                    required_fields=COMPLETED_MONTH_FIELDS,
+                    validator=validate_completed_month_records,
+                )
+                completed_rows = _load_completed_month_record_authority(
+                    heal_derived=True
+                )
+    expected_closed_months = [
+        str(item)
+        for item in pd.period_range(
+            first_counted.to_period("M"),
+            target.to_period("M") - 1,
+            freq="M",
+        )
+    ]
+    if [item["completed_month"] for item in completed_rows] != expected_closed_months:
+        raise V18Error("prepare-day prior completed-month prefix is incomplete")
+
+    fold = fold_holder or read_json(FOLD_MANIFEST_DIR / f"{month}.json")
+    bundle = bundle_holder or read_json(FOLD_MODEL_DIR / f"{month}.json")
+    state_path = STATE_MANIFEST_DIR / f"{month}.json"
+    retained_state: dict[str, Any] | None = None
+    if os.path.lexists(state_path):
+        if state_path.is_symlink() or not state_path.is_file():
+            raise V18Error("prepare-day retained state is not a plain file")
+        retained_state = read_json(state_path)
+        validate_state_manifest(retained_state)
+    # Outcome history is opened only after the target cache and source
+    # manifest above have been fully sealed and independently validated.
+    history = pair_history_from_ledgers(decision_rows, outcome_rows)
+    state_value = derive_month_state(history, month)
+    state_value_artifact = build_state_manifest(
+        state_value,
+        created_at=(
+            datetime.now(TOKYO)
+            if retained_state is None
+            else retained_state["created_at"]
+        ),
+        c00_fold_manifest_sha256=fold["fold_manifest_sha256"],
+        fold_model_bundle_file_sha256=fold[
+            "fold_model_bundle_file_sha256"
+        ],
+        activation_payload_sha256=context["activation_payload_sha256"],
+        activation_receipt_sha256=context["activation_receipt_sha256"],
+        first_counted_session_value=context["first_counted_session"],
+        activation_observed_at=context[
+            "activation_receipt_commit_observed_at"
+        ],
+    )
+    if retained_state is None:
+        _write_json_once_exact(
+            state_value_artifact,
+            state_path,
+            label="canonical monthly state manifest",
+        )
+    elif canonical_json_bytes(state_value_artifact) != canonical_json_bytes(
+        retained_state
+    ):
+        raise V18Error("prepare-day retained state differs from exact history replay")
+    state = read_json(state_path)
+    validate_state_manifest(state)
+    expected_state = {
+        "target_month": str(month),
+        "activation_payload_sha256": context["activation_payload_sha256"],
+        "activation_receipt_sha256": context["activation_receipt_sha256"],
+        "c00_fold_manifest_sha256": fold["fold_manifest_sha256"],
+        "fold_model_bundle_file_sha256": fold[
+            "fold_model_bundle_file_sha256"
+        ],
+    }
+    if any(state[field] != expected for field, expected in expected_state.items()):
+        raise V18Error("prepare-day state does not bind current month authority")
+    score_shard_path = SCORE_SESSION_DIR / f"{target.date()}.csv"
+    retained_pair: pd.DataFrame | None = None
+    if os.path.lexists(score_shard_path):
+        if score_shard_path.is_symlink() or not score_shard_path.is_file():
+            raise V18Error("prepare-day retained score shard is not a plain file")
+        retained_pair = validate_score_rows(
+            _read_csv_plain(
+                score_shard_path,
+                label="canonical score-session shard",
+                dtype={"code": "string"},
+                float_precision="round_trip",
+            )
+        )
+        if retained_pair["session_date"].iloc[0] != str(target.date()):
+            raise V18Error("prepare-day retained score shard targets another session")
+    if retained_pair is None:
+        scores, _, _ = freeze_c00_top2(
+            target_panel,
+            target,
+            capture_operational_timestamp=True,
+            source_manifest_sha256=source["source_manifest_sha256"],
+            first_counted_session_value=context["first_counted_session"],
+            activation_observed_at=context["activation_receipt_commit_observed_at"],
+            return_bundle=True,
+            model_bundle=bundle,
+            fold_manifest=fold,
+        )
+        append_score_rows(scores, SCORE_OUTPUT)
+    else:
+        scores, _, _ = freeze_c00_top2(
+            target_panel,
+            target,
+            score_generated_at=retained_pair["score_generated_at"].iloc[0],
+            runtime_lock_verified_at=retained_pair[
+                "runtime_lock_verified_at"
+            ].iloc[0],
+            terminal_replay=True,
+            source_manifest_sha256=source["source_manifest_sha256"],
+            first_counted_session_value=context["first_counted_session"],
+            activation_observed_at=context["activation_receipt_commit_observed_at"],
+            return_bundle=True,
+            model_bundle=bundle,
+            fold_manifest=fold,
+        )
+        if not validate_score_rows(scores).equals(retained_pair):
+            raise V18Error("prepare-day retained score pair differs from exact replay")
+        # Rebuild/heal the cumulative CSV view from immutable session shards.
+        append_score_rows(retained_pair, SCORE_OUTPUT)
+    checkpoint = prepare_checkpoint(
+        session_date=target,
+        checkpoint_core_store_root=checkpoint_core_store_root,
+    )
+    return {
+        "target_session": str(target.date()),
+        "month_source_manifest_sha256": source["month_source_manifest_sha256"],
+        "source_manifest_sha256": source["source_manifest_sha256"],
+        "target_slice_semantic_sha256": source["target_slice_semantic_sha256"],
+        "fold_manifest_sha256": fold["fold_manifest_sha256"],
+        "state_manifest_sha256": state["state_manifest_sha256"],
+        "score_semantic_sha256": semantic_score_hash(scores),
+        "checkpoint_batch_id": checkpoint["checkpoint_batch_id"],
+        "production_model_changed": False,
+        "orders_allowed": False,
+    }
+
+
+def finalize_terminal(
+    *,
+    source_pdf: str | Path,
+    source_file_name: str,
+    source_url: str,
+    source_received_at: Any,
+    predictor_raw_store_root: str | Path,
+    predictor_derived_store_root: str | Path,
+    outcome_raw_store_root: str | Path,
+    checkpoint_core_store_root: str | Path,
+    activation_context: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Attach the last outcome and close the terminal month in one operation.
+
+    This is the only operational terminal-outcome mutation.  It is deliberately
+    separate from ``evaluate`` so no performance gate can be opened before the
+    complete terminal outcome/month authority has been sealed.
+    """
+
+    if not _STRICT_RUNTIME_ACTIVE:
+        raise V18Error("finalize-terminal requires the strict operational runtime")
+    context = validate_activation_context(activation_context)
+    decisions = _load_decision_record_authority(heal_derived=True)
+    if not decisions:
+        raise V18Error("finalize-terminal requires a nonempty decision ledger")
+    first = _date(context["first_counted_session"], "first counted session")
+    if decisions[0]["session_date"] != str(first.date()):
+        raise V18Error("finalize-terminal decision prefix starts on another session")
+    calendar = load_registered_calendar()
+    terminal = deterministic_terminal_session(first, calendar)
+    denominator = calendar[(calendar >= first) & (calendar <= terminal)]
+    decision_index = pd.DatetimeIndex(
+        [_date(item["session_date"], "terminal decision session") for item in decisions]
+    )
+    if not decision_index.equals(denominator) or decision_index[-1] != terminal:
+        raise V18Error("finalize-terminal requires the exact terminal denominator")
+    if any(
+        decisions[-1][field] != context[field]
+        for field in (
+            "activation_payload_sha256",
+            "activation_receipt_sha256",
+        )
+    ):
+        raise V18Error("finalize-terminal activation authority changed")
+
+    # Final performance evidence remains sealed until the entire terminal
+    # predictor/cache and checkpoint authority has been reconstructed.
+    identity_registry: dict[tuple[int, int], str] = {}
+    predictor_bindings = validate_predictor_evidence(
+        decisions,
+        None,
+        source_manifest_directory=SOURCE_MANIFEST_DIR,
+        predictor_raw_store_root=predictor_raw_store_root,
+        predictor_derived_store_root=predictor_derived_store_root,
+        external_identity_registry=identity_registry,
+    )
+    validate_checkpoint_evidence(
+        decisions,
+        checkpoint_core_store_root=checkpoint_core_store_root,
+        external_identity_registry=identity_registry,
+    )
+
+    outcomes = _load_outcome_record_authority(decisions, heal_derived=True)
+    if len(outcomes) not in {len(decisions) - 1, len(decisions)}:
+        raise V18Error("finalize-terminal outcome ledger is not T-1 or exact terminal")
+    prior_manifests = validate_outcome_evidence(
+        decisions,
+        outcomes,
+        outcome_manifest_directory=OUTCOME_MANIFEST_DIR,
+        outcome_raw_store_root=outcome_raw_store_root,
+        external_identity_registry=identity_registry,
+    )
+    _validate_terminal_predictor_outcome_cross_role(
+        predictor_bindings["_terminal_predictor_raw_records"],
+        predictor_bindings["_terminal_predictor_shard_bindings"],
+        prior_manifests,
+        terminal_session=terminal,
+        allow_terminal_outcome_only=len(outcomes) == len(decisions),
+        predictor_raw_store_root=predictor_raw_store_root,
+        predictor_derived_store_root=predictor_derived_store_root,
+        outcome_raw_store_root=outcome_raw_store_root,
+    )
+    received = _timestamp(source_received_at, "terminal outcome source_received_at")
+    manifest_path = OUTCOME_MANIFEST_DIR / f"{terminal.date()}.json"
+    if os.path.lexists(manifest_path):
+        if manifest_path.is_symlink() or not manifest_path.is_file():
+            raise V18Error("terminal outcome manifest is not a plain file")
+        manifest, _ = validate_outcome_manifest(
+            manifest_path,
+            decisions[-1],
+            outcome_raw_store_root=outcome_raw_store_root,
+        )
+        supplied_count, supplied_sha = _source_file_metadata(
+            source_pdf, label="retained terminal outcome input"
+        )
+        expected_input = {
+            "source_file_name": source_file_name,
+            "source_url": _official_jpx_daily_url(
+                source_url,
+                "terminal outcome source URL",
+                file_name=source_file_name,
+                source_session=terminal,
+            ),
+            "source_byte_count": supplied_count,
+            "source_sha256": supplied_sha,
+        }
+        if any(manifest[field] != expected for field, expected in expected_input.items()) or (
+            _timestamp(manifest["source_received_at"], "retained terminal receipt")
+            != received
+        ):
+            raise V18Error("finalize-terminal retry changes its exact source input")
+    else:
+        manifest = build_outcome_manifest(
+            decisions[-1],
+            source_pdf,
+            outcome_raw_store_root=outcome_raw_store_root,
+            source_file_name=source_file_name,
+            source_url=source_url,
+            source_received_at=received,
+            output=manifest_path,
+        )
+
+    if len(outcomes) == len(decisions) - 1:
+        combined_outcomes = attach_outcomes(
+            decisions,
+            manifest_path,
+            outcome_raw_store_root=outcome_raw_store_root,
+            existing_outcomes=outcomes,
+        )
+        if len(combined_outcomes) != len(decisions):
+            raise V18Error("finalize-terminal did not derive exactly one final outcome")
+        append_jsonl_record(
+            OUTCOME_LEDGER,
+            combined_outcomes[-1],
+            required_fields=OUTCOME_FIELDS,
+            validator=lambda rows: validate_outcome_records(rows, decisions),
+        )
+        combined_outcomes = _load_outcome_record_authority(
+            decisions, heal_derived=True
+        )
+    else:
+        combined_outcomes = outcomes
+        if combined_outcomes[-1]["outcome_manifest_sha256"] != manifest[
+            "outcome_manifest_sha256"
+        ]:
+            raise V18Error("retained terminal outcome ledger binding changed")
+
+    terminal_month = terminal.to_period("M")
+    completed = _load_completed_month_record_authority(heal_derived=True)
+    if completed and completed[-1]["completed_month"] == str(terminal_month):
+        replayed = build_completed_month_record(
+            decisions,
+            combined_outcomes,
+            completed_month=str(terminal_month),
+            created_at=completed[-1]["created_at"],
+            existing_records=completed[:-1],
+        )
+        if canonical_json_bytes(replayed[-1]) != canonical_json_bytes(completed[-1]):
+            raise V18Error("retained terminal month close differs from exact replay")
+    else:
+        closed = build_completed_month_record(
+            decisions,
+            combined_outcomes,
+            completed_month=str(terminal_month),
+            capture_operational_timestamp=True,
+            existing_records=completed,
+        )
+        append_jsonl_record(
+            COMPLETED_MONTH_LEDGER,
+            closed[-1],
+            required_fields=COMPLETED_MONTH_FIELDS,
+            validator=validate_completed_month_records,
+        )
+        completed = _load_completed_month_record_authority(heal_derived=True)
+    expected_months = [
+        str(item)
+        for item in pd.period_range(
+            first.to_period("M"), terminal_month, freq="M"
+        )
+    ]
+    if [item["completed_month"] for item in completed] != expected_months:
+        raise V18Error("finalize-terminal completed-month prefix is incomplete")
+    return {
+        "terminal_session": str(terminal.date()),
+        "outcome_manifest_sha256": manifest["outcome_manifest_sha256"],
+        "outcome_record_sha256": combined_outcomes[-1]["record_sha256"],
+        "completed_month": str(terminal_month),
+        "completed_month_record_sha256": completed[-1]["record_sha256"],
+        "raw_source_provenance": _raw_source_provenance_envelope(),
+        "production_model_changed": False,
+        "orders_allowed": False,
+    }
 
 
 def _frame_sha(frame: pd.DataFrame, columns: Sequence[str]) -> str:
@@ -4197,6 +11857,7 @@ def export_c00_model_bundle(
     runtime_lock_verified_at: Any | None = None,
     historical_runtime_replay: bool = False,
     first_counted_session_value: Any | None = None,
+    _a2_rehearsal_contract: _A2RehearsalContract | None = None,
 ) -> dict[str, Any]:
     """Export the full fitted C00 pipeline as non-executable canonical numbers."""
 
@@ -4204,9 +11865,18 @@ def export_c00_model_bundle(
         raise V18Error("C00 model is not the registered three-step pipeline")
     target = _month(target_month, "bundle target_month")
     created = _timestamp(created_at, "bundle created_at")
-    verified = _runtime_verified_timestamp(
-        runtime_lock_verified_at,
-        allow_historical_replay=historical_runtime_replay,
+    rehearsal = (
+        None
+        if _a2_rehearsal_contract is None
+        else _require_active_a2_rehearsal_contract(_a2_rehearsal_contract)
+    )
+    verified = (
+        _timestamp(runtime_lock_verified_at, "runtime_lock_verified_at")
+        if rehearsal is not None
+        else _runtime_verified_timestamp(
+            runtime_lock_verified_at,
+            allow_historical_replay=historical_runtime_replay,
+        )
     )
     if verified > created:
         raise V18Error("C00 bundle creation predates runtime verification")
@@ -4253,25 +11923,67 @@ def export_c00_model_bundle(
         "ridge_fit_intercept": bool(ridge.fit_intercept),
         "ridge_coef": _numeric_array_object(ridge.coef_, dtype="float64"),
         "ridge_intercept": float(np.asarray(ridge.intercept_).reshape(-1)[0]),
-        "protocol_sha256": PROTOCOL_SHA256,
-        "runner_sha256": sha256_file(__file__),
-        "python_version": platform.python_version(),
-        "numpy_version": np.__version__,
-        "scikit_learn_version": sklearn.__version__,
+        "protocol_sha256": (
+            PROTOCOL_SHA256 if rehearsal is None else rehearsal.protocol_sha256
+        ),
+        "runner_sha256": (
+            sha256_file(__file__) if rehearsal is None else rehearsal.runner_sha256
+        ),
+        "python_version": (
+            platform.python_version()
+            if rehearsal is None
+            else rehearsal.runtime_python_version
+        ),
+        "numpy_version": (
+            np.__version__ if rehearsal is None else rehearsal.numpy_version
+        ),
+        "scikit_learn_version": (
+            sklearn.__version__
+            if rehearsal is None
+            else rehearsal.scikit_learn_version
+        ),
         "canonical_json_contract": CANONICAL_JSON_CONTRACT,
     }
     value["fold_model_bundle_sha256"] = canonical_json_sha256(
         value, exclude_fields={"fold_model_bundle_sha256"}
     )
-    validate_c00_model_bundle(value)
+    validate_c00_model_bundle(
+        value, _a2_rehearsal_contract=rehearsal
+    )
     return value
 
 
-def validate_c00_model_bundle(bundle: Mapping[str, Any]) -> str:
-    protocol = read_json(PROTOCOL)
-    required = set(
-        protocol["c00_contract"]["fold_model_bundle_contract"]["required_fields"]
+def validate_c00_model_bundle(
+    bundle: Mapping[str, Any],
+    *,
+    _a2_rehearsal_contract: _A2RehearsalContract | None = None,
+) -> str:
+    rehearsal = (
+        None
+        if _a2_rehearsal_contract is None
+        else _require_active_a2_rehearsal_contract(_a2_rehearsal_contract)
     )
+    if rehearsal is None:
+        protocol = read_json(PROTOCOL)
+        required = set(
+            protocol["c00_contract"]["fold_model_bundle_contract"][
+                "required_fields"
+            ]
+        )
+        runtime_python_version = read_json(RUNTIME_LOCK)["runtime"]["python"][
+            "version"
+        ]
+        runner_sha256 = sha256_file(__file__)
+        expected_protocol_sha256 = PROTOCOL_SHA256
+        expected_numpy_version = "2.3.5"
+        expected_sklearn_version = "1.8.0"
+    else:
+        required = set(rehearsal.fold_model_bundle_required_fields)
+        runtime_python_version = rehearsal.runtime_python_version
+        runner_sha256 = rehearsal.runner_sha256
+        expected_protocol_sha256 = rehearsal.protocol_sha256
+        expected_numpy_version = rehearsal.numpy_version
+        expected_sklearn_version = rehearsal.scikit_learn_version
     if set(bundle) != required:
         raise V18Error("C00 model bundle fields differ from protocol")
     value = dict(bundle)
@@ -4280,7 +11992,6 @@ def validate_c00_model_bundle(bundle: Mapping[str, Any]) -> str:
     verified = _timestamp(
         value["runtime_lock_verified_at"], "bundle runtime_lock_verified_at"
     )
-    runtime = read_json(RUNTIME_LOCK)["runtime"]
     if (
         value["schema_version"] != 1
         or value["input_feature_order"] != list(G0_FEATURES)
@@ -4296,11 +12007,11 @@ def validate_c00_model_bundle(bundle: Mapping[str, Any]) -> str:
         or value["ridge_fit_intercept"] is not True
         or value["runtime_lock_sha256"] != RUNTIME_LOCK_SHA256
         or verified > created
-        or value["protocol_sha256"] != PROTOCOL_SHA256
-        or value["runner_sha256"] != sha256_file(__file__)
-        or value["python_version"] != runtime["python"]["version"]
-        or value["numpy_version"] != "2.3.5"
-        or value["scikit_learn_version"] != "1.8.0"
+        or value["protocol_sha256"] != expected_protocol_sha256
+        or value["runner_sha256"] != runner_sha256
+        or value["python_version"] != runtime_python_version
+        or value["numpy_version"] != expected_numpy_version
+        or value["scikit_learn_version"] != expected_sklearn_version
         or value["canonical_json_contract"] != CANONICAL_JSON_CONTRACT
     ):
         raise V18Error("C00 model bundle fixed contract changed")
@@ -4359,11 +12070,20 @@ def validate_c00_model_bundle(bundle: Mapping[str, Any]) -> str:
     return expected
 
 
-def predict_c00_model_bundle(bundle: Mapping[str, Any], features: Any) -> np.ndarray:
+def predict_c00_model_bundle(
+    bundle: Mapping[str, Any],
+    features: Any,
+    *,
+    _a2_rehearsal_contract: _A2RehearsalContract | None = None,
+) -> np.ndarray:
     """Clean-room score reconstruction from the registered numeric bundle."""
 
-    validate_c00_model_bundle(bundle)
-    with _numeric_execution():
+    validate_c00_model_bundle(
+        bundle, _a2_rehearsal_contract=_a2_rehearsal_contract
+    )
+    with _numeric_execution(
+        _a2_rehearsal_contract=_a2_rehearsal_contract
+    ):
         raw = np.asarray(features, dtype="<f8")
         if raw.ndim != 2 or raw.shape[1] != len(G0_FEATURES):
             raise V18Error("C00 bundle scoring matrix has wrong shape")
@@ -4400,10 +12120,33 @@ def _build_fold(
     terminal_replay: bool = False,
     first_counted_session_value: Any | None = None,
     activation_observed_at: Any | None = None,
+    month_source_manifest: Mapping[str, Any] | None = None,
+    _a2_rehearsal_contract: _A2RehearsalContract | None = None,
 ) -> tuple[Any, dict[str, Any], dict[str, Any]]:
+    rehearsal = (
+        None
+        if _a2_rehearsal_contract is None
+        else _require_active_a2_rehearsal_contract(_a2_rehearsal_contract)
+    )
     month_start = target_month.start_time.normalize()
-    verified = _runtime_verified_timestamp(
-        runtime_lock_verified_at, allow_historical_replay=terminal_replay
+    if month_source_manifest is None:
+        raise V18Error("C00 fold requires the sealed independent month-source manifest")
+    month_source = dict(month_source_manifest)
+    if set(month_source) != set(MONTH_SOURCE_MANIFEST_FIELDS):
+        raise V18Error("C00 fold month-source schema changed")
+    if month_source["target_month"] != str(target_month):
+        raise V18Error("C00 fold month-source target differs")
+    expected_month_source_hash = canonical_json_sha256(
+        month_source, exclude_fields={"month_source_manifest_sha256"}
+    )
+    if month_source["month_source_manifest_sha256"] != expected_month_source_hash:
+        raise V18Error("C00 fold month-source self-hash changed")
+    verified = (
+        _timestamp(runtime_lock_verified_at, "runtime_lock_verified_at")
+        if rehearsal is not None
+        else _runtime_verified_timestamp(
+            runtime_lock_verified_at, allow_historical_replay=terminal_replay
+        )
     )
     if capture_operational_timestamps:
         if any(
@@ -4439,7 +12182,7 @@ def _build_fold(
     # persisted numeric bundle.
     if capture_operational_timestamps:
         fit_started_at = datetime.now(TOKYO)
-    with _numeric_execution():
+    with _numeric_execution(_a2_rehearsal_contract=rehearsal):
         model = v17.fit_daily_rank_ridge(training, G0_FEATURES)
     if capture_operational_timestamps:
         fit_completed_at = datetime.now(TOKYO)
@@ -4448,6 +12191,10 @@ def _build_fold(
     assert bundle_created_at is not None
     if verified > fit_started_at or fit_started_at > fit_completed_at:
         raise V18Error("fold runtime/fit timestamps are not causal")
+    if _timestamp(
+        month_source["sealed_at"], "fold month-source sealed_at"
+    ) > fit_started_at:
+        raise V18Error("C00 fold fit predates its sealed month-source authority")
     if activation_observed_at is not None and fit_started_at < _timestamp(
         activation_observed_at, "activation_receipt_commit_observed_at"
     ):
@@ -4459,6 +12206,7 @@ def _build_fold(
         runtime_lock_verified_at=verified,
         historical_runtime_replay=terminal_replay,
         first_counted_session_value=first_counted_session_value,
+        _a2_rehearsal_contract=rehearsal,
     )
     target = training["_daily_rank_target"].to_numpy(dtype=float)
     identity = training.loc[:, ["date", "code"]].sort_values(
@@ -4490,6 +12238,18 @@ def _build_fold(
             training.loc[:, list(G0_FEATURES)].to_numpy(dtype=float)
         ),
         "feature_names": list(G0_FEATURES),
+        "month_source_manifest_path": (
+            "research/model_v18_shoulder_state_month_source_manifests/"
+            f"{target_month}.json"
+        ),
+        "month_source_manifest_sha256": expected_month_source_hash,
+        "training_source_set_sha256": month_source["source_set_sha256"],
+        "training_parsed_shard_set_sha256": month_source[
+            "parsed_shard_set_sha256"
+        ],
+        "training_g0_panel_semantic_sha256": month_source[
+            "g0_training_panel_semantic_sha256"
+        ],
         "ridge_alpha": 1.0,
         "fold_model_bundle_path": (
             "research/model_v18_shoulder_state_fold_models/"
@@ -4512,15 +12272,33 @@ def _build_fold(
         "scaler_scale_sha256": bundle["scaler_scale"]["sha256"],
         "ridge_coef_sha256": bundle["ridge_coef"]["sha256"],
         "ridge_intercept": float(np.asarray(intercept).reshape(-1)[0]),
-        "universe_contract_sha256": canonical_json_sha256(
-            read_json(PROTOCOL)["c00_contract"]
+        "universe_contract_sha256": (
+            canonical_json_sha256(read_json(PROTOCOL)["c00_contract"])
+            if rehearsal is None
+            else canonical_json_sha256(json.loads(rehearsal.c00_contract_json))
         ),
-        "protocol_sha256": PROTOCOL_SHA256,
-        "runner_sha256": sha256_file(__file__),
-        "python_version": platform.python_version(),
-        "numpy_version": np.__version__,
-        "pandas_version": pd.__version__,
-        "scikit_learn_version": sklearn.__version__,
+        "protocol_sha256": (
+            PROTOCOL_SHA256 if rehearsal is None else rehearsal.protocol_sha256
+        ),
+        "runner_sha256": (
+            sha256_file(__file__) if rehearsal is None else rehearsal.runner_sha256
+        ),
+        "python_version": (
+            platform.python_version()
+            if rehearsal is None
+            else rehearsal.runtime_python_version
+        ),
+        "numpy_version": (
+            np.__version__ if rehearsal is None else rehearsal.numpy_version
+        ),
+        "pandas_version": (
+            pd.__version__ if rehearsal is None else rehearsal.pandas_version
+        ),
+        "scikit_learn_version": (
+            sklearn.__version__
+            if rehearsal is None
+            else rehearsal.scikit_learn_version
+        ),
         "canonical_json_contract": CANONICAL_JSON_CONTRACT,
     }
     manifest["fold_manifest_sha256"] = canonical_json_sha256(
@@ -4532,28 +12310,110 @@ def _build_fold(
 def validate_fold_manifest(
     manifest: Mapping[str, Any],
     bundle: Mapping[str, Any] | None = None,
+    *,
+    _a2_rehearsal_contract: _A2RehearsalContract | None = None,
+    _a2_rehearsal_month_source: Mapping[str, Any] | None = None,
 ) -> str:
-    protocol = read_json(PROTOCOL)
-    required = set(protocol["c00_contract"]["fold_manifest_required_fields"])
+    rehearsal = (
+        None
+        if _a2_rehearsal_contract is None
+        else _require_active_a2_rehearsal_contract(_a2_rehearsal_contract)
+    )
+    if rehearsal is None:
+        protocol = read_json(PROTOCOL)
+        required = set(protocol["c00_contract"]["fold_manifest_required_fields"])
+        expected_protocol_sha256 = PROTOCOL_SHA256
+        runner_sha256 = sha256_file(__file__)
+        runtime_python_version = read_json(RUNTIME_LOCK)["runtime"]["python"][
+            "version"
+        ]
+        expected_numpy_version = "2.3.5"
+        expected_pandas_version = "2.2.3"
+        expected_sklearn_version = "1.8.0"
+    else:
+        if _a2_rehearsal_month_source is None:
+            raise V18Error("A2 rehearsal fold lacks its in-memory month source")
+        required = set(rehearsal.fold_manifest_required_fields)
+        expected_protocol_sha256 = rehearsal.protocol_sha256
+        runner_sha256 = rehearsal.runner_sha256
+        runtime_python_version = rehearsal.runtime_python_version
+        expected_numpy_version = rehearsal.numpy_version
+        expected_pandas_version = rehearsal.pandas_version
+        expected_sklearn_version = rehearsal.scikit_learn_version
     missing = sorted(required - set(manifest))
     if missing:
         raise V18Error(f"fold manifest is missing fields: {missing}")
     if set(manifest) != required:
         raise V18Error("fold manifest fields differ from protocol")
-    if manifest["protocol_sha256"] != PROTOCOL_SHA256:
+    if manifest["protocol_sha256"] != expected_protocol_sha256:
         raise V18Error("fold protocol hash changed")
-    if manifest["runner_sha256"] != sha256_file(__file__):
+    if manifest["runner_sha256"] != runner_sha256:
         raise V18Error("fold runner hash changed")
     if manifest["runtime_lock_sha256"] != RUNTIME_LOCK_SHA256:
         raise V18Error("fold runtime-lock binding changed")
     if manifest["feature_names"] != list(G0_FEATURES) or float(manifest["ridge_alpha"]) != 1.0:
         raise V18Error("fold C00 feature/alpha contract changed")
     target = _month(manifest["target_month"], "fold target_month")
+    expected_month_source_path = (
+        "research/model_v18_shoulder_state_month_source_manifests/"
+        f"{target}.json"
+    )
+    if manifest["month_source_manifest_path"] != expected_month_source_path:
+        raise V18Error("fold month-source manifest path changed")
+    for field in (
+        "month_source_manifest_sha256",
+        "training_source_set_sha256",
+        "training_parsed_shard_set_sha256",
+        "training_g0_panel_semantic_sha256",
+    ):
+        _require_sha(manifest[field], f"fold {field}")
+    month_source_path = ROOT / expected_month_source_path
+    month_source_sealed: datetime | None = None
+    month_source_cutoff: datetime | None = None
+    if rehearsal is not None:
+        month_source = dict(_a2_rehearsal_month_source or {})
+        has_month_source = True
+    else:
+        has_month_source = month_source_path.is_file()
+        month_source = read_json(month_source_path) if has_month_source else {}
+    if has_month_source:
+        if set(month_source) != set(MONTH_SOURCE_MANIFEST_FIELDS):
+            raise V18Error("fold canonical month-source schema changed")
+        expected_month_source_hash = canonical_json_sha256(
+            month_source, exclude_fields={"month_source_manifest_sha256"}
+        )
+        if month_source["month_source_manifest_sha256"] != expected_month_source_hash:
+            raise V18Error("fold canonical month-source self-hash changed")
+        month_source_sealed = _timestamp(
+            month_source["sealed_at"], "fold month-source sealed_at"
+        )
+        month_source_cutoff = _cutoff(
+            _date(month_source["seal_session"], "fold month-source seal session")
+        )
+        bindings = {
+            "month_source_manifest_sha256": month_source[
+                "month_source_manifest_sha256"
+            ],
+            "training_source_set_sha256": month_source["source_set_sha256"],
+            "training_parsed_shard_set_sha256": month_source[
+                "parsed_shard_set_sha256"
+            ],
+            "training_g0_panel_semantic_sha256": month_source[
+                "g0_training_panel_semantic_sha256"
+            ],
+        }
+        for field, expected in bindings.items():
+            if manifest[field] != expected:
+                raise V18Error(f"fold month-source binding changed: {field}")
     expected_path = f"research/model_v18_shoulder_state_fold_models/{target}.json"
     if manifest["fold_model_bundle_path"] != expected_path:
         raise V18Error("fold model bundle path changed")
+    if rehearsal is not None and bundle is None:
+        raise V18Error("A2 rehearsal fold lacks its in-memory model bundle")
     bundle_value = read_json(ROOT / expected_path) if bundle is None else dict(bundle)
-    bundle_hash = validate_c00_model_bundle(bundle_value)
+    bundle_hash = validate_c00_model_bundle(
+        bundle_value, _a2_rehearsal_contract=rehearsal
+    )
     if bundle_value["target_month"] != str(target):
         raise V18Error("fold model bundle target month differs")
     fit_started = _timestamp(manifest["fit_started_at"], "fold fit_started_at")
@@ -4576,6 +12436,10 @@ def validate_fold_manifest(
         != verified
     ):
         raise V18Error("fold/bundle observed timestamps are not causal")
+    if month_source_sealed is not None and month_source_sealed > fit_started:
+        raise V18Error("fold fit predates its canonical month-source seal")
+    if month_source_cutoff is not None and sealed > month_source_cutoff:
+        raise V18Error("fold seal is later than its canonical month cutoff")
     file_hash = hashlib.sha256(_json_file_bytes(bundle_value)).hexdigest()
     expected_bundle_fields = {
         "fold_model_bundle_schema_version": 1,
@@ -4603,18 +12467,156 @@ def validate_fold_manifest(
         rel_tol=0,
     ):
         raise V18Error("fold manifest ridge intercept changed")
-    runtime = read_json(RUNTIME_LOCK)["runtime"]
     if (
-        manifest["python_version"] != runtime["python"]["version"]
-        or manifest["numpy_version"] != "2.3.5"
-        or manifest["pandas_version"] != "2.2.3"
-        or manifest["scikit_learn_version"] != "1.8.0"
+        manifest["python_version"] != runtime_python_version
+        or manifest["numpy_version"] != expected_numpy_version
+        or manifest["pandas_version"] != expected_pandas_version
+        or manifest["scikit_learn_version"] != expected_sklearn_version
     ):
         raise V18Error("fold manifest runtime versions differ from lock")
     expected = canonical_json_sha256(manifest, exclude_fields={"fold_manifest_sha256"})
     if manifest["fold_manifest_sha256"] != expected:
         raise V18Error("fold manifest self-hash mismatch")
     return expected
+
+
+def _fold_stage_object_key(
+    target_month: pd.Period, month_source_manifest_sha256: str
+) -> str:
+    identity = {
+        "cache_contract_id": PREDICTOR_CACHE_CONTRACT_ID,
+        "target_month": str(target_month),
+        "month_source_manifest_sha256": _require_sha(
+            month_source_manifest_sha256, "fold-stage month-source SHA"
+        ),
+        "protocol_sha256": PROTOCOL_SHA256,
+        "runner_sha256": sha256_file(__file__),
+        "runtime_lock_sha256": RUNTIME_LOCK_SHA256,
+    }
+    return f"{FOLD_STAGE_OBJECT_PREFIX}{canonical_json_sha256(identity)}.json"
+
+
+def _load_or_create_month_fold(
+    training_panel: pd.DataFrame,
+    *,
+    target_month: pd.Period,
+    month_source_manifest: Mapping[str, Any],
+    predictor_derived_store_root: str | Path,
+    first_counted_session_value: Any,
+    activation_observed_at: Any,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Persist fold+bundle bytes before installing either canonical file."""
+
+    month_source = dict(month_source_manifest)
+    month_source_hash = _require_sha(
+        month_source["month_source_manifest_sha256"],
+        "fold-stage month-source manifest SHA",
+    )
+    object_key = _fold_stage_object_key(target_month, month_source_hash)
+    if _external_object_exists(
+        predictor_derived_store_root,
+        object_key,
+        prefix=FOLD_STAGE_OBJECT_PREFIX,
+        label="fold-stage artifact",
+    ):
+        stage, _ = _read_external_canonical_json(
+            predictor_derived_store_root,
+            object_key,
+            prefix=FOLD_STAGE_OBJECT_PREFIX,
+            label="fold-stage artifact",
+        )
+        required = {
+            "schema_version",
+            "cache_contract_id",
+            "target_month",
+            "month_source_manifest_sha256",
+            "fold_manifest",
+            "fold_model_bundle",
+            "protocol_sha256",
+            "runner_sha256",
+            "runtime_lock_sha256",
+            "stage_sha256",
+        }
+        if set(stage) != required:
+            raise V18Error("fold-stage fields differ from A2 contract")
+        expected_fixed = {
+            "schema_version": 1,
+            "cache_contract_id": PREDICTOR_CACHE_CONTRACT_ID,
+            "target_month": str(target_month),
+            "month_source_manifest_sha256": month_source_hash,
+            "protocol_sha256": PROTOCOL_SHA256,
+            "runner_sha256": sha256_file(__file__),
+            "runtime_lock_sha256": RUNTIME_LOCK_SHA256,
+        }
+        if any(stage[field] != expected for field, expected in expected_fixed.items()):
+            raise V18Error("fold-stage fixed identity changed")
+        if stage["stage_sha256"] != canonical_json_sha256(
+            stage, exclude_fields={"stage_sha256"}
+        ):
+            raise V18Error("fold-stage self-hash changed")
+        fold = dict(stage["fold_manifest"])
+        bundle = dict(stage["fold_model_bundle"])
+        validate_fold_manifest(fold, bundle)
+    else:
+        _, fold, bundle = _build_fold(
+            training_panel,
+            target_month,
+            capture_operational_timestamps=True,
+            first_counted_session_value=first_counted_session_value,
+            activation_observed_at=activation_observed_at,
+            month_source_manifest=month_source,
+        )
+        stage = {
+            "schema_version": 1,
+            "cache_contract_id": PREDICTOR_CACHE_CONTRACT_ID,
+            "target_month": str(target_month),
+            "month_source_manifest_sha256": month_source_hash,
+            "fold_manifest": fold,
+            "fold_model_bundle": bundle,
+            "protocol_sha256": PROTOCOL_SHA256,
+            "runner_sha256": sha256_file(__file__),
+            "runtime_lock_sha256": RUNTIME_LOCK_SHA256,
+        }
+        stage["stage_sha256"] = canonical_json_sha256(
+            stage, exclude_fields={"stage_sha256"}
+        )
+        _write_external_bytes_once(
+            _json_file_bytes(stage),
+            store_root=predictor_derived_store_root,
+            object_key=object_key,
+            prefix=FOLD_STAGE_OBJECT_PREFIX,
+            label="fold-stage artifact",
+            replace_unpublished_stage=True,
+        )
+    training = v17._candidate_training(
+        training_panel, end=target_month.start_time.normalize() - pd.Timedelta(days=1)
+    )
+    identity = training.loc[:, ["date", "code"]].sort_values(
+        ["date", "code"], kind="stable"
+    )
+    current_hashes = {
+        "training_row_identity_sha256": _frame_sha(identity, ("date", "code")),
+        "training_target_sha256": _numeric_sha(
+            training["_daily_rank_target"].to_numpy(dtype=float)
+        ),
+        "feature_matrix_sha256": _numeric_sha(
+            training.loc[:, list(G0_FEATURES)].to_numpy(dtype=float)
+        ),
+    }
+    if any(fold[field] != expected for field, expected in current_hashes.items()):
+        raise V18Error("fold-stage training input differs from current month source")
+    bundle_path = FOLD_MODEL_DIR / f"{target_month}.json"
+    fold_path = FOLD_MANIFEST_DIR / f"{target_month}.json"
+    bundle_payload = _write_json_once_exact(
+        bundle, bundle_path, label="canonical fold model bundle"
+    )
+    if hashlib.sha256(bundle_payload).hexdigest() != fold[
+        "fold_model_bundle_file_sha256"
+    ]:
+        raise V18Error("fold-stage canonical bundle file hash changed")
+    _write_json_once_exact(fold, fold_path, label="canonical fold manifest")
+    validate_fold_manifest(fold, bundle)
+    return fold, bundle
 
 
 SCORE_FIELDS = (
@@ -4649,6 +12651,8 @@ def freeze_c00_top2(
     return_bundle: bool = False,
     model_bundle: Mapping[str, Any] | None = None,
     fold_manifest: Mapping[str, Any] | None = None,
+    month_source_manifest: Mapping[str, Any] | None = None,
+    _a2_rehearsal_contract: _A2RehearsalContract | None = None,
 ) -> (
     pd.DataFrame
     | tuple[pd.DataFrame, dict[str, Any]]
@@ -4656,9 +12660,18 @@ def freeze_c00_top2(
 ):
     """Reproduce v1.7 C00 monthly Ridge and freeze one outcome-free top pair."""
 
+    rehearsal = (
+        None
+        if _a2_rehearsal_contract is None
+        else _require_active_a2_rehearsal_contract(_a2_rehearsal_contract)
+    )
     target = _date(session_date, "session_date")
-    verified = _runtime_verified_timestamp(
-        runtime_lock_verified_at, allow_historical_replay=terminal_replay
+    verified = (
+        _timestamp(runtime_lock_verified_at, "runtime_lock_verified_at")
+        if rehearsal is not None
+        else _runtime_verified_timestamp(
+            runtime_lock_verified_at, allow_historical_replay=terminal_replay
+        )
     )
     if capture_operational_timestamp:
         if score_generated_at is not None:
@@ -4718,12 +12731,23 @@ def freeze_c00_top2(
             runtime_lock_verified_at=verified,
             first_counted_session_value=first_counted_session_value,
             activation_observed_at=activation_observed_at,
+            month_source_manifest=month_source_manifest,
+            _a2_rehearsal_contract=rehearsal,
         )
     else:
         bundle = dict(model_bundle)
-        bundle_hash = validate_c00_model_bundle(bundle)
+        bundle_hash = validate_c00_model_bundle(
+            bundle, _a2_rehearsal_contract=rehearsal
+        )
         fold = dict(fold_manifest or {})
-        validate_fold_manifest(fold, bundle)
+        validate_fold_manifest(
+            fold,
+            bundle,
+            _a2_rehearsal_contract=rehearsal,
+            _a2_rehearsal_month_source=(
+                month_source_manifest if rehearsal is not None else None
+            ),
+        )
         if fold["target_month"] != str(month):
             raise V18Error("reused C00 fold target month differs")
         if fold.get("fold_model_bundle_sha256") != bundle_hash:
@@ -4745,11 +12769,15 @@ def freeze_c00_top2(
     if scoring.empty:
         raise V18Error("C00 target score universe is empty")
     scoring_matrix = scoring.loc[:, list(G0_FEATURES)]
-    with _numeric_execution():
+    with _numeric_execution(_a2_rehearsal_contract=rehearsal):
         predicted = (
             model.predict(scoring_matrix)
             if model is not None
-            else predict_c00_model_bundle(bundle, scoring_matrix)
+            else predict_c00_model_bundle(
+                bundle,
+                scoring_matrix,
+                _a2_rehearsal_contract=rehearsal,
+            )
         )
         ranked = v17._top_scored_rows(scoring, predicted, count=2)
     if capture_operational_timestamp:
@@ -4849,6 +12877,565 @@ def semantic_score_hash(scores: pd.DataFrame) -> str:
     ).hexdigest()
 
 
+def _a2_rehearsal_canonical_authority_paths() -> tuple[Path, ...]:
+    return (
+        *_registered_local_authority_files(),
+        DECISION_LEDGER,
+        OUTCOME_LEDGER,
+        COMPLETED_MONTH_LEDGER,
+        SCORE_OUTPUT,
+        PICKS_OUTPUT,
+        CHECKPOINT_PROPOSAL_DIR,
+        *_registered_local_authority_directories(),
+    )
+
+
+def _a2_rehearsal_preflight_payload() -> dict[str, Any]:
+    if not _STRICT_RUNTIME_ACTIVE or _STRICT_RUNTIME_VERIFIED_AT is None:
+        raise V18Error("A2 nonauthority rehearsal requires the strict runtime")
+    if any(os.path.lexists(path) for path in _a2_rehearsal_canonical_authority_paths()):
+        raise V18Error("A2 nonauthority rehearsal refuses canonical authority")
+    _validate_startup_and_module_closure(phase="A2 rehearsal untimed preflight")
+    protocol, protocol_sha256 = validate_protocol()
+    runtime_lock, runtime_lock_sha256 = validate_runtime_lock(
+        strict_environment=False
+    )
+    calendar = load_registered_calendar()
+    target = pd.Timestamp("2026-08-05")
+    latest = _latest_required_predictor_source_session(target, calendar)
+    if latest != pd.Timestamp("2026-08-04"):
+        raise V18Error("A2 rehearsal fixed target/D-1 contract changed")
+    runtime = runtime_lock["runtime"]
+    expected_limit = int(runtime["numeric_execution_contract"]["threadpoolctl_limit"])
+    if expected_limit != 1:
+        raise V18Error("A2 rehearsal numeric thread limit changed")
+    with threadpoolctl.threadpool_limits(limits=expected_limit):
+        observed = _normalised_native_threadpools(hash_libraries=False)
+    expected_native = [
+        {
+            key: (expected_limit if key == "num_threads" else child)
+            for key, child in item.items()
+            if key != "library_sha256"
+        }
+        for item in runtime["native_threadpools"]
+    ]
+    if observed != expected_native:
+        raise V18Error("A2 rehearsal native numeric backend changed")
+    versions = {
+        "python_version": platform.python_version(),
+        "numpy_version": np.__version__,
+        "pandas_version": pd.__version__,
+        "scikit_learn_version": sklearn.__version__,
+    }
+    if versions != {
+        "python_version": runtime["python"]["version"],
+        "numpy_version": "2.3.5",
+        "pandas_version": "2.2.3",
+        "scikit_learn_version": "1.8.0",
+    }:
+        raise V18Error("A2 rehearsal runtime versions changed")
+    c00_contract = protocol["c00_contract"]
+    c00_contract_json = json.dumps(
+        c00_contract,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+        allow_nan=False,
+    )
+    return {
+        "protocol_sha256": protocol_sha256,
+        "runner_sha256": sha256_file(__file__),
+        "runtime_lock_sha256": runtime_lock_sha256,
+        "calendar_sha256": CALENDAR_SHA256,
+        "calendar_session_count": int(len(calendar)),
+        "calendar_first_session": str(pd.Timestamp(calendar[0]).date()),
+        "calendar_last_session": str(pd.Timestamp(calendar[-1]).date()),
+        "c00_contract_sha256": canonical_json_sha256(c00_contract),
+        "c00_contract_json": c00_contract_json,
+        "fold_manifest_required_fields": list(
+            c00_contract["fold_manifest_required_fields"]
+        ),
+        "fold_model_bundle_required_fields": list(
+            c00_contract["fold_model_bundle_contract"]["required_fields"]
+        ),
+        **versions,
+        "numeric_threadpool_limit": expected_limit,
+        "target_session": str(target.date()),
+        "latest_required_source_session": str(latest.date()),
+    }
+
+
+def prepare_a2_nonauthority_rehearsal_contract() -> _A2RehearsalContract:
+    """Perform all project/runtime I/O before the separately timed pure seam."""
+
+    global _ACTIVE_A2_REHEARSAL_CONTRACT
+    if _ACTIVE_A2_REHEARSAL_CONTRACT is not None:
+        raise V18Error("A2 rehearsal capability is already active")
+    payload = _a2_rehearsal_preflight_payload()
+    capability = _A2RehearsalContract(
+        nonce=secrets.token_hex(32),
+        protocol_sha256=str(payload["protocol_sha256"]),
+        runner_sha256=str(payload["runner_sha256"]),
+        runtime_lock_sha256=str(payload["runtime_lock_sha256"]),
+        calendar_sha256=str(payload["calendar_sha256"]),
+        c00_contract_json=str(payload["c00_contract_json"]),
+        fold_manifest_required_fields=tuple(
+            payload["fold_manifest_required_fields"]
+        ),
+        fold_model_bundle_required_fields=tuple(
+            payload["fold_model_bundle_required_fields"]
+        ),
+        runtime_python_version=str(payload["python_version"]),
+        numpy_version=str(payload["numpy_version"]),
+        pandas_version=str(payload["pandas_version"]),
+        scikit_learn_version=str(payload["scikit_learn_version"]),
+        numeric_threadpool_limit=int(payload["numeric_threadpool_limit"]),
+        target_session=str(payload["target_session"]),
+        latest_required_source_session=str(
+            payload["latest_required_source_session"]
+        ),
+        preflight_sha256=canonical_json_sha256(payload),
+    )
+    _ACTIVE_A2_REHEARSAL_CONTRACT = capability
+    return capability
+
+
+def validate_a2_nonauthority_rehearsal_postflight(
+    rehearsal_contract: _A2RehearsalContract,
+) -> str:
+    """Revalidate the untimed closure/absence snapshot and revoke capability."""
+
+    global _ACTIVE_A2_REHEARSAL_CONTRACT
+    capability = _require_active_a2_rehearsal_contract(rehearsal_contract)
+    try:
+        observed = canonical_json_sha256(_a2_rehearsal_preflight_payload())
+        if observed != capability.preflight_sha256:
+            raise V18Error("A2 rehearsal preflight/postflight contract changed")
+        return observed
+    finally:
+        _ACTIVE_A2_REHEARSAL_CONTRACT = None
+
+
+def build_a2_nonauthority_rehearsal_day(
+    snapshot_prices: bytes | pd.DataFrame,
+    suffix_prices: Sequence[pd.DataFrame],
+    *,
+    rehearsal_contract: _A2RehearsalContract,
+    input_kind: str,
+    target_session: Any,
+    runtime_lock_verified_at: Any,
+    month_source_sealed_at: Any,
+    fit_started_at: Any,
+    fit_completed_at: Any,
+    score_generated_at: Any,
+    source_manifest_sha256: str,
+    source_set_sha256: str,
+    parsed_shard_set_sha256: str,
+    reuse_fold_token: _A2RehearsalFoldToken | None = None,
+) -> tuple[dict[str, Any], _A2RehearsalFoldToken]:
+    """Run the bound preactivation timing seam without creating authority.
+
+    The full31 reference and the two compact cases share the production panel,
+    numeric-fold, bundle-validation, and score paths.  Compact cases additionally
+    exercise the exact compact CSV decoder plus suffix projection/merge.  No path
+    or output argument exists, and the returned envelope deliberately differs
+    from every production manifest schema.  The fold token is an in-memory-only
+    Python object so the intramonth proxy can validate and reuse the boundary fit
+    without serialising a second authority channel.
+    """
+
+    capability = _require_active_a2_rehearsal_contract(rehearsal_contract)
+    if input_kind not in A2_REHEARSAL_INPUT_KINDS:
+        raise V18Error("A2 nonauthority rehearsal input kind changed")
+    target = _date(target_session, "A2 rehearsal target session")
+    if str(target.date()) != capability.target_session:
+        raise V18Error("A2 nonauthority rehearsal target is not the fixed synthetic day")
+    verified = _timestamp(
+        runtime_lock_verified_at, "A2 rehearsal runtime_lock_verified_at"
+    )
+    month_sealed = _timestamp(
+        month_source_sealed_at, "A2 rehearsal month_source_sealed_at"
+    )
+    fit_started = _timestamp(fit_started_at, "A2 rehearsal fit_started_at")
+    fit_completed = _timestamp(fit_completed_at, "A2 rehearsal fit_completed_at")
+    score_generated = _timestamp(
+        score_generated_at, "A2 rehearsal score_generated_at"
+    )
+    cutoff = datetime.combine(target.date(), CUTOFF_TIME, TOKYO)
+    if not (
+        verified <= month_sealed <= fit_started <= fit_completed <= score_generated
+        < cutoff
+    ):
+        raise V18Error("A2 rehearsal replay timestamps are not causal/precutoff")
+    source_manifest_hash = _require_sha(
+        source_manifest_sha256, "A2 rehearsal source manifest SHA"
+    )
+    source_set_hash = _require_sha(source_set_sha256, "A2 rehearsal source set SHA")
+    shard_set_hash = _require_sha(
+        parsed_shard_set_sha256, "A2 rehearsal parsed shard set SHA"
+    )
+
+    suffix_rows = 0
+    if input_kind == "full31_reference":
+        if not isinstance(snapshot_prices, pd.DataFrame):
+            raise V18Error("A2 full31 rehearsal snapshot must be a DataFrame")
+        frames = [
+            _coerce_jsonl_frame(
+                snapshot_prices,
+                PARSED_PRICE_COLUMNS,
+                label="A2 rehearsal full31 reference prefix",
+            )
+        ]
+        for index, frame in enumerate(suffix_prices):
+            frames.append(
+                _coerce_jsonl_frame(
+                    frame,
+                    PARSED_PRICE_COLUMNS,
+                    label=f"A2 rehearsal full31 suffix {index}",
+                )
+            )
+            suffix_rows += len(frames[-1])
+        try:
+            prices = merge_daily_prices(frames)
+        except Exception as exc:
+            raise V18Error(f"A2 rehearsal full31 merge failed: {exc}") from exc
+        prices = _coerce_jsonl_frame(
+            prices, PARSED_PRICE_COLUMNS, label="A2 rehearsal full31 merged prefix"
+        )
+        snapshot_rows = len(frames[0])
+    else:
+        if not isinstance(snapshot_prices, bytes):
+            raise V18Error("A2 compact rehearsal snapshot must be canonical bytes")
+        snapshot_frame = decode_canonical_model_price_csv(
+            snapshot_prices, label="A2 rehearsal compact snapshot"
+        )
+        expected_snapshot_latest = (
+            pd.Timestamp("2026-07-31")
+            if input_kind == "month_boundary_compact"
+            else pd.Timestamp("2026-06-30")
+        )
+        if pd.to_datetime(snapshot_frame["date"]).max().normalize() != (
+            expected_snapshot_latest
+        ):
+            raise V18Error("A2 compact rehearsal snapshot cutoff changed")
+        projected_suffix: list[pd.DataFrame] = []
+        for index, frame in enumerate(suffix_prices):
+            projected = _coerce_model_price_frame(
+                frame, label=f"A2 rehearsal compact suffix {index}"
+            )
+            projected_suffix.append(projected)
+            suffix_rows += len(projected)
+        if not projected_suffix:
+            raise V18Error("A2 compact rehearsal requires a nonempty suffix")
+        prices = _coerce_model_price_frame(
+            pd.concat([snapshot_frame, *projected_suffix], ignore_index=True),
+            label="A2 rehearsal compact snapshot plus suffix",
+        )
+        snapshot_rows = len(snapshot_frame)
+
+    latest = pd.to_datetime(prices["date"], errors="coerce").max().normalize()
+    if str(latest.date()) != capability.latest_required_source_session:
+        raise V18Error("A2 rehearsal merged prefix is not exact D-1")
+    compact_projection = _coerce_model_price_frame(
+        prices, label="A2 rehearsal model-price projection"
+    )
+    compact_payload = canonical_model_price_csv_bytes(
+        compact_projection, label="A2 rehearsal model-price projection"
+    )
+    compact_payload_sha256 = hashlib.sha256(compact_payload).hexdigest()
+    exact_prefix_identity = {
+        "schema_version": 1,
+        "target_session": str(target.date()),
+        "latest_required_source_session": str(latest.date()),
+        "model_price_row_count": int(len(compact_projection)),
+        "model_price_csv_byte_count": len(compact_payload),
+        "model_price_csv_sha256": compact_payload_sha256,
+        "source_manifest_sha256": source_manifest_hash,
+        "source_set_sha256": source_set_hash,
+        "parsed_shard_set_sha256": shard_set_hash,
+    }
+    retained_proof: dict[str, Any] | None = None
+    if reuse_fold_token is None:
+        if not decode_canonical_model_price_csv(
+            compact_payload, label="A2 rehearsal model-price round trip"
+        ).equals(compact_projection):
+            raise V18Error("A2 rehearsal compact projection does not round-trip")
+    else:
+        if not isinstance(reuse_fold_token, _A2RehearsalFoldToken):
+            raise V18Error("A2 rehearsal fold reuse token type changed")
+        try:
+            retained_proof = json.loads(reuse_fold_token.exact_prefix_proof_json)
+        except (TypeError, ValueError, json.JSONDecodeError) as exc:
+            raise V18Error("A2 rehearsal exact-prefix proof JSON is invalid") from exc
+        expected_proof_fields = {
+            *exact_prefix_identity,
+            "model_price_semantic_sha256",
+            "g0_panel_exact_digest",
+            "g0_training_row_count",
+            "g0_training_panel_semantic_sha256",
+        }
+        if (
+            not isinstance(retained_proof, dict)
+            or set(retained_proof) != expected_proof_fields
+            or canonical_json_bytes(retained_proof).decode("utf-8")
+            != reuse_fold_token.exact_prefix_proof_json
+            or canonical_json_sha256(retained_proof)
+            != reuse_fold_token.exact_prefix_proof_sha256
+        ):
+            raise V18Error("A2 rehearsal exact-prefix proof binding changed")
+        if any(
+            retained_proof[field] != expected
+            for field, expected in exact_prefix_identity.items()
+        ):
+            raise V18Error(
+                "A2 rehearsal reused proof differs from canonical full-prefix bytes"
+            )
+
+    # Exactly one production panel build occurs in every timed/reference call.
+    panel = build_forward_c00_panel(prices, target)
+    target_rows = _coerce_jsonl_frame(
+        panel.loc[pd.to_datetime(panel["date"]).eq(target)],
+        G0_PANEL_COLUMNS,
+        label="A2 rehearsal target slice",
+    )
+    target_payload = canonical_frame_jsonl_bytes(
+        target_rows, G0_PANEL_COLUMNS, label="A2 rehearsal target slice"
+    )
+    if not decode_canonical_frame_jsonl(
+        target_payload, G0_PANEL_COLUMNS, label="A2 rehearsal target round trip"
+    ).equals(target_rows):
+        raise V18Error("A2 rehearsal target cache does not round-trip")
+    if target_rows["oc_return_pct"].notna().any():
+        raise V18Error("A2 rehearsal target cache contains an outcome")
+
+    month = target.to_period("M")
+    training_panel = panel.loc[
+        pd.to_datetime(panel["date"]).lt(month.start_time.normalize()),
+        list(G0_PANEL_COLUMNS),
+    ]
+    if reuse_fold_token is None:
+        model_price_semantic = model_price_semantic_sha256(compact_projection)
+        panel_digest = _exact_g0_frame_digest(panel)
+        rehearsal_training_binding = semantic_frame_sha256(
+            training_panel, G0_PANEL_COLUMNS
+        )
+        rehearsal_training_row_count = int(len(training_panel))
+        exact_prefix_proof = {
+            **exact_prefix_identity,
+            "model_price_semantic_sha256": model_price_semantic,
+            "g0_panel_exact_digest": panel_digest,
+            "g0_training_row_count": rehearsal_training_row_count,
+            "g0_training_panel_semantic_sha256": rehearsal_training_binding,
+        }
+        exact_prefix_proof_json = canonical_json_bytes(exact_prefix_proof).decode(
+            "utf-8"
+        )
+        exact_prefix_proof_sha256 = canonical_json_sha256(exact_prefix_proof)
+        month_source: dict[str, Any] = {
+            field: None for field in MONTH_SOURCE_MANIFEST_FIELDS
+        }
+        month_source.update(
+            {
+                "schema_version": 1,
+                "target_month": str(month),
+                "first_counted_session": str(target.date()),
+                "seal_session": str(target.date()),
+                "activation_observed_at": verified,
+                "latest_required_source_session": str(latest.date()),
+                "created_at": month_sealed,
+                "sealed_at": month_sealed,
+                "runtime_lock_sha256": capability.runtime_lock_sha256,
+                "runtime_lock_verified_at": verified,
+                "source_set_sha256": source_set_hash,
+                "parsed_shard_set_sha256": shard_set_hash,
+                "parsed_row_count": int(len(prices)),
+                "model_price_full_prefix_semantic_sha256": model_price_semantic,
+                "g0_training_panel_semantic_sha256": rehearsal_training_binding,
+                "g0_training_row_count": rehearsal_training_row_count,
+                "protocol_sha256": capability.protocol_sha256,
+                "runner_sha256": capability.runner_sha256,
+                "parser_sha256": JPX_PARSER_SHA256,
+                "canonical_json_contract": CANONICAL_JSON_CONTRACT,
+            }
+        )
+        month_source["month_source_manifest_sha256"] = canonical_json_sha256(
+            month_source, exclude_fields={"month_source_manifest_sha256"}
+        )
+        _, fold, bundle = _build_fold(
+            panel,
+            month,
+            fit_started_at=fit_started,
+            fit_completed_at=fit_completed,
+            bundle_created_at=fit_completed,
+            sealed_at=fit_completed,
+            runtime_lock_verified_at=verified,
+            terminal_replay=True,
+            first_counted_session_value=target,
+            activation_observed_at=verified,
+            month_source_manifest=month_source,
+            _a2_rehearsal_contract=capability,
+        )
+        token = _A2RehearsalFoldToken(
+            dict(fold),
+            dict(bundle),
+            dict(month_source),
+            exact_prefix_proof_json,
+            exact_prefix_proof_sha256,
+        )
+    else:
+        assert retained_proof is not None
+        model_price_semantic = _require_sha(
+            retained_proof["model_price_semantic_sha256"],
+            "A2 rehearsal retained model-price semantic SHA",
+        )
+        panel_digest = retained_proof["g0_panel_exact_digest"]
+        if not isinstance(panel_digest, dict):
+            raise V18Error("A2 rehearsal retained G0 digest is invalid")
+        rehearsal_training_binding = _require_sha(
+            retained_proof["g0_training_panel_semantic_sha256"],
+            "A2 rehearsal retained training semantic SHA",
+        )
+        rehearsal_training_row_count = int(
+            retained_proof["g0_training_row_count"]
+        )
+        if rehearsal_training_row_count <= 0 or len(training_panel) != (
+            rehearsal_training_row_count
+        ):
+            raise V18Error("A2 rehearsal retained training row count changed")
+        fold = dict(reuse_fold_token.fold_manifest)
+        bundle = dict(reuse_fold_token.model_bundle)
+        token_month_source = dict(reuse_fold_token.month_source_manifest)
+        exact_month_bindings = {
+            "target_month": str(month),
+            "latest_required_source_session": str(latest.date()),
+            "source_set_sha256": source_set_hash,
+            "parsed_shard_set_sha256": shard_set_hash,
+            "parsed_row_count": int(len(prices)),
+            "model_price_full_prefix_semantic_sha256": model_price_semantic,
+            "g0_training_panel_semantic_sha256": rehearsal_training_binding,
+            "g0_training_row_count": rehearsal_training_row_count,
+        }
+        if (
+            set(token_month_source) != set(MONTH_SOURCE_MANIFEST_FIELDS)
+            or token_month_source["month_source_manifest_sha256"]
+            != canonical_json_sha256(
+                token_month_source,
+                exclude_fields={"month_source_manifest_sha256"},
+            )
+            or any(
+                token_month_source[field] != expected
+                for field, expected in exact_month_bindings.items()
+            )
+        ):
+            raise V18Error("A2 rehearsal reused fold month-source binding changed")
+        validate_fold_manifest(
+            fold,
+            bundle,
+            _a2_rehearsal_contract=capability,
+            _a2_rehearsal_month_source=token_month_source,
+        )
+        training = v17._candidate_training(
+            panel, end=month.start_time.normalize() - pd.Timedelta(days=1)
+        )
+        identity = training.loc[:, ["date", "code"]].sort_values(
+            ["date", "code"], kind="stable"
+        )
+        current_hashes = {
+            "training_row_identity_sha256": _frame_sha(identity, ("date", "code")),
+            "training_target_sha256": _numeric_sha(
+                training["_daily_rank_target"].to_numpy(dtype=float)
+            ),
+            "feature_matrix_sha256": _numeric_sha(
+                training.loc[:, list(G0_FEATURES)].to_numpy(dtype=float)
+            ),
+            "training_source_set_sha256": source_set_hash,
+            "training_parsed_shard_set_sha256": shard_set_hash,
+            "training_g0_panel_semantic_sha256": rehearsal_training_binding,
+        }
+        if fold.get("target_month") != str(month) or any(
+            fold.get(field) != expected for field, expected in current_hashes.items()
+        ):
+            raise V18Error("A2 rehearsal reused fold differs from current prefix")
+        token = reuse_fold_token
+        month_source = token_month_source
+
+    scores, replayed_fold, replayed_bundle = freeze_c00_top2(
+        panel,
+        target,
+        score_generated_at=score_generated,
+        runtime_lock_verified_at=verified,
+        terminal_replay=True,
+        source_manifest_sha256=source_manifest_hash,
+        first_counted_session_value=target,
+        activation_observed_at=verified,
+        return_bundle=True,
+        model_bundle=bundle,
+        fold_manifest=fold,
+        month_source_manifest=month_source,
+        _a2_rehearsal_contract=capability,
+    )
+    if replayed_fold != fold or replayed_bundle != bundle:
+        raise V18Error("A2 rehearsal score path changed the reused fold")
+    score_payload = validate_score_rows(scores).to_csv(
+        index=False, lineterminator="\n"
+    ).encode("utf-8")
+    comparison: dict[str, Any] = {
+        "target_session": str(target.date()),
+        "latest_required_source_session": str(latest.date()),
+        "model_price_row_count": int(len(compact_projection)),
+        "model_price_semantic_sha256": model_price_semantic,
+        "model_price_csv_sha256": compact_payload_sha256,
+        "source_manifest_sha256": source_manifest_hash,
+        "source_set_sha256": source_set_hash,
+        "parsed_shard_set_sha256": shard_set_hash,
+        "g0_panel_exact_digest": panel_digest,
+        "g0_training_row_count": rehearsal_training_row_count,
+        "g0_training_panel_semantic_sha256": rehearsal_training_binding,
+        "target_cache_byte_count": len(target_payload),
+        "target_cache_sha256": hashlib.sha256(target_payload).hexdigest(),
+        "target_cache_semantic_sha256": semantic_frame_sha256(
+            target_rows, G0_PANEL_COLUMNS
+        ),
+        "fold_manifest_file_sha256": hashlib.sha256(
+            _json_file_bytes(fold)
+        ).hexdigest(),
+        "fold_manifest_sha256": fold["fold_manifest_sha256"],
+        "fold_model_bundle_file_sha256": hashlib.sha256(
+            _json_file_bytes(bundle)
+        ).hexdigest(),
+        "fold_model_bundle_sha256": bundle["fold_model_bundle_sha256"],
+        "score_file_sha256": hashlib.sha256(score_payload).hexdigest(),
+        "score_semantic_sha256": semantic_score_hash(scores),
+        "top2_code_score_ieee_sha256": canonical_json_sha256(
+            [
+                {
+                    "source_rank": int(row.source_rank),
+                    "code": str(row.code),
+                    "model_score_ieee_le_sha256": hashlib.sha256(
+                        struct.pack("<d", float(row.model_score))
+                    ).hexdigest(),
+                }
+                for row in scores.itertuples(index=False)
+            ]
+        ),
+        "build_forward_c00_panel_call_count": 1,
+    }
+    envelope: dict[str, Any] = {
+        "schema_version": 1,
+        "scope": "nonauthority_rehearsal_only",
+        "input_kind": input_kind,
+        "snapshot_row_count": int(snapshot_rows),
+        "suffix_row_count": int(suffix_rows),
+        "comparison": comparison,
+        "production_authority": False,
+        "canonical_artifact_written": False,
+    }
+    envelope["envelope_sha256"] = canonical_json_sha256(
+        envelope, exclude_fields={"envelope_sha256"}
+    )
+    return envelope, token
+
+
 def validate_score_ledger(
     scores: pd.DataFrame,
     *,
@@ -4889,98 +13476,128 @@ def semantic_score_ledger_hash(
     ).hexdigest()
 
 
+def validate_score_session_authority(scores: pd.DataFrame) -> str:
+    """Exact-compare the derived ledger with immutable per-session shards."""
+
+    ledger = validate_score_ledger(scores, allow_empty=True)
+    expected_groups = {
+        str(session.date()): validate_score_rows(group.drop(columns="_session"))
+        for session, group in ledger.assign(
+            _session=pd.to_datetime(ledger["session_date"], errors="coerce")
+        ).groupby("_session", sort=True)
+    }
+    if not SCORE_SESSION_DIR.is_dir() or SCORE_SESSION_DIR.is_symlink():
+        raise V18Error("score-session authority directory is missing")
+    directory_stat = os.stat(SCORE_SESSION_DIR, follow_symlinks=False)
+    if (
+        directory_stat.st_uid != os.geteuid()
+        or stat.S_IMODE(directory_stat.st_mode) != 0o700
+    ):
+        raise V18Error("score-session authority directory is not private")
+    entries = sorted(SCORE_SESSION_DIR.iterdir(), key=lambda item: item.name)
+    expected_names = [f"{session}.csv" for session in expected_groups]
+    for entry in entries:
+        if re.fullmatch(r"(?:\d{4}-\d{2}-\d{2}\.csv|\.\d{4}-\d{2}-\d{2}\.csv\.staging)", entry.name) is None:
+            raise V18Error("score-session authority has an unregistered entry")
+    observed_final_names = [
+        item.name for item in entries if not item.name.startswith(".")
+    ]
+    if observed_final_names != expected_names:
+        raise V18Error("score-session authority has a missing/extra/non-plain file")
+    bindings: list[dict[str, Any]] = []
+    for file_name in expected_names:
+        entry = SCORE_SESSION_DIR / file_name
+        session = entry.stem
+        payload = _read_local_authority_bytes(
+            entry, label="terminal score-session shard"
+        )
+        expected = expected_groups[session].to_csv(
+            index=False, lineterminator="\n"
+        ).encode()
+        if payload != expected:
+            raise V18Error("score-session shard differs from deferred ledger")
+        bindings.append(
+            {
+                "session_date": session,
+                "byte_count": len(payload),
+                "file_sha256": hashlib.sha256(payload).hexdigest(),
+                "semantic_sha256": semantic_score_hash(expected_groups[session]),
+            }
+        )
+    derived = ledger.to_csv(index=False, lineterminator="\n").encode()
+    if SCORE_OUTPUT.is_symlink() or _plain_file_bytes(
+        SCORE_OUTPUT, label="derived canonical score ledger"
+    ) != derived:
+        raise V18Error("derived score ledger differs from session authority")
+    return canonical_json_sha256(bindings)
+
+
 def append_score_rows(scores: pd.DataFrame, path: str | Path = SCORE_OUTPUT) -> None:
-    """Append one new two-rank score pair without rewriting canonical bytes."""
+    """Seal one immutable score shard, then rebuild the derived CSV view."""
 
     pair = validate_score_rows(scores)
     target = Path(path)
-    target.parent.mkdir(parents=True, exist_ok=True)
-    descriptor = os.open(
-        target,
-        os.O_RDWR
-        | os.O_APPEND
-        | os.O_CREAT
-        | os.O_CLOEXEC
-        | getattr(os, "O_NOFOLLOW", 0),
-        0o644,
+    canonical_target = Path(os.path.abspath(os.fspath(target)))
+    canonical_score = Path(os.path.abspath(os.fspath(SCORE_OUTPUT)))
+    shard_directory = (
+        SCORE_SESSION_DIR
+        if canonical_target == canonical_score
+        else target.parent / f"{target.name}.sessions"
     )
-    try:
-        before = os.fstat(descriptor)
-        if not stat.S_ISREG(before.st_mode):
-            raise V18Error("score ledger is not a regular file")
-        if before.st_nlink != 1:
-            raise V18Error("score ledger has a forbidden hard-link alias")
-        fcntl.flock(descriptor, fcntl.LOCK_EX)
-        os.lseek(descriptor, 0, os.SEEK_SET)
-        chunks: list[bytes] = []
-        while True:
-            chunk = os.read(descriptor, 1024 * 1024)
-            if not chunk:
-                break
-            chunks.append(chunk)
-        existing_bytes = b"".join(chunks)
-        read_complete = os.fstat(descriptor)
-        if any(
-            getattr(before, field) != getattr(read_complete, field)
-            for field in (
-                "st_dev",
-                "st_ino",
-                "st_nlink",
-                "st_size",
-                "st_mtime_ns",
-                "st_ctime_ns",
-            )
-        ) or read_complete.st_nlink != 1:
-            raise V18Error("score ledger changed while being read")
-        if existing_bytes:
-            try:
-                existing_frame = pd.read_csv(
-                    io.StringIO(existing_bytes.decode("utf-8")),
-                    dtype={"code": "string"},
-                    float_precision="round_trip",
-                )
-            except (UnicodeDecodeError, pd.errors.ParserError, pd.errors.EmptyDataError) as exc:
-                raise V18Error("score ledger bytes are not canonical CSV") from exc
-            existing = validate_score_ledger(existing_frame, allow_empty=True)
-            canonical_existing = existing.to_csv(
-                index=False, lineterminator="\n"
-            ).encode()
-            if existing_bytes != canonical_existing:
-                raise V18Error("score ledger bytes differ from canonical CSV")
-        else:
-            existing = pd.DataFrame(columns=SCORE_FIELDS)
-        new_session = pd.Timestamp(pair["session_date"].iloc[0])
-        last_session = (
-            None if existing.empty else pd.Timestamp(existing["session_date"].iloc[-1])
-        )
-        if last_session is not None and new_session <= last_session:
-            raise V18Error("refusing to overwrite/reorder an existing score target")
-        payload = pair.to_csv(
-            index=False,
-            header=not existing_bytes,
-            lineterminator="\n",
-        ).encode()
-        os.lseek(descriptor, 0, os.SEEK_END)
-        remaining = memoryview(payload)
-        while remaining:
-            written = os.write(descriptor, remaining)
-            if written <= 0:  # pragma: no cover - kernel invariant
-                raise OSError("short write while appending score ledger")
-            remaining = remaining[written:]
-        os.fsync(descriptor)
-        after = os.fstat(descriptor)
+    if canonical_target == canonical_score:
+        if shard_directory.is_symlink() or not shard_directory.is_dir():
+            raise V18Error("score-session authority readiness directory is missing")
+        directory_stat = os.stat(shard_directory, follow_symlinks=False)
         if (
-            (after.st_dev, after.st_ino) != (before.st_dev, before.st_ino)
-            or after.st_nlink != 1
-            or after.st_size != len(existing_bytes) + len(payload)
+            directory_stat.st_uid != os.geteuid()
+            or stat.S_IMODE(directory_stat.st_mode) != 0o700
         ):
-            raise V18Error("score ledger changed or was hard-linked during append")
-    finally:
+            raise V18Error("score-session authority readiness mode changed")
+    else:
+        shard_directory.mkdir(parents=True, exist_ok=True)
+    session = str(pair["session_date"].iloc[0])
+    shard_path = shard_directory / f"{session}.csv"
+    shard_payload = pair.to_csv(index=False, lineterminator="\n").encode()
+    _atomic_local_bytes_once(shard_path, shard_payload)
+
+    entries = sorted(shard_directory.iterdir(), key=lambda item: item.name)
+    for entry in entries:
+        if re.fullmatch(r"(?:\d{4}-\d{2}-\d{2}\.csv|\.\d{4}-\d{2}-\d{2}\.csv\.staging)", entry.name) is None:
+            raise V18Error("score-session authority contains an unregistered name")
+    final_entries = [item for item in entries if not item.name.startswith(".")]
+    frames: list[pd.DataFrame] = []
+    observed_sessions: list[str] = []
+    for entry in final_entries:
+        match = re.fullmatch(r"(\d{4}-\d{2}-\d{2})\.csv", entry.name)
+        if match is None:
+            raise V18Error("score-session authority contains an unregistered name")
+        retained = (
+            _read_local_authority_bytes(entry, label="score-session shard")
+            if canonical_target == canonical_score
+            else _plain_file_bytes(entry, label="score-session shard")
+        )
         try:
-            fcntl.flock(descriptor, fcntl.LOCK_UN)
-        except OSError:
-            pass
-        os.close(descriptor)
+            frame = pd.read_csv(
+                io.BytesIO(retained),
+                dtype={"code": "string"},
+                float_precision="round_trip",
+            )
+        except (UnicodeDecodeError, pd.errors.ParserError, pd.errors.EmptyDataError) as exc:
+            raise V18Error("score-session shard is not canonical CSV") from exc
+        validated = validate_score_rows(frame)
+        if validated["session_date"].iloc[0] != match.group(1):
+            raise V18Error("score-session filename/date binding changed")
+        if retained != validated.to_csv(index=False, lineterminator="\n").encode():
+            raise V18Error("score-session shard exact bytes changed")
+        observed_sessions.append(match.group(1))
+        frames.append(validated)
+    if observed_sessions != sorted(observed_sessions) or len(observed_sessions) != len(
+        set(observed_sessions)
+    ):
+        raise V18Error("score-session authority chronology changed")
+    ledger = validate_score_ledger(pd.concat(frames, ignore_index=True))
+    expected_ledger = ledger.to_csv(index=False, lineterminator="\n").encode()
+    _atomic_local_derived_bytes(target, expected_ledger)
 
 
 def load_registered_calendar(path: str | Path = CALENDAR) -> pd.DatetimeIndex:
@@ -5021,7 +13638,7 @@ def first_counted_session(
     workflow_run_updated_at: Any,
     workflow_run_observed_at: Any,
     calendar: pd.DatetimeIndex | None = None,
-    not_before_session: str = "2026-08-05",
+    not_before_session: str = "2026-08-06",
 ) -> pd.Timestamp:
     """Derive the fixed start from C's successful workflow server timestamp."""
 
@@ -5829,6 +14446,63 @@ def _github_require_ancestor(ancestor: str, descendant: str, name: str) -> None:
         raise V18Error(f"GitHub {name} ancestry is not satisfied")
 
 
+def _payload_additional_test_artifacts(
+    payload: Mapping[str, Any], *, verify_worktree: bool
+) -> tuple[dict[str, str], ...]:
+    records = _validate_additional_test_artifacts(
+        payload.get("additional_test_artifacts"),
+        verify_worktree=verify_worktree,
+    )
+    if any(item["path"] == payload.get("tests_path") for item in records):
+        raise V18Error("additional test artifacts overlap the legacy base test")
+    return records
+
+
+def _validate_additional_test_git_blobs(
+    records: Sequence[Mapping[str, str]], *, commit_sha: str
+) -> None:
+    validated = _validate_additional_test_artifacts(
+        list(records), verify_worktree=False
+    )
+    for item in validated:
+        observed = hashlib.sha256(
+            _git_file_bytes(commit_sha, item["path"])
+        ).hexdigest()
+        if observed != item["sha256"]:
+            raise V18Error(
+                f"preregistration commit additional test changed: {item['path']}"
+            )
+
+
+def _preregistered_artifact_paths(payload: Mapping[str, Any]) -> tuple[str, ...]:
+    legacy = tuple(
+        str(payload[field])
+        for field in (
+            "protocol_path",
+            "hypothesis_path",
+            "runtime_lock_path",
+            "runner_path",
+            "audit_path",
+            "rehearsal_path",
+            "tests_path",
+            "iteration_report_path",
+            "validation_report_path",
+            "session_calendar_path",
+            "workflow_path",
+        )
+    )
+    additional = tuple(
+        item["path"]
+        for item in _payload_additional_test_artifacts(
+            payload, verify_worktree=False
+        )
+    )
+    combined = (*legacy, *additional)
+    if len(combined) != len(set(combined)):
+        raise V18Error("preregistered artifact paths overlap or duplicate")
+    return combined
+
+
 def _validate_preregistration_git_binding(payload: Mapping[str, Any]) -> str:
     prereg = _git_require_commit(
         payload["preregistration_commit_sha"], "preregistration_commit_sha"
@@ -5839,7 +14513,10 @@ def _validate_preregistration_git_binding(payload: Mapping[str, Any]) -> str:
         ("runtime_lock_path", "runtime_lock_sha256"),
         ("runner_path", "runner_sha256"),
         ("audit_path", "audit_sha256"),
+        ("rehearsal_path", "rehearsal_sha256"),
         ("tests_path", "tests_sha256"),
+        ("iteration_report_path", "iteration_report_sha256"),
+        ("validation_report_path", "validation_report_sha256"),
         ("session_calendar_path", "session_calendar_sha256"),
         ("workflow_path", "workflow_sha256"),
     )
@@ -5849,6 +14526,10 @@ def _validate_preregistration_git_binding(payload: Mapping[str, Any]) -> str:
         ).hexdigest()
         if observed != payload[hash_field]:
             raise V18Error(f"preregistration commit artifact changed: {path_field}")
+    additional_tests = _payload_additional_test_artifacts(
+        payload, verify_worktree=True
+    )
+    _validate_additional_test_git_blobs(additional_tests, commit_sha=prereg)
     preregistered_tree = _git_tree_paths(prereg)
     forbidden_exact = {
         "research/model_v18_shoulder_state_activation_payload.json",
@@ -5861,6 +14542,9 @@ def _validate_preregistration_git_binding(payload: Mapping[str, Any]) -> str:
         "research/model_v18_shoulder_state_result.json",
     }
     forbidden_prefixes = (
+        "research/model_v18_shoulder_state_decision_records/",
+        "research/model_v18_shoulder_state_outcome_records/",
+        "research/model_v18_shoulder_state_month_records/",
         "research/model_v18_shoulder_state_source_manifests/",
         "research/model_v18_shoulder_state_outcome_manifests/",
         "research/model_v18_shoulder_state_fold_manifests/",
@@ -6032,17 +14716,7 @@ def _validate_payload_commit_git_binding(
     )
     if branch_tip != payload_commit:
         _git_is_ancestor(payload_commit, branch_tip, "payload-to-observed-branch-tip")
-    for path_field in (
-        "protocol_path",
-        "hypothesis_path",
-        "runtime_lock_path",
-        "runner_path",
-        "audit_path",
-        "tests_path",
-        "session_calendar_path",
-        "workflow_path",
-    ):
-        path = str(payload[path_field])
+    for path in _preregistered_artifact_paths(payload):
         if _git_file_bytes(prereg, path) != _git_file_bytes(payload_commit, path):
             raise V18Error(f"payload commit modified preregistered path: {path}")
     if _git_changed_paths(prereg, payload_commit) != {str(receipt["payload_path"])}:
@@ -6090,17 +14764,7 @@ def _validate_receipt_commit_git_binding(
         label="canonical activation receipt",
     ):
         raise V18Error("receipt commit exact bytes differ from canonical receipt file")
-    for path_field in (
-        "protocol_path",
-        "hypothesis_path",
-        "runtime_lock_path",
-        "runner_path",
-        "audit_path",
-        "tests_path",
-        "session_calendar_path",
-        "workflow_path",
-    ):
-        path = str(payload[path_field])
+    for path in _preregistered_artifact_paths(payload):
         prereg_bytes = _git_file_bytes(prereg, path)
         if prereg_bytes != _git_file_bytes(receipt_commit, path):
             raise V18Error(f"receipt commit modified preregistered path: {path}")
@@ -6127,9 +14791,80 @@ def _protocol_activation() -> tuple[dict[str, Any], dict[str, Any]]:
     return protocol, protocol["activation"]
 
 
+def validate_predictor_cache_anchor_summary(
+    summary: Mapping[str, Any],
+) -> dict[str, Any]:
+    value = dict(summary)
+    if set(value) != set(CACHE_ANCHOR_SUMMARY_FIELDS):
+        raise V18Error("payload predictor-cache anchor summary fields changed")
+    _date(value["latest_source_session"], "payload cache anchor latest session")
+    _timestamp(value["verified_at"], "payload cache anchor verified_at")
+    sealed = _timestamp(value["sealed_at"], "payload cache anchor sealed_at")
+    if _timestamp(value["verified_at"], "payload cache anchor verified_at") > sealed:
+        raise V18Error("payload cache anchor verification follows its seal")
+    model_month = _month(
+        value["model_price_snapshot_target_month"],
+        "payload model-price snapshot target month",
+    )
+    if _latest_registered_source_before_month(model_month) > _date(
+        value["latest_source_session"], "payload cache anchor latest session"
+    ):
+        raise V18Error("payload model-price snapshot exceeds its raw anchor")
+    for field in (
+        "raw_source_set_sha256",
+        "ordered_shard_set_sha256",
+        "cumulative_snapshot_file_sha256",
+        "cumulative_snapshot_semantic_sha256",
+        "model_price_snapshot_file_sha256",
+        "model_price_snapshot_semantic_sha256",
+        "model_price_snapshot_manifest_file_sha256",
+        "model_price_snapshot_manifest_sha256",
+        "snapshot_manifest_file_sha256",
+        "snapshot_manifest_sha256",
+        "direct_clean_room_verification_receipt_sha256",
+        "compact_consumer_equivalence_receipt_sha256",
+    ):
+        _require_sha(value[field], f"payload cache anchor {field}")
+    for field in (
+        "raw_source_count",
+        "ordered_shard_count",
+        "cumulative_snapshot_byte_count",
+        "model_price_snapshot_byte_count",
+        "model_price_snapshot_manifest_byte_count",
+    ):
+        if isinstance(value[field], bool) or int(value[field]) <= 0:
+            raise V18Error(f"payload cache anchor {field} must be positive")
+    if int(value["raw_source_count"]) != int(value["ordered_shard_count"]):
+        raise V18Error("payload cache anchor raw/shard counts differ")
+    _external_key_components(
+        value["cumulative_snapshot_object_key"],
+        prefix=CACHE_ANCHOR_OBJECT_PREFIX,
+        label="payload cache anchor snapshot",
+    )
+    _external_key_components(
+        value["model_price_snapshot_object_key"],
+        prefix=MODEL_PRICE_SNAPSHOT_OBJECT_PREFIX,
+        label="payload model-price snapshot",
+    )
+    _external_key_components(
+        value["model_price_snapshot_manifest_object_key"],
+        prefix=MODEL_PRICE_SNAPSHOT_OBJECT_PREFIX,
+        label="payload model-price snapshot manifest",
+    )
+    _external_key_components(
+        value["snapshot_manifest_object_key"],
+        prefix=CACHE_ANCHOR_OBJECT_PREFIX,
+        label="payload cache anchor manifest",
+    )
+    return value
+
+
 def validate_activation_payload(
     payload: Mapping[str, Any] | str | Path,
     protocol: Mapping[str, Any] | None = None,
+    predictor_raw_store_root: str | Path | None = None,
+    predictor_derived_store_root: str | Path | None = None,
+    reparse_predictor_cache_anchor: bool = False,
 ) -> tuple[dict[str, Any], str]:
     value = read_json(payload) if isinstance(payload, (str, Path)) else dict(payload)
     active_protocol = dict(protocol) if protocol is not None else validate_protocol()[0]
@@ -6140,6 +14875,49 @@ def validate_activation_payload(
     for field, expected in contract["fixed_values"].items():
         if value.get(field) != expected:
             raise V18Error(f"activation payload fixed field changed: {field}")
+    additional_paths = _protocol_additional_test_artifact_paths(active_protocol)
+    additional_tests = _validate_additional_test_artifacts(
+        value["additional_test_artifacts"],
+        expected_paths=additional_paths,
+        verify_worktree=True,
+    )
+    if any(item["path"] == value.get("tests_path") for item in additional_tests):
+        raise V18Error("activation payload test artifact registries overlap")
+    anchor_summary = validate_predictor_cache_anchor_summary(
+        value["predictor_cache_anchor"]
+    )
+    not_before_predecessor = _latest_required_predictor_source_session(
+        _date(value["not_before_session"], "activation not-before session")
+    )
+    if not_before_predecessor <= _date(
+        anchor_summary["latest_source_session"], "activation cache anchor H"
+    ):
+        raise V18Error(
+            "activation not-before predecessor must strictly follow cache anchor H"
+        )
+    if (predictor_raw_store_root is None) != (
+        predictor_derived_store_root is None
+    ):
+        raise V18Error("activation cache anchor validation requires both stores")
+    if predictor_derived_store_root is not None:
+        anchor_manifest, anchor_payload = _read_external_canonical_json(
+            predictor_derived_store_root,
+            anchor_summary["snapshot_manifest_object_key"],
+            prefix=CACHE_ANCHOR_OBJECT_PREFIX,
+            label="activation predictor cache anchor manifest",
+        )
+        _, observed_summary, _ = validate_predictor_cache_anchor(
+            anchor_manifest,
+            predictor_raw_store_root=predictor_raw_store_root,
+            predictor_derived_store_root=predictor_derived_store_root,
+            require_direct_clean_room_reparse=reparse_predictor_cache_anchor,
+        )
+        if hashlib.sha256(anchor_payload).hexdigest() != anchor_summary[
+            "snapshot_manifest_file_sha256"
+        ]:
+            raise V18Error("activation cache anchor exact manifest bytes changed")
+        if observed_summary != anchor_summary:
+            raise V18Error("activation cache anchor summary differs from external anchor")
     _validate_git_commit(
         value["preregistration_commit_sha"],
         value["preregistration_commit_url"],
@@ -6151,7 +14929,10 @@ def validate_activation_payload(
         ("runtime_lock_path", "runtime_lock_sha256"),
         ("runner_path", "runner_sha256"),
         ("audit_path", "audit_sha256"),
+        ("rehearsal_path", "rehearsal_sha256"),
         ("tests_path", "tests_sha256"),
+        ("iteration_report_path", "iteration_report_sha256"),
+        ("validation_report_path", "validation_report_sha256"),
         ("session_calendar_path", "session_calendar_sha256"),
         ("workflow_path", "workflow_sha256"),
     )
@@ -6179,6 +14960,9 @@ def validate_activation_payload(
 def create_activation_payload(
     *,
     preregistration_commit_sha: str,
+    predictor_raw_store_root: str | Path,
+    predictor_derived_store_root: str | Path,
+    predictor_cache_anchor_manifest_object_key: str,
     output: str | Path | None = None,
 ) -> dict[str, Any]:
     """Create commit-B payload; the caller must commit it after prereg commit A."""
@@ -6188,6 +14972,27 @@ def create_activation_payload(
     preregistration_commit_sha = _git_require_commit(
         preregistration_commit_sha, "preregistration_commit_sha"
     )
+    if output is not None and _local_authority_presence_state(
+        output, label="activation payload"
+    ) != "absent":
+        retained = read_json(output)
+        validated, _ = validate_activation_payload(
+            retained,
+            protocol,
+            predictor_raw_store_root=predictor_raw_store_root,
+            predictor_derived_store_root=predictor_derived_store_root,
+            reparse_predictor_cache_anchor=False,
+        )
+        if (
+            validated["preregistration_commit_sha"]
+            != preregistration_commit_sha
+            or validated["predictor_cache_anchor"][
+                "snapshot_manifest_object_key"
+            ]
+            != predictor_cache_anchor_manifest_object_key
+        ):
+            raise V18Error("activation payload retry changes its exact authority")
+        return validated
     commit_observation = _github_observation(
         commit_sha=preregistration_commit_sha
     )
@@ -6195,6 +15000,22 @@ def create_activation_payload(
     workflow_observation = _github_workflow_run_observation(
         preregistration_commit_sha
     )
+    anchor_manifest, anchor_manifest_payload = _read_external_canonical_json(
+        predictor_derived_store_root,
+        predictor_cache_anchor_manifest_object_key,
+        prefix=CACHE_ANCHOR_OBJECT_PREFIX,
+        label="activation predictor cache anchor manifest",
+    )
+    _, predictor_cache_anchor, _ = validate_predictor_cache_anchor(
+        anchor_manifest,
+        predictor_raw_store_root=predictor_raw_store_root,
+        predictor_derived_store_root=predictor_derived_store_root,
+        require_direct_clean_room_reparse=True,
+    )
+    if hashlib.sha256(anchor_manifest_payload).hexdigest() != (
+        predictor_cache_anchor["snapshot_manifest_file_sha256"]
+    ):
+        raise V18Error("activation cache anchor exact manifest file hash changed")
     projection = commit_observation["canonical_projection"]
     preregistration_commit_url = str(projection["html_url"])
     committed = _timestamp(projection["committer_date"], "commit committer_date")
@@ -6214,7 +15035,18 @@ def create_activation_payload(
         "hypothesis_sha256": sha256_file(ROOT / fixed["hypothesis_path"]),
         "runner_sha256": sha256_file(ROOT / fixed["runner_path"]),
         "audit_sha256": sha256_file(ROOT / fixed["audit_path"]),
+        "rehearsal_sha256": sha256_file(ROOT / fixed["rehearsal_path"]),
         "tests_sha256": sha256_file(ROOT / fixed["tests_path"]),
+        "iteration_report_sha256": sha256_file(
+            ROOT / fixed["iteration_report_path"]
+        ),
+        "validation_report_sha256": sha256_file(
+            ROOT / fixed["validation_report_path"]
+        ),
+        "additional_test_artifacts": _additional_test_artifacts_from_worktree(
+            _protocol_additional_test_artifact_paths(protocol)
+        ),
+        "predictor_cache_anchor": predictor_cache_anchor,
         "preregistration_commit_sha": preregistration_commit_sha,
         "preregistration_commit_url": preregistration_commit_url,
         "preregistration_commit_committed_at": committed,
@@ -6240,7 +15072,13 @@ def create_activation_payload(
     value["payload_sha256"] = canonical_json_sha256(
         value, exclude_fields={"payload_sha256"}
     )
-    validate_activation_payload(value, protocol)
+    validate_activation_payload(
+        value,
+        protocol,
+        predictor_raw_store_root=predictor_raw_store_root,
+        predictor_derived_store_root=predictor_derived_store_root,
+        reparse_predictor_cache_anchor=False,
+    )
     if output is not None:
         write_json(value, output, exclusive=True)
     return value
@@ -6327,6 +15165,16 @@ def create_activation_receipt(
     payload_commit_sha = _git_require_commit(
         payload_commit_sha, "payload_commit_sha"
     )
+    if output is not None and _local_authority_presence_state(
+        output, label="activation receipt"
+    ) != "absent":
+        retained = read_json(output)
+        validated, _ = validate_activation_receipt(
+            retained, payload_value, protocol
+        )
+        if validated["payload_commit_sha"] != payload_commit_sha:
+            raise V18Error("activation receipt retry changes payload commit B")
+        return validated
     commit_observation = _github_observation(commit_sha=payload_commit_sha)
     branch_observation = _github_observation(branch=str(fixed["branch"]))
     workflow_observation = _github_workflow_run_observation(payload_commit_sha)
@@ -6476,6 +15324,17 @@ def activate(
         _timestamp(workflow_observation["retrieved_at"], "workflow retrieved_at"),
     ):
         raise V18Error("activation observations missed the nondiscretionary first cutoff")
+    first_predecessor = _latest_required_predictor_source_session(first)
+    anchor_latest = _date(
+        validate_predictor_cache_anchor_summary(
+            payload_value["predictor_cache_anchor"]
+        )["latest_source_session"],
+        "activation predictor anchor latest session",
+    )
+    if first_predecessor <= anchor_latest:
+        raise V18Error(
+            "activation first counted predecessor must strictly follow anchor H"
+        )
     terminal = deterministic_terminal_session(first, scheduled)
     denominator = scheduled[(scheduled >= first) & (scheduled <= terminal)]
     return {
@@ -6502,6 +15361,7 @@ def activate(
         ).isoformat(timespec="microseconds"),
         "receipt_workflow_run_observation": workflow_observation,
         "first_counted_session": str(first.date()),
+        "first_counted_predecessor_session": str(first_predecessor.date()),
         "terminal_session": str(terminal.date()),
         "terminal_scheduled_sessions": int(len(denominator)),
         "represented_calendar_months": int(denominator.to_period("M").nunique()),
@@ -6538,6 +15398,7 @@ def validate_activation_context(context: Mapping[str, Any]) -> dict[str, Any]:
         "activation_receipt_workflow_run_observed_at",
         "receipt_workflow_run_observation",
         "first_counted_session",
+        "first_counted_predecessor_session",
         "terminal_session",
         "terminal_scheduled_sessions",
         "represented_calendar_months",
@@ -6658,11 +15519,24 @@ def validate_activation_context(context: Mapping[str, Any]) -> dict[str, Any]:
         ),
     ):
         raise V18Error("activation observations missed the first counted cutoff")
+    first_predecessor = _latest_required_predictor_source_session(first)
+    anchor_latest = _date(
+        validate_predictor_cache_anchor_summary(
+            payload["predictor_cache_anchor"]
+        )["latest_source_session"],
+        "activation predictor anchor latest session",
+    )
+    if first_predecessor <= anchor_latest:
+        raise V18Error(
+            "activation first counted predecessor must strictly follow anchor H"
+        )
     terminal = deterministic_terminal_session(first)
     calendar = load_registered_calendar()
     denominator = calendar[(calendar >= first) & (calendar <= terminal)]
     if (
         value["first_counted_session"] != str(first.date())
+        or value["first_counted_predecessor_session"]
+        != str(first_predecessor.date())
         or value["terminal_session"] != str(terminal.date())
         or int(value["terminal_scheduled_sessions"]) != len(denominator)
         or int(value["represented_calendar_months"])
@@ -6753,15 +15627,27 @@ def validate_checkpoint_decision_core(
         raise V18Error("checkpoint core computation timestamp is invalid")
     for field in ("source_manifest_sha256", "state_manifest_sha256"):
         _require_sha(value[field], f"checkpoint core {field}")
+    score_pair = (
+        value["score_session_file_sha256"],
+        value["score_session_semantic_sha256"],
+    )
+    if any(item is None for item in score_pair):
+        raise V18Error("checkpoint requires the exact two-row score-session shard")
+    _require_sha(score_pair[0], "checkpoint score-session file SHA")
+    _require_sha(score_pair[1], "checkpoint score-session semantic SHA")
+    _require_sha(value["score_session_set_sha256"], "checkpoint score-session set SHA")
     fold_pair = (
         value["c00_fold_manifest_sha256"],
         value["fold_model_bundle_file_sha256"],
     )
-    if (fold_pair[0] is None) != (fold_pair[1] is None):
-        raise V18Error("checkpoint core fold pair nullability differs")
-    if fold_pair[0] is not None:
-        _require_sha(fold_pair[0], "checkpoint fold manifest")
-        _require_sha(fold_pair[1], "checkpoint fold bundle")
+    if any(item is None for item in fold_pair):
+        raise V18Error("checkpoint requires the exact monthly fold/bundle pair")
+    _require_sha(fold_pair[0], "checkpoint fold manifest")
+    _require_sha(fold_pair[1], "checkpoint fold bundle")
+    if not _strict_bool(value["source_complete"]) or not _strict_bool(
+        value["model_complete"]
+    ):
+        raise V18Error("checkpoint cannot encode incomplete source/model authority")
     if value["failure_reason"] is not None and value["failure_reason"] not in DAILY_FAILURE_REASONS:
         raise V18Error("checkpoint core failure reason is not registered")
     return value
@@ -6986,6 +15872,57 @@ def _read_installed_directory_file(
         os.close(descriptor)
 
 
+def _existing_checkpoint_session_payloads(
+    parent_fd: int,
+    *,
+    session_name: str,
+    file_names: Sequence[str],
+    file_mode: int,
+    directory_mode: int,
+    label: str,
+) -> dict[str, bytes] | None:
+    """Secure-read a fully published pair, or return None when absent."""
+
+    try:
+        directory_fd = os.open(
+            session_name,
+            os.O_RDONLY
+            | os.O_DIRECTORY
+            | os.O_CLOEXEC
+            | getattr(os, "O_NOFOLLOW", 0),
+            dir_fd=parent_fd,
+        )
+    except FileNotFoundError:
+        return None
+    except OSError as exc:
+        raise V18Error(f"{label} final session cannot be pinned") from exc
+    try:
+        metadata = os.fstat(directory_fd)
+        if (
+            not stat.S_ISDIR(metadata.st_mode)
+            or metadata.st_uid != os.geteuid()
+            or stat.S_IMODE(metadata.st_mode) != directory_mode
+            or set(os.listdir(directory_fd)) != set(file_names)
+        ):
+            raise V18Error(f"{label} final session is not the exact pair")
+        payloads: dict[str, bytes] = {}
+        for file_name in file_names:
+            child = os.stat(file_name, dir_fd=directory_fd, follow_symlinks=False)
+            if (
+                not stat.S_ISREG(child.st_mode)
+                or child.st_uid != os.geteuid()
+                or child.st_nlink != 1
+                or stat.S_IMODE(child.st_mode) != file_mode
+            ):
+                raise V18Error(f"{label} final child metadata changed")
+            payloads[file_name] = _read_installed_directory_file(
+                directory_fd, file_name, label=f"{label} final {file_name}"
+            )
+        return payloads
+    finally:
+        os.close(directory_fd)
+
+
 def _install_checkpoint_session_directory(
     parent_fd: int,
     *,
@@ -6995,7 +15932,7 @@ def _install_checkpoint_session_directory(
     directory_mode: int,
     label: str,
 ) -> dict[str, tuple[int, str]]:
-    """Create one fixed session directory and its two files exactly once."""
+    """Atomically publish one fixed pair directory, with pre-link recovery."""
 
     names = tuple(payloads)
     suffixes = {Path(name).suffix for name in names}
@@ -7007,28 +15944,102 @@ def _install_checkpoint_session_directory(
         expected_names = ()
     if names != expected_names or len(set(names)) != 2:
         raise V18Error(f"{label} pair must contain exactly two distinct files")
+    stage_name = f".{session_name}.staging"
+    fcntl.flock(parent_fd, fcntl.LOCK_EX)
     try:
-        os.mkdir(session_name, mode=directory_mode, dir_fd=parent_fd)
-    except FileExistsError as exc:
-        raise V18Error(f"{label} session directory already exists") from exc
-    try:
-        destination_fd = os.open(
-            session_name,
+        parent_stat = os.fstat(parent_fd)
+        if (
+            not stat.S_ISDIR(parent_stat.st_mode)
+            or parent_stat.st_uid != os.geteuid()
+            or stat.S_IMODE(parent_stat.st_mode) & 0o022
+        ):
+            raise V18Error(f"{label} parent owner/permissions are not private")
+        try:
+            existing = os.stat(
+                session_name, dir_fd=parent_fd, follow_symlinks=False
+            )
+        except FileNotFoundError:
+            existing = None
+        if existing is not None:
+            if not stat.S_ISDIR(existing.st_mode):
+                raise V18Error(f"{label} final session is not a directory")
+            _revalidate_checkpoint_session_directory(
+                parent_fd,
+                session_name=session_name,
+                payloads=payloads,
+                file_mode=file_mode,
+                directory_mode=directory_mode,
+                label=label,
+            )
+            # Heal the only durable post-rename/pre-parent-fsync crash window.
+            os.fsync(parent_fd)
+            return {
+                file_name: (len(payload), hashlib.sha256(payload).hexdigest())
+                for file_name, payload in payloads.items()
+            }
+
+        # A staged directory has no registered final name and is explicitly
+        # nonauthority.  Under the private parent lock, securely discard only
+        # its known single-link regular children before rebuilding fresh
+        # timestamp/nonce payloads.
+        try:
+            stage_fd = os.open(
+                stage_name,
+                os.O_RDONLY
+                | os.O_DIRECTORY
+                | os.O_CLOEXEC
+                | getattr(os, "O_NOFOLLOW", 0),
+                dir_fd=parent_fd,
+            )
+        except FileNotFoundError:
+            stage_fd = -1
+        except OSError as exc:
+            raise V18Error(f"{label} staged directory cannot be pinned") from exc
+        if stage_fd >= 0:
+            try:
+                staged_stat = os.fstat(stage_fd)
+                staged_names = set(os.listdir(stage_fd))
+                if (
+                    not stat.S_ISDIR(staged_stat.st_mode)
+                    or staged_stat.st_uid != os.geteuid()
+                    or stat.S_IMODE(staged_stat.st_mode) != directory_mode
+                    or not staged_names.issubset(set(names))
+                ):
+                    raise V18Error(f"{label} staged directory is not recoverable")
+                for file_name in sorted(staged_names):
+                    metadata = os.stat(
+                        file_name, dir_fd=stage_fd, follow_symlinks=False
+                    )
+                    if (
+                        not stat.S_ISREG(metadata.st_mode)
+                        or metadata.st_uid != os.geteuid()
+                        or metadata.st_nlink != 1
+                        or stat.S_IMODE(metadata.st_mode) != file_mode
+                    ):
+                        raise V18Error(f"{label} staged child is not recoverable")
+                    os.unlink(file_name, dir_fd=stage_fd)
+                os.fsync(stage_fd)
+            finally:
+                os.close(stage_fd)
+            entry = os.stat(stage_name, dir_fd=parent_fd, follow_symlinks=False)
+            if not stat.S_ISDIR(entry.st_mode):
+                raise V18Error(f"{label} staged entry changed before cleanup")
+            os.rmdir(stage_name, dir_fd=parent_fd)
+            os.fsync(parent_fd)
+
+        os.mkdir(stage_name, mode=directory_mode, dir_fd=parent_fd)
+        stage_fd = os.open(
+            stage_name,
             os.O_RDONLY
             | os.O_DIRECTORY
             | os.O_CLOEXEC
             | getattr(os, "O_NOFOLLOW", 0),
             dir_fd=parent_fd,
         )
-    except OSError as exc:
-        # A created but unusable directory is deliberately not repaired.  Its
-        # presence permanently records an interrupted/hostile seal attempt.
-        raise V18Error(f"{label} new session directory cannot be pinned") from exc
-    try:
-        os.fchmod(destination_fd, directory_mode)
-        for file_name in names:
-            payload = payloads[file_name]
-            try:
+        try:
+            os.fchmod(stage_fd, directory_mode)
+            for file_name in names:
+                payload = payloads[file_name]
                 descriptor = os.open(
                     file_name,
                     os.O_WRONLY
@@ -7037,51 +16048,85 @@ def _install_checkpoint_session_directory(
                     | os.O_CLOEXEC
                     | getattr(os, "O_NOFOLLOW", 0),
                     file_mode,
-                    dir_fd=destination_fd,
+                    dir_fd=stage_fd,
                 )
-            except FileExistsError as exc:
-                raise V18Error(f"{label} pair file already exists") from exc
-            try:
-                os.fchmod(descriptor, file_mode)
-                remaining = memoryview(payload)
-                while remaining:
-                    written = os.write(descriptor, remaining)
-                    if written <= 0:  # pragma: no cover - kernel invariant
-                        raise OSError("short checkpoint pair write")
-                    remaining = remaining[written:]
-                os.fsync(descriptor)
-                metadata = os.fstat(descriptor)
-                if (
-                    not stat.S_ISREG(metadata.st_mode)
-                    or metadata.st_nlink != 1
-                    or stat.S_IMODE(metadata.st_mode) != file_mode
-                    or metadata.st_size != len(payload)
-                ):
-                    raise V18Error(f"{label} new file metadata changed")
-            finally:
-                os.close(descriptor)
-        os.fsync(destination_fd)
-        os.fsync(parent_fd)
-        directory_stat = os.fstat(destination_fd)
+                try:
+                    os.fchmod(descriptor, file_mode)
+                    remaining = memoryview(payload)
+                    while remaining:
+                        written = os.write(descriptor, remaining)
+                        if written <= 0:  # pragma: no cover - kernel invariant
+                            raise OSError("short checkpoint staged-pair write")
+                        remaining = remaining[written:]
+                    os.fsync(descriptor)
+                    metadata = os.fstat(descriptor)
+                    if (
+                        not stat.S_ISREG(metadata.st_mode)
+                        or metadata.st_uid != os.geteuid()
+                        or metadata.st_nlink != 1
+                        or stat.S_IMODE(metadata.st_mode) != file_mode
+                        or metadata.st_size != len(payload)
+                    ):
+                        raise V18Error(f"{label} staged file metadata changed")
+                finally:
+                    os.close(descriptor)
+            os.fsync(stage_fd)
+            os.fsync(parent_fd)
+            if set(os.listdir(stage_fd)) != set(names):
+                raise V18Error(f"{label} staged directory is not the exact pair")
+            for file_name, expected in payloads.items():
+                if _read_installed_directory_file(
+                    stage_fd,
+                    file_name,
+                    label=f"{label} staged {file_name}",
+                ) != expected:
+                    raise V18Error(f"{label} staged bytes changed")
+        finally:
+            os.close(stage_fd)
+        try:
+            os.stat(session_name, dir_fd=parent_fd, follow_symlinks=False)
+        except FileNotFoundError:
+            pass
+        else:
+            raise V18Error(f"{label} final session appeared before publish")
+        # The retained parent is owner-private and held under its advisory
+        # lock.  Re-pin the staged directory immediately before rename.  A
+        # same-UID process deliberately ignoring the cooperative lock remains
+        # outside the registered threat model; every consumer still re-pins
+        # the exact installed bytes.
+        stage_before_publish = os.stat(
+            stage_name, dir_fd=parent_fd, follow_symlinks=False
+        )
         if (
-            not stat.S_ISDIR(directory_stat.st_mode)
-            or stat.S_IMODE(directory_stat.st_mode) != directory_mode
-            or set(os.listdir(destination_fd)) != set(names)
+            not stat.S_ISDIR(stage_before_publish.st_mode)
+            or stage_before_publish.st_uid != os.geteuid()
+            or stat.S_IMODE(stage_before_publish.st_mode) != directory_mode
         ):
-            raise V18Error(f"{label} installed directory is not the exact pair")
-        result: dict[str, tuple[int, str]] = {}
-        for file_name, expected in payloads.items():
-            observed = _read_installed_directory_file(
-                destination_fd,
-                file_name,
-                label=f"{label} sealed {file_name}",
-            )
-            if observed != expected:
-                raise V18Error(f"{label} sealed bytes changed")
-            result[file_name] = (len(observed), hashlib.sha256(observed).hexdigest())
-        return result
+            raise V18Error(f"{label} staged directory changed before publish")
+        os.rename(
+            stage_name,
+            session_name,
+            src_dir_fd=parent_fd,
+            dst_dir_fd=parent_fd,
+        )
+        os.fsync(parent_fd)
+        _revalidate_checkpoint_session_directory(
+            parent_fd,
+            session_name=session_name,
+            payloads=payloads,
+            file_mode=file_mode,
+            directory_mode=directory_mode,
+            label=label,
+        )
+        return {
+            file_name: (len(payload), hashlib.sha256(payload).hexdigest())
+            for file_name, payload in payloads.items()
+        }
     finally:
-        os.close(destination_fd)
+        try:
+            fcntl.flock(parent_fd, fcntl.LOCK_UN)
+        except OSError:
+            pass
 
 
 def _revalidate_checkpoint_session_directory(
@@ -7111,6 +16156,7 @@ def _revalidate_checkpoint_session_directory(
         observed_names = set(os.listdir(directory_fd))
         if (
             not stat.S_ISDIR(directory_stat.st_mode)
+            or directory_stat.st_uid != os.geteuid()
             or stat.S_IMODE(directory_stat.st_mode) != directory_mode
             or observed_names != set(payloads)
         ):
@@ -7119,6 +16165,7 @@ def _revalidate_checkpoint_session_directory(
             metadata = os.stat(file_name, dir_fd=directory_fd, follow_symlinks=False)
             if (
                 not stat.S_ISREG(metadata.st_mode)
+                or metadata.st_uid != os.geteuid()
                 or metadata.st_nlink != 1
                 or stat.S_IMODE(metadata.st_mode) != file_mode
                 or metadata.st_size != len(expected)
@@ -7218,6 +16265,8 @@ def build_state_manifest(
     source_months = state.get("source_months")
     if not isinstance(source_months, list) or len(source_months) != 3:
         raise V18Error("state must contain exactly three source months")
+    if c00_fold_manifest_sha256 is None or fold_model_bundle_file_sha256 is None:
+        raise V18Error("counted monthly state requires its exact fold/bundle pair")
     counts = [int(item["complete_pairs"]) for item in source_months]
     medians = [item["median_rank1_minus_rank2_pct"] for item in source_months]
     value = {
@@ -7230,17 +16279,11 @@ def build_state_manifest(
         "state_available": state.get("state_value_pct") is not None,
         "state_value_pct": state.get("state_value_pct"),
         "selected_source_rank": state.get("selected_source_rank"),
-        "c00_fold_manifest_sha256": (
-            None
-            if c00_fold_manifest_sha256 is None
-            else _require_sha(c00_fold_manifest_sha256, "c00_fold_manifest_sha256")
+        "c00_fold_manifest_sha256": _require_sha(
+            c00_fold_manifest_sha256, "c00_fold_manifest_sha256"
         ),
-        "fold_model_bundle_file_sha256": (
-            None
-            if fold_model_bundle_file_sha256 is None
-            else _require_sha(
-                fold_model_bundle_file_sha256, "fold_model_bundle_file_sha256"
-            )
+        "fold_model_bundle_file_sha256": _require_sha(
+            fold_model_bundle_file_sha256, "fold_model_bundle_file_sha256"
         ),
         "protocol_sha256": PROTOCOL_SHA256,
         "activation_payload_sha256": _require_sha(
@@ -7303,13 +16346,12 @@ def validate_state_manifest(manifest: Mapping[str, Any]) -> dict[str, Any]:
         raise V18Error("state selected source rank does not recompute")
     fold_hash = value["c00_fold_manifest_sha256"]
     bundle_file_hash = value["fold_model_bundle_file_sha256"]
-    if (fold_hash is None) != (bundle_file_hash is None):
-        raise V18Error("state fold manifest/bundle hashes must be paired")
-    if fold_hash is not None:
-        _require_sha(fold_hash, "c00_fold_manifest_sha256")
-        _require_sha(bundle_file_hash, "fold_model_bundle_file_sha256")
-        if fold_hash == ZERO_SHA256 or bundle_file_hash == ZERO_SHA256:
-            raise V18Error("all-zero SHA is not a missing fold sentinel")
+    if fold_hash is None or bundle_file_hash is None:
+        raise V18Error("counted monthly state lacks its fold/bundle pair")
+    _require_sha(fold_hash, "c00_fold_manifest_sha256")
+    _require_sha(bundle_file_hash, "fold_model_bundle_file_sha256")
+    if fold_hash == ZERO_SHA256 or bundle_file_hash == ZERO_SHA256:
+        raise V18Error("all-zero SHA is not a missing fold sentinel")
     for field in (
         "protocol_sha256",
         "activation_payload_sha256",
@@ -7401,93 +16443,232 @@ def _sealed_record(
     return value
 
 
+def _jsonl_record_authority_spec(
+    path: str | Path,
+    required_fields: Sequence[str],
+) -> tuple[Path, str]:
+    target = Path(os.path.abspath(os.fspath(path)))
+    canonical_specs = {
+        Path(os.path.abspath(os.fspath(DECISION_LEDGER))): (
+            DECISION_RECORD_DIR,
+            "session_date",
+        ),
+        Path(os.path.abspath(os.fspath(OUTCOME_LEDGER))): (
+            OUTCOME_RECORD_DIR,
+            "session_date",
+        ),
+        Path(os.path.abspath(os.fspath(COMPLETED_MONTH_LEDGER))): (
+            COMPLETED_MONTH_RECORD_DIR,
+            "completed_month",
+        ),
+    }
+    if target in canonical_specs:
+        return canonical_specs[target]
+    field_set = set(required_fields)
+    if "completed_month" in field_set:
+        key_field = "completed_month"
+    elif "session_date" in field_set:
+        key_field = "session_date"
+    else:
+        raise V18Error("JSONL record authority lacks a registered key field")
+    return target.parent / f"{target.name}.records", key_field
+
+
+def _jsonl_record_file_name(record: Mapping[str, Any], *, key_field: str) -> str:
+    token = str(record.get(key_field, ""))
+    pattern = r"\d{4}-\d{2}" if key_field == "completed_month" else r"\d{4}-\d{2}-\d{2}"
+    if re.fullmatch(pattern, token) is None:
+        raise V18Error("JSONL authority record key is not canonical")
+    return f"{token}.json"
+
+
+def load_jsonl_record_authority(
+    path: str | Path,
+    *,
+    required_fields: Sequence[str],
+    validator: Any,
+    heal_derived: bool,
+) -> list[dict[str, Any]]:
+    """Load immutable record shards and exact-compare/heal their JSONL view."""
+
+    target = Path(path)
+    authority_directory, key_field = _jsonl_record_authority_spec(
+        target, required_fields
+    )
+    records: list[dict[str, Any]] = []
+    if authority_directory.exists():
+        if authority_directory.is_symlink() or not authority_directory.is_dir():
+            raise V18Error("JSONL record authority directory is not plain")
+        directory_stat = os.stat(authority_directory, follow_symlinks=False)
+        if (
+            directory_stat.st_uid != os.geteuid()
+            or stat.S_IMODE(directory_stat.st_mode) != 0o700
+        ):
+            raise V18Error("JSONL record authority directory is not private")
+        entries = sorted(authority_directory.iterdir(), key=lambda item: item.name)
+        if heal_derived:
+            for stage in entries:
+                match = re.fullmatch(r"\.(.+\.json)\.staging", stage.name)
+                if match is None:
+                    continue
+                final = authority_directory / match.group(1)
+                if not os.path.lexists(final):
+                    continue
+                _read_local_authority_bytes(
+                    final, label="JSONL record authority crash recovery"
+                )
+            entries = sorted(authority_directory.iterdir(), key=lambda item: item.name)
+        finals: list[Path] = []
+        for entry in entries:
+            if re.fullmatch(r"\..+\.json\.staging", entry.name):
+                # An unpublished local staging name is explicitly nonauthority.
+                # The exact candidate writer either resumes/rebuilds it or heals
+                # its proven final hard-link on the next append.
+                continue
+            if re.fullmatch(r"(?:\d{4}-\d{2}|\d{4}-\d{2}-\d{2})\.json", entry.name) is None:
+                raise V18Error("JSONL record authority has an unregistered entry")
+            if entry.is_symlink() or not entry.is_file():
+                raise V18Error("JSONL record authority contains a non-plain file")
+            metadata = os.stat(entry, follow_symlinks=False)
+            if (
+                metadata.st_uid != os.geteuid()
+                or stat.S_IMODE(metadata.st_mode) != 0o600
+                or metadata.st_nlink != 1
+            ):
+                raise V18Error("JSONL record authority owner/mode/link changed")
+            finals.append(entry)
+        for entry in finals:
+            payload = _plain_file_bytes(entry, label="JSONL record authority shard")
+            try:
+                value = json.loads(payload.decode("utf-8", errors="strict"))
+            except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+                raise V18Error("JSONL record authority shard is not strict JSON") from exc
+            if (
+                not isinstance(value, dict)
+                or payload != canonical_json_bytes(value) + b"\n"
+                or entry.name != _jsonl_record_file_name(value, key_field=key_field)
+            ):
+                raise V18Error("JSONL record authority shard bytes/key are noncanonical")
+            records.append(value)
+    records.sort(key=lambda item: int(item.get("sequence_number", -1)))
+    validated = validator(records)
+    if canonical_json_bytes(validated) != canonical_json_bytes(records):
+        raise V18Error("JSONL record authority validator changed retained records")
+    expected_payload = b"".join(
+        canonical_json_bytes(item) + b"\n" for item in validated
+    )
+    if heal_derived:
+        if expected_payload:
+            _atomic_local_derived_bytes(target, expected_payload)
+        elif os.path.lexists(target):
+            raise V18Error("JSONL derived ledger exists without record authority")
+    elif expected_payload:
+        if target.is_symlink() or _plain_file_bytes(
+            target, label="derived canonical JSONL ledger"
+        ) != expected_payload:
+            raise V18Error("derived JSONL ledger differs from record authority")
+    elif os.path.lexists(target):
+        raise V18Error("derived JSONL ledger exists without record authority")
+    return records
+
+
+def _load_decision_record_authority(*, heal_derived: bool) -> list[dict[str, Any]]:
+    return load_jsonl_record_authority(
+        DECISION_LEDGER,
+        required_fields=DECISION_FIELDS,
+        validator=validate_decision_records,
+        heal_derived=heal_derived,
+    )
+
+
+def _load_outcome_record_authority(
+    decisions: Sequence[Mapping[str, Any]],
+    *,
+    heal_derived: bool,
+) -> list[dict[str, Any]]:
+    return load_jsonl_record_authority(
+        OUTCOME_LEDGER,
+        required_fields=OUTCOME_FIELDS,
+        validator=lambda rows: validate_outcome_records(rows, decisions),
+        heal_derived=heal_derived,
+    )
+
+
+def _load_completed_month_record_authority(
+    *, heal_derived: bool
+) -> list[dict[str, Any]]:
+    return load_jsonl_record_authority(
+        COMPLETED_MONTH_LEDGER,
+        required_fields=COMPLETED_MONTH_FIELDS,
+        validator=validate_completed_month_records,
+        heal_derived=heal_derived,
+    )
+
+
 def append_jsonl_record(
     path: str | Path,
     record: Mapping[str, Any],
     *,
     required_fields: Sequence[str],
     validator: Any | None = None,
-) -> None:
-    """Append one prevalidated record without ever rewriting existing bytes."""
+) -> dict[str, Any]:
+    """Seal one immutable record shard, then rebuild the recoverable JSONL view."""
 
     target = Path(path)
-    target.parent.mkdir(parents=True, exist_ok=True)
-    candidate = dict(record)
-    line = canonical_json_bytes(candidate) + b"\n"
-    flags = (
-        os.O_RDWR
-        | os.O_APPEND
-        | os.O_CREAT
-        | os.O_CLOEXEC
-        | getattr(os, "O_NOFOLLOW", 0)
+    active_validator = (
+        (lambda rows: validate_hash_chain(rows, required_fields=required_fields))
+        if validator is None
+        else validator
     )
-    descriptor = os.open(target, flags, 0o644)
-    try:
-        before = os.fstat(descriptor)
-        if not stat.S_ISREG(before.st_mode):
-            raise V18Error("JSONL ledger is not a regular file")
-        if before.st_nlink != 1:
-            raise V18Error("JSONL ledger has a forbidden hard-link alias")
-        fcntl.flock(descriptor, fcntl.LOCK_EX)
-        os.lseek(descriptor, 0, os.SEEK_SET)
-        chunks: list[bytes] = []
-        while True:
-            chunk = os.read(descriptor, 1024 * 1024)
-            if not chunk:
-                break
-            chunks.append(chunk)
-        existing_bytes = b"".join(chunks)
-        read_complete = os.fstat(descriptor)
-        if any(
-            getattr(before, field) != getattr(read_complete, field)
-            for field in (
-                "st_dev",
-                "st_ino",
-                "st_nlink",
-                "st_size",
-                "st_mtime_ns",
-                "st_ctime_ns",
-            )
-        ) or read_complete.st_nlink != 1:
-            raise V18Error("JSONL ledger changed while being read")
-        try:
-            existing = _parse_jsonl_text(existing_bytes.decode("utf-8"))
-        except UnicodeDecodeError as exc:
-            raise V18Error("JSONL ledger is not UTF-8") from exc
-        validate_hash_chain(existing, required_fields=required_fields)
-        expected_sequence = len(existing)
-        if int(candidate.get("sequence_number", -1)) != expected_sequence:
-            raise V18Error("append record sequence does not follow ledger")
-        expected_previous = (
-            existing[-1]["record_sha256"] if existing else ZERO_SHA256
+    existing = load_jsonl_record_authority(
+        target,
+        required_fields=required_fields,
+        validator=active_validator,
+        heal_derived=True,
+    )
+    candidate = dict(record)
+    authority_directory, key_field = _jsonl_record_authority_spec(
+        target, required_fields
+    )
+    candidate_name = _jsonl_record_file_name(candidate, key_field=key_field)
+    if existing and candidate_name == _jsonl_record_file_name(
+        existing[-1], key_field=key_field
+    ):
+        if canonical_json_bytes(candidate) != canonical_json_bytes(existing[-1]):
+            raise V18Error("append record key conflicts with retained authority")
+        return existing[-1]
+    expected_sequence = len(existing)
+    if int(candidate.get("sequence_number", -1)) != expected_sequence:
+        raise V18Error("append record sequence does not follow record authority")
+    expected_previous = existing[-1]["record_sha256"] if existing else ZERO_SHA256
+    if candidate.get("previous_record_sha256") != expected_previous:
+        raise V18Error("append record predecessor does not follow record authority")
+    combined = active_validator([*existing, candidate])
+    canonical_authorities = {
+        Path(os.path.abspath(os.fspath(item)))
+        for item in (
+            DECISION_RECORD_DIR,
+            OUTCOME_RECORD_DIR,
+            COMPLETED_MONTH_RECORD_DIR,
         )
-        if candidate.get("previous_record_sha256") != expected_previous:
-            raise V18Error("append record predecessor does not follow ledger")
-        combined = [*existing, candidate]
-        if validator is None:
-            validate_hash_chain(combined, required_fields=required_fields)
-        else:
-            validator(combined)
-        remaining = memoryview(line)
-        while remaining:
-            written = os.write(descriptor, remaining)
-            if written <= 0:  # pragma: no cover - kernel invariant
-                raise OSError("short write while appending JSONL ledger")
-            remaining = remaining[written:]
-        os.fsync(descriptor)
-        after = os.fstat(descriptor)
-        if (
-            (after.st_dev, after.st_ino) != (before.st_dev, before.st_ino)
-            or after.st_nlink != 1
-            or after.st_size != len(existing_bytes) + len(line)
-        ):
-            raise V18Error("JSONL ledger changed or was hard-linked during append")
-    finally:
-        try:
-            fcntl.flock(descriptor, fcntl.LOCK_UN)
-        except OSError:
-            pass
-        os.close(descriptor)
+    }
+    canonical_authority = Path(os.path.abspath(os.fspath(authority_directory)))
+    if canonical_authority in canonical_authorities:
+        if authority_directory.is_symlink() or not authority_directory.is_dir():
+            raise V18Error("JSONL record authority readiness directory is missing")
+    else:
+        authority_directory.mkdir(parents=True, exist_ok=True)
+    shard_path = authority_directory / candidate_name
+    _atomic_local_bytes_once(shard_path, canonical_json_bytes(candidate) + b"\n")
+    retained = load_jsonl_record_authority(
+        target,
+        required_fields=required_fields,
+        validator=active_validator,
+        heal_derived=True,
+    )
+    if canonical_json_bytes(retained) != canonical_json_bytes(combined):
+        raise V18Error("JSONL record authority changed during append")
+    return retained[-1]
 
 
 def semantic_decision_hash(
@@ -7525,6 +16706,7 @@ def validate_decision_records(
     previous_date: pd.Timestamp | None = None
     month_state: dict[str, tuple[Any, ...]] = {}
     activation_identity: bytes | None = None
+    score_session_bindings: list[dict[str, Any]] = []
     for row in rows:
         forbidden = FORBIDDEN_DECISION_COLUMNS & set(row)
         if forbidden:
@@ -7559,13 +16741,12 @@ def validate_decision_records(
                 raise V18Error(f"decision {field} cannot use all-zero sentinel")
         fold_hash = row["c00_fold_manifest_sha256"]
         bundle_file_hash = row["fold_model_bundle_file_sha256"]
-        if (fold_hash is None) != (bundle_file_hash is None):
-            raise V18Error("decision fold manifest/bundle hashes must be paired")
-        if fold_hash is not None:
-            _require_sha(fold_hash, "decision c00_fold_manifest_sha256")
-            _require_sha(bundle_file_hash, "decision fold_model_bundle_file_sha256")
-            if fold_hash == ZERO_SHA256 or bundle_file_hash == ZERO_SHA256:
-                raise V18Error("decision fold hashes cannot use all-zero sentinel")
+        if fold_hash is None or bundle_file_hash is None:
+            raise V18Error("counted decision lacks its monthly fold/bundle pair")
+        _require_sha(fold_hash, "decision c00_fold_manifest_sha256")
+        _require_sha(bundle_file_hash, "decision fold_model_bundle_file_sha256")
+        if fold_hash == ZERO_SHA256 or bundle_file_hash == ZERO_SHA256:
+            raise V18Error("decision fold hashes cannot use all-zero sentinel")
         _validate_git_commit(
             row["activation_receipt_commit_sha"],
             row["activation_receipt_commit_url"],
@@ -7654,6 +16835,26 @@ def validate_decision_records(
             session_date=session,
             resolution=resolution,
         )
+        score_hashes = (
+            row["score_session_file_sha256"],
+            row["score_session_semantic_sha256"],
+        )
+        if _strict_bool(row["model_complete"]):
+            if score_hashes[0] is None or score_hashes[1] is None:
+                raise V18Error("model-complete decision lacks score-session hashes")
+            score_session_bindings.append(
+                {
+                    "session_date": str(session.date()),
+                    "file_sha256": score_hashes[0],
+                    "semantic_sha256": score_hashes[1],
+                }
+            )
+        elif score_hashes != (None, None):
+            raise V18Error("model-incomplete decision binds a score-session shard")
+        if row["score_session_set_sha256"] != canonical_json_sha256(
+            score_session_bindings
+        ):
+            raise V18Error("decision score-session set chain changed")
         expected_checkpoint_core_hash = canonical_json_sha256(core)
         if row["checkpoint_core_sha256"] != expected_checkpoint_core_hash:
             raise V18Error("decision checkpoint core hash changed")
@@ -7773,6 +16974,10 @@ def validate_decision_records(
             raise V18Error("decision was not sealed by the registered cutoff")
         source_complete = _strict_bool(row["source_complete"])
         model_complete = _strict_bool(row["model_complete"])
+        if not source_complete or not model_complete:
+            raise V18Error(
+                "counted decision contains incomplete source/model authority"
+            )
         state_available = _strict_bool(row["state_available"])
         months = row["three_prior_calendar_months"]
         counts = row["three_complete_pair_day_counts"]
@@ -7828,21 +17033,7 @@ def validate_decision_records(
                 raise V18Error("incomplete source/model decision exposed a frozen pair")
         decision = str(row["decision"])
         failure_reason = row["failure_reason"]
-        if not source_complete:
-            expected_decision = (
-                "fail_closed_source_empty"
-                if failure_reason == "source_missing_before_cutoff"
-                else "fail_closed_source_partial"
-            )
-            expected_code = None
-        elif not model_complete:
-            expected_decision = (
-                "fail_closed_model_fold"
-                if fold_hash is None
-                else "fail_closed_model_pair"
-            )
-            expected_code = None
-        elif not state_available:
+        if not state_available:
             expected_decision = "cash_state_unavailable"
             expected_code = None
         elif state_value == 0.0:
@@ -7863,18 +17054,6 @@ def validate_decision_records(
             expected_reason = "state_value_exact_zero"
         elif decision == "cash_state_unavailable":
             expected_reason = "state_insufficient_prior_months"
-        elif decision in {"fail_closed_source_empty", "fail_closed_source_partial"}:
-            expected_reason = (
-                "source_missing_before_cutoff"
-                if decision == "fail_closed_source_empty"
-                else "source_partial_or_late_before_cutoff"
-            )
-        elif decision in {"fail_closed_model_fold", "fail_closed_model_pair"}:
-            expected_reason = (
-                "fold_unavailable_before_target_month"
-                if decision == "fail_closed_model_fold"
-                else "pair_unavailable_before_cutoff"
-            )
         else:  # pragma: no cover - exhaustive decision registry above
             raise V18Error("decision is outside the registered reason map")
         if isinstance(expected_reason, tuple):
@@ -7887,10 +17066,6 @@ def validate_decision_records(
             raise V18Error("cash_state_zero failure reason changed")
         if decision in {
             "cash_state_unavailable",
-            "fail_closed_source_empty",
-            "fail_closed_source_partial",
-            "fail_closed_model_fold",
-            "fail_closed_model_pair",
         }:
             if not isinstance(failure_reason, str) or not failure_reason.strip():
                 raise V18Error("cash/fail-closed decision requires a failure reason")
@@ -7930,10 +17105,14 @@ def build_decision_ledger(
     predictor_raw_store_root: str | Path | None = None,
     return_decision_core: bool = False,
     checkpoint_binding: Mapping[str, Any] | None = None,
+    _resume_exact_runtime: bool = False,
 ) -> list[dict[str, Any]] | dict[str, Any]:
     """Build a validated decision-chain prefix with one new outcome-free record."""
 
-    current_runtime_verified = _runtime_verified_timestamp(runtime_lock_verified_at)
+    current_runtime_verified = _runtime_verified_timestamp(
+        runtime_lock_verified_at,
+        allow_historical_replay=_resume_exact_runtime,
+    )
     existing = validate_decision_records(existing_records)
     session = _date(session_date, "session_date")
     activation = validate_activation_context(activation)
@@ -7951,7 +17130,24 @@ def build_decision_ledger(
         source_manifest,
         session_date=session,
         predictor_raw_store_root=predictor_raw_store_root,
+        first_counted_session_value=activation["first_counted_session"],
+        require_predecessor_decision=False,
     )
+    first_counted = _date(
+        activation["first_counted_session"], "decision first counted session"
+    )
+    if session == first_counted:
+        if (
+            source["previous_counted_target_session"] is not None
+            or source["previous_counted_source_manifest_sha256"] is not None
+        ):
+            raise V18Error("first decision source has a predecessor binding")
+    elif not existing or (
+        source["previous_counted_target_session"] != existing[-1]["session_date"]
+        or source["previous_counted_source_manifest_sha256"]
+        != existing[-1]["source_manifest_sha256"]
+    ):
+        raise V18Error("decision source predecessor differs from prior decision")
     state = validate_state_manifest(state_manifest)
     if (
         state["activation_payload_sha256"] != actual_payload_hash
@@ -8005,25 +17201,32 @@ def build_decision_ledger(
     if computed is None and not capture_operational_timestamp:
         raise V18Error("pure decision construction requires computed_at")
     source_complete = _strict_bool(source["source_complete"])
+    if not source_complete:
+        raise V18Error(
+            "incomplete/missing predictor source is an experiment integrity abort"
+        )
     model_complete = False
     rank1_code = rank2_code = None
     score1 = score2 = None
+    score_session_file_sha: str | None = None
+    score_session_semantic_sha: str | None = None
     fold_hash: str | None = None
     bundle_file_hash: str | None = None
     if (fold_manifest is None) != (fold_model_bundle is None):
         raise V18Error("decision fold manifest/bundle presence differs")
-    if fold_manifest is not None and fold_model_bundle is not None:
-        fold_hash = validate_fold_manifest(fold_manifest, fold_model_bundle)
-        bundle_file_hash = str(fold_manifest["fold_model_bundle_file_sha256"])
-        if computed is not None and computed < _timestamp(
-            fold_manifest["fit_completed_at"], "fold fit_completed_at"
-        ):
-            raise V18Error("decision computed before monthly fold completion")
+    if fold_manifest is None or fold_model_bundle is None:
+        raise V18Error("missing monthly fold/bundle is an experiment integrity abort")
+    fold_hash = validate_fold_manifest(fold_manifest, fold_model_bundle)
+    bundle_file_hash = str(fold_manifest["fold_model_bundle_file_sha256"])
+    if computed is not None and computed < _timestamp(
+        fold_manifest["fit_completed_at"], "fold fit_completed_at"
+    ):
+        raise V18Error("decision computed before monthly fold completion")
     if state["c00_fold_manifest_sha256"] != fold_hash or state[
         "fold_model_bundle_file_sha256"
     ] != bundle_file_hash:
         raise V18Error("decision fold pair differs from sealed state manifest")
-    if source_complete and scores is not None and fold_manifest is not None:
+    if scores is not None:
         score_rows = validate_score_rows(scores)
         if computed is not None and computed < _timestamp(
             score_rows["score_generated_at"].iloc[0], "score_generated_at"
@@ -8042,39 +17245,18 @@ def build_decision_ledger(
         rank2_code = str(ranked.loc[2, "code"])
         score1 = float(ranked.loc[1, "model_score"])
         score2 = float(ranked.loc[2, "model_score"])
+        score_payload = score_rows.to_csv(index=False, lineterminator="\n").encode()
+        score_session_file_sha = hashlib.sha256(score_payload).hexdigest()
+        score_session_semantic_sha = semantic_score_hash(score_rows)
         model_complete = True
-    elif source_complete:
-        derived_model_reason = (
-            "fold_unavailable_before_target_month"
-            if fold_manifest is None
-            else "pair_unavailable_before_cutoff"
-        )
-        if failure_reason is not None and failure_reason != derived_model_reason:
-            raise V18Error("caller model failure reason differs from artifact state")
-        failure_reason = derived_model_reason
-    if not source_complete:
-        source_reason = str(source["failure_reason"])
-        if failure_reason is not None and failure_reason != source_reason:
-            raise V18Error("caller source failure reason differs from source manifest")
-        failure_reason = source_reason
+    else:
+        raise V18Error("missing exact target score pair is an experiment integrity abort")
+    if failure_reason is not None:
+        raise V18Error("caller cannot inject a daily failure reason")
     state_available = _strict_bool(state["state_available"])
     state_value = state["state_value_pct"]
     state_rank = state["selected_source_rank"]
-    if not source_complete:
-        decision = (
-            "fail_closed_source_empty"
-            if failure_reason == "source_missing_before_cutoff"
-            else "fail_closed_source_partial"
-        )
-        candidate_code = None
-    elif not model_complete:
-        decision = (
-            "fail_closed_model_fold"
-            if failure_reason == "fold_unavailable_before_target_month"
-            else "fail_closed_model_pair"
-        )
-        candidate_code = None
-    elif not state_available:
+    if not state_available:
         decision, candidate_code = "cash_state_unavailable", None
         failure_reason = "state_insufficient_prior_months"
     elif float(state_value) == 0.0:
@@ -8086,14 +17268,10 @@ def build_decision_ledger(
         decision, candidate_code = "selected_rank2", rank2_code
     if decision.startswith("selected_"):
         failure_reason = None
-    selected_rank = state_rank if source_complete and model_complete else None
-    decision_runtime_verified = (
-        _timestamp(
-            score_rows["runtime_lock_verified_at"].iloc[0],
-            "score runtime_lock_verified_at",
-        )
-        if model_complete
-        else current_runtime_verified
+    selected_rank = state_rank
+    decision_runtime_verified = _timestamp(
+        score_rows["runtime_lock_verified_at"].iloc[0],
+        "score runtime_lock_verified_at",
     )
     if capture_operational_timestamp:
         computed = datetime.now(TOKYO)
@@ -8107,14 +17285,29 @@ def build_decision_ledger(
         _timestamp(state["created_at"], "state created_at"),
         _timestamp(source["sealed_at"], "source manifest sealed_at"),
     ]
-    if fold_manifest is not None:
-        prerequisites.append(_timestamp(fold_manifest["sealed_at"], "fold sealed_at"))
-    if model_complete:
-        prerequisites.append(
-            _timestamp(score_rows["score_generated_at"].iloc[0], "score_generated_at")
-        )
+    prerequisites.append(_timestamp(fold_manifest["sealed_at"], "fold sealed_at"))
+    prerequisites.append(
+        _timestamp(score_rows["score_generated_at"].iloc[0], "score_generated_at")
+    )
     if computed < max(prerequisites) or computed > _cutoff(session):
         raise V18Error("decision computation violates its timestamp DAG")
+    score_session_bindings = [
+        {
+            "session_date": str(item["session_date"]),
+            "file_sha256": item["score_session_file_sha256"],
+            "semantic_sha256": item["score_session_semantic_sha256"],
+        }
+        for item in existing
+        if item.get("score_session_file_sha256") is not None
+    ]
+    score_session_bindings.append(
+        {
+            "session_date": str(session.date()),
+            "file_sha256": score_session_file_sha,
+            "semantic_sha256": score_session_semantic_sha,
+        }
+    )
+    score_session_set_sha = canonical_json_sha256(score_session_bindings)
     decision_core = {
         "candidate_id": CANDIDATE_ID,
         "runtime_lock_verified_at": decision_runtime_verified,
@@ -8122,6 +17315,9 @@ def build_decision_ledger(
         "c00_fold_manifest_sha256": fold_hash,
         "fold_model_bundle_file_sha256": bundle_file_hash,
         "state_manifest_sha256": state["state_manifest_sha256"],
+        "score_session_file_sha256": score_session_file_sha,
+        "score_session_semantic_sha256": score_session_semantic_sha,
+        "score_session_set_sha256": score_session_set_sha,
         "decision_cutoff": _cutoff(session),
         "computed_at": computed,
         "source_complete": source_complete,
@@ -8210,6 +17406,9 @@ def _activation_context_from_decision(row: Mapping[str, Any]) -> dict[str, Any]:
             "activation_receipt_sha256": row["activation_receipt_sha256"],
             **{field: row[field] for field in RECEIPT_OBSERVATION_RUNTIME_FIELDS},
             "first_counted_session": str(first.date()),
+            "first_counted_predecessor_session": str(
+                _latest_required_predictor_source_session(first).date()
+            ),
             "terminal_session": str(terminal.date()),
             "terminal_scheduled_sessions": len(denominator),
             "represented_calendar_months": denominator.to_period("M").nunique(),
@@ -8223,60 +17422,49 @@ def _activation_context_from_decision(row: Mapping[str, Any]) -> dict[str, Any]:
 def _discover_activation_context(
     existing_decisions: Sequence[Mapping[str, Any]],
 ) -> dict[str, Any]:
+    if not os.path.lexists(ACTIVATION_CONTEXT):
+        raise V18Error("canonical activation context is missing")
+    canonical = validate_activation_context(read_json(ACTIVATION_CONTEXT))
     if existing_decisions:
-        return _activation_context_from_decision(existing_decisions[0])
-    payload, _, _, _ = validate_canonical_activation_artifacts()
-    branch = str(payload["branch"])
-    try:
-        tip = str(_git("rev-parse", f"refs/heads/{branch}")).strip()
-    except V18Error:
-        tip = str(_git("rev-parse", "HEAD")).strip()
-    receipt_path = "research/model_v18_shoulder_state_activation_receipt.json"
-    introductions = [
-        item
-        for item in str(
-            _git(
-                "log",
-                "--format=%H",
-                "--diff-filter=A",
-                tip,
-                "--",
-                receipt_path,
-            )
-        ).splitlines()
-        if item
-    ]
-    if len(introductions) != 1:
-        raise V18Error("activation receipt introduction commit is not unique")
-    return activate(
-        ACTIVATION_PAYLOAD,
-        ACTIVATION_RECEIPT,
-        activation_receipt_commit_sha=introductions[0],
-    )
+        derived = _activation_context_from_decision(existing_decisions[0])
+        if canonical_json_bytes(derived) != canonical_json_bytes(canonical):
+            raise V18Error("decision prefix differs from canonical activation context")
+    return canonical
 
 
 def _canonical_target_score_pair(session: pd.Timestamp) -> pd.DataFrame | None:
-    try:
-        scores = _read_csv_plain(
-            SCORE_OUTPUT,
-            label="canonical checkpoint score ledger",
+    shard_path = SCORE_SESSION_DIR / f"{session.date()}.csv"
+    if not shard_path.is_file() or shard_path.is_symlink():
+        return None
+    pair = validate_score_rows(
+        _read_csv_plain(
+            shard_path,
+            label="canonical checkpoint score-session shard",
             dtype={"code": "string"},
             float_precision="round_trip",
         )
-    except FileNotFoundError:
-        return None
+    )
+    scores = _read_csv_plain(
+        SCORE_OUTPUT,
+        label="canonical checkpoint derived score ledger",
+        dtype={"code": "string"},
+        float_precision="round_trip",
+    )
     ledger = validate_score_ledger(scores, allow_empty=True)
     target = str(session.date())
     selected = ledger.loc[ledger["session_date"].eq(target)].reset_index(drop=True)
-    if selected.empty:
-        return None
-    validate_score_rows(selected)
-    return selected
+    if selected.empty or not validate_score_rows(selected).equals(pair):
+        raise V18Error("checkpoint derived score ledger differs from session shard")
+    return pair
 
 
 def _derive_canonical_checkpoint_core(
     session: pd.Timestamp,
     existing: Sequence[Mapping[str, Any]],
+    *,
+    computed_at: Any | None = None,
+    runtime_lock_verified_at: Any | None = None,
+    capture_operational_timestamp: bool = True,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     activation = _discover_activation_context(existing)
     source_path = SOURCE_MANIFEST_DIR / f"{session.date()}.json"
@@ -8296,15 +17484,174 @@ def _derive_canonical_checkpoint_core(
         source_manifest=source,
         state_manifest=state,
         activation=activation,
-        capture_operational_timestamp=True,
+        computed_at=computed_at,
+        runtime_lock_verified_at=runtime_lock_verified_at,
+        capture_operational_timestamp=capture_operational_timestamp,
         existing_records=existing,
         fold_manifest=fold,
         fold_model_bundle=bundle,
         return_decision_core=True,
+        _resume_exact_runtime=not capture_operational_timestamp,
     )
     if not isinstance(derived, dict):  # pragma: no cover - explicit API mode
         raise V18Error("checkpoint core derivation returned a decision ledger")
     return derived, activation
+
+
+def _prepare_private_local_authority_directory(path: Path, *, label: str) -> int:
+    """Create/verify one durable empty local authority parent preactivation."""
+
+    target = Path(os.path.abspath(os.fspath(path)))
+    parent = target.parent
+    if parent.resolve(strict=True) != parent or parent.is_symlink():
+        raise V18Error(f"{label} parent must be an existing plain directory")
+    parent_fd = os.open(
+        parent,
+        os.O_RDONLY
+        | os.O_DIRECTORY
+        | os.O_CLOEXEC
+        | getattr(os, "O_NOFOLLOW", 0),
+    )
+    fcntl.flock(parent_fd, fcntl.LOCK_EX)
+    try:
+        parent_stat = os.fstat(parent_fd)
+        if (
+            parent_stat.st_uid != os.geteuid()
+            or stat.S_IMODE(parent_stat.st_mode) & 0o022
+        ):
+            raise V18Error(f"{label} parent owner/permissions are unsafe")
+        try:
+            observed = os.stat(
+                target.name, dir_fd=parent_fd, follow_symlinks=False
+            )
+        except FileNotFoundError:
+            os.mkdir(target.name, mode=0o700, dir_fd=parent_fd)
+            os.fsync(parent_fd)
+            observed = os.stat(
+                target.name, dir_fd=parent_fd, follow_symlinks=False
+            )
+        if (
+            not stat.S_ISDIR(observed.st_mode)
+            or observed.st_uid != os.geteuid()
+            or stat.S_IMODE(observed.st_mode) != 0o700
+        ):
+            raise V18Error(f"{label} owner/mode changed")
+        directory_fd = os.open(
+            target.name,
+            os.O_RDONLY
+            | os.O_DIRECTORY
+            | os.O_CLOEXEC
+            | getattr(os, "O_NOFOLLOW", 0),
+            dir_fd=parent_fd,
+        )
+        try:
+            pinned = os.fstat(directory_fd)
+            if (
+                (pinned.st_dev, pinned.st_ino)
+                != (observed.st_dev, observed.st_ino)
+                or pinned.st_uid != os.geteuid()
+                or stat.S_IMODE(pinned.st_mode) != 0o700
+            ):
+                raise V18Error(f"{label} changed while pinned")
+            os.fsync(directory_fd)
+        finally:
+            os.close(directory_fd)
+        os.fsync(parent_fd)
+        return stat.S_IMODE(observed.st_mode)
+    finally:
+        try:
+            fcntl.flock(parent_fd, fcntl.LOCK_UN)
+        except OSError:
+            pass
+        os.close(parent_fd)
+
+
+def prepare_operational_stores(
+    *,
+    predictor_raw_store_root: str | Path,
+    predictor_derived_store_root: str | Path,
+    outcome_raw_store_root: str | Path,
+    checkpoint_core_store_root: str | Path,
+) -> dict[str, Any]:
+    """Precreate every private daily authority parent before activation."""
+
+    roots = (
+        (predictor_raw_store_root, "predictor raw"),
+        (predictor_derived_store_root, "predictor derived"),
+        (outcome_raw_store_root, "outcome raw"),
+        (checkpoint_core_store_root, "checkpoint core"),
+    )
+    for index, (left, left_label) in enumerate(roots):
+        _external_store_root(left, left_label)
+        for right, right_label in roots[index + 1 :]:
+            _validate_external_root_pair_disjoint(
+                left, left_label, right, right_label
+            )
+    local_directories = (
+        CHECKPOINT_PROPOSAL_DIR,
+        *_registered_local_authority_directories(),
+    )
+    # Preflight every existing path and every derived view before creating a
+    # missing directory, so stale-run contamination cannot cause a partial
+    # readiness mutation.
+    for directory in local_directories:
+        if os.path.lexists(directory):
+            observed = os.stat(directory, follow_symlinks=False)
+            if (
+                directory.is_symlink()
+                or not stat.S_ISDIR(observed.st_mode)
+                or observed.st_uid != os.geteuid()
+                or stat.S_IMODE(observed.st_mode) != 0o700
+                or any(directory.iterdir())
+            ):
+                raise V18Error(
+                    f"local authority readiness path is not private and empty: {directory}"
+                )
+    for derived in (
+        DECISION_LEDGER,
+        OUTCOME_LEDGER,
+        COMPLETED_MONTH_LEDGER,
+        SCORE_OUTPUT,
+        PICKS_OUTPUT,
+        ACTIVATION_CONTEXT,
+        RESULT_OUTPUT,
+    ):
+        if os.path.lexists(derived):
+            raise V18Error(
+                f"preactivation derived/result artifact already exists: {derived}"
+            )
+    local_modes = {
+        str(directory.relative_to(ROOT)): _prepare_private_local_authority_directory(
+            directory, label=f"local authority readiness {directory.name}"
+        )
+        for directory in local_directories
+    }
+    anchor_key = f"{CHECKPOINT_CORE_OBJECT_PREFIX}.pair-install-anchor"
+    with _external_parent_fd(
+        checkpoint_core_store_root,
+        anchor_key,
+        prefix=CHECKPOINT_CORE_OBJECT_PREFIX,
+        label="checkpoint core readiness",
+        create_parents=True,
+    ) as (parent_fd, _):
+        os.fsync(parent_fd)
+        core_parent = os.fstat(parent_fd)
+    return {
+        "checkpoint_proposal_directory": str(
+            CHECKPOINT_PROPOSAL_DIR.relative_to(ROOT)
+        ),
+        "checkpoint_proposal_directory_mode": local_modes[
+            str(CHECKPOINT_PROPOSAL_DIR.relative_to(ROOT))
+        ],
+        "checkpoint_core_parent_mode": stat.S_IMODE(core_parent.st_mode),
+        "local_authority_directories": sorted(local_modes),
+        "local_authority_directory_modes": {
+            key: local_modes[key] for key in sorted(local_modes)
+        },
+        "external_roots_pairwise_disjoint": True,
+        "production_model_changed": False,
+        "orders_allowed": False,
+    }
 
 
 def prepare_checkpoint(
@@ -8318,46 +17665,15 @@ def prepare_checkpoint(
         raise V18Error("checkpoint preparation requires strict operational runtime")
     _validate_startup_and_module_closure(phase="checkpoint preparation entry")
     target = _date(session_date, "checkpoint session")
-    existing = validate_decision_records(read_jsonl(DECISION_LEDGER))
-    primary_core, activation = _derive_canonical_checkpoint_core(
-        target,
-        existing,
-    )
-    # The historical safety_cash role name is an opaque publication
-    # predecessor only.  It has no fallback authority and commits the exact
-    # same decision core as primary under an independent hiding nonce.
-    safety_core = dict(primary_core)
-    cores = {"safety_cash": safety_core, "primary": primary_core}
-    for core in cores.values():
-        validate_checkpoint_decision_core(
-            core,
-            session_date=target,
-            resolution="primary",
-        )
+    existing = _load_decision_record_authority(heal_derived=True)
     sequence = len(existing)
     previous = existing[-1]["record_sha256"] if existing else ZERO_SHA256
     batch_id = f"model_v18_shoulder_state_checkpoint_batch_{target:%Y%m%d}"
-    core_payloads: dict[str, bytes] = {}
-    for role in CHECKPOINT_ROLES:
-        core = cores[role]
-        core_hash = canonical_json_sha256(core)
-        sealed_value = {
-            "schema_version": 1,
-            "target_session": str(target.date()),
-            "checkpoint_role": role,
-            "decision_sequence_number": sequence,
-            "previous_decision_record_sha256": previous,
-            "nonce_hex": secrets.token_bytes(32).hex(),
-            "decision_core": core,
-            "decision_core_sha256": core_hash,
-        }
-        core_payloads[f"{role}.bin"] = encode_checkpoint_core_envelope(sealed_value)
 
     # Resolve and retain both destination parents before exposing either pair.
     # The external pair is durably installed first; only then is proposal
     # created_at captured and the public pair built.  This makes the registered
     # seal-before-proposal edge true without relying on filesystem mtimes.
-    CHECKPOINT_PROPOSAL_DIR.mkdir(parents=True, exist_ok=True)
     proposal_root = CHECKPOINT_PROPOSAL_DIR.resolve(strict=True)
     if (
         CHECKPOINT_PROPOSAL_DIR.is_symlink()
@@ -8372,7 +17688,7 @@ def prepare_checkpoint(
         anchor_key,
         prefix=CHECKPOINT_CORE_OBJECT_PREFIX,
         label="checkpoint core",
-        create_parents=True,
+        create_parents=False,
     ) as (core_parent_fd, _):
         proposal_parent_fd = os.open(
             proposal_root,
@@ -8385,10 +17701,133 @@ def prepare_checkpoint(
             observed_proposal_root = os.fstat(proposal_parent_fd)
             if (
                 not stat.S_ISDIR(observed_proposal_root.st_mode)
+                or observed_proposal_root.st_uid != os.geteuid()
+                or stat.S_IMODE(observed_proposal_root.st_mode) & 0o022
                 or (observed_proposal_root.st_dev, observed_proposal_root.st_ino)
                 != (expected_proposal_root.st_dev, expected_proposal_root.st_ino)
             ):
                 raise V18Error("checkpoint proposal root changed during open")
+            # Establish both sides' exact publication state before mutating
+            # either side.  A public proposal without its sealed external core
+            # can never be repaired safely; a sealed core without a proposal
+            # is the one registered resumable crash state.
+            retained_core_payloads = _existing_checkpoint_session_payloads(
+                core_parent_fd,
+                session_name=str(target.date()),
+                file_names=tuple(f"{role}.bin" for role in CHECKPOINT_ROLES),
+                file_mode=0o600,
+                directory_mode=0o700,
+                label="checkpoint core",
+            )
+            retained_proposal_payloads = _existing_checkpoint_session_payloads(
+                proposal_parent_fd,
+                session_name=str(target.date()),
+                file_names=tuple(f"{role}.json" for role in CHECKPOINT_ROLES),
+                file_mode=0o644,
+                directory_mode=0o755,
+                label="checkpoint proposal",
+            )
+            if (
+                retained_proposal_payloads is not None
+                and retained_core_payloads is None
+            ):
+                raise V18Error(
+                    "checkpoint proposal exists without its sealed core pair"
+                )
+
+            retained_sealed_values: dict[str, dict[str, Any]] = {}
+            if retained_core_payloads is not None:
+                for role in CHECKPOINT_ROLES:
+                    payload_name = f"{role}.bin"
+                    sealed_value = parse_checkpoint_core_envelope(
+                        retained_core_payloads[payload_name]
+                    )
+                    retained_static = {
+                        "schema_version": 1,
+                        "target_session": str(target.date()),
+                        "checkpoint_role": role,
+                        "decision_sequence_number": sequence,
+                        "previous_decision_record_sha256": previous,
+                    }
+                    if any(
+                        sealed_value.get(field) != expected
+                        for field, expected in retained_static.items()
+                    ) or re.fullmatch(
+                        r"[0-9a-f]{64}", str(sealed_value.get("nonce_hex", ""))
+                    ) is None:
+                        raise V18Error(
+                            "checkpoint retained core differs from current exact inputs"
+                        )
+                    if encode_checkpoint_core_envelope(sealed_value) != (
+                        retained_core_payloads[payload_name]
+                    ):
+                        raise V18Error("checkpoint retained core envelope is noncanonical")
+                    retained_sealed_values[role] = sealed_value
+                retained_primary = retained_sealed_values["primary"]["decision_core"]
+                if retained_sealed_values["safety_cash"]["decision_core"] != (
+                    retained_primary
+                ):
+                    raise V18Error("checkpoint retained role cores differ")
+                primary_core, activation = _derive_canonical_checkpoint_core(
+                    target,
+                    existing,
+                    computed_at=retained_primary.get("computed_at"),
+                    runtime_lock_verified_at=retained_primary.get(
+                        "runtime_lock_verified_at"
+                    ),
+                    capture_operational_timestamp=False,
+                )
+            else:
+                primary_core, activation = _derive_canonical_checkpoint_core(
+                    target,
+                    existing,
+                )
+
+            # The historical safety_cash role name is an opaque publication
+            # predecessor only.  It has no fallback authority and commits the
+            # exact same decision core as primary under an independent nonce.
+            cores = {
+                "safety_cash": dict(primary_core),
+                "primary": primary_core,
+            }
+            for core in cores.values():
+                validate_checkpoint_decision_core(
+                    core,
+                    session_date=target,
+                    resolution="primary",
+                )
+            core_payloads: dict[str, bytes] = {}
+            if retained_core_payloads is not None:
+                for role in CHECKPOINT_ROLES:
+                    sealed_value = retained_sealed_values[role]
+                    expected_fields = {
+                        "decision_core": cores[role],
+                        "decision_core_sha256": canonical_json_sha256(cores[role]),
+                    }
+                    if any(
+                        sealed_value.get(field) != expected
+                        for field, expected in expected_fields.items()
+                    ):
+                        raise V18Error(
+                            "checkpoint retained core differs from current exact inputs"
+                        )
+                core_payloads = retained_core_payloads
+            else:
+                for role in CHECKPOINT_ROLES:
+                    core = cores[role]
+                    sealed_value = {
+                        "schema_version": 1,
+                        "target_session": str(target.date()),
+                        "checkpoint_role": role,
+                        "decision_sequence_number": sequence,
+                        "previous_decision_record_sha256": previous,
+                        "nonce_hex": secrets.token_bytes(32).hex(),
+                        "decision_core": core,
+                        "decision_core_sha256": canonical_json_sha256(core),
+                    }
+                    core_payloads[f"{role}.bin"] = encode_checkpoint_core_envelope(
+                        sealed_value
+                    )
             core_metadata = _install_checkpoint_session_directory(
                 core_parent_fd,
                 session_name=str(target.date()),
@@ -8397,64 +17836,103 @@ def prepare_checkpoint(
                 directory_mode=0o700,
                 label="checkpoint core",
             )
-            created_at = datetime.now(TOKYO)
-            if any(
-                _timestamp(core["computed_at"], "checkpoint core computed_at")
-                > created_at
-                for core in cores.values()
-            ):
-                raise V18Error("checkpoint proposal timestamp predates its sealed core")
-            common_proposal = {
-                "schema_version": 1,
-                "checkpoint_batch_id": batch_id,
-                "repository": "rokuroku-066/TSE-Session-Ranker",
-                "branch": read_json(ACTIVATION_PAYLOAD)["branch"],
-                "protocol_id": PROTOCOL_ID,
-                "protocol_sha256": PROTOCOL_SHA256,
-                "runner_sha256": sha256_file(__file__),
-                "runtime_lock_sha256": RUNTIME_LOCK_SHA256,
-                "activation_payload_sha256": activation["activation_payload_sha256"],
-                "activation_receipt_sha256": activation["activation_receipt_sha256"],
-                "activation_receipt_commit_sha": activation[
-                    "activation_receipt_commit_sha"
-                ],
-                "target_session": str(target.date()),
-                "decision_sequence_number": sequence,
-                "previous_decision_record_sha256": previous,
-                "sealed_core_byte_count": CHECKPOINT_CORE_ENVELOPE_BYTES,
-                "created_at": created_at,
-                "canonical_json_contract": CANONICAL_JSON_CONTRACT,
-            }
             proposals: dict[str, dict[str, Any]] = {}
-            proposal_payloads: dict[str, bytes] = {}
-            for ordinal, role in enumerate(CHECKPOINT_ROLES):
-                object_key = _checkpoint_core_object_key(target, role)
-                observed_core = core_metadata[f"{role}.bin"]
-                if observed_core[0] != CHECKPOINT_CORE_ENVELOPE_BYTES:
-                    raise V18Error("checkpoint core envelope byte count changed")
-                proposal = {
-                    **common_proposal,
-                    "checkpoint_id": (
-                        f"model_v18_shoulder_state_checkpoint_{target:%Y%m%d}_{role}"
-                    ),
-                    "publication_ordinal": ordinal,
-                    "checkpoint_role": role,
-                    "sealed_core_object_key": object_key,
-                    "sealed_core_sha256": observed_core[1],
+            if retained_proposal_payloads is not None:
+                proposal_payloads = retained_proposal_payloads
+                for role in CHECKPOINT_ROLES:
+                    payload_name = f"{role}.json"
+                    try:
+                        proposal = json.loads(
+                            proposal_payloads[payload_name].decode("utf-8")
+                        )
+                    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+                        raise V18Error(
+                            "checkpoint retained proposal is not canonical JSON"
+                        ) from exc
+                    if _json_file_bytes(proposal) != proposal_payloads[payload_name]:
+                        raise V18Error("checkpoint retained proposal bytes are noncanonical")
+                    validated, _, _ = validate_checkpoint_proposal(
+                        proposal,
+                        session_date=target,
+                        role=role,
+                        activation=activation,
+                        sequence_number=sequence,
+                        previous_record_sha256=previous,
+                    )
+                    observed_core = core_metadata[f"{role}.bin"]
+                    if (
+                        int(validated["sealed_core_byte_count"])
+                        != observed_core[0]
+                        or validated["sealed_core_sha256"] != observed_core[1]
+                    ):
+                        raise V18Error(
+                            "checkpoint retained proposal differs from retained core"
+                        )
+                    proposals[role] = validated
+            else:
+                created_at = datetime.now(TOKYO)
+                if any(
+                    _timestamp(core["computed_at"], "checkpoint core computed_at")
+                    > created_at
+                    for core in cores.values()
+                ):
+                    raise V18Error(
+                        "checkpoint proposal timestamp predates its sealed core"
+                    )
+                common_proposal = {
+                    "schema_version": 1,
+                    "checkpoint_batch_id": batch_id,
+                    "repository": "rokuroku-066/TSE-Session-Ranker",
+                    "branch": read_json(ACTIVATION_PAYLOAD)["branch"],
+                    "protocol_id": PROTOCOL_ID,
+                    "protocol_sha256": PROTOCOL_SHA256,
+                    "runner_sha256": sha256_file(__file__),
+                    "runtime_lock_sha256": RUNTIME_LOCK_SHA256,
+                    "activation_payload_sha256": activation[
+                        "activation_payload_sha256"
+                    ],
+                    "activation_receipt_sha256": activation[
+                        "activation_receipt_sha256"
+                    ],
+                    "activation_receipt_commit_sha": activation[
+                        "activation_receipt_commit_sha"
+                    ],
+                    "target_session": str(target.date()),
+                    "decision_sequence_number": sequence,
+                    "previous_decision_record_sha256": previous,
+                    "sealed_core_byte_count": CHECKPOINT_CORE_ENVELOPE_BYTES,
+                    "created_at": created_at,
+                    "canonical_json_contract": CANONICAL_JSON_CONTRACT,
                 }
-                proposal["proposal_sha256"] = canonical_json_sha256(
-                    proposal, exclude_fields={"proposal_sha256"}
-                )
-                validated, _, _ = validate_checkpoint_proposal(
-                    proposal,
-                    session_date=target,
-                    role=role,
-                    activation=activation,
-                    sequence_number=sequence,
-                    previous_record_sha256=previous,
-                )
-                proposals[role] = validated
-                proposal_payloads[f"{role}.json"] = _json_file_bytes(validated)
+                proposal_payloads = {}
+                for ordinal, role in enumerate(CHECKPOINT_ROLES):
+                    object_key = _checkpoint_core_object_key(target, role)
+                    observed_core = core_metadata[f"{role}.bin"]
+                    if observed_core[0] != CHECKPOINT_CORE_ENVELOPE_BYTES:
+                        raise V18Error("checkpoint core envelope byte count changed")
+                    proposal = {
+                        **common_proposal,
+                        "checkpoint_id": (
+                            f"model_v18_shoulder_state_checkpoint_{target:%Y%m%d}_{role}"
+                        ),
+                        "publication_ordinal": ordinal,
+                        "checkpoint_role": role,
+                        "sealed_core_object_key": object_key,
+                        "sealed_core_sha256": observed_core[1],
+                    }
+                    proposal["proposal_sha256"] = canonical_json_sha256(
+                        proposal, exclude_fields={"proposal_sha256"}
+                    )
+                    validated, _, _ = validate_checkpoint_proposal(
+                        proposal,
+                        session_date=target,
+                        role=role,
+                        activation=activation,
+                        sequence_number=sequence,
+                        previous_record_sha256=previous,
+                    )
+                    proposals[role] = validated
+                    proposal_payloads[f"{role}.json"] = _json_file_bytes(validated)
             _validate_checkpoint_proposal_pair(proposals)
             proposal_metadata = _install_checkpoint_session_directory(
                 proposal_parent_fd,
@@ -8760,8 +18238,12 @@ def _checkpoint_protected_paths() -> tuple[str, ...]:
     paths = protocol["activation"]["preregistration_commit"]["required_paths"]
     if not isinstance(paths, list) or any(not isinstance(item, str) for item in paths):
         raise V18Error("checkpoint protected-path registry is invalid")
+    additional_test_paths = _protocol_additional_test_artifact_paths(protocol)
     proposal_root = CHECKPOINT_PROPOSAL_DIR.relative_to(ROOT).as_posix()
-    return tuple(dict.fromkeys([*paths, proposal_root]))
+    combined = [*paths, *additional_test_paths, proposal_root]
+    if len(combined) != len(set(combined)):
+        raise V18Error("checkpoint protected-path registry overlaps or duplicates")
+    return tuple(combined)
 
 
 def _checkpoint_protected_blob_authorities() -> dict[str, str]:
@@ -8774,10 +18256,23 @@ def _checkpoint_protected_blob_authorities() -> dict[str, str]:
         str(payload["runtime_lock_path"]): str(payload["runtime_lock_sha256"]),
         str(payload["runner_path"]): str(payload["runner_sha256"]),
         str(payload["audit_path"]): str(payload["audit_sha256"]),
+        str(payload["rehearsal_path"]): str(payload["rehearsal_sha256"]),
         str(payload["tests_path"]): str(payload["tests_sha256"]),
+        str(payload["iteration_report_path"]): str(
+            payload["iteration_report_sha256"]
+        ),
+        str(payload["validation_report_path"]): str(
+            payload["validation_report_sha256"]
+        ),
         str(payload["session_calendar_path"]): str(payload["session_calendar_sha256"]),
         str(payload["workflow_path"]): str(payload["workflow_sha256"]),
     }
+    for item in _payload_additional_test_artifacts(
+        payload, verify_worktree=True
+    ):
+        if item["path"] in bindings:
+            raise V18Error("checkpoint additional test binding overlaps")
+        bindings[item["path"]] = item["sha256"]
     result: dict[str, str] = {}
     for relative, expected_sha256 in bindings.items():
         path = ROOT / relative
@@ -9164,7 +18659,7 @@ def publish_checkpoint(*, session_date: Any) -> dict[str, Any]:
         raise V18Error("checkpoint publication requires strict runtime validation")
     validate_canonical_activation_artifacts()
     session = _date(session_date, "checkpoint publication session")
-    existing = validate_decision_records(read_jsonl(DECISION_LEDGER))
+    existing = _load_decision_record_authority(heal_derived=True)
     activation = _discover_activation_context(existing)
     expected_sessions = load_registered_calendar()
     expected_sessions = expected_sessions[
@@ -10176,8 +19671,12 @@ def build_outcome_manifest(
         raise V18Error("official outcome source_file_name is invalid")
     if target.strftime("%Y%m%d") not in source_file_name:
         raise V18Error("official outcome filename does not bind target date")
-    if not str(source_url).startswith("https://www.jpx.co.jp/"):
-        raise V18Error("outcome source URL is not official JPX HTTPS")
+    official_source_url = _official_jpx_daily_url(
+        source_url,
+        "outcome source URL",
+        file_name=source_file_name,
+        source_session=target,
+    )
     received = _timestamp(source_received_at, "outcome source_received_at")
     if received <= _timestamp(
         current["decision_materialized_at"], "decision materialized_at"
@@ -10218,7 +19717,7 @@ def build_outcome_manifest(
         "runtime_lock_sha256": RUNTIME_LOCK_SHA256,
         "runtime_lock_verified_at": verified,
         "source_file_name": source_file_name,
-        "source_url": source_url,
+        "source_url": official_source_url,
         "raw_source_object_key": object_key,
         "source_byte_count": source_metadata[0],
         "source_sha256": source_metadata[1],
@@ -10282,6 +19781,12 @@ def validate_outcome_manifest(
     expected_key = _outcome_object_key(target)
     if value["raw_source_object_key"] != expected_key:
         raise V18Error("outcome raw object key changed")
+    _official_jpx_daily_url(
+        value["source_url"],
+        "outcome manifest source URL",
+        file_name=value["source_file_name"],
+        source_session=target,
+    )
     _require_sha(value["source_sha256"], "outcome source_sha256")
     received = _timestamp(value["source_received_at"], "outcome source_received_at")
     if received <= _timestamp(
@@ -10947,21 +20452,266 @@ def validate_outcome_evidence(
     return manifests
 
 
+def _validate_terminal_predictor_outcome_cross_role(
+    predictor_raw_records: Sequence[Mapping[str, Any]],
+    predictor_shard_bindings: Sequence[Mapping[str, Any]],
+    outcome_manifests: Sequence[Mapping[str, Any]],
+    *,
+    terminal_session: Any,
+    allow_terminal_outcome_only: bool,
+    predictor_raw_store_root: str | Path,
+    predictor_derived_store_root: str | Path,
+    outcome_raw_store_root: str | Path,
+) -> None:
+    """Require every overlapping daily PDF role to bind identical bytes.
+
+    Manual acquisition remains an explicit trusted boundary.  This check
+    proves only that the separately retained predictor and outcome roles did
+    not diverge after acquisition; it does not authenticate the JPX origin.
+    """
+
+    raw_records = [dict(item) for item in predictor_raw_records]
+    bindings = [dict(item) for item in predictor_shard_bindings]
+    if len(raw_records) != len(bindings):
+        raise V18Error("terminal cross-role predictor arrays are misaligned")
+    predictor_by_file: dict[str, tuple[dict[str, Any], dict[str, Any]]] = {}
+    for raw_record, binding in zip(raw_records, bindings, strict=True):
+        file_name = str(raw_record["file"])
+        if file_name in predictor_by_file:
+            raise V18Error("terminal cross-role predictor filename is duplicated")
+        predictor_by_file[file_name] = (raw_record, binding)
+    terminal = _date(terminal_session, "terminal cross-role session")
+    manifests = [dict(item) for item in outcome_manifests]
+    unmatched: list[pd.Timestamp] = []
+    seen_targets: set[pd.Timestamp] = set()
+    for outcome in manifests:
+        outcome_target = _date(
+            outcome["target_session"], "terminal cross-role outcome session"
+        )
+        if outcome_target in seen_targets:
+            raise V18Error("terminal cross-role outcome session is duplicated")
+        seen_targets.add(outcome_target)
+        file_name = str(outcome["source_file_name"])
+        matched = predictor_by_file.get(file_name)
+        # The terminal target has no following predictor session and is the
+        # sole legitimate outcome-only daily PDF.
+        if matched is None:
+            if not allow_terminal_outcome_only or outcome_target != terminal:
+                raise V18Error(
+                    "terminal cross-role predictor PDF is missing before final session"
+                )
+            unmatched.append(outcome_target)
+            continue
+        raw_record, binding = matched
+        exact = {
+            "file": file_name,
+            "url": outcome["source_url"],
+            "byte_count": int(outcome["source_byte_count"]),
+            "sha256": outcome["source_sha256"],
+        }
+        if any(raw_record[field] != expected for field, expected in exact.items()):
+            raise V18Error(
+                "terminal predictor/outcome roles bind different daily bytes"
+            )
+        shard_manifest, _ = _read_external_canonical_json(
+            predictor_derived_store_root,
+            binding["shard_manifest_object_key"],
+            prefix=PREDICTOR_SHARD_OBJECT_PREFIX,
+            label="terminal cross-role predictor shard manifest",
+        )
+        _validate_parsed_shard_manifest(
+            shard_manifest,
+            raw_record=raw_record,
+            predictor_derived_store_root=predictor_derived_store_root,
+            expected_chronology_class="forward",
+            expected_raw_received_at=outcome["source_received_at"],
+            decode_data=False,
+        )
+        _assert_external_objects_nonalias(
+            predictor_raw_store_root,
+            str(raw_record["object_key"]),
+            PREDICTOR_OBJECT_PREFIX,
+            outcome_raw_store_root,
+            str(outcome["raw_source_object_key"]),
+            OUTCOME_OBJECT_PREFIX,
+        )
+    expected_unmatched = [terminal] if allow_terminal_outcome_only else []
+    if unmatched != expected_unmatched:
+        raise V18Error(
+            "terminal cross-role outcome-only session set differs from protocol"
+        )
+
+
+def _validate_deferred_state_evidence(
+    decisions: Sequence[Mapping[str, Any]],
+    *,
+    expected_payload_sha256: str,
+    expected_receipt_sha256: str,
+) -> dict[str, dict[str, Any]]:
+    """Open outcome-derived monthly state only after outcome-blind preflight."""
+
+    rows = [dict(item) for item in decisions]
+    represented_months = sorted(
+        {str(pd.Timestamp(item["session_date"]).to_period("M")) for item in rows}
+    )
+    if STATE_MANIFEST_DIR.is_symlink() or not STATE_MANIFEST_DIR.is_dir():
+        raise V18Error("state manifest directory is missing")
+    entries = sorted(STATE_MANIFEST_DIR.iterdir(), key=lambda item: item.name)
+    expected_names = [f"{month}.json" for month in represented_months]
+    if (
+        any(not item.is_file() or item.is_symlink() for item in entries)
+        or sorted(item.name for item in entries) != expected_names
+    ):
+        raise V18Error("state manifest directory has missing or extra files")
+    result: dict[str, dict[str, Any]] = {}
+    for month in represented_months:
+        state = validate_state_manifest(
+            read_json(STATE_MANIFEST_DIR / f"{month}.json")
+        )
+        if (
+            state["activation_payload_sha256"] != expected_payload_sha256
+            or state["activation_receipt_sha256"] != expected_receipt_sha256
+        ):
+            raise V18Error(f"state activation hashes differ for {month}")
+        month_rows = [
+            item
+            for item in rows
+            if str(pd.Timestamp(item["session_date"]).to_period("M")) == month
+        ]
+        selection_fields = (
+            "three_prior_calendar_months",
+            "three_complete_pair_day_counts",
+            "three_month_medians_pct",
+            "state_value_pct",
+            "selected_source_rank",
+        )
+        for decision in month_rows:
+            if decision["state_manifest_sha256"] != state[
+                "state_manifest_sha256"
+            ]:
+                raise V18Error("decision does not bind its canonical monthly state")
+            if any(decision[field] != state[field] for field in selection_fields):
+                raise V18Error("decision selection differs from monthly state")
+            if (
+                decision["c00_fold_manifest_sha256"]
+                != state["c00_fold_manifest_sha256"]
+                or decision["fold_model_bundle_file_sha256"]
+                != state["fold_model_bundle_file_sha256"]
+            ):
+                raise V18Error("monthly state/decision fold binding differs")
+            if _timestamp(decision["computed_at"], "decision computed_at") < (
+                _timestamp(state["created_at"], "state created_at")
+            ):
+                raise V18Error("decision timestamp predates canonical monthly state")
+        result[month] = state
+    return result
+
+
+def _validate_exact_month_authority_directories(
+    represented_months: Sequence[str],
+) -> None:
+    """Pin the exact local month-source/fold/bundle authority name sets."""
+
+    months = [
+        str(_month(value, "represented authority month"))
+        for value in represented_months
+    ]
+    if months != sorted(set(months)):
+        raise V18Error("represented authority month set is not exact/sorted")
+    expected = {f"{month}.json" for month in months}
+    expected_with_stages = expected | {f".{name}.staging" for name in expected}
+    for directory, label in (
+        (MONTH_SOURCE_MANIFEST_DIR, "month-source manifest"),
+        (FOLD_MANIFEST_DIR, "fold manifest"),
+        (FOLD_MODEL_DIR, "fold model bundle"),
+    ):
+        try:
+            directory_stat = os.stat(directory, follow_symlinks=False)
+        except OSError as exc:
+            raise V18Error(f"terminal {label} directory is missing") from exc
+        if (
+            not stat.S_ISDIR(directory_stat.st_mode)
+            or directory_stat.st_uid != os.geteuid()
+            or stat.S_IMODE(directory_stat.st_mode) != 0o700
+        ):
+            raise V18Error(f"terminal {label} directory metadata changed")
+        observed_before = set(os.listdir(directory))
+        if (
+            not expected.issubset(observed_before)
+            or not observed_before.issubset(expected_with_stages)
+        ):
+            raise V18Error(f"terminal {label} directory name set changed")
+        # Heal only the registered final+canonical-stage same-inode crash case,
+        # then re-pin the exact final-only set through the directory descriptor.
+        for name in sorted(expected):
+            _read_local_authority_bytes(
+                directory / name, label=f"terminal {label} {name}"
+            )
+        try:
+            directory_fd = os.open(
+                directory,
+                os.O_RDONLY
+                | os.O_DIRECTORY
+                | os.O_CLOEXEC
+                | getattr(os, "O_NOFOLLOW", 0),
+            )
+        except OSError as exc:
+            raise V18Error(f"terminal {label} directory cannot be pinned") from exc
+        try:
+            pinned = os.fstat(directory_fd)
+            if (
+                (pinned.st_dev, pinned.st_ino)
+                != (directory_stat.st_dev, directory_stat.st_ino)
+                or pinned.st_uid != os.geteuid()
+                or stat.S_IMODE(pinned.st_mode) != 0o700
+                or set(os.listdir(directory_fd)) != expected
+            ):
+                raise V18Error(f"terminal {label} directory changed while pinned")
+            for name in sorted(expected):
+                metadata = os.stat(
+                    name, dir_fd=directory_fd, follow_symlinks=False
+                )
+                if (
+                    not stat.S_ISREG(metadata.st_mode)
+                    or metadata.st_uid != os.geteuid()
+                    or stat.S_IMODE(metadata.st_mode) != 0o600
+                    or metadata.st_nlink != 1
+                ):
+                    raise V18Error(f"terminal {label} member metadata changed")
+            entry_after = os.stat(directory, follow_symlinks=False)
+            if (
+                (entry_after.st_dev, entry_after.st_ino)
+                != (pinned.st_dev, pinned.st_ino)
+                or set(os.listdir(directory_fd)) != expected
+            ):
+                raise V18Error(f"terminal {label} directory changed after scan")
+        finally:
+            os.close(directory_fd)
+
+
 def validate_predictor_evidence(
     decisions: Sequence[Mapping[str, Any]] | pd.DataFrame,
-    scores: pd.DataFrame,
+    scores: pd.DataFrame | None,
     *,
     source_manifest_directory: str | Path,
     predictor_raw_store_root: str | Path,
+    predictor_derived_store_root: str | Path,
     external_identity_registry: dict[tuple[int, int], str] | None = None,
 ) -> dict[str, Any]:
     """Clean-replay every counted C00 input, monthly fold, score, and top two."""
 
-    _external_store_root(predictor_raw_store_root, "predictor")
+    _validate_external_store_disjointness(
+        predictor_raw_store_root, predictor_derived_store_root
+    )
     if sha256_file(ROOT / JPX_PARSER_PATH) != JPX_PARSER_SHA256:
         raise V18Error("terminal predictor parser source SHA changed")
     decision_rows = validate_decision_records(decisions)
-    _, payload_hash, _, receipt_hash = validate_canonical_activation_artifacts()
+    payload_value, payload_hash, _, receipt_hash = validate_canonical_activation_artifacts()
+    validate_activation_payload(
+        payload_value,
+        predictor_raw_store_root=predictor_raw_store_root,
+        predictor_derived_store_root=predictor_derived_store_root,
+    )
     if any(
         item["activation_payload_sha256"] != payload_hash
         or item["activation_receipt_sha256"] != receipt_hash
@@ -11016,6 +20766,9 @@ def validate_predictor_evidence(
                 "receipt_workflow_run_observation"
             ],
             "first_counted_session": str(first_session.date()),
+            "first_counted_predecessor_session": str(
+                _latest_required_predictor_source_session(first_session).date()
+            ),
             "terminal_session": str(terminal_session.date()),
             "terminal_scheduled_sessions": len(terminal_denominator),
             "represented_calendar_months": terminal_denominator.to_period("M").nunique(),
@@ -11041,33 +20794,25 @@ def validate_predictor_evidence(
             for item in decision_rows
         }
     )
-    if STATE_MANIFEST_DIR.is_symlink() or not STATE_MANIFEST_DIR.is_dir():
-        raise V18Error("state manifest directory is missing")
-    state_entries = sorted(STATE_MANIFEST_DIR.iterdir(), key=lambda item: item.name)
-    expected_state_names = [f"{month}.json" for month in represented_months]
-    if (
-        any(not item.is_file() or item.is_symlink() for item in state_entries)
-        or sorted(item.name for item in state_entries) != expected_state_names
-    ):
-        raise V18Error("state manifest directory has missing or extra files")
-    state_by_month = {
-        month: validate_state_manifest(
-            read_json(STATE_MANIFEST_DIR / f"{month}.json")
+    _validate_exact_month_authority_directories(represented_months)
+    if scores is None:
+        # State is forward-performance-bearing.  The outcome-blind terminal
+        # phase must finish raw/shard/snapshot/cache and checkpoint validation
+        # before even enumerating the state directory.
+        state_by_month: dict[str, dict[str, Any]] = {}
+        score_groups: dict[str, pd.DataFrame] = {}
+    else:
+        state_by_month = _validate_deferred_state_evidence(
+            decision_rows,
+            expected_payload_sha256=payload_hash,
+            expected_receipt_sha256=receipt_hash,
         )
-        for month in represented_months
-    }
-    for month, state in state_by_month.items():
-        if (
-            state["activation_payload_sha256"] != payload_hash
-            or state["activation_receipt_sha256"] != receipt_hash
-        ):
-            raise V18Error(f"state activation hashes differ for {month}")
-    if scores.empty:
+    if scores is not None and scores.empty:
         if scores.columns.tolist() != list(SCORE_FIELDS):
             raise V18Error("empty score ledger must retain the registered header")
         validate_score_ledger(scores, allow_empty=True)
-        score_groups: dict[str, pd.DataFrame] = {}
-    else:
+        score_groups = {}
+    elif scores is not None:
         score_rows = validate_score_ledger(scores)
         score_sessions = pd.to_datetime(score_rows["session_date"], errors="coerce")
         score_groups = {
@@ -11078,13 +20823,39 @@ def validate_predictor_evidence(
         }
     source_manifest_pairs: list[dict[str, Any]] = []
     semantic_sets: dict[str, list[dict[str, Any]]] = {
-        "parsed_panel_semantic_sha256": [],
-        "g0_panel_semantic_sha256": [],
-        "common_universe_semantic_sha256": [],
         "target_date_scoring_input_semantic_sha256": [],
+        "target_slice_semantic_sha256": [],
     }
     manifests: list[dict[str, Any]] = []
+    anchor_summary = payload_value["predictor_cache_anchor"]
+    anchor_manifest, _ = _read_external_canonical_json(
+        predictor_derived_store_root,
+        anchor_summary["snapshot_manifest_object_key"],
+        prefix=CACHE_ANCHOR_OBJECT_PREFIX,
+        label="terminal predictor cache anchor manifest",
+    )
+    _, observed_anchor_summary, _ = validate_predictor_cache_anchor(
+        anchor_manifest,
+        predictor_raw_store_root=predictor_raw_store_root,
+        predictor_derived_store_root=predictor_derived_store_root,
+        require_direct_clean_room_reparse=False,
+    )
+    if observed_anchor_summary != anchor_summary:
+        raise V18Error("terminal predictor anchor differs from payload B")
+    anchor_raw = [dict(item) for item in anchor_manifest["raw_sources"]]
+    anchor_shards = [dict(item) for item in anchor_manifest["parsed_shards"]]
+    if len(anchor_raw) != len(anchor_shards):
+        raise V18Error("terminal anchor raw/shard binding count differs")
     raw_union: dict[str, dict[str, Any]] = {}
+    shard_union: dict[str, dict[str, Any]] = {}
+    for item, binding in zip(anchor_raw, anchor_shards, strict=True):
+        object_key = item["object_key"]
+        if object_key in raw_union:
+            raise V18Error("terminal anchor repeats a raw object key")
+        raw_union[object_key] = item
+        shard_union[object_key] = binding
+    predecessor_raw = anchor_manifest["raw_sources"]
+    predecessor_shards = anchor_manifest["parsed_shards"]
     for decision in decision_rows:
         target = decision["session_date"]
         path = directory / f"{target}.json"
@@ -11094,9 +20865,18 @@ def validate_predictor_evidence(
             read_json(path),
             session_date=target,
             predictor_raw_store_root=predictor_raw_store_root,
+            first_counted_session_value=first_session,
+            require_predecessor_decision=False,
         )
         if decision["source_manifest_sha256"] != digest:
             raise V18Error("decision does not bind its predictor source manifest")
+        if _strict_bool(value["source_complete"]):
+            if _source_set_records(value)[: len(predecessor_raw)] != predecessor_raw:
+                raise V18Error("terminal predictor raw chain forks its predecessor")
+            if value["parsed_shards"][: len(predecessor_shards)] != predecessor_shards:
+                raise V18Error("terminal parsed-shard chain forks its predecessor")
+            predecessor_raw = _source_set_records(value)
+            predecessor_shards = value["parsed_shards"]
         source_manifest_pairs.append(
             {"target_session": target, "source_manifest_sha256": digest}
         )
@@ -11104,41 +20884,109 @@ def validate_predictor_evidence(
             semantic_sets[field].append(
                 {"target_session": target, field: value[field]}
             )
-        for item in _source_set_records(value):
+        for item, binding in zip(
+            _source_set_records(value), value["parsed_shards"], strict=True
+        ):
             prior = raw_union.setdefault(item["object_key"], item)
             if prior != item:
                 raise V18Error("predictor raw object metadata conflicts across manifests")
+            prior_binding = shard_union.setdefault(item["object_key"], dict(binding))
+            if prior_binding != dict(binding):
+                raise V18Error("predictor shard binding conflicts across manifests")
         manifests.append(value)
     ordered_union = [raw_union[key] for key in sorted(raw_union)]
     if ordered_union:
-        with _external_snapshot_paths(
-            predictor_raw_store_root,
+        union_prices = _terminal_reparse_predictor_shards_once(
             ordered_union,
-            prefix=PREDICTOR_OBJECT_PREFIX,
-            label="predictor",
+            [shard_union[item["object_key"]] for item in ordered_union],
+            predictor_raw_store_root=predictor_raw_store_root,
+            predictor_derived_store_root=predictor_derived_store_root,
             identity_registry=external_identity_registry,
-        ) as (union_paths, _):
-            try:
-                union_prices, union_report = _collect_jpx_registered(union_paths)
-            except Exception as exc:
-                raise V18Error(f"terminal predictor union parse failed: {exc}") from exc
-            union_inputs = union_report.get("inputs")
-            if not isinstance(union_inputs, list) or len(union_inputs) != len(union_paths):
-                raise V18Error("terminal predictor union parser report is incomplete")
-            if any(int(item.get("rejected_rows", -1)) != 0 for item in union_inputs):
-                raise V18Error("terminal predictor union parse rejected a row")
-            if union_prices[["date", "code"]].duplicated().any():
-                raise V18Error("terminal predictor union contains duplicate date/code rows")
+        )
     else:
         union_prices = pd.DataFrame(columns=PARSED_PRICE_COLUMNS)
+    if ordered_union:
+        anchor_names = {
+            Path(item["file"]).with_suffix(".txt").name
+            for item in anchor_manifest["raw_sources"]
+        }
+        anchor_direct = union_prices.loc[
+            union_prices["source_file"].astype(str).isin(anchor_names)
+        ].copy()
+        anchor_snapshot_payload = _external_object_bytes(
+            predictor_derived_store_root,
+            anchor_summary["cumulative_snapshot_object_key"],
+            prefix=CACHE_ANCHOR_OBJECT_PREFIX,
+            label="terminal cache anchor snapshot",
+        )
+        anchor_snapshot = decode_canonical_frame_jsonl(
+            anchor_snapshot_payload,
+            PARSED_PRICE_COLUMNS,
+            label="terminal cache anchor snapshot",
+        )
+        if not _coerce_jsonl_frame(
+            anchor_direct,
+            PARSED_PRICE_COLUMNS,
+            label="terminal direct anchor subset",
+        ).equals(anchor_snapshot):
+            raise V18Error("terminal raw union differs from payload-B anchor snapshot")
+        anchored_equivalence = validate_compact_consumer_equivalence_receipt(
+            anchor_manifest["compact_consumer_equivalence_receipt"]
+        )
+        terminal_equivalence = build_compact_consumer_equivalence_receipt(
+            anchor_direct,
+            _coerce_model_price_frame(
+                anchor_direct, label="terminal anchor compact-consumer prefix"
+            ),
+            synthetic_target_session=anchored_equivalence[
+                "synthetic_target_session"
+            ],
+        )
+        if terminal_equivalence != anchored_equivalence:
+            raise V18Error(
+                "terminal raw31/compact12 consumer proof differs from payload B"
+            )
+    for manifest in manifests:
+        if not _strict_bool(manifest["source_complete"]):
+            continue
+        target = manifest["target_session"]
+        cache_manifest, cache_manifest_payload = _read_external_canonical_json(
+            predictor_derived_store_root,
+            manifest["g0_panel_cache_manifest_object_key"],
+            prefix=G0_PANEL_CACHE_OBJECT_PREFIX,
+            label="terminal target-slice cache manifest",
+        )
+        cache, _, expected_cache_key, _ = _validate_g0_cache_manifest(
+            cache_manifest,
+            predictor_derived_store_root=predictor_derived_store_root,
+            expected_target_session=target,
+            expected_latest_source_session=manifest[
+                "latest_required_source_session"
+            ],
+            expected_source_set_sha256=manifest["source_set_sha256"],
+            expected_parsed_shard_set_sha256=manifest[
+                "parsed_shard_set_sha256"
+            ],
+        )
+        if (
+            expected_cache_key != manifest["g0_panel_cache_manifest_object_key"]
+            or len(cache_manifest_payload)
+            != int(manifest["g0_panel_cache_manifest_byte_count"])
+            or hashlib.sha256(cache_manifest_payload).hexdigest()
+            != manifest["g0_panel_cache_manifest_file_sha256"]
+            or cache["cache_manifest_sha256"]
+            != manifest["g0_panel_cache_manifest_sha256"]
+        ):
+            raise V18Error("terminal target-slice cache exact binding changed")
     fold_by_month: dict[str, tuple[str | None, str | None]] = {}
     replayed_score_sessions: set[str] = set()
+    outcome_blind_score_expectations: list[dict[str, Any]] = []
     replayed_months: set[str] = set()
     for decision, manifest in zip(decision_rows, manifests, strict=True):
         target = decision["session_date"]
         month = str(pd.Timestamp(target).to_period("M"))
         resolution = decision["checkpoint_resolution"]
-        state = state_by_month[month]
+        state = state_by_month.get(month)
         fold_pair = (
             decision["c00_fold_manifest_sha256"],
             decision["fold_model_bundle_file_sha256"],
@@ -11146,10 +20994,12 @@ def validate_predictor_evidence(
         prior_pair = fold_by_month.setdefault(month, fold_pair)
         if prior_pair != fold_pair:
             raise V18Error("decision fold pair changed within target month")
-        if decision["state_manifest_sha256"] != state["state_manifest_sha256"]:
+        if state is not None and decision["state_manifest_sha256"] != state[
+            "state_manifest_sha256"
+        ]:
             raise V18Error("decision does not bind its canonical monthly state")
         computed = _timestamp(decision["computed_at"], "decision computed_at")
-        if computed < _timestamp(
+        if state is not None and computed < _timestamp(
             state["created_at"], "state created_at"
         ):
             raise V18Error("decision timestamp predates canonical monthly state")
@@ -11161,9 +21011,7 @@ def validate_predictor_evidence(
         ):
             raise V18Error("decision timestamp predates predictor receipt")
         if not _strict_bool(manifest["source_complete"]):
-            if target in score_groups:
-                raise V18Error("source-incomplete decision has a score pair")
-            continue
+            raise V18Error("counted terminal source is incomplete")
         parsed_prices = union_prices.loc[
             union_prices["source_file"].astype(str).isin(
                 {Path(name).with_suffix(".txt").name for name in manifest["source_files"]}
@@ -11171,18 +21019,46 @@ def validate_predictor_evidence(
         ].copy()
         if len(parsed_prices) != int(manifest["parsed_row_count"]):
             raise V18Error("terminal predictor subset parsed row count differs")
-        panel = build_forward_c00_panel(parsed_prices, target)
+        direct_full_panel = build_forward_c00_panel(parsed_prices, target)
+        panel = _coerce_jsonl_frame(
+            direct_full_panel.loc[
+                pd.to_datetime(direct_full_panel["date"]).eq(_date(target, "target"))
+            ],
+            G0_PANEL_COLUMNS,
+            label="terminal direct G0 target slice",
+        )
+        del direct_full_panel
         validate_source_manifest(
             manifest,
             session_date=target,
             predictor_raw_store_root=predictor_raw_store_root,
             parsed_prices=parsed_prices,
             panel=panel,
+            first_counted_session_value=first_session,
+            require_predecessor_decision=False,
         )
+        cache_manifest, _ = _read_external_canonical_json(
+            predictor_derived_store_root,
+            manifest["g0_panel_cache_manifest_object_key"],
+            prefix=G0_PANEL_CACHE_OBJECT_PREFIX,
+            label="terminal target-slice cache manifest",
+        )
+        _, cached_target_slice, _, _ = _validate_g0_cache_manifest(
+            cache_manifest,
+            predictor_derived_store_root=predictor_derived_store_root,
+            expected_target_session=target,
+            expected_latest_source_session=manifest[
+                "latest_required_source_session"
+            ],
+            expected_source_set_sha256=manifest["source_set_sha256"],
+            expected_parsed_shard_set_sha256=manifest[
+                "parsed_shard_set_sha256"
+            ],
+        )
+        if not panel.equals(cached_target_slice):
+            raise V18Error("terminal target-slice cache differs from raw computation")
         if fold_pair == (None, None):
-            if target in score_groups:
-                raise V18Error("fold-unavailable decision has a score pair")
-            continue
+            raise V18Error("counted terminal decision lacks its monthly fold")
         fold_path = FOLD_MANIFEST_DIR / f"{month}.json"
         bundle_path = FOLD_MODEL_DIR / f"{month}.json"
         if not fold_path.is_file() or not bundle_path.is_file():
@@ -11200,10 +21076,79 @@ def validate_predictor_evidence(
         ):
             raise V18Error("decision timestamp predates monthly fold completion")
         if month not in replayed_months:
+            month_source_path = MONTH_SOURCE_MANIFEST_DIR / f"{month}.json"
+            if not month_source_path.is_file():
+                raise V18Error("clean-room monthly source manifest is missing")
+            month_source = read_json(month_source_path)
+            if (
+                fold["month_source_manifest_sha256"]
+                != month_source.get("month_source_manifest_sha256")
+            ):
+                raise V18Error("fold differs from canonical month-source manifest")
+            month_source_names = {
+                Path(name).with_suffix(".txt").name
+                for name in month_source["source_files"]
+            }
+            month_prices = union_prices.loc[
+                union_prices["source_file"].astype(str).isin(month_source_names)
+            ].copy()
+            month_model_prices = _coerce_model_price_frame(
+                month_prices, label="terminal month-source compact projection"
+            )
+            month_seal = _date(month_source["seal_session"], "month seal session")
+            month_raw_panel = build_forward_c00_panel(month_prices, month_seal)
+            month_raw_digest = _exact_g0_frame_digest(month_raw_panel)
+            month_training_panel = _coerce_jsonl_frame(
+                month_raw_panel.loc[
+                    pd.to_datetime(month_raw_panel["date"]).lt(
+                        pd.Period(month, freq="M").start_time
+                    )
+                ],
+                G0_PANEL_COLUMNS,
+                label="terminal raw31 month-source training panel",
+            )
+            del month_raw_panel
+            gc.collect()
+            month_compact_panel = build_forward_c00_panel(
+                month_model_prices, month_seal
+            )
+            month_compact_digest = _exact_g0_frame_digest(month_compact_panel)
+            if month_compact_digest != month_raw_digest:
+                raise V18Error(
+                    "terminal month full31/compact12 consumer panels differ"
+                )
+            compact_training_panel = _coerce_jsonl_frame(
+                month_compact_panel.loc[
+                    pd.to_datetime(month_compact_panel["date"]).lt(
+                        pd.Period(month, freq="M").start_time
+                    )
+                ],
+                G0_PANEL_COLUMNS,
+                label="terminal compact12 month-source training panel",
+            )
+            del month_compact_panel
+            gc.collect()
+            if not month_training_panel.equals(compact_training_panel):
+                raise V18Error(
+                    "terminal month training rows differ across raw/compact inputs"
+                )
+            model_month_semantic = model_price_semantic_sha256(month_model_prices)
+            training_month_semantic = semantic_frame_sha256(
+                month_training_panel, G0_PANEL_COLUMNS
+            )
+            validate_month_source_manifest(
+                month_source,
+                predictor_raw_store_root=predictor_raw_store_root,
+                predictor_derived_store_root=predictor_derived_store_root,
+                training_panel=month_training_panel,
+                model_prices=month_model_prices,
+                precomputed_model_semantic_sha256=model_month_semantic,
+                precomputed_training_semantic_sha256=training_month_semantic,
+            )
             started = _timestamp(fold["fit_started_at"], "fold fit_started_at")
             completed = _timestamp(fold["fit_completed_at"], "fold fit_completed_at")
             _, reconstructed_fold, reconstructed_bundle = _build_fold(
-                panel,
+                month_training_panel,
                 pd.Period(month, freq="M"),
                 fit_started_at=started,
                 fit_completed_at=completed,
@@ -11215,6 +21160,7 @@ def validate_predictor_evidence(
                 activation_observed_at=decision_rows[0][
                     "activation_receipt_commit_observed_at"
                 ],
+                month_source_manifest=month_source,
             )
             if canonical_json_bytes(reconstructed_bundle) != canonical_json_bytes(bundle):
                 raise V18Error("clean-room numeric C00 fold bundle differs")
@@ -11222,24 +21168,45 @@ def validate_predictor_evidence(
                 raise V18Error("clean-room C00 fold manifest differs")
             replayed_months.add(month)
         observed_scores = score_groups.get(target)
+        replayed, _, _ = freeze_c00_top2(
+            panel,
+            target,
+            score_generated_at=(
+                decision["computed_at"]
+                if observed_scores is None
+                else observed_scores["score_generated_at"].iloc[0]
+            ),
+            runtime_lock_verified_at=(
+                fold["runtime_lock_verified_at"]
+                if observed_scores is None
+                else observed_scores["runtime_lock_verified_at"].iloc[0]
+            ),
+            terminal_replay=True,
+            source_manifest_sha256=manifest["source_manifest_sha256"],
+            first_counted_session_value=decision_rows[0]["session_date"],
+            activation_observed_at=decision_rows[0][
+                "activation_receipt_commit_observed_at"
+            ],
+            return_bundle=True,
+            model_bundle=bundle,
+            fold_manifest=fold,
+        )
+        expectation_columns = (
+            "session_date",
+            "source_rank",
+            "code",
+            "name",
+            "model_score",
+            "feature_source_max_date",
+            "source_manifest_sha256",
+            "c00_fold_manifest_sha256",
+        )
+        outcome_blind_score_expectations.extend(
+            replayed.loc[:, list(expectation_columns)].to_dict(orient="records")
+        )
         if observed_scores is not None:
-            replayed, _, _ = freeze_c00_top2(
-                panel,
-                target,
-                score_generated_at=observed_scores["score_generated_at"].iloc[0],
-                runtime_lock_verified_at=observed_scores[
-                    "runtime_lock_verified_at"
-                ].iloc[0],
-                terminal_replay=True,
-                source_manifest_sha256=manifest["source_manifest_sha256"],
-                first_counted_session_value=decision_rows[0]["session_date"],
-                activation_observed_at=decision_rows[0][
-                    "activation_receipt_commit_observed_at"
-                ],
-                return_bundle=True,
-                model_bundle=bundle,
-                fold_manifest=fold,
-            )
+            if state is None:
+                raise V18Error("score validation lacks deferred monthly state")
             if semantic_score_hash(replayed) != semantic_score_hash(observed_scores):
                 raise V18Error("clean-room C00 score/top-two replay differs")
             score_generated = _timestamp(
@@ -11264,27 +21231,29 @@ def validate_predictor_evidence(
                 or (computed is not None and computed < score_generated)
             ):
                 raise V18Error("score/decision timestamps violate PIT causality")
-            if resolution == "primary" and _strict_bool(decision["model_complete"]):
-                ranked = replayed.set_index("source_rank")
-                if (
-                    decision["c00_rank1_code"] != str(ranked.loc[1, "code"])
-                    or decision["c02_rank2_code"] != str(ranked.loc[2, "code"])
-                    or float(decision["c00_rank1_score"])
-                    != float(ranked.loc[1, "model_score"])
-                    or float(decision["c02_rank2_score"])
-                    != float(ranked.loc[2, "model_score"])
-                ):
-                    raise V18Error("decision pair differs from clean-room C00 replay")
             replayed_score_sessions.add(target)
-        elif resolution == "primary" and _strict_bool(decision["model_complete"]):
-            raise V18Error("model-complete decision lacks its score pair")
+        if resolution == "primary" and _strict_bool(decision["model_complete"]):
+            ranked = replayed.set_index("source_rank")
+            if (
+                decision["c00_rank1_code"] != str(ranked.loc[1, "code"])
+                or decision["c02_rank2_code"] != str(ranked.loc[2, "code"])
+                or float(decision["c00_rank1_score"])
+                != float(ranked.loc[1, "model_score"])
+                or float(decision["c02_rank2_score"])
+                != float(ranked.loc[2, "model_score"])
+            ):
+                raise V18Error("decision pair differs from clean-room C00 replay")
+            if scores is not None and observed_scores is None:
+                raise V18Error("model-complete decision lacks its score pair")
     for month, fold_pair in fold_by_month.items():
-        if fold_pair == (None, None) or month in replayed_months:
+        if fold_pair == (None, None):
+            raise V18Error("counted fold-set contains a null monthly authority")
+        if month in replayed_months:
             continue
         fold_path = FOLD_MANIFEST_DIR / f"{month}.json"
         bundle_path = FOLD_MODEL_DIR / f"{month}.json"
         if not fold_path.is_file() or not bundle_path.is_file():
-            raise V18Error("sealed fail-closed month fold artifact is missing")
+            raise V18Error("sealed counted month fold artifact is missing")
         fold = read_json(fold_path)
         bundle = read_json(bundle_path)
         validate_fold_manifest(fold, bundle)
@@ -11292,8 +21261,8 @@ def validate_predictor_evidence(
             fold["fold_manifest_sha256"] != fold_pair[0]
             or sha256_file(bundle_path) != fold_pair[1]
         ):
-            raise V18Error("sealed fail-closed month fold pair changed")
-    if set(score_groups) != replayed_score_sessions:
+            raise V18Error("sealed counted month fold pair changed")
+    if scores is not None and set(score_groups) != replayed_score_sessions:
         raise V18Error("score ledger contains an uncounted or unreplayed session")
     fold_months = sorted(
         {
@@ -11316,6 +21285,11 @@ def validate_predictor_evidence(
         for month in fold_months
     ]
     return {
+        "_outcome_blind_score_expectations": outcome_blind_score_expectations,
+        "_terminal_predictor_raw_records": ordered_union,
+        "_terminal_predictor_shard_bindings": [
+            shard_union[item["object_key"]] for item in ordered_union
+        ],
         "runtime_lock_sha256": RUNTIME_LOCK_SHA256,
         "predictor_source_manifest_set_sha256": canonical_json_sha256(
             source_manifest_pairs
@@ -11323,14 +21297,21 @@ def validate_predictor_evidence(
         "predictor_raw_source_set_sha256": canonical_json_sha256(ordered_union),
         "predictor_unique_raw_object_count": len(ordered_union),
         "predictor_parser_sha256": JPX_PARSER_SHA256,
-        "predictor_parsed_panel_semantic_set_sha256": canonical_json_sha256(
-            semantic_sets["parsed_panel_semantic_sha256"]
+        "predictor_parsed_shard_binding_set_sha256": canonical_json_sha256(
+            [
+                {
+                    "target_session": item["target_session"],
+                    "parsed_shard_set_sha256": manifest[
+                        "parsed_shard_set_sha256"
+                    ],
+                }
+                for item, manifest in zip(
+                    source_manifest_pairs, manifests, strict=True
+                )
+            ]
         ),
-        "predictor_g0_panel_semantic_set_sha256": canonical_json_sha256(
-            semantic_sets["g0_panel_semantic_sha256"]
-        ),
-        "predictor_common_universe_semantic_set_sha256": canonical_json_sha256(
-            semantic_sets["common_universe_semantic_sha256"]
+        "predictor_target_slice_semantic_set_sha256": canonical_json_sha256(
+            semantic_sets["target_slice_semantic_sha256"]
         ),
         "predictor_target_date_scoring_input_semantic_set_sha256": canonical_json_sha256(
             semantic_sets["target_date_scoring_input_semantic_sha256"]
@@ -11344,6 +21325,89 @@ def validate_predictor_evidence(
     }
 
 
+def validate_deferred_score_evidence(
+    scores: pd.DataFrame,
+    expectations: Sequence[Mapping[str, Any]],
+    decisions: Sequence[Mapping[str, Any]],
+) -> pd.DataFrame:
+    """Open and compare the score ledger only after outcome-blind raw replay."""
+
+    observed = validate_score_ledger(scores, allow_empty=not expectations)
+    validate_score_session_authority(observed)
+    expected_rows = [dict(item) for item in expectations]
+    identity_fields = (
+        "session_date",
+        "source_rank",
+        "code",
+        "name",
+        "model_score",
+        "feature_source_max_date",
+        "source_manifest_sha256",
+        "c00_fold_manifest_sha256",
+    )
+    observed_projection = observed.loc[:, list(identity_fields)].copy()
+    expected_projection = pd.DataFrame(expected_rows, columns=identity_fields)
+    for frame in (observed_projection, expected_projection):
+        if not frame.empty:
+            frame["session_date"] = pd.to_datetime(frame["session_date"]).dt.strftime(
+                "%Y-%m-%d"
+            )
+            frame["feature_source_max_date"] = pd.to_datetime(
+                frame["feature_source_max_date"]
+            ).dt.strftime("%Y-%m-%d")
+            frame["source_rank"] = frame["source_rank"].astype(int)
+            frame["code"] = frame["code"].astype(str)
+    observed_projection = observed_projection.sort_values(
+        ["session_date", "source_rank"], kind="stable"
+    ).reset_index(drop=True)
+    expected_projection = expected_projection.sort_values(
+        ["session_date", "source_rank"], kind="stable"
+    ).reset_index(drop=True)
+    if len(observed_projection) != len(expected_projection):
+        raise V18Error("deferred score ledger has a missing/extra pair")
+    for index in range(len(expected_projection)):
+        for field in identity_fields:
+            left = observed_projection.at[index, field]
+            right = expected_projection.at[index, field]
+            if field == "model_score":
+                if not _ieee_float_equal(left, right):
+                    raise V18Error("deferred score model bits differ from raw replay")
+            elif left != right:
+                raise V18Error(f"deferred score binding differs: {field}")
+    decision_by_session = {
+        str(item["session_date"]): dict(item) for item in validate_decision_records(decisions)
+    }
+    for session, group in observed.groupby(
+        pd.to_datetime(observed["session_date"]).dt.strftime("%Y-%m-%d"),
+        sort=True,
+    ):
+        decision = decision_by_session[session]
+        source = read_json(SOURCE_MANIFEST_DIR / f"{session}.json")
+        month = str(pd.Timestamp(session).to_period("M"))
+        fold = read_json(FOLD_MANIFEST_DIR / f"{month}.json")
+        state = read_json(STATE_MANIFEST_DIR / f"{month}.json")
+        generated = _timestamp(group["score_generated_at"].iloc[0], "score generated")
+        verified = _timestamp(
+            group["runtime_lock_verified_at"].iloc[0], "score runtime verified"
+        )
+        prerequisites = (
+            _timestamp(source["sealed_at"], "source sealed"),
+            _timestamp(fold["sealed_at"], "fold sealed"),
+            _timestamp(state["created_at"], "state created"),
+            _timestamp(
+                decision["activation_receipt_commit_observed_at"],
+                "activation observed",
+            ),
+        )
+        if (
+            verified < max(prerequisites)
+            or generated < verified
+            or _timestamp(decision["computed_at"], "decision computed") < generated
+        ):
+            raise V18Error("deferred score timestamp DAG changed")
+    return observed
+
+
 def evaluate(
     decisions: Sequence[Mapping[str, Any]] | pd.DataFrame,
     outcomes: Sequence[Mapping[str, Any]] | pd.DataFrame,
@@ -11352,10 +21416,14 @@ def evaluate(
     calendar: pd.DatetimeIndex | None = None,
     source_manifest_directory: str | Path | None = None,
     predictor_raw_store_root: str | Path | None = None,
+    predictor_derived_store_root: str | Path | None = None,
     scores: pd.DataFrame | str | Path | None = None,
     outcome_manifest_directory: str | Path | None = None,
     outcome_raw_store_root: str | Path | None = None,
     checkpoint_core_store_root: str | Path | None = None,
+    prevalidated_predictor_bindings: Mapping[str, Any] | None = None,
+    prevalidated_checkpoint_bindings: Mapping[str, Any] | None = None,
+    external_identity_registry: dict[tuple[int, int], str] | None = None,
 ) -> dict[str, Any]:
     """Evaluate only at deterministic terminal month-end; otherwise stay sealed."""
 
@@ -11384,16 +21452,7 @@ def evaluate(
             len(decision_index) == len(expected)
             and decision_index[-1] == terminal
         )
-    if terminal_candidate:
-        _preflight_terminal_completed_month_ledger(
-            completed_months,
-            decision_rows,
-            calendar=scheduled,
-        )
-    month_rows = validate_completed_month_records(completed_months)
-    outcome_rows = validate_outcome_records(outcomes, decision_rows)
     if not decision_rows:
-        validate_completed_month_coverage(month_rows, decision_rows, outcome_rows)
         return {
             "status": "awaiting_terminal_evaluation",
             "scheduled_sessions": 0,
@@ -11407,11 +21466,92 @@ def evaluate(
     assert terminal is not None
     sessions = len(decision_rows)
     months = int(decision_index.to_period("M").nunique())
-    ready = (
-        terminal_candidate
-        and len(outcome_rows) == sessions
+    if not terminal_candidate:
+        # The direct API mirrors the CLI's sealed waiting branch.  Do not
+        # iterate caller-supplied performance containers until the decision
+        # ledger alone proves the exact terminal denominator.
+        return {
+            "status": "awaiting_terminal_evaluation",
+            "scheduled_sessions": sessions,
+            "outcome_records": 0,
+            "represented_calendar_months": months,
+            "minimum_scheduled_sessions": MIN_FORWARD_SESSIONS,
+            "minimum_calendar_months": MIN_FORWARD_MONTHS,
+            "deterministic_terminal_session": str(terminal.date()),
+            "gate_evaluated": False,
+            "decision_ledger_sha256": semantic_decision_hash(decision_rows),
+            "production_model_changed": False,
+            "orders_allowed": False,
+        }
+    _validate_startup_and_module_closure(phase="terminal reconstruction entry")
+    if checkpoint_core_store_root is None:
+        raise V18Error("terminal checkpoint core store is required")
+    identity_registry = (
+        {} if external_identity_registry is None else external_identity_registry
     )
-    if not ready:
+    if outcome_manifest_directory is None or outcome_raw_store_root is None:
+        raise V18Error("terminal outcome manifest directory/raw store is required")
+    predictor_arguments = (
+        source_manifest_directory,
+        predictor_raw_store_root,
+        predictor_derived_store_root,
+        scores,
+    )
+    if not all(item is not None for item in predictor_arguments):
+        raise V18Error("terminal predictor manifest/raw store/scores are required")
+    assert source_manifest_directory is not None
+    assert predictor_raw_store_root is not None
+    assert predictor_derived_store_root is not None
+    assert scores is not None
+    predictor_bindings = (
+        dict(prevalidated_predictor_bindings)
+        if prevalidated_predictor_bindings is not None
+        else validate_predictor_evidence(
+            decision_rows,
+            None,
+            source_manifest_directory=source_manifest_directory,
+            predictor_raw_store_root=predictor_raw_store_root,
+            predictor_derived_store_root=predictor_derived_store_root,
+            external_identity_registry=identity_registry,
+        )
+    )
+    score_expectations = predictor_bindings.pop(
+        "_outcome_blind_score_expectations", None
+    )
+    if not isinstance(score_expectations, list):
+        raise V18Error("outcome-blind predictor replay lacks score expectations")
+    terminal_predictor_raw = predictor_bindings.pop(
+        "_terminal_predictor_raw_records", None
+    )
+    terminal_predictor_shards = predictor_bindings.pop(
+        "_terminal_predictor_shard_bindings", None
+    )
+    if not isinstance(terminal_predictor_raw, list) or not isinstance(
+        terminal_predictor_shards, list
+    ):
+        raise V18Error("outcome-blind predictor replay lacks cross-role bindings")
+    checkpoint_bindings = (
+        dict(prevalidated_checkpoint_bindings)
+        if prevalidated_checkpoint_bindings is not None
+        else validate_checkpoint_evidence(
+            decision_rows,
+            checkpoint_core_store_root=checkpoint_core_store_root,
+            external_identity_registry=identity_registry,
+        )
+    )
+    _, payload_hash, _, receipt_hash = validate_canonical_activation_artifacts()
+    _validate_deferred_state_evidence(
+        decision_rows,
+        expected_payload_sha256=payload_hash,
+        expected_receipt_sha256=receipt_hash,
+    )
+    if not _preflight_terminal_completed_month_ledger(
+        completed_months, decision_rows, calendar=scheduled
+    ):
+        raise V18Error("terminal completed-month preflight was not reached")
+    month_rows = validate_completed_month_records(completed_months)
+    outcome_rows = validate_outcome_records(outcomes, decision_rows)
+    if len(outcome_rows) != sessions:
         return {
             "status": "awaiting_terminal_evaluation",
             "scheduled_sessions": sessions,
@@ -11426,29 +21566,6 @@ def evaluate(
             "orders_allowed": False,
         }
     validate_completed_month_coverage(month_rows, decision_rows, outcome_rows)
-    _validate_startup_and_module_closure(phase="terminal reconstruction entry")
-    if checkpoint_core_store_root is None:
-        raise V18Error("terminal checkpoint core store is required")
-    external_identity_registry: dict[tuple[int, int], str] = {}
-    if outcome_manifest_directory is None or outcome_raw_store_root is None:
-        raise V18Error("terminal outcome manifest directory/raw store is required")
-    validate_outcome_evidence(
-        decision_rows,
-        outcome_rows,
-        outcome_manifest_directory=outcome_manifest_directory,
-        outcome_raw_store_root=outcome_raw_store_root,
-        external_identity_registry=external_identity_registry,
-    )
-    predictor_arguments = (
-        source_manifest_directory,
-        predictor_raw_store_root,
-        scores,
-    )
-    if not all(item is not None for item in predictor_arguments):
-        raise V18Error("terminal predictor manifest/raw store/scores are required")
-    assert source_manifest_directory is not None
-    assert predictor_raw_store_root is not None
-    assert scores is not None
     if isinstance(scores, (str, Path)):
         score_path = Path(scores)
         if score_path.is_symlink() or not score_path.is_file():
@@ -11463,12 +21580,25 @@ def evaluate(
         score_frame = scores
     else:  # pragma: no cover - guarded by the annotated public boundary
         raise V18Error("terminal scores must be a DataFrame or canonical path")
-    predictor_bindings = validate_predictor_evidence(
+    validate_deferred_score_evidence(
+        score_frame, score_expectations, decision_rows
+    )
+    outcome_manifests = validate_outcome_evidence(
         decision_rows,
-        score_frame,
-        source_manifest_directory=source_manifest_directory,
+        outcome_rows,
+        outcome_manifest_directory=outcome_manifest_directory,
+        outcome_raw_store_root=outcome_raw_store_root,
+        external_identity_registry=identity_registry,
+    )
+    _validate_terminal_predictor_outcome_cross_role(
+        terminal_predictor_raw,
+        terminal_predictor_shards,
+        outcome_manifests,
+        terminal_session=terminal,
+        allow_terminal_outcome_only=True,
         predictor_raw_store_root=predictor_raw_store_root,
-        external_identity_registry=external_identity_registry,
+        predictor_derived_store_root=predictor_derived_store_root,
+        outcome_raw_store_root=outcome_raw_store_root,
     )
     _validate_startup_and_module_closure(phase="terminal reconstruction imports")
     if _STRICT_RUNTIME_ACTIVE:
@@ -11478,11 +21608,6 @@ def evaluate(
     # Checkpoint evidence is the last remote/external reconstruction before
     # unblinding.  Its internally pinned current ref therefore cannot go stale
     # across other terminal network phases before the first performance helper.
-    checkpoint_bindings = validate_checkpoint_evidence(
-        decision_rows,
-        checkpoint_core_store_root=checkpoint_core_store_root,
-        external_identity_registry=external_identity_registry,
-    )
     frame, evaluated_decisions, evaluated_outcomes = _evaluation_frame(
         decision_rows, outcome_rows
     )
@@ -11725,6 +21850,7 @@ def build_result(
     completed_month_ledger_path: str | Path,
     score_output: str | Path = SCORE_OUTPUT,
     picks_output: str | Path = PICKS_OUTPUT,
+    runtime_lock_verified_at: Any | None = None,
 ) -> dict[str, Any]:
     """Build the protocol result envelope after terminal evidence validation."""
 
@@ -11798,6 +21924,13 @@ def build_result(
     )
     if set(input_bindings) != required_inputs:
         raise V18Error("terminal result lacks exact clean-room predictor input bindings")
+    result_verified_at = (
+        _runtime_verified_timestamp()
+        if runtime_lock_verified_at is None
+        else _timestamp(
+            runtime_lock_verified_at, "retained result runtime_lock_verified_at"
+        )
+    )
     return {
         "schema_version": 1,
         "protocol_id": PROTOCOL_ID,
@@ -11815,6 +21948,7 @@ def build_result(
             "production_promotion_allowed": False,
             "orders_allowed": False,
         },
+        "raw_source_provenance": _raw_source_provenance_envelope(),
         "input": input_bindings,
         "forward_period": {
             "first_counted_session": first["session_date"],
@@ -11842,7 +21976,7 @@ def build_result(
             "runtime_lock_self_sha256": read_json(RUNTIME_LOCK)[
                 "runtime_lock_self_sha256"
             ],
-            "runtime_lock_verified_at": _runtime_verified_timestamp(),
+            "runtime_lock_verified_at": result_verified_at,
             "python_version": platform.python_version(),
             "numpy_version": np.__version__,
             "pandas_version": pd.__version__,
@@ -11918,6 +22052,7 @@ def build_integrity_abort_result(
     *,
     failure_reason: str,
     integrity_stage: str,
+    activation_context: Mapping[str, Any],
 ) -> dict[str, Any]:
     """Build an outcome-blind create-once integrity-abort envelope."""
 
@@ -11934,8 +22069,9 @@ def build_integrity_abort_result(
         )
     if stage not in ABORT_INTEGRITY_STAGES:
         raise V18Error("integrity abort stage is not registered")
-    if os.path.lexists(RESULT_OUTPUT):
-        raise V18Error("canonical result already exists; integrity abort cannot overwrite it")
+    result_presence = _local_authority_presence_state(
+        RESULT_OUTPUT, label="canonical result"
+    )
     protocol, observed_protocol_hash = validate_protocol()
     allowed_reasons = protocol["result_contract"]["abort_stage_reason_values"][stage]
     if reason not in allowed_reasons:
@@ -11946,28 +22082,18 @@ def build_integrity_abort_result(
     if observed_runtime_hash != RUNTIME_LOCK_SHA256:
         raise V18Error("integrity abort runtime-lock authority changed")
 
-    payload_hash: str | None = None
-    receipt_hash: str | None = None
-    if ACTIVATION_PAYLOAD.is_file() and not ACTIVATION_PAYLOAD.is_symlink():
-        try:
-            _, payload_hash = validate_activation_payload(
-                ACTIVATION_PAYLOAD, protocol
-            )
-        except V18Error:
-            payload_hash = None
+    context = validate_activation_context(activation_context)
+    _, payload_hash = validate_activation_payload(ACTIVATION_PAYLOAD, protocol)
+    _, receipt_hash = validate_activation_receipt(
+        ACTIVATION_RECEIPT,
+        ACTIVATION_PAYLOAD,
+        protocol,
+    )
     if (
-        payload_hash is not None
-        and ACTIVATION_RECEIPT.is_file()
-        and not ACTIVATION_RECEIPT.is_symlink()
+        context["activation_payload_sha256"] != payload_hash
+        or context["activation_receipt_sha256"] != receipt_hash
     ):
-        try:
-            _, receipt_hash = validate_activation_receipt(
-                ACTIVATION_RECEIPT,
-                ACTIVATION_PAYLOAD,
-                protocol,
-            )
-        except V18Error:
-            receipt_hash = None
+        raise V18Error("integrity abort activation context changed")
 
     required_inputs = tuple(protocol["result_contract"]["required_input_fields"])
     input_bindings: dict[str, Any] = dict.fromkeys(required_inputs)
@@ -12001,22 +22127,55 @@ def build_integrity_abort_result(
         protocol["result_contract"]["required_artifact_hashes"]
     ):
         raise V18Error("integrity abort artifact schema differs from protocol")
-    return {
+    retained_result: dict[str, Any] | None = None
+    result_verified_at = _STRICT_RUNTIME_VERIFIED_AT
+    if result_presence != "absent":
+        retained_payload = _read_local_authority_bytes(
+            RESULT_OUTPUT, label="retained abort result"
+        )
+        status_tokens = re.findall(
+            rb'^  "status": "([a-z0-9_]+)",?$', retained_payload, re.MULTILINE
+        )
+        if status_tokens != [b"aborted_integrity_failure"]:
+            raise V18Error(
+                "canonical result is not an abort envelope; abort retry is forbidden"
+            )
+        try:
+            parsed_retained = json.loads(retained_payload.decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise V18Error("retained abort result is not strict JSON") from exc
+        if not isinstance(parsed_retained, dict):
+            raise V18Error("retained abort result is not a JSON object")
+        retained_result = parsed_retained
+        try:
+            retained_verified_at = retained_result["runtime"][
+                "runtime_lock_verified_at"
+            ]
+            _timestamp(
+                retained_verified_at,
+                "retained abort runtime_lock_verified_at",
+            )
+        except (KeyError, TypeError) as exc:
+            raise V18Error("retained abort runtime timestamp is missing") from exc
+        # Validate chronology without normalizing the retained JSON scalar.
+        # Exact retry must reproduce the published bytes, including whether a
+        # valid timestamp used an explicit fractional-second component.
+        result_verified_at = retained_verified_at
+    result = {
         "schema_version": 1,
         "protocol_id": PROTOCOL_ID,
         "protocol_sha256": observed_protocol_hash,
         "runner_sha256": sha256_file(__file__),
         "activation_payload_sha256": payload_hash,
         "activation_receipt_sha256": receipt_hash,
-        # C's workflow observation is intentionally not reconstructed from a
-        # decision ledger on the outcome-blind abort path.  There is no
-        # separate canonical C-observation artifact, so null is the only
-        # independently reproducible value here.
-        "activation_receipt_commit_sha": None,
+        "activation_receipt_commit_sha": context[
+            "activation_receipt_commit_sha"
+        ],
         "status": "aborted_integrity_failure",
         "failure_reason": reason,
         "integrity_stage": stage,
         "authority": dict(protocol["result_contract"]["authority_values"]),
+        "raw_source_provenance": _raw_source_provenance_envelope(),
         "input": input_bindings,
         "forward_period": None,
         "state_months": None,
@@ -12033,13 +22192,18 @@ def build_integrity_abort_result(
             "runtime_lock_self_sha256": runtime_lock[
                 "runtime_lock_self_sha256"
             ],
-            "runtime_lock_verified_at": _STRICT_RUNTIME_VERIFIED_AT,
+            "runtime_lock_verified_at": result_verified_at,
             "python_version": platform.python_version(),
             "numpy_version": np.__version__,
             "pandas_version": pd.__version__,
             "scikit_learn_version": sklearn.__version__,
         },
     }
+    if retained_result is not None:
+        if canonical_json_bytes(retained_result) != canonical_json_bytes(result):
+            raise V18Error("retained canonical result differs from exact abort retry")
+        return retained_result
+    return result
 
 
 def _read_frame(path: str | Path) -> pd.DataFrame:
@@ -12089,59 +22253,58 @@ def _build_parser() -> argparse.ArgumentParser:
         help="strictly validate the preregistered operational runtime and binaries",
     )
 
-    source_manifest = subparsers.add_parser(
-        "prepare-source-manifest",
-        help="seal cumulative predictor PDFs and build the outcome-free C00 panel",
+    cache_anchor = subparsers.add_parser(
+        "prepare-predictor-cache",
+        help="seal the exact pre-B historical raw/shard/snapshot cache anchor",
     )
-    source_manifest.add_argument("--source-pdf", action="append", required=True)
-    source_manifest.add_argument("--source-file-name", action="append", required=True)
-    source_manifest.add_argument("--source-url", action="append", required=True)
-    source_manifest.add_argument("--source-received-at", required=True)
-    source_manifest.add_argument("--session", required=True)
-    source_manifest.add_argument("--predictor-raw-store-root", required=True)
-    source_manifest.add_argument("--panel-output", required=True)
-    source_manifest.add_argument("--output")
+    cache_anchor.add_argument("--source-pdf", action="append", required=True)
+    cache_anchor.add_argument("--source-file-name", action="append", required=True)
+    cache_anchor.add_argument("--source-url", action="append", required=True)
+    cache_anchor.add_argument("--through", required=True)
+    cache_anchor.add_argument("--predictor-raw-store-root", required=True)
+    cache_anchor.add_argument("--predictor-derived-store-root", required=True)
 
-    source_failure = subparsers.add_parser(
-        "prepare-source-failure-manifest",
-        help="seal a counted no-source fail-closed manifest before cutoff",
+    store_readiness = subparsers.add_parser(
+        "prepare-operational-stores",
+        help="precreate and validate private disjoint checkpoint/store parents",
     )
-    source_failure.add_argument("--session", required=True)
-    source_failure.add_argument("--source-pdf", action="append")
-    source_failure.add_argument("--source-file-name", action="append")
-    source_failure.add_argument("--source-url", action="append")
-    source_failure.add_argument("--source-received-at")
-    source_failure.add_argument("--predictor-raw-store-root", required=True)
-    source_failure.add_argument("--output")
+    store_readiness.add_argument("--predictor-raw-store-root", required=True)
+    store_readiness.add_argument("--predictor-derived-store-root", required=True)
+    store_readiness.add_argument("--outcome-raw-store-root", required=True)
+    store_readiness.add_argument("--checkpoint-core-store-root", required=True)
 
-    fold = subparsers.add_parser(
-        "prepare-fold",
-        help="fit and exclusively seal one monthly C00 numeric fold before scoring",
+    prepare_day_parser = subparsers.add_parser(
+        "prepare-day",
+        help=(
+            "canonical one-process source/month/fold/state/score/checkpoint preparation"
+        ),
     )
-    fold.add_argument("--source-manifest", required=True)
-    fold.add_argument("--predictor-raw-store-root", required=True)
-    fold.add_argument("--activation-context", required=True)
-    fold.add_argument("--session", required=True)
-    fold.add_argument("--fold-manifest-output")
-    fold.add_argument("--model-bundle-output")
-
-    top2 = subparsers.add_parser(
-        "prepare-top2",
-        help="sealed predictor evidence -> frozen outcome-free v1.7 C00 top two",
+    prepare_day_parser.add_argument("--session", required=True)
+    prepare_day_parser.add_argument("--new-predictor-pdf", action="append", default=[])
+    prepare_day_parser.add_argument(
+        "--new-predictor-file-name", action="append", default=[]
     )
-    top2.add_argument("--panel")
-    top2.add_argument("--source-manifest", required=True)
-    top2.add_argument("--predictor-raw-store-root", required=True)
-    top2.add_argument("--activation-context", required=True)
-    top2.add_argument("--state-manifest", required=True)
-    top2.add_argument("--session", required=True)
-    top2.add_argument("--reuse-fold-manifest", required=True)
-    top2.add_argument("--reuse-model-bundle", required=True)
+    prepare_day_parser.add_argument("--new-predictor-url", action="append", default=[])
+    prepare_day_parser.add_argument(
+        "--new-predictor-received-at", action="append", default=[]
+    )
+    prepare_day_parser.add_argument("--predictor-raw-store-root", required=True)
+    prepare_day_parser.add_argument("--predictor-derived-store-root", required=True)
+    prepare_day_parser.add_argument("--outcome-raw-store-root", required=True)
+    prepare_day_parser.add_argument("--checkpoint-core-store-root", required=True)
+    prepare_day_parser.add_argument(
+        "--activation-context", default=str(ACTIVATION_CONTEXT)
+    )
 
     payload = subparsers.add_parser(
         "create-activation-payload", help="create commit-B activation payload"
     )
     payload.add_argument("--preregistration-commit-sha", required=True)
+    payload.add_argument("--predictor-raw-store-root", required=True)
+    payload.add_argument("--predictor-derived-store-root", required=True)
+    payload.add_argument(
+        "--predictor-cache-anchor-manifest-object-key", required=True
+    )
     payload.add_argument("--output", default=str(ACTIVATION_PAYLOAD))
 
     receipt = subparsers.add_parser(
@@ -12157,24 +22320,7 @@ def _build_parser() -> argparse.ArgumentParser:
     preflight.add_argument("--payload", default=str(ACTIVATION_PAYLOAD))
     preflight.add_argument("--receipt", default=str(ACTIVATION_RECEIPT))
     preflight.add_argument("--receipt-commit-sha", required=True)
-    preflight.add_argument("--output")
-
-    state = subparsers.add_parser(
-        "prepare-state", help="build one outcome-lagged target-month state manifest"
-    )
-    state.add_argument("--target-month", required=True)
-    state.add_argument("--fold-manifest")
-    state.add_argument("--activation-payload", default=str(ACTIVATION_PAYLOAD))
-    state.add_argument("--activation-receipt", default=str(ACTIVATION_RECEIPT))
-    state.add_argument("--activation-context", required=True)
-    state.add_argument("--output", required=True)
-
-    checkpoint = subparsers.add_parser(
-        "prepare-checkpoint",
-        help="seal the fixed nonce-hidden safety and primary checkpoint pair",
-    )
-    checkpoint.add_argument("--session", required=True)
-    checkpoint.add_argument("--checkpoint-core-store-root", required=True)
+    preflight.add_argument("--output", default=str(ACTIVATION_CONTEXT))
 
     publish = subparsers.add_parser(
         "publish-checkpoint",
@@ -12188,27 +22334,21 @@ def _build_parser() -> argparse.ArgumentParser:
     decide.add_argument("--session", required=True)
     decide.add_argument("--checkpoint-core-store-root", required=True)
 
-    attach = subparsers.add_parser(
-        "attach-outcomes", help="append later official outcomes without overwrite"
+    terminal_finalize = subparsers.add_parser(
+        "finalize-terminal",
+        help="seal the final outcome and close the terminal month after blind gates",
     )
-    attach.add_argument("--outcome-manifest", action="append", required=True)
-    attach.add_argument("--outcome-raw-store-root", required=True)
-
-    manifest = subparsers.add_parser(
-        "prepare-outcome-manifest",
-        help="exclusively seal and parse one official target-day JPX PDF",
+    terminal_finalize.add_argument("--source-pdf", required=True)
+    terminal_finalize.add_argument("--source-file-name", required=True)
+    terminal_finalize.add_argument("--source-url", required=True)
+    terminal_finalize.add_argument("--source-received-at", required=True)
+    terminal_finalize.add_argument("--predictor-raw-store-root", required=True)
+    terminal_finalize.add_argument("--predictor-derived-store-root", required=True)
+    terminal_finalize.add_argument("--outcome-raw-store-root", required=True)
+    terminal_finalize.add_argument("--checkpoint-core-store-root", required=True)
+    terminal_finalize.add_argument(
+        "--activation-context", default=str(ACTIVATION_CONTEXT)
     )
-    manifest.add_argument("--source-pdf", required=True)
-    manifest.add_argument("--source-file-name", required=True)
-    manifest.add_argument("--source-url", required=True)
-    manifest.add_argument("--source-received-at", required=True)
-    manifest.add_argument("--outcome-raw-store-root", required=True)
-    manifest.add_argument("--output")
-
-    close = subparsers.add_parser(
-        "close-month", help="append one completed monthly pair-median record"
-    )
-    close.add_argument("--completed-month", required=True)
 
     evaluation = subparsers.add_parser(
         "evaluate",
@@ -12221,6 +22361,7 @@ def _build_parser() -> argparse.ArgumentParser:
     evaluation.add_argument("--outcomes", default=str(OUTCOME_LEDGER))
     evaluation.add_argument("--source-manifest-directory", default=str(SOURCE_MANIFEST_DIR))
     evaluation.add_argument("--predictor-raw-store-root", required=True)
+    evaluation.add_argument("--predictor-derived-store-root", required=True)
     evaluation.add_argument("--outcome-manifest-directory", default=str(OUTCOME_MANIFEST_DIR))
     evaluation.add_argument("--outcome-raw-store-root", required=True)
     evaluation.add_argument("--checkpoint-core-store-root", required=True)
@@ -12230,23 +22371,51 @@ def _build_parser() -> argparse.ArgumentParser:
 
     abort = subparsers.add_parser(
         "abort",
-        help="exclusively record an outcome-blind integrity failure",
+        help="record an outcome-blind create-once integrity failure after activation",
     )
     abort.add_argument(
-        "--failure-reason",
-        required=True,
-        choices=ABORT_FAILURE_REASONS,
+        "--failure-reason", required=True, choices=ABORT_FAILURE_REASONS
     )
     abort.add_argument(
-        "--integrity-stage",
-        required=True,
-        choices=ABORT_INTEGRITY_STAGES,
+        "--integrity-stage", required=True, choices=ABORT_INTEGRITY_STAGES
     )
+    abort.add_argument("--activation-context", default=str(ACTIVATION_CONTEXT))
+
     return parser
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = _build_parser().parse_args(argv)
+    postactivation_result_guarded = {
+        "prepare-day",
+        "publish-checkpoint",
+        "decide",
+        "finalize-terminal",
+        "evaluate",
+        "abort",
+    }
+    result_presence = (
+        _local_authority_presence_state(RESULT_OUTPUT, label="canonical result")
+        if args.command in postactivation_result_guarded
+        else "absent"
+    )
+    if args.command in {
+        "prepare-day",
+        "publish-checkpoint",
+        "decide",
+        "finalize-terminal",
+    } and result_presence != "absent":
+        raise V18Error(
+            "experiment already has a terminal result; post-result work is forbidden"
+        )
+    if args.command == "evaluate" and result_presence != "absent":
+        retained_status = _result_status_token_without_performance_read(
+            RESULT_OUTPUT, presence=result_presence
+        )
+        if retained_status == "aborted_integrity_failure":
+            raise V18Error(
+                "experiment was irreversibly terminated by an integrity abort"
+            )
     runtime_value: dict[str, Any] | None = None
     runtime_digest: str | None = None
     if args.command != "validate":
@@ -12254,17 +22423,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.command not in {"validate", "validate-runtime"}:
         validate_protocol()
     if args.command in {
-        "prepare-source-manifest",
-        "prepare-source-failure-manifest",
-        "prepare-fold",
-        "prepare-top2",
-        "prepare-state",
-        "prepare-checkpoint",
+        "prepare-day",
         "publish-checkpoint",
         "decide",
-        "attach-outcomes",
-        "prepare-outcome-manifest",
-        "close-month",
+        "finalize-terminal",
         "evaluate",
     }:
         # Direct v1.8 artifacts are intentionally outside the transitive lock
@@ -12294,213 +22456,61 @@ def main(argv: Sequence[str] | None = None) -> int:
             "orders_allowed": False,
         }
     elif args.command == "abort":
+        if Path(args.activation_context).resolve() != ACTIVATION_CONTEXT.resolve():
+            raise V18Error("integrity abort requires canonical activation context")
         result = build_integrity_abort_result(
             failure_reason=args.failure_reason,
             integrity_stage=args.integrity_stage,
+            activation_context=read_json(args.activation_context),
         )
         write_json(result, RESULT_OUTPUT, exclusive=True)
-    elif args.command == "prepare-source-manifest":
-        target = _date(args.session, "session")
-        output = args.output or str(SOURCE_MANIFEST_DIR / f"{target.date()}.json")
-        if Path(output).resolve() != (SOURCE_MANIFEST_DIR / f"{target.date()}.json").resolve():
-            raise V18Error("canonical source manifest must use its target-date path")
-        source, panel = build_predictor_source_manifest(
+    elif args.command == "prepare-predictor-cache":
+        anchor, summary = build_predictor_cache_anchor(
             args.source_pdf,
             args.source_file_name,
             args.source_url,
-            session_date=target,
-            source_received_at=args.source_received_at,
+            through_session=args.through,
             predictor_raw_store_root=args.predictor_raw_store_root,
-            output=output,
+            predictor_derived_store_root=args.predictor_derived_store_root,
         )
-        _write_csv_exclusive(panel, args.panel_output)
         result = {
-            "target_session": str(target.date()),
-            "source_manifest_sha256": source["source_manifest_sha256"],
-            "source_set_sha256": source["source_set_sha256"],
-            "parsed_panel_semantic_sha256": source[
-                "parsed_panel_semantic_sha256"
-            ],
-            "g0_panel_semantic_sha256": source["g0_panel_semantic_sha256"],
-            "panel_output_sha256": sha256_file(args.panel_output),
+            "cache_contract_id": anchor["cache_contract_id"],
+            **summary,
             "production_model_changed": False,
             "orders_allowed": False,
         }
-    elif args.command == "prepare-source-failure-manifest":
-        target = _date(args.session, "session")
-        output = args.output or str(SOURCE_MANIFEST_DIR / f"{target.date()}.json")
-        if Path(output).resolve() != (SOURCE_MANIFEST_DIR / f"{target.date()}.json").resolve():
-            raise V18Error("canonical source-failure manifest must use its target-date path")
-        result = build_source_failure_manifest(
-            session_date=target,
-            source_pdfs=args.source_pdf or (),
-            source_file_names=args.source_file_name or (),
-            source_urls=args.source_url or (),
-            source_received_at=args.source_received_at,
+    elif args.command == "prepare-operational-stores":
+        result = prepare_operational_stores(
             predictor_raw_store_root=args.predictor_raw_store_root,
-            output=output,
+            predictor_derived_store_root=args.predictor_derived_store_root,
+            outcome_raw_store_root=args.outcome_raw_store_root,
+            checkpoint_core_store_root=args.checkpoint_core_store_root,
         )
-    elif args.command == "prepare-fold":
-        fold_target = _date(args.session, "session")
-        if Path(args.source_manifest).resolve() != (
-            SOURCE_MANIFEST_DIR / f"{fold_target.date()}.json"
-        ).resolve():
-            raise V18Error("monthly fold must consume its canonical source manifest")
-        _, panel, source, _ = replay_predictor_source_manifest(
-            read_json(args.source_manifest),
+    elif args.command == "prepare-day":
+        if Path(args.activation_context).resolve() != ACTIVATION_CONTEXT.resolve():
+            raise V18Error("prepare-day requires canonical activation context")
+        result = prepare_day(
             session_date=args.session,
+            new_predictor_pdfs=args.new_predictor_pdf,
+            new_predictor_file_names=args.new_predictor_file_name,
+            new_predictor_urls=args.new_predictor_url,
+            new_predictor_received_at=args.new_predictor_received_at,
             predictor_raw_store_root=args.predictor_raw_store_root,
+            predictor_derived_store_root=args.predictor_derived_store_root,
+            outcome_raw_store_root=args.outcome_raw_store_root,
+            checkpoint_core_store_root=args.checkpoint_core_store_root,
+            activation_context=read_json(args.activation_context),
         )
-        activation_context = validate_activation_context(
-            read_json(args.activation_context)
-        )
-        if _STRICT_RUNTIME_VERIFIED_AT is None:  # pragma: no cover - CLI invariant
-            raise V18Error("monthly fold lacks strict runtime verification")
-        if _STRICT_RUNTIME_VERIFIED_AT < _timestamp(
-            source["sealed_at"], "source manifest sealed_at"
-        ):
-            raise V18Error("monthly fold runtime verification predates source seal")
-        _, fold_value, bundle = _build_fold(
-            panel,
-            _date(args.session, "session").to_period("M"),
-            capture_operational_timestamps=True,
-            first_counted_session_value=activation_context["first_counted_session"],
-            activation_observed_at=activation_context[
-                "activation_receipt_commit_observed_at"
-            ],
-        )
-        bundle_output = (
-            Path(args.model_bundle_output)
-            if args.model_bundle_output
-            else ROOT / fold_value["fold_model_bundle_path"]
-        )
-        fold_output = (
-            Path(args.fold_manifest_output)
-            if args.fold_manifest_output
-            else FOLD_MANIFEST_DIR / f"{fold_value['target_month']}.json"
-        )
-        if bundle_output.resolve() != (ROOT / fold_value["fold_model_bundle_path"]).resolve():
-            raise V18Error("monthly fold bundle must use its canonical path")
-        if fold_output.resolve() != (
-            FOLD_MANIFEST_DIR / f"{fold_value['target_month']}.json"
-        ).resolve():
-            raise V18Error("monthly fold manifest must use its canonical path")
-        write_json(bundle, bundle_output, exclusive=True)
-        if sha256_file(bundle_output) != fold_value["fold_model_bundle_file_sha256"]:
-            raise V18Error("persisted fold model bundle byte hash changed")
-        write_json(fold_value, fold_output, exclusive=True)
-        result = {
-            "target_month": fold_value["target_month"],
-            "fold_manifest_sha256": fold_value["fold_manifest_sha256"],
-            "fold_model_bundle_sha256": bundle["fold_model_bundle_sha256"],
-            "fold_model_bundle_file_sha256": fold_value[
-                "fold_model_bundle_file_sha256"
-            ],
-            "production_model_changed": False,
-            "orders_allowed": False,
-        }
-    elif args.command == "prepare-top2":
-        score_target = _date(args.session, "session")
-        if Path(args.source_manifest).resolve() != (
-            SOURCE_MANIFEST_DIR / f"{score_target.date()}.json"
-        ).resolve():
-            raise V18Error("score must consume its canonical source manifest")
-        score_month = str(score_target.to_period("M"))
-        if Path(args.state_manifest).resolve() != (
-            STATE_MANIFEST_DIR / f"{score_month}.json"
-        ).resolve():
-            raise V18Error("score must consume its canonical monthly state manifest")
-        parsed_prices, replay_panel, source, source_hash = replay_predictor_source_manifest(
-            read_json(args.source_manifest),
-            session_date=args.session,
-            predictor_raw_store_root=args.predictor_raw_store_root,
-        )
-        if not _strict_bool(source["source_complete"]):
-            raise V18Error("prepare-top2 cannot score an incomplete source manifest")
-        panel = _read_frame(args.panel) if args.panel else replay_panel
-        observed_semantics = predictor_semantic_hashes(
-            parsed_prices, panel, args.session
-        )
-        for field, observed in observed_semantics.items():
-            if source[field] != observed:
-                raise V18Error(f"prepare-top2 panel differs from source manifest: {field}")
-        reused_fold = read_json(args.reuse_fold_manifest) if args.reuse_fold_manifest else None
-        reused_bundle = read_json(args.reuse_model_bundle) if args.reuse_model_bundle else None
-        validate_fold_manifest(reused_fold, reused_bundle)
-        target_month = str(_date(args.session, "session").to_period("M"))
-        if (
-            Path(args.reuse_fold_manifest).resolve()
-            != (FOLD_MANIFEST_DIR / f"{target_month}.json").resolve()
-            or Path(args.reuse_model_bundle).resolve()
-            != (FOLD_MODEL_DIR / f"{target_month}.json").resolve()
-        ):
-            raise V18Error("score must consume canonical monthly fold artifacts")
-        activation_context = validate_activation_context(
-            read_json(args.activation_context)
-        )
-        state = validate_state_manifest(read_json(args.state_manifest))
-        if state["target_month"] != str(_date(args.session, "session").to_period("M")):
-            raise V18Error("score state manifest target month differs")
-        if (
-            state["activation_payload_sha256"]
-            != activation_context["activation_payload_sha256"]
-            or state["activation_receipt_sha256"]
-            != activation_context["activation_receipt_sha256"]
-        ):
-            raise V18Error("score state activation hashes differ")
-        if (
-            state["c00_fold_manifest_sha256"]
-            != reused_fold["fold_manifest_sha256"]
-            or state["fold_model_bundle_file_sha256"]
-            != reused_fold["fold_model_bundle_file_sha256"]
-        ):
-            raise V18Error("score state does not bind the supplied monthly fold")
-        prerequisites = (
-            _timestamp(source["sealed_at"], "source manifest sealed_at"),
-            _timestamp(reused_fold["sealed_at"], "fold sealed_at"),
-            _timestamp(
-                activation_context["activation_receipt_commit_observed_at"],
-                "activation_receipt_commit_observed_at",
-            ),
-            _timestamp(state["created_at"], "state created_at"),
-        )
-        if _STRICT_RUNTIME_VERIFIED_AT is None or _STRICT_RUNTIME_VERIFIED_AT < max(
-            prerequisites
-        ):
-            raise V18Error("C00 score runtime verification predates a sealed prerequisite")
-        scores, fold, bundle = freeze_c00_top2(
-            panel,
-            args.session,
-            capture_operational_timestamp=True,
-            source_manifest_sha256=source_hash,
-            first_counted_session_value=activation_context.get(
-                "first_counted_session"
-            ),
-            activation_observed_at=activation_context.get(
-                "activation_receipt_commit_observed_at"
-            ),
-            return_bundle=True,
-            model_bundle=reused_bundle,
-            fold_manifest=reused_fold,
-        )
-        append_score_rows(scores, SCORE_OUTPUT)
-        result = {
-            "session_date": args.session,
-            "score_semantic_sha256": semantic_score_hash(scores),
-            "fold_manifest_sha256": fold["fold_manifest_sha256"],
-            "fold_model_bundle_sha256": bundle["fold_model_bundle_sha256"],
-            "fold_model_bundle_file_sha256": fold[
-                "fold_model_bundle_file_sha256"
-            ],
-            "scores_output_sha256": sha256_file(SCORE_OUTPUT),
-            "production_model_changed": False,
-            "orders_allowed": False,
-        }
     elif args.command == "create-activation-payload":
         if Path(args.output).resolve() != ACTIVATION_PAYLOAD.resolve():
             raise V18Error("canonical activation payload must use its registered path")
         result = create_activation_payload(
             preregistration_commit_sha=args.preregistration_commit_sha,
+            predictor_raw_store_root=args.predictor_raw_store_root,
+            predictor_derived_store_root=args.predictor_derived_store_root,
+            predictor_cache_anchor_manifest_object_key=(
+                args.predictor_cache_anchor_manifest_object_key
+            ),
             output=args.output,
         )
     elif args.command == "create-activation-receipt":
@@ -12518,193 +22528,74 @@ def main(argv: Sequence[str] | None = None) -> int:
         if (
             Path(args.payload).resolve() != ACTIVATION_PAYLOAD.resolve()
             or Path(args.receipt).resolve() != ACTIVATION_RECEIPT.resolve()
+            or Path(args.output).resolve() != ACTIVATION_CONTEXT.resolve()
         ):
             raise V18Error("activation preflight requires canonical artifacts")
-        result = activate(
-            args.payload,
-            args.receipt,
-            activation_receipt_commit_sha=args.receipt_commit_sha,
+        context_presence = _local_authority_presence_state(
+            ACTIVATION_CONTEXT, label="activation context"
         )
-        if args.output:
+        if context_presence != "absent":
+            result = validate_activation_context(read_json(ACTIVATION_CONTEXT))
+            if result["activation_receipt_commit_sha"] != args.receipt_commit_sha:
+                raise V18Error("activation context retry changes receipt commit C")
+        else:
+            result = activate(
+                args.payload,
+                args.receipt,
+                activation_receipt_commit_sha=args.receipt_commit_sha,
+            )
             write_json(result, args.output, exclusive=True)
-    elif args.command == "prepare-state":
-        if (
-            Path(args.activation_payload).resolve() != ACTIVATION_PAYLOAD.resolve()
-            or Path(args.activation_receipt).resolve() != ACTIVATION_RECEIPT.resolve()
-        ):
-            raise V18Error("canonical state preparation requires canonical activation artifacts")
-        payload, payload_hash = validate_activation_payload(args.activation_payload)
-        _, receipt_hash = validate_activation_receipt(
-            args.activation_receipt, payload
-        )
-        activation_context = validate_activation_context(
-            read_json(args.activation_context)
-        )
-        if (
-            activation_context.get("activation_payload_sha256") != payload_hash
-            or activation_context.get("activation_receipt_sha256") != receipt_hash
-        ):
-            raise V18Error("state activation context differs from canonical artifacts")
-        fold = read_json(args.fold_manifest) if args.fold_manifest else None
-        if fold is not None:
-            if Path(args.fold_manifest).resolve() != (
-                FOLD_MANIFEST_DIR / f"{args.target_month}.json"
-            ).resolve():
-                raise V18Error("state must consume its canonical monthly fold manifest")
-            validate_fold_manifest(fold)
-        relevant_receipts: list[datetime] = []
-        required_completed_times: list[datetime] = []
-        decision_history = read_jsonl(DECISION_LEDGER)
-        outcome_history = read_jsonl(OUTCOME_LEDGER)
-        history = pair_history_from_ledgers(decision_history, outcome_history)
-        target_start = pd.Period(args.target_month, freq="M").start_time
-        relevant_receipts = [
-            _timestamp(item["outcome_received_at"], "outcome_received_at")
-            for item in outcome_history
-            if _date(item["session_date"], "outcome session") < target_start
-        ]
-        completed = validate_completed_month_records(
-            read_jsonl(COMPLETED_MONTH_LEDGER)
-        )
-        completed_by_month = {
-            item["completed_month"]: item for item in completed
-        }
-        required_months = [
-            str(pd.Period(args.target_month, freq="M") - offset)
-            for offset in (3, 2, 1)
-        ]
-        for required_month in required_months:
-            if pd.Period(required_month, freq="M") >= pd.Period("2026-08", freq="M"):
-                record = completed_by_month.get(required_month)
-                if record is None:
-                    raise V18Error("state preparation lacks a required completed month")
-                required_completed_times.append(
-                    _timestamp(record["created_at"], "completed month created_at")
-                )
-        state = derive_month_state(history, args.target_month)
-        created_at = datetime.now(TOKYO)
-        prerequisites = [
-            *relevant_receipts,
-            *required_completed_times,
-        ]
-        if fold is not None:
-            prerequisites.append(_timestamp(fold["sealed_at"], "fold sealed_at"))
-        if prerequisites and created_at <= max(prerequisites):
-            raise V18Error("state creation does not follow all sealed prerequisites")
-        expected_state_output = STATE_MANIFEST_DIR / f"{args.target_month}.json"
-        if Path(args.output).resolve() != expected_state_output.resolve():
-            raise V18Error("canonical state manifest must use its target-month path")
-        result = build_state_manifest(
-            state,
-            created_at=created_at,
-            c00_fold_manifest_sha256=(
-                None if fold is None else fold["fold_manifest_sha256"]
-            ),
-            fold_model_bundle_file_sha256=(
-                None if fold is None else fold["fold_model_bundle_file_sha256"]
-            ),
-            activation_payload_sha256=payload_hash,
-            activation_receipt_sha256=receipt_hash,
-            first_counted_session_value=activation_context.get(
-                "first_counted_session"
-            ),
-            activation_observed_at=activation_context.get(
-                "activation_receipt_commit_observed_at"
-            ),
-        )
-        write_json(result, args.output, exclusive=True)
-    elif args.command == "prepare-checkpoint":
-        result = prepare_checkpoint(
-            session_date=args.session,
-            checkpoint_core_store_root=args.checkpoint_core_store_root,
-        )
     elif args.command == "publish-checkpoint":
         result = publish_checkpoint(session_date=args.session)
     elif args.command == "decide":
-        existing = read_jsonl(DECISION_LEDGER)
-        activation_context = _discover_activation_context(existing)
-        core, checkpoint_binding = resolve_checkpoint(
-            session_date=args.session,
-            existing_records=existing,
-            activation=activation_context,
-            checkpoint_core_store_root=args.checkpoint_core_store_root,
-        )
-        combined = materialize_checkpoint_decision(
-            core,
-            checkpoint_binding,
-            session_date=args.session,
-            activation=activation_context,
-            existing_records=existing,
-        )
-        append_jsonl_record(
-            DECISION_LEDGER,
-            combined[-1],
-            required_fields=DECISION_FIELDS,
-            validator=validate_decision_records,
-        )
+        existing = _load_decision_record_authority(heal_derived=True)
+        target_session = str(_date(args.session, "decide session").date())
+        if existing and existing[-1]["session_date"] == target_session:
+            # A crash after the immutable record shard but before the derived
+            # JSONL view/health response is an exact validation-only retry.
+            combined = existing
+        else:
+            activation_context = _discover_activation_context(existing)
+            core, checkpoint_binding = resolve_checkpoint(
+                session_date=args.session,
+                existing_records=existing,
+                activation=activation_context,
+                checkpoint_core_store_root=args.checkpoint_core_store_root,
+            )
+            combined = materialize_checkpoint_decision(
+                core,
+                checkpoint_binding,
+                session_date=args.session,
+                activation=activation_context,
+                existing_records=existing,
+            )
+            append_jsonl_record(
+                DECISION_LEDGER,
+                combined[-1],
+                required_fields=DECISION_FIELDS,
+                validator=validate_decision_records,
+            )
+            combined = _load_decision_record_authority(heal_derived=True)
         result = {
             "sequence_number": combined[-1]["sequence_number"],
             "session_date": combined[-1]["session_date"],
             "record_sha256": combined[-1]["record_sha256"],
             "decision_ledger_semantic_sha256": semantic_decision_hash(combined),
         }
-    elif args.command == "attach-outcomes":
-        decisions = read_jsonl(DECISION_LEDGER)
-        existing = read_jsonl(OUTCOME_LEDGER)
-        combined = attach_outcomes(
-            decisions,
-            args.outcome_manifest,
-            outcome_raw_store_root=args.outcome_raw_store_root,
-            existing_outcomes=existing,
-        )
-        for record in combined[len(existing) :]:
-            append_jsonl_record(
-                OUTCOME_LEDGER,
-                record,
-                required_fields=OUTCOME_FIELDS,
-                validator=lambda rows: validate_outcome_records(rows, decisions),
-            )
-        result = {
-            "attached_records": len(combined) - len(existing),
-            "outcome_records": len(combined),
-            "outcome_ledger_sha256": sha256_file(OUTCOME_LEDGER),
-        }
-    elif args.command == "prepare-outcome-manifest":
-        decisions = read_jsonl(DECISION_LEDGER)
-        if not decisions:
-            raise V18Error("cannot prepare an outcome manifest without a decision")
-        target = decisions[-1]["session_date"]
-        output = args.output or str(OUTCOME_MANIFEST_DIR / f"{target}.json")
-        if Path(output).resolve() != (OUTCOME_MANIFEST_DIR / f"{target}.json").resolve():
-            raise V18Error("canonical outcome manifest must use its target-date path")
-        result = build_outcome_manifest(
-            decisions,
-            args.source_pdf,
-            outcome_raw_store_root=args.outcome_raw_store_root,
+    elif args.command == "finalize-terminal":
+        if Path(args.activation_context).resolve() != ACTIVATION_CONTEXT.resolve():
+            raise V18Error("finalize-terminal requires canonical activation context")
+        result = finalize_terminal(
+            source_pdf=args.source_pdf,
             source_file_name=args.source_file_name,
             source_url=args.source_url,
             source_received_at=args.source_received_at,
-            output=output,
+            predictor_raw_store_root=args.predictor_raw_store_root,
+            predictor_derived_store_root=args.predictor_derived_store_root,
+            outcome_raw_store_root=args.outcome_raw_store_root,
+            checkpoint_core_store_root=args.checkpoint_core_store_root,
+            activation_context=read_json(args.activation_context),
         )
-    elif args.command == "close-month":
-        existing = read_jsonl(COMPLETED_MONTH_LEDGER)
-        combined = build_completed_month_record(
-            read_jsonl(DECISION_LEDGER),
-            read_jsonl(OUTCOME_LEDGER),
-            completed_month=args.completed_month,
-            capture_operational_timestamp=True,
-            existing_records=existing,
-        )
-        append_jsonl_record(
-            COMPLETED_MONTH_LEDGER,
-            combined[-1],
-            required_fields=COMPLETED_MONTH_FIELDS,
-            validator=validate_completed_month_records,
-        )
-        result = {
-            "completed_month": args.completed_month,
-            "record_sha256": combined[-1]["record_sha256"],
-        }
     elif args.command == "evaluate":
         canonical_inputs = {
             "decision ledger": (args.decisions, DECISION_LEDGER),
@@ -12729,30 +22620,120 @@ def main(argv: Sequence[str] | None = None) -> int:
             expected_path = Path(os.path.abspath(os.fspath(expected)))
             if supplied_path != expected_path:
                 raise V18Error(f"canonical result {label} path changed")
-        if os.path.lexists(RESULT_OUTPUT):
-            raise V18Error(
-                "canonical result already exists; terminal evaluation cannot be repeated"
+        decisions = load_jsonl_record_authority(
+            args.decisions,
+            required_fields=DECISION_FIELDS,
+            validator=validate_decision_records,
+            heal_derived=False,
+        )
+        scheduled = load_registered_calendar()
+        terminal_candidate = False
+        terminal: pd.Timestamp | None = None
+        decision_index = pd.DatetimeIndex([])
+        if decisions:
+            first = _date(decisions[0]["session_date"], "first decision")
+            terminal = deterministic_terminal_session(first, scheduled)
+            denominator = scheduled[(scheduled >= first) & (scheduled <= terminal)]
+            decision_index = pd.DatetimeIndex(
+                [_date(item["session_date"], "decision session") for item in decisions]
             )
-        decisions = read_jsonl(args.decisions)
-        completed_months = read_jsonl(args.completed_months)
-        # A terminal candidate must first prove the exact terminal-inclusive
-        # completed-month chain.  The outcome path is not opened before this
-        # outcome-blind structural seal succeeds.
+            if len(decision_index) > len(denominator) or not decision_index.equals(
+                denominator[: len(decision_index)]
+            ):
+                raise V18Error("decision denominator differs from registered calendar")
+            terminal_candidate = (
+                len(decision_index) == len(denominator)
+                and len(decision_index) > 0
+                and decision_index[-1] == terminal
+            )
+        if not terminal_candidate:
+            # Decision/calendar structure is the only information opened on
+            # a nonterminal invocation.  In particular, do not enumerate or
+            # read predictor caches, state, completed-month, outcome, score,
+            # picks, checkpoint, or result evidence merely to report waiting.
+            if result_presence != "absent":
+                raise V18Error(
+                    "canonical result exists before the terminal denominator"
+                )
+            result = {
+                "status": "awaiting_terminal_evaluation",
+                "scheduled_sessions": len(decisions),
+                "outcome_records": 0,
+                "represented_calendar_months": int(
+                    decision_index.to_period("M").nunique()
+                ),
+                "minimum_scheduled_sessions": MIN_FORWARD_SESSIONS,
+                "minimum_calendar_months": MIN_FORWARD_MONTHS,
+                "deterministic_terminal_session": (
+                    None if terminal is None else str(terminal.date())
+                ),
+                "gate_evaluated": False,
+                "performance_evidence_opened": False,
+                "production_model_changed": False,
+                "orders_allowed": False,
+            }
+            print(
+                json.dumps(
+                    _safe(result), ensure_ascii=False, sort_keys=True, allow_nan=False
+                )
+            )
+            return 0
+        terminal_identity_registry: dict[tuple[int, int], str] = {}
+        predictor_bindings = validate_predictor_evidence(
+            decisions,
+            None,
+            source_manifest_directory=args.source_manifest_directory,
+            predictor_raw_store_root=args.predictor_raw_store_root,
+            predictor_derived_store_root=args.predictor_derived_store_root,
+            external_identity_registry=terminal_identity_registry,
+        )
+        checkpoint_bindings = validate_checkpoint_evidence(
+            decisions,
+            checkpoint_core_store_root=args.checkpoint_core_store_root,
+            external_identity_registry=terminal_identity_registry,
+        )
+        # Outcome, score, picks, and result paths remain unopened until all
+        # outcome-blind raw/shard/snapshot/cache/checkpoint reconstruction
+        # above has succeeded.
+        payload_value, payload_hash, _, receipt_hash = (
+            validate_canonical_activation_artifacts()
+        )
+        del payload_value
+        _validate_deferred_state_evidence(
+            decisions,
+            expected_payload_sha256=payload_hash,
+            expected_receipt_sha256=receipt_hash,
+        )
+        completed_months = load_jsonl_record_authority(
+            args.completed_months,
+            required_fields=COMPLETED_MONTH_FIELDS,
+            validator=validate_completed_month_records,
+            heal_derived=False,
+        )
         _preflight_terminal_completed_month_ledger(
             completed_months,
             decisions,
         )
-        outcomes = read_jsonl(args.outcomes)
+        outcomes = load_jsonl_record_authority(
+            args.outcomes,
+            required_fields=OUTCOME_FIELDS,
+            validator=lambda rows: validate_outcome_records(rows, decisions),
+            heal_derived=False,
+        )
         result = evaluate(
             decisions,
             outcomes,
             completed_months,
             source_manifest_directory=args.source_manifest_directory,
             predictor_raw_store_root=args.predictor_raw_store_root,
+            predictor_derived_store_root=args.predictor_derived_store_root,
             scores=Path(args.scores),
             outcome_manifest_directory=args.outcome_manifest_directory,
             outcome_raw_store_root=args.outcome_raw_store_root,
             checkpoint_core_store_root=args.checkpoint_core_store_root,
+            prevalidated_predictor_bindings=predictor_bindings,
+            prevalidated_checkpoint_bindings=checkpoint_bindings,
+            external_identity_registry=terminal_identity_registry,
         )
         if result["status"] != "awaiting_terminal_evaluation":
             expected_picks = materialize_picks(decisions, outcomes)
@@ -12760,19 +22741,29 @@ def main(argv: Sequence[str] | None = None) -> int:
                 index=False, lineterminator="\n"
             ).encode()
             picks_path = Path(args.picks)
-            if picks_path.exists():
-                if picks_path.is_symlink() or not picks_path.is_file():
-                    raise V18Error("canonical picks output is not a plain file")
-                if (
-                    _plain_file_bytes(
-                        picks_path, label="canonical picks output"
-                    )
-                    != expected_pick_bytes
-                ):
-                    raise V18Error("canonical picks differ from recomputed picks")
-            else:
-                _write_csv_exclusive(expected_picks, picks_path)
-            result = build_result(
+            # The exact writer is also the only safe healer for a crash after
+            # final link and before staging-name cleanup.
+            _write_csv_exclusive(expected_picks, picks_path)
+            if (
+                _plain_file_bytes(picks_path, label="canonical picks output")
+                != expected_pick_bytes
+            ):
+                raise V18Error("canonical picks differ from recomputed picks")
+            retained_result: dict[str, Any] | None = None
+            retained_runtime_verified_at: Any | None = None
+            if result_presence != "absent":
+                # This is deliberately after blind predictor/checkpoint gates
+                # and the authorized performance reconstruction above.
+                retained_result = read_json(RESULT_OUTPUT)
+                try:
+                    retained_runtime_verified_at = retained_result["runtime"][
+                        "runtime_lock_verified_at"
+                    ]
+                except (KeyError, TypeError) as exc:
+                    raise V18Error(
+                        "retained terminal result runtime timestamp is missing"
+                    ) from exc
+            rebuilt_result = build_result(
                 result,
                 decisions,
                 outcomes,
@@ -12782,8 +22773,19 @@ def main(argv: Sequence[str] | None = None) -> int:
                 completed_month_ledger_path=args.completed_months,
                 score_output=args.scores,
                 picks_output=args.picks,
+                runtime_lock_verified_at=retained_runtime_verified_at,
             )
-            write_json(result, RESULT_OUTPUT, exclusive=True)
+            if retained_result is not None:
+                if canonical_json_bytes(retained_result) != canonical_json_bytes(
+                    rebuilt_result
+                ):
+                    raise V18Error(
+                        "retained canonical result differs from exact terminal retry"
+                    )
+                result = retained_result
+            else:
+                result = rebuilt_result
+                write_json(result, RESULT_OUTPUT, exclusive=True)
     else:  # pragma: no cover - argparse enforces this
         raise V18Error(f"unknown command: {args.command}")
     print(json.dumps(_safe(result), ensure_ascii=False, sort_keys=True, allow_nan=False))
