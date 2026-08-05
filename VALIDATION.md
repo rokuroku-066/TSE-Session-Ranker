@@ -4175,3 +4175,197 @@ orders allowed:             false
 ```
 
 </details>
+
+## Entry 024 — v1.8 A2：activation前の運用・因果・再開可能性修復
+
+**日付:** 2026-08-05
+**状態:** activation前、production変更なし、注文不可
+**対象:** PR #8 merge後のcurrent mainを起点とする新規A2 branch
+
+<details>
+<summary>修復範囲、非権威リハーサル、検証証跡</summary>
+
+### Entry 023の扱いとA2の境界
+
+Entry 023のcommit-A案はsuperseded / unactivatedであり、payload B、receipt C、
+activation context、counted decision、outcome、result、注文を一度も生成していない。
+A2はSH01の式、C00、cost、bootstrap、gate、calendar、nominal alphaを変更しない
+preactivation operational correctionである。新しいbranchはcurrent mainから
+`agent/v18-a2-shoulder-state-20260805`として開始し、A/B/Cの線形履歴を新規に作る。
+
+登録calendar自体は2026-08-05から始まるが、A2の`not_before_session`は
+2026-08-06である。payload Bとactivation contextはanchorの最新session Hに対し、
+`H < predecessor(first_counted_session)`をactivation前に必須とする。最早の
+first counted sessionが2026-08-06ならterminalは2027-02-26、N=135、120本目は
+2027-02-03、必要executed daysは`ceil(0.9 * 135)=122`である。
+
+### 完全入力だけを数える非裁量契約
+
+forward raw sourceのoriginは`manual_operator_attested_v1`である。URL、filename、
+`received_at`はoperator metadataであり、JPX server receipt、live refetch、独立した
+availability/acquisition-time/origin/authenticity証明ではない。結果と独立監査は常に
+`official_source_verified=false`と固定caveatを出す。将来licensed / permissionedな
+source-auth workflowへ変更するには新しい事前登録とactivationを要する。
+
+sourceがmissing、partial、ambiguous、D-1未達、parser不一致、month fold/bundle欠落、
+exact 2-row score pair欠落、prior outcome/month close欠落、checkpoint欠落なら、cashに
+変換せず実験全体をirreversible integrity abortする。許されるcashは
+`cash_state_unavailable`と`cash_state_zero`だけで、前者は直前3完了月それぞれの
+complete pairが10未満であること、後者はexact medianが0であることからのみ導く。
+
+canonical mutation surfaceは`prepare-day`とterminal末尾の`finalize-terminal`へ集約し、
+旧split source/month/top2/state/outcome/attach/close CLIは削除した。通常日Dの
+`prepare-day`はD-1 predictorをsealし、同じPDFを物理的に非aliasなoutcome rawへ
+exact `(file,url,byte_count,sha256,received_at)`一致でsealし、D-1 outcomeをattachし、
+必要ならprior monthをcloseしてからcurrent state/score/checkpointを作る。terminal Tは
+outcome-blind predictor/cache/checkpoint gate後に`finalize-terminal`がT outcomeと
+terminal month closeだけをexact retry可能に作る。
+
+### A2 predictor authorityと因果DAG
+
+各PDFはcreate-once raw object、generic parsed shard data/manifest、receipt/date/parser/runtime
+bindingを持つ。anchorはfull31 clean-room reparse、compact12 projection、raw/shard equality、
+full31↔compact12 consumer equivalence（column/order/dtype/null bitmap/IEEE bytes、`-0`、
+string/bool、synthetic target）をpayload Bへbindする。月次compact snapshotはimmediate
+predecessor＋forward suffix、日次G0 cacheはexact target slice、source manifestは
+immediate counted predecessor source hashをbindする。terminalはanchorを含むunique rawを
+各1回full31で再parseし、全shard、snapshot、month training、daily target cache、fold、
+scoreをunseal前に独立再構築する。
+
+日次source、month source、fold、G0 cache、score、checkpointのchronologyは
+`raw received <= shard created <= shard sealed <= derived created <= derived sealed <= source`
+を有限schemaで固定する。同じdaily PDFのpredictor/outcomeは非alias別objectでありながら
+file/URL/byte-count/SHA/receiptが一致し、terminalも全overlap sessionをcross-role比較する。
+
+### create-once authorityとcrash recovery
+
+raw/derived/core/outcomeは4つのdisjoint operator-supplied private rootsを使う。外部storeは
+manifest/coreから参照されたcontent-addressed objectだけがauthorityで、unreferenced
+stage/extraはnonauthorityでありstore completenessは主張しない。参照objectはpath、prefix、
+bytes、SHA、uid、mode、nlink、inode、DAGをsecure-readする。
+
+local single-file authorityはprivate parent fd lock、same-parent staging、fsync、atomic
+no-replace link、link後parent fsync、stage unlink後parent fsyncを使う。final＋canonical stage
+が同一private inodeのnlink2であるpost-link crashだけを安全にhealし、その他のalias、mode、
+uid、inode、bytes conflictは無変更でabortする。decision、outcome、completed-month、scoreは
+per-record create-once shardがauthorityで、JSONL/CSVはshard列からexact prefix/suffixだけ
+healできるderived viewである。checkpoint core/proposal pairはbilateral preflightとstaged
+session directory recoveryを使い、complete retryはvalidation-only、remote Git publishは
+one-shotのままである。cooperative same-euid writerとprivate parent lockがthreat boundaryである。
+
+### terminal blindness、abort、result
+
+非terminal evaluateはdecision＋calendarだけでawaitingを判定し、state、completed month、
+outcome、score、picks、resultを読まない。terminal/finalizeはraw→shard→snapshot→cache→
+checkpointをoutcome-blindに検証してからstate/completed/outcome/scoreを初めて開く。
+activated abortは非null payload/receipt/C/activation identityをbindし、metrics、gates、nomineeを
+nullにしたoperator-attested irreversible terminationである。abortはperformance filesを
+opaque SHA fingerprintとしてstreamできるだけでdecode/count/deriveしない。既存abort resultは
+evaluateをperformance-unseal前にstatus-tailだけで拒否し、selection resultのexact crash retry
+だけを許す。
+
+### 非権威cold rehearsal
+
+payload-bound `research/model_v18_a2_rehearsal.py`はactivation/decision/result authorityを一切
+作らず、fresh `/tmp` rootsだけで動く。preflightはstrict runtime/module/project closureと
+canonical authority absenceを検証し、process-local nonforgeable capabilityを発行する。timed
+builderはrepo/canonical authority/calendar/protocol/runtime file、networkを一切open/writeせず、
+capabilityがpinしたin-memory contractだけを使う。postflightはcanonical authority absenceを
+再検証する。
+
+slow full31 reference buildはtimed gate外で1回だけ行う。各cold compact runは同じregistered
+raw/source/shard/training semantic/target/fold/bundle/score/top2 bytesと比較する。boundaryはreal
+fold fitを含め300秒以下、`intramonth_fold_reuse_upper_bound_proxy`はvalidated boundary foldを
+reuseし120秒以下である。3回すべてfresh rootで実行する。
+
+最初のnonauthority attempt `/tmp/v18-a2-reference.8Mtcgv` は、registry documentary evidenceが
+旧protocol/runner/runtime（a889… / c661… / a27c…）を埋め込んでいることを途中で検出したため、
+完了前に停止し隔離した。raw projectionが一致していてもそのobjectを再利用せず、authorityにも
+証拠にもしていない。その後registry validatorへprotocol/runner/runtimeのpath/size/SHA exact
+checkを追加し、9 mutation negativeを固定した。fresh final-pin registry
+`/tmp/v18-a2-final-registry.Pq5K1O/cache-rehearsal-registry.json`
+（SHA-256 `b01093d715e4baeaabd3a814fbdf72423ce077c688179e25799c135277701082`）とfresh root
+`/tmp/v18-a2-final-reference.s2eQzX`から完全に再実行した。
+
+その初回3 coldはfull31 comparisonを6/6でexact再現し、boundaryは3/3で300秒以内だったが、
+proxyは253.365～295.297秒で3/3とも120秒を超えたためactivationを許可しなかった。
+read-only phase profileは、real panel 58.394秒、fresh fold-input hash 1.41秒、score 3.849秒に
+対し、proof-only full G0 digest 25.738秒、pre-month semantic 81.855秒、同じmodel semanticの
+2回計算45.814＋49.358秒、proof roundtrip 13.273秒を特定した。gateを緩和せず、boundaryが
+canonical full-prefix CSV bytes/rows/source/shard identitiesとone-time proofをprocess-local tokenへ
+bindし、proxyはfresh decode/merge/canonical encodeのexact byte identity一致後だけproof digestを
+reuseするよう修復した。panel、target cache、fold current row/target/feature hashes、fold/bundle
+validation、scoreは毎回freshである。production intramonthもcaller frame/hashを受けないprivate
+pathで、exact retained snapshot bytes/canonical decode/self/source/shard binding後だけsealed
+model/training semanticをreuseし、terminalはfull validatorで再計算する。修復bytesを再pinし、
+新しいregistry/reference/cold rootsから再度完全実行した。最終registryは
+`/tmp/v18-a2-d871-registry.lqbhQS/cache-rehearsal-registry.json`
+（SHA-256 `b11624bac33663388bfb9e3394018787196685f7083a247c386d4c0fe8c5251f`）、
+reference rootは`/tmp/v18-a2-d871-reference.WPeAcd`、cold rootsは
+`/tmp/v18-a2-d871-cold-1.685uH7`、`/tmp/v18-a2-d871-cold-2.ctca61`、
+`/tmp/v18-a2-d871-cold-3.VvKdRd`で、すべてfresh 0700 rootである。
+
+```text
+pre-fix reference health SHA-256:            fae030e059e5f2702a62a8998ebe409fd05fce1b80abb688a0f59cd7fdce1827
+pre-fix reference.json / manifest:           926ba4082c95897c17b1620f47761f481635f9c2ea614b78d31e3b16e120fc94 / f71a152052aadcea71db4d7ac85975710eb92fb16a8e1726225318e6ddf08628
+pre-fix comparison / shard set:              ab180c9560d4c6dfc94ed5b340989dc0b0b336a47063a39813d5bf61236b1070 / c5501856e378e3934af6e48fd233a66e7c0a7efe302e74daf7a368f31d768ae6
+pre-fix untimed reference peak RSS:           9,427,496 KiB
+pre-fix cold 1 health / comparison:        d76c159c169edcd02e1ee930eb4a30c1722f4e365d2ff6717d6c3e7b39846087 / ab180c9560d4c6dfc94ed5b340989dc0b0b336a47063a39813d5bf61236b1070
+pre-fix cold 1 boundary / proxy:            296.103267759s PASS / 295.297273303s FAIL
+pre-fix cold 2 health / comparison:        91a4efa86b1140db2d311349c30e53ce12decc5204ad9884d55abbc73de27ec0 / ab180c9560d4c6dfc94ed5b340989dc0b0b336a47063a39813d5bf61236b1070
+pre-fix cold 2 boundary / proxy:            296.215795915s PASS / 256.492393834s FAIL
+pre-fix cold 3 health / comparison:        7fa1edd0fb9f45c07d3dc6dfd5fe87e57f4fe409d3eb2901c1faa98319f52ab5 / ab180c9560d4c6dfc94ed5b340989dc0b0b336a47063a39813d5bf61236b1070
+pre-fix cold 3 boundary / proxy:            264.224661550s PASS / 253.365278338s FAIL
+pre-fix exact equality / timing verdict:   6 / 6 PASS; boundary 3 / 3 PASS; proxy 0 / 3 FAIL
+post-fix reference health SHA-256:          3e6b3c0235a06e67c90bb760a668f703b5a67b70634f6dd0932b6f7eccf00493
+post-fix reference.json / manifest:         ca78bcf5020ccfca32c1d9064d51dc150ad8cca697917f2be9c7ddbe9e97a8d2 / d36b2b60c3cd44a22bb74de949dc1bfdb1fa5ff1917d2bb508ba64dbd2aa7dd9
+post-fix comparison / shard set:            78aadf5a632f11651ec4aee8d1526d63d952589c86f5a264a67353b3d7ba91a1 / 4809baeed65b50d953f01b87de27c418de48a873d46f3088a7b128fa293aad9b
+post-fix untimed reference peak RSS:         9,448,024 KiB
+post-fix cold 1 health / comparison:       2e8072ea8d4277f4ba181add6416b0259a4b2cbaaba62866ed9451208d4a7635 / 78aadf5a632f11651ec4aee8d1526d63d952589c86f5a264a67353b3d7ba91a1
+post-fix cold 1 boundary / proxy / RSS:    235.968694960s PASS / 89.055534944s PASS / 7,925,732 KiB
+post-fix cold 2 health / comparison:       e4efbaa347512be49c5303f57b8a1a428b4a58a94a56658eb49e85064fe8d90b / 78aadf5a632f11651ec4aee8d1526d63d952589c86f5a264a67353b3d7ba91a1
+post-fix cold 2 boundary / proxy / RSS:    228.250916652s PASS / 99.055807985s PASS / 7,926,868 KiB
+post-fix cold 3 health / comparison:       a9af04d918ef5fd5133c2738a5e76082d973f36c7b06a3e8e9334c6a2a0ce938 / 78aadf5a632f11651ec4aee8d1526d63d952589c86f5a264a67353b3d7ba91a1
+post-fix cold 3 boundary / proxy / RSS:    221.795425250s PASS / 84.060303119s PASS / 7,926,796 KiB
+post-fix exact equality / timing verdict:  6 / 6 PASS; boundary 3 / 3 PASS; proxy 3 / 3 PASS
+canonical repo mutation:                   false
+activation / decision / outcome / result:  absent / absent / absent / absent
+```
+
+### frozen artifactと検証
+
+```text
+protocol SHA-256:                   930a82163f347aa7c303dfea1fb8b593ac6bff95ff774a2c6804c437d679cb5f
+runner SHA-256:                     d871b71141efedb3109bca64350f534032ee3ac44aef37ff4a01f517d69cdc6c
+runtime-lock file SHA-256:          2cd701e0ae5969b3a13236908e260c7f072344f5ca477287b14a3ed22b257a54
+runtime-lock self SHA-256:          244fc4bf0809bf553379f627c6b89b2842759104577b248d1bcc902813ae12fb
+hypothesis SHA-256:                 7f750b0613252caa6d87bcff7c5b4a783cc33a09a0c5f7bcd6b3d4ed47630025
+iteration report SHA-256:           e6a45d76cd50a7be7bb65f4c5c6f90084b1b1542db9cd98773e856954b40e622
+calendar SHA-256:                   c5c5908b0e26ebd57eb2e473b9d4ce7f92a7c8b336f6ad70596152de971b77a7
+independent audit SHA-256:          9a3fc5d872fd0104184f5c0f1f8da3840f740b06bc55a4ab8cc844552eb2bf40
+independent audit test SHA-256:     6c18a4bdb8ada683c44adb66917a9e649ea1ecc5ac2601cea65ef95c6a503514
+base test SHA-256:                  2f9c9140092020bee84d7748e36034705880039ac617674128f4f8f5b01d97be
+nonauthority rehearsal SHA-256:     018673b872d0db20a75a57f82ae20b07e53726e1275da73825260f9c12cdc1e4
+real rehearsal test SHA-256:        fa2f114708b35ae740521e9fa1ab0ee83ee79873b9572ecc888bf9da8eef64ed
+operations SHA-256:                 ed0e7ad62dcfb7ef2d6a069b1a4956385e7a1fde6eb6fde9e274df1227ef95d9
+operations docs SHA-256:            380bae0bfe1b2a8fba29f5823ce3ace8919721170d0b835b7e68840c0b5aaa3c
+operations test SHA-256:            3f263af3a1478667feb94f04ffa23c6f413273aacd70f342c2428ed4f7577a20
+```
+
+```text
+py_compile:                         PASS
+protocol validation:               PASS
+independent protocol validation:   PASS
+strict runtime validation:         PASS
+base + A2 + ops tests:              384 passed
+broader full-repo tests:            813 passed + 192 subtests (154.92s)
+warnings:                           0 combined / 27 broader full-repo
+git diff --check:                   PASS
+read-only material blockers:       0
+activation payload/receipt/context: absent / absent / absent
+forward outcomes / forward result:  unopened / absent
+production model changed:          false
+orders allowed:                     false
+```
+
+</details>
